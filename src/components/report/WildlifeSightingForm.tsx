@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react' // Added useEffect
 import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
@@ -150,6 +150,22 @@ export function WildlifeSightingForm() {
       ? googleMapsEmbedUrl(coords.lat, coords.lng, 17)
       : googleMapsEmbedUrl(DEFAULT_MAP_LAT, DEFAULT_MAP_LNG, 12)
 
+  // --- NEW FIX: AUTO-POPULATE PHONE NUMBER ---
+  // This safely loads their profile number into the editable form state 
+  // without locking them out of changing it later.
+  useEffect(() => {
+    if (profile?.contactPhone) {
+      setFormData((prev) => {
+        if (!prev.reporterPhone) {
+          let cleaned = profile.contactPhone.replace(/\D/g, '')
+          if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
+          return { ...prev, reporterPhone: cleaned }
+        }
+        return prev
+      })
+    }
+  }, [profile?.contactPhone])
+
   const fetchCurrentLocation = useCallback(async () => {
     if (!('geolocation' in navigator)) {
       toast.error('Location is not supported in this browser')
@@ -213,21 +229,21 @@ export function WildlifeSightingForm() {
       return
     }
 
-    const savedContact = profile?.contactPhone?.trim()
-    const contactPhone = savedContact || formData.reporterPhone.trim()
+    // --- FIX: NO MORE PROFILE OVERRIDE ---
+    // We now strictly trust whatever is in the input box, whether it was 
+    // auto-filled from the profile or typed in fresh by the user.
+    const contactPhone = formData.reporterPhone.trim()
+    
     if (!contactPhone) {
       toast.error('Contact number is required')
       return
     }
 
-    // --- UPDATED VALIDATION LOGIC ---
-    // Enforces exact 11 digits, strictly starting with "09"
     const cleanPhone = contactPhone.replace(/\D/g, '')
     if (!/^09\d{9}$/.test(cleanPhone)) {
       toast.error('Contact number must be exactly 11 digits and start with "09"')
       return
     }
-    // --------------------------------
 
     if (!formData.behavior) {
       toast.error('Please select a condition or behavior')
@@ -262,7 +278,7 @@ export function WildlifeSightingForm() {
         description: formData.description,
         condition: formData.condition.trim() || undefined,
         behavior: behavior || undefined,
-        reporterPhone: cleanPhone, // Saving strictly cleaned phone number
+        reporterPhone: cleanPhone, // Submitting the cleaned, user-editable phone number
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
