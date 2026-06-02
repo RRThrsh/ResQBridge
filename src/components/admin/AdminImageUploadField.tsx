@@ -77,7 +77,7 @@ export function AdminImageUploadField({ value, onChange, label = 'Image' }: Prop
         <p className="mb-1 text-sm font-medium text-foreground">
           {value ? 'Replace image' : 'Click to upload image'}
         </p>
-        <p className="text-xs text-muted-foreground">JPG, PNG, WebP up to 5 MB</p>
+        <p className="text-xs text-muted-foreground">JPG, PNG, WebP up to 20 MB</p>
       </button>
     </div>
   )
