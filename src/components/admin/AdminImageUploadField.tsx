@@ -21,7 +21,7 @@ export function AdminImageUploadField({ value, onChange, label = 'Image' }: Prop
     if (!file) return
 
     if (file.size > MAX_IMAGE_FILE_BYTES) {
-      toast.error(`${file.name} must be 15 MB or smaller`)
+      toast.error(`${file.name} must be 50 MB or smaller`)
       return
     }
     if (!file.type.startsWith('image/')) {
@@ -77,7 +77,7 @@ export function AdminImageUploadField({ value, onChange, label = 'Image' }: Prop
         <p className="mb-1 text-sm font-medium text-foreground">
           {value ? 'Replace image' : 'Click to upload image'}
         </p>
-        <p className="text-xs text-muted-foreground">JPG, PNG, WebP up to 20 MB</p>
+        <p className="text-xs text-muted-foreground">JPG, PNG, WebP up to 50 MB</p>
       </button>
     </div>
   )
