@@ -35,12 +35,12 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
         className="w-full sm:w-[520px] bg-background border-l border-border p-0 overflow-y-auto"
       >
         {/* Hero image */}
-        <div className="relative h-64 overflow-hidden bg-muted">
-          <img
-            src={species.image}
-            alt={species.commonName}
-            className="w-full h-full object-cover"
-          />
+<div className="relative bg-muted flex justify-center">
+  <img
+    src={species.image}
+    alt={species.commonName}
+    className="max-h-[400px] w-auto object-contain"
+  />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
           {/* Close button */}
