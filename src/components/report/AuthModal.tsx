@@ -104,7 +104,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       }
       setCode('')
       setStep('otp')
-      setCountdown(180)
+      setCountdown(60)
       toast.success(`Code sent to ${normalizedEmail}`)
     } catch (error) {
       toast.error(errorMessage(error, 'Could not send code'))
