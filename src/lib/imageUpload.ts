@@ -1,4 +1,4 @@
-export const MAX_IMAGE_FILE_BYTES = 15 * 1024 * 1024
+export const MAX_IMAGE_FILE_BYTES = 20 * 1024 * 1024
 export const MAX_IMAGE_DATA_URL_LENGTH = 900_000
 
 export function readImageFile(file: File): Promise<string | null> {
@@ -17,7 +17,7 @@ export function validateImageDataUrl(dataUrl: string): string | null {
     return 'Please upload an image'
   }
   if (dataUrl.length > MAX_IMAGE_DATA_URL_LENGTH) {
-    return 'Image is too large. Use a smaller file (15 MB or less).'
+    return 'Image is too large. Use a smaller file (20 MB or less).'
   }
   return null
 }
