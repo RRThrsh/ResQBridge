@@ -18,7 +18,9 @@ export const defaultWildlife = [
       "Never purchase pangolin products — it is strictly illegal"
     ],
     "ecologicalImportance": "Pangolins are the primary natural control of ant and termite populations in Palawan forests, preventing ecological damage to trees and soil structures.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Manis_culionensis.jpg/440px-Manis_culionensis.jpg",
+    "images": [
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Manis_culionensis.jpg/440px-Manis_culionensis.jpg"
+],
     "tags": [
       "endemic",
       "protected",
@@ -44,7 +46,9 @@ export const defaultWildlife = [
       "Report all sightings with GPS coordinates to PWRCC"
     ],
     "ecologicalImportance": "Katala serve as important seed dispersers for large-fruited trees in coastal and lowland forests, helping forest regeneration across Palawan.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Cacatua_haematuropygia_-Philippines-8.jpg/440px-Cacatua_haematuropygia_-Philippines-8.jpg",
+    "images": [
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Cacatua_haematuropygia_-Philippines-8.jpg/440px-Cacatua_haematuropygia_-Philippines-8.jpg"
+],
     "tags": [
       "endemic",
       "protected",
@@ -71,7 +75,9 @@ export const defaultWildlife = [
       "Keep noise and light to a minimum near sighting areas"
     ],
     "ecologicalImportance": "Binturong are critical dispersers of strangler fig seeds, which would not germinate without passing through their digestive system. Without binturong, fig trees — and many species that depend on them — would decline.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Binturong_in_Overloon.jpg/440px-Binturong_in_Overloon.jpg",
+    "images": [
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Cacatua_haematuropygia_-Philippines-8.jpg/440px-Cacatua_haematuropygia_-Philippines-8.jpg"
+],
     "tags": [
       "vulnerable",
       "nocturnal",
@@ -97,7 +103,9 @@ export const defaultWildlife = [
       "Do not consume its meat — it is strictly protected"
     ],
     "ecologicalImportance": "As a fruit-eater, it disperses seeds of large-fruited trees across wide areas of forest, contributing significantly to Palawan forest regeneration.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Gray%27s_monitor_2.jpg/440px-Gray%27s_monitor_2.jpg",
+    "images": [
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Cacatua_haematuropygia_-Philippines-8.jpg/440px-Cacatua_haematuropygia_-Philippines-8.jpg"
+],
     "tags": [
       "endemic",
       "endangered",
@@ -124,7 +132,9 @@ export const defaultWildlife = [
       "If found grounded, do not handle — call PWRCC"
     ],
     "ecologicalImportance": "Flying foxes are the primary long-distance seed dispersers and pollinators for many large-fruited trees in Palawan. Without them, many fruit tree species would fail to regenerate.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Flying_fox_with_young.jpg/440px-Flying_fox_with_young.jpg",
+    "images": [
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Cacatua_haematuropygia_-Philippines-8.jpg/440px-Cacatua_haematuropygia_-Philippines-8.jpg"
+],
     "tags": [
       "vulnerable",
       "nocturnal",
@@ -151,7 +161,9 @@ export const defaultWildlife = [
       "If you find an entangled or stranded turtle, call PWRCC immediately"
     ],
     "ecologicalImportance": "Green Sea Turtles maintain healthy seagrass beds which provide nursery habitat for many fish species. Their excrement also fertilizes seagrass meadows and provides nutrients to coral reefs.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Chelonia_mydas_is_going_for_the_air.jpg/440px-Chelonia_mydas_is_going_for_the_air.jpg",
+   "images": [
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Cacatua_haematuropygia_-Philippines-8.jpg/440px-Cacatua_haematuropygia_-Philippines-8.jpg"
+],
     "tags": [
       "endangered",
       "diurnal",
@@ -178,7 +190,9 @@ export const defaultWildlife = [
       "Observe only from a distance using binoculars"
     ],
     "ecologicalImportance": "Hornbills are major seed dispersers for large-seeded forest trees. They are known as the \"farmers of the forest\" because seeds germinate better after passing through their digestive system.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Anthracoceros_marchei_-_palawan_hornbill.jpg/440px-Anthracoceros_marchei_-_palawan_hornbill.jpg",
+    "images": [
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Cacatua_haematuropygia_-Philippines-8.jpg/440px-Cacatua_haematuropygia_-Philippines-8.jpg"
+],
     "tags": [
       "endemic",
       "vulnerable",
@@ -205,7 +219,9 @@ export const defaultWildlife = [
       "If found in a building, call PWRCC for safe removal"
     ],
     "ecologicalImportance": "Monitor lizards are important scavengers and pest controllers. They consume large quantities of insects, rodents, and carrion, helping maintain ecological balance near human settlements.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Varanus_salvator_on_the_Ground.jpg/440px-Varanus_salvator_on_the_Ground.jpg",
+   "images": [
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Cacatua_haematuropygia_-Philippines-8.jpg/440px-Cacatua_haematuropygia_-Philippines-8.jpg"
+],
     "tags": [
       "protected",
       "diurnal",
