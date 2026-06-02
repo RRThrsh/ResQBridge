@@ -222,9 +222,12 @@ export const createWildlifeItem = mutation({
       activeTime: wildlifeItemValidator.fields.activeTime,
       description: v.string(),
       safetyTips: v.array(v.string()),
-      ecologicalImportance: v.string(),
-      images: v.array(v.string()),
-      tags: v.array(v.string()),
+ecologicalImportance: v.string(),
+
+image: v.optional(v.string()),
+images: v.optional(v.array(v.string())),
+
+tags: v.array(v.string()),
     }),
   },
   returns: v.string(),
