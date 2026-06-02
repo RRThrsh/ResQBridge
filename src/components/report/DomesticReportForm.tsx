@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MapPin, AlertTriangle, Loader2 } from 'lucide-react'
+import { MapPin, AlertTriangle, Loader2, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -107,6 +107,16 @@ export function DomesticReportForm() {
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6 sm:p-8">
+      
+      {/* --- ADDED DISCLAIMER NOTE --- */}
+      <div className="mb-8 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm text-muted-foreground">
+        <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <p>
+          <strong className="font-semibold text-foreground">Important Note:</strong> This report concerns domestic animals. Please note that domestic animal rescue and shelter services are managed by <strong>Nativity's Stray Rescue Shelter</strong>, not PWRCC.
+        </p>
+      </div>
+      {/* ----------------------------- */}
+
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           Domestic Animal Report
