@@ -44,15 +44,14 @@ export function AboutSection() {
               <span className="text-gradient">Matters</span>
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-              <strong className="text-foreground">DWARRMS</strong> — Domestic Wildlife Animal Report & Rescue 
-              Management System — is a centralized reporting platform that helps communities and 
-              authorities manage wildlife and domestic animal concerns, rescue incidents, monitoring, 
-              and conservation efforts across Palawan.
-            </p>
+  <strong className="text-foreground">ResQBridge</strong> — A Web-Based Animal Rescue and Reporting System
+  that helps communities and authorities manage wildlife and domestic animal concerns,
+  rescue incidents, monitoring, and conservation efforts across Palawan.
+</p>
             <p className="text-muted-foreground text-sm leading-relaxed mb-8">
-              The system bridges the gap between concerned citizens and the Palawan Wildlife Rescue 
-              and Conservation Center (PWRCC), ensuring every animal welfare concern is promptly 
-              addressed by trained wildlife professionals.
+              The system bridges the gap between concerned citizens, animal rescuers,
+              and responsible authorities, ensuring every animal welfare concern is
+              promptly addressed and monitored through a centralized platform.
             </p>
 
             {/* Features */}
