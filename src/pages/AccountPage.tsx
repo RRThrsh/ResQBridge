@@ -1,0 +1,212 @@
+import { useState } from 'react'
+import { Link, Navigate } from 'react-router-dom'
+import { useMutation, useQuery } from 'convex/react'
+import { Loader2, Pencil } from 'lucide-react'
+import { api } from '../../convex/_generated/api'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { useUserAuth } from '@/context/UserAuthContext'
+import { normalizeEmail } from '@/lib/admin'
+import { formatDate } from '@/lib/dates'
+import { toast } from 'sonner'
+import { ThemeSetting } from '@/components/theme/ThemeSetting'
+
+export function AccountPage() {
+  const { isLoggedIn, user, updateUser } = useUserAuth()
+  const updateProfile = useMutation(api.users.updateProfile)
+  const profile = useQuery(
+    api.users.getProfile,
+    user ? { email: normalizeEmail(user.email) } : 'skip',
+  )
+  const [isEditing, setIsEditing] = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [contactPhone, setContactPhone] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  if (!isLoggedIn || !user) {
+    return <Navigate to="/" replace />
+  }
+
+  const accountUser = user
+
+  function startEditing() {
+    if (!profile) return
+    setFirstName(profile.firstName)
+    setLastName(profile.lastName)
+    setContactPhone(profile.contactPhone ?? '')
+    setIsEditing(true)
+  }
+
+  function cancelEditing() {
+    if (!profile) return
+    setFirstName(profile.firstName)
+    setLastName(profile.lastName)
+    setContactPhone(profile.contactPhone ?? '')
+    setIsEditing(false)
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+
+    setSaving(true)
+    try {
+      const updated = await updateProfile({
+        email: normalizeEmail(accountUser.email),
+        firstName,
+        lastName,
+        contactPhone,
+      })
+      updateUser({
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+      })
+      toast.success('Profile updated')
+      setIsEditing(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update profile')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen pt-28 pb-20">
+      <div className="mx-auto max-w-lg px-4 sm:px-6">
+        <div className="mb-10">
+          <div className="mb-6 flex items-center gap-2 text-xs text-muted-foreground">
+            <Link to="/" className="transition-colors hover:text-foreground">
+              Home
+            </Link>
+            <span>/</span>
+            <span className="text-foreground">Account</span>
+          </div>
+          <h1
+            className="mb-2 text-3xl font-bold text-foreground sm:text-4xl"
+            style={{ fontFamily: 'var(--font-heading)' }}
+          >
+            My Account
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {isEditing
+              ? 'Update your profile below. Your email is used for sign-in and cannot be changed here.'
+              : 'Your profile details. Your email is used for sign-in and cannot be changed here.'}
+          </p>
+        </div>
+
+        {profile === undefined ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : !profile ? (
+          <p className="text-sm text-muted-foreground">
+            Your account could not be loaded. Try signing out and back in.
+          </p>
+        ) : (
+          <>
+          <Card className="mb-6 border-border">
+            <CardHeader>
+              <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>Appearance</CardTitle>
+              <CardDescription>Choose how DWARRMS looks on this device</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ThemeSetting />
+            </CardContent>
+          </Card>
+          <Card className="border-border">
+            <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+              <div className="space-y-1.5">
+                <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>Profile</CardTitle>
+                <CardDescription>Personal details for your DWARRMS account</CardDescription>
+              </div>
+              {!isEditing ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={startEditing}
+                  aria-label="Edit profile"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              ) : null}
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <form onSubmit={handleSave} className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Email</label>
+                    <Input value={profile.email} disabled className="bg-muted/40" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">First name</label>
+                    <Input
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Last name</label>
+                    <Input
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Contact number</label>
+                    <Input
+                      type="tel"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      placeholder="For rescue team follow-up"
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={cancelEditing}
+                      disabled={saving}
+                      className="rounded-xl"
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={saving} className="rounded-xl">
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save changes'}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <dl className="grid gap-3 text-sm">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Name</dt>
+                    <dd className="font-medium">
+                      {profile.firstName} {profile.lastName}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Email</dt>
+                    <dd>{profile.email}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Contact number</dt>
+                    <dd>{profile.contactPhone ?? 'Not set'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Member since</dt>
+                    <dd>{formatDate(profile.createdAt)}</dd>
+                  </div>
+                </dl>
+              )}
+            </CardContent>
+          </Card>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

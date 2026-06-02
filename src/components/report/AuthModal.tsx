@@ -1,0 +1,236 @@
+import { useRef, useState } from 'react'
+import { Loader2 } from 'lucide-react'
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useUserAuth } from '@/context/UserAuthContext'
+import { toast } from 'sonner'
+import { sendOtp, verifyOtp, type AuthMode } from '@/lib/auth-api'
+
+type Props = { open: boolean; onClose: () => void }
+
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback
+}
+
+export function AuthModal({ open, onClose }: Props) {
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-md gap-6 p-6">
+        {open ? <AuthForm key="auth-form" onClose={onClose} /> : null}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+const emptyAuthForm = {
+  mode: 'sign-in' as AuthMode,
+  step: 'details' as const,
+  firstName: '',
+  lastName: '',
+  email: '',
+  code: '',
+}
+
+function AuthForm({ onClose }: { onClose: () => void }) {
+  const { login } = useUserAuth()
+  const [mode, setMode] = useState<AuthMode>(emptyAuthForm.mode)
+  const [step, setStep] = useState<'details' | 'otp'>(emptyAuthForm.step)
+  const [firstName, setFirstName] = useState(emptyAuthForm.firstName)
+  const [lastName, setLastName] = useState(emptyAuthForm.lastName)
+  const [email, setEmail] = useState(emptyAuthForm.email)
+  const [code, setCode] = useState(emptyAuthForm.code)
+  const [loading, setLoading] = useState(false)
+  const submittingRef = useRef(false)
+
+  const emailValid = email.trim().includes('@')
+  const signUpReady = firstName.trim() && lastName.trim() && emailValid
+  const signInReady = emailValid
+  const detailsReady = mode === 'sign-up' ? signUpReady : signInReady
+  const otpReady = code.length === 6
+
+  function switchMode(next: AuthMode) {
+    setMode(next)
+    setStep('details')
+    setCode('')
+  }
+
+  function backToDetails() {
+    setStep('details')
+    setCode('')
+  }
+
+  async function sendCode(e: React.FormEvent) {
+    e.preventDefault()
+    const normalizedEmail = email.trim().toLowerCase()
+
+    if (mode === 'sign-up') {
+      if (!firstName.trim() || !lastName.trim()) {
+        toast.error('Enter your first and last name')
+        return
+      }
+    }
+    if (!normalizedEmail.includes('@')) {
+      toast.error('Enter a valid email')
+      return
+    }
+
+    if (submittingRef.current) return
+    submittingRef.current = true
+    setLoading(true)
+    try {
+      await sendOtp({
+        mode,
+        email: normalizedEmail,
+        ...(mode === 'sign-up'
+          ? { firstName: firstName.trim(), lastName: lastName.trim() }
+          : {}),
+      })
+      setEmail(normalizedEmail)
+      if (mode === 'sign-up') {
+        setFirstName(firstName.trim())
+        setLastName(lastName.trim())
+      }
+      setCode('')
+      setStep('otp')
+      toast.success(`Code sent to ${normalizedEmail}`)
+    } catch (error) {
+      toast.error(errorMessage(error, 'Could not send code'))
+    } finally {
+      submittingRef.current = false
+      setLoading(false)
+    }
+  }
+
+  async function verifyCode(e: React.FormEvent) {
+    e.preventDefault()
+    if (!otpReady || submittingRef.current) return
+
+    submittingRef.current = true
+    setLoading(true)
+    try {
+      login(await verifyOtp(email, code, mode))
+      onClose()
+      toast.success(mode === 'sign-up' ? 'Account created' : 'Signed in')
+    } catch (error) {
+      toast.error(errorMessage(error, 'Invalid code'))
+    } finally {
+      submittingRef.current = false
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="space-y-1 text-center">
+        <DialogTitle className="text-xl font-bold" style={{ fontFamily: 'var(--font-heading)' }}>
+          {step === 'details'
+            ? mode === 'sign-up'
+              ? 'Create account'
+              : 'Welcome back'
+            : 'Enter verification code'}
+        </DialogTitle>
+        <DialogDescription>
+          {step === 'details'
+            ? mode === 'sign-up'
+              ? 'Sign up with your name and email. We will send a one-time code.'
+              : 'Sign in with your email. We will send a one-time code.'
+            : `6-digit code sent to ${email}`}
+        </DialogDescription>
+      </div>
+
+      {step === 'details' && (
+        <Tabs value={mode} onValueChange={(value) => switchMode(value as AuthMode)} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-background border border-border h-10 p-1">
+            <TabsTrigger
+              value="sign-in"
+              className="h-full rounded-md text-xs aria-selected:bg-primary aria-selected:text-primary-foreground"
+            >
+              Sign In
+            </TabsTrigger>
+            <TabsTrigger
+              value="sign-up"
+              className="h-full rounded-md text-xs aria-selected:bg-primary aria-selected:text-primary-foreground"
+            >
+              Sign Up
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+
+      {step === 'details' ? (
+        <form onSubmit={sendCode} className="space-y-4">
+          {mode === 'sign-up' && (
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                placeholder="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                autoFocus
+                required
+              />
+              <Input
+                placeholder="Last name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
+          )}
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="off"
+            autoFocus={mode === 'sign-in'}
+            required
+          />
+          <SubmitButton loading={loading} disabled={!detailsReady}>
+            Send code
+          </SubmitButton>
+        </form>
+      ) : (
+        <form onSubmit={verifyCode} className="space-y-4">
+          <Input
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="000000"
+            maxLength={6}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            className="h-12 text-center text-xl font-mono tracking-[0.35em]"
+            autoFocus
+          />
+          <SubmitButton loading={loading} disabled={!otpReady}>
+            {mode === 'sign-up' ? 'Create account' : 'Sign in'}
+          </SubmitButton>
+          <button
+            type="button"
+            className="w-full text-sm text-muted-foreground hover:text-foreground"
+            onClick={backToDetails}
+          >
+            Use a different email
+          </button>
+        </form>
+      )}
+    </>
+  )
+}
+
+function SubmitButton({
+  loading,
+  disabled,
+  children,
+}: {
+  loading: boolean
+  disabled: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <Button type="submit" disabled={disabled || loading} className="w-full">
+      {loading ? <Loader2 className="size-4 animate-spin" /> : children}
+    </Button>
+  )
+}

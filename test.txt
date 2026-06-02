@@ -1,0 +1,14 @@
+Tech Stack
+
+Frontend
+- React
+- Typescript
+- Tailwindcss
+- Shadcn UI
+
+Backend
+- Convex
+- Nodemailer
+
+Testing
+- Jest

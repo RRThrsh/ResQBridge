@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Vite / tooling caches
+.vite/
+.cache/
+.eslintcache
+.turbo/
+
+# Environment & secrets (keep .env.example for the team)
+# .env
+.env.*
+!.env.example
+*.local
+
+# Logs & debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.cursor/
+
+# Test & coverage
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Editors & IDEs
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Cursor / Claude / agent tooling (local installs, not app source)
+.claude/
+.agents/
+skills-lock.json
+
+# Deployment platform metadata
+.vercel/
+.netlify/
