@@ -52,7 +52,7 @@ function emptySpecies(): WildlifeSpecies {
     description: '',
     safetyTips: [],
     ecologicalImportance: '',
-    image: '',
+    images: [], // FIX: Changed from image: '' to images: []
     tags: [],
   }
 }
@@ -82,6 +82,7 @@ export function AdminWildlifeDialog({
         : null
     : null
   const [prevDraftSyncKey, setPrevDraftSyncKey] = useState<string | null>(null)
+  
   if (draftSyncKey !== prevDraftSyncKey) {
     setPrevDraftSyncKey(draftSyncKey)
     if (draftSyncKey === 'create') {
@@ -90,8 +91,8 @@ export function AdminWildlifeDialog({
       setTagsText('')
     } else if (species) {
       setDraft({ ...species })
-      setSafetyTipsText(species.safetyTips.join('\n'))
-      setTagsText(species.tags.join(', '))
+      setSafetyTipsText(species.safetyTips?.join('\n') || '')
+      setTagsText(species.tags?.join(', ') || '')
     }
   }
 
@@ -118,7 +119,7 @@ export function AdminWildlifeDialog({
       diet: draft!.diet.trim(),
       description: draft!.description.trim(),
       ecologicalImportance: draft!.ecologicalImportance.trim(),
-      image: draft!.image.trim(),
+      images: draft!.images || [], // FIX: Replaced image string with images array
       safetyTips,
       tags,
       id: draft!.id,
@@ -140,9 +141,14 @@ export function AdminWildlifeDialog({
         throw new Error('Common name and scientific name are required.')
       }
 
-      const imageError = validateImageDataUrl(payload.image)
-      if (imageError) {
-        throw new Error(imageError)
+      // FIX: Validate all images in the array instead of just one string
+      if (payload.images && payload.images.length > 0) {
+        for (const img of payload.images) {
+          const imageError = validateImageDataUrl(img)
+          if (imageError) {
+            throw new Error(imageError)
+          }
+        }
       }
 
       const email = normalizeEmail(adminEmail)
@@ -175,9 +181,10 @@ export function AdminWildlifeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {isView && displaySpecies?.image ? (
+        {/* FIX: Check the first index of the images array for view mode */}
+        {isView && displaySpecies?.images && displaySpecies.images.length > 0 ? (
           <img
-            src={displaySpecies.image}
+            src={displaySpecies.images[0]}
             alt={displaySpecies.commonName}
             className="max-h-40 w-full rounded-lg border border-border object-cover"
           />
@@ -240,7 +247,7 @@ export function AdminWildlifeDialog({
                   value={draft.category}
                   onValueChange={(value) => {
                     if (!value) return
-                    setDraft((d) => d && { ...d, category: value })
+                    setDraft((d) => d && { ...d, category: value as any })
                   }}
                 >
                   <SelectTrigger>
@@ -261,7 +268,7 @@ export function AdminWildlifeDialog({
                   value={draft.status}
                   onValueChange={(value) => {
                     if (!value) return
-                    setDraft((d) => d && { ...d, status: value })
+                    setDraft((d) => d && { ...d, status: value as any })
                   }}
                 >
                   <SelectTrigger>
@@ -282,7 +289,7 @@ export function AdminWildlifeDialog({
                 value={draft.activeTime}
                 onValueChange={(value) => {
                   if (!value) return
-                  setDraft((d) => d && { ...d, activeTime: value })
+                  setDraft((d) => d && { ...d, activeTime: value as any })
                 }}
               >
                 <SelectTrigger>
@@ -309,10 +316,13 @@ export function AdminWildlifeDialog({
                 onChange={(e) => setDraft((d) => d && { ...d, diet: e.target.value })}
               />
             </div>
+            
+            {/* FIX: Bind the single image component to the first index of the images array */}
             <AdminImageUploadField
-              value={draft.image}
-              onChange={(image) => setDraft((d) => d && { ...d, image })}
+              value={draft.images?.[0] || ''}
+              onChange={(img) => setDraft((d) => d && { ...d, images: img ? [img] : [] })}
             />
+            
             <div>
               <label className="mb-1 block text-xs text-muted-foreground">Description</label>
               <Textarea
