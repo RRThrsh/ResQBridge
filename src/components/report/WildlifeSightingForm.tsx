@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react' // Added useEffect
+import { useCallback, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
@@ -35,9 +35,21 @@ import {
 } from '@/lib/reportPhotos'
 import { cn } from '@/lib/utils'
 
+// --- NEW IMPORTS FOR INTERACTIVE MAP ---
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
 /** Default map center ~PWRCC Puerto Princesa until user fixes location via GPS */
 const DEFAULT_MAP_LAT = 9.7393
 const DEFAULT_MAP_LNG = 118.7361
+
+// --- CUSTOM MARKER AVOIDS BUNDLER ASSET ISSUES ---
+const customMarkerIcon = L.divIcon({
+  className: 'custom-map-marker',
+  html: `<div style="background-color: hsl(var(--primary)); width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transform: translate(-50%, -50%);"></div>`,
+  iconSize: [0, 0],
+})
 
 async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
   try {
@@ -114,9 +126,31 @@ function formatPinLine(lat: number, lng: number, placename: string | null): stri
   return placename ? `${placename} · ${pair}` : pair
 }
 
-function googleMapsEmbedUrl(lat: number, lng: number, zoom: number) {
-  const q = encodeURIComponent(`${lat},${lng}`)
-  return `http://googleusercontent.com/maps.google.com/maps?q=${q}&z=${zoom}&output=embed`
+// --- SUB-COMPONENT: HANDLES MAP CLICKS & FLYING TO GPS ---
+function ClickableMap({ 
+  coords, 
+  onMapClick 
+}: { 
+  coords: {lat: number, lng: number} | null, 
+  onMapClick: (lat: number, lng: number) => void 
+}) {
+  const map = useMap()
+
+  // Fly to the new coordinate when the user hits "Current location"
+  useEffect(() => {
+    if (coords) {
+      map.flyTo([coords.lat, coords.lng], map.getZoom(), { animate: true })
+    }
+  }, [coords, map])
+
+  // Listen for manual clicks on the map
+  useMapEvents({
+    click(e) {
+      onMapClick(e.latlng.lat, e.latlng.lng)
+    },
+  })
+
+  return coords ? <Marker position={[coords.lat, coords.lng]} icon={customMarkerIcon} /> : null
 }
 
 export function WildlifeSightingForm() {
@@ -145,33 +179,41 @@ export function WildlifeSightingForm() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [photos, setPhotos] = useState<ReportPhotoItem[]>([])
 
-  const mapEmbedSrc =
-    coords != null
-      ? googleMapsEmbedUrl(coords.lat, coords.lng, 17)
-      : googleMapsEmbedUrl(DEFAULT_MAP_LAT, DEFAULT_MAP_LNG, 12)
-
-  // --- NEW FIX: AUTO-POPULATE PHONE NUMBER ---
-  // This safely loads their profile number into the editable form state 
-  // without locking them out of changing it later.
-useEffect(() => {
-  const phone = profile?.contactPhone
-
-  if (phone) {
-    setFormData((prev) => {
-      if (!prev.reporterPhone) {
-        let cleaned = phone.replace(/\D/g, '')
-        if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
-
-        return {
-          ...prev,
-          reporterPhone: cleaned,
+  useEffect(() => {
+    const phone = profile?.contactPhone;
+    
+    if (phone) {
+      setFormData((prev) => {
+        if (!prev.reporterPhone) {
+          let cleaned = phone.replace(/\D/g, '')
+          if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
+          return { ...prev, reporterPhone: cleaned }
         }
-      }
+        return prev
+      })
+    }
+  }, [profile?.contactPhone])
 
-      return prev
-    })
+  // Reused handler for both GPS and manual clicks
+  const updateLocationData = async (lat: number, lng: number) => {
+    setLocFetching(true)
+    setCoords({ lat, lng })
+    
+    try {
+      const label = await reverseGeocode(lat, lng)
+      setFormData((prev) => ({
+        ...prev,
+        location: formatPinLine(lat, lng, label),
+      }))
+    } catch {
+      setFormData((prev) => ({
+        ...prev,
+        location: formatPinLine(lat, lng, null),
+      }))
+    } finally {
+      setLocFetching(false)
+    }
   }
-}, [profile?.contactPhone])
 
   const fetchCurrentLocation = useCallback(async () => {
     if (!('geolocation' in navigator)) {
@@ -182,26 +224,12 @@ useEffect(() => {
     setLocFetching(true)
     try {
       const { lat, lng, accuracyM } = await getRefinedPosition()
+      await updateLocationData(lat, lng)
 
-      let label: string | null = null
-      try {
-        label = await reverseGeocode(lat, lng)
-      } catch {
-        label = null
-      }
-
-      setCoords({ lat, lng })
-      setFormData((prev) => ({
-        ...prev,
-        location: formatPinLine(lat, lng, label),
-      }))
-
-      const accNote =
-        accuracyM < 9999
-          ? ` (~${Math.round(accuracyM)} m accuracy)`
-          : ''
+      const accNote = accuracyM < 9999 ? ` (~${Math.round(accuracyM)} m accuracy)` : ''
       toast.success(`Location captured${accNote}`)
     } catch (err: unknown) {
+      setLocFetching(false) // Must clear here if error throws before updateLocationData
       const geoErr = err as GeolocationPositionError
       if (geoErr?.code === geoErr?.PERMISSION_DENIED) {
         toast.error('Location permission denied. Enable location or enter the address manually.')
@@ -210,8 +238,6 @@ useEffect(() => {
       } else {
         toast.error('Could not get an accurate location. Try again or enter it manually.')
       }
-    } finally {
-      setLocFetching(false)
     }
   }, [])
 
@@ -236,11 +262,7 @@ useEffect(() => {
       return
     }
 
-    // --- FIX: NO MORE PROFILE OVERRIDE ---
-    // We now strictly trust whatever is in the input box, whether it was 
-    // auto-filled from the profile or typed in fresh by the user.
     const contactPhone = formData.reporterPhone.trim()
-    
     if (!contactPhone) {
       toast.error('Contact number is required')
       return
@@ -285,7 +307,7 @@ useEffect(() => {
         description: formData.description,
         condition: formData.condition.trim() || undefined,
         behavior: behavior || undefined,
-        reporterPhone: cleanPhone, // Submitting the cleaned, user-editable phone number
+        reporterPhone: cleanPhone, 
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
@@ -343,7 +365,7 @@ useEffect(() => {
                 onChange={(e) =>
                   setFormData({ ...formData, location: e.target.value })
                 }
-                placeholder="Describe the place or use current location…"
+                placeholder="Click the map, use GPS, or describe..."
                 className="pl-10 h-12 bg-background border-border rounded-xl pr-3"
                 required
               />
@@ -364,31 +386,29 @@ useEffect(() => {
             </Button>
           </div>
 
+          {/* --- INTERACTIVE LEAFLET MAP --- */}
           <div className={cn(
-            'overflow-hidden rounded-xl border border-border bg-muted/30',
+            'overflow-hidden rounded-xl border border-border bg-muted/30 relative z-0 h-[260px]',
           )}>
-            <iframe
-              key={mapEmbedSrc}
-              title={
-                coords
-                  ? `Map pin at ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`
-                  : 'Map — Puerto Princesa area'
-              }
-              src={mapEmbedSrc}
-              width="100%"
-              height={240}
-              className="aspect-[21/10] max-h-[280px] w-full bg-muted grayscale-[30%]"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+            <MapContainer
+              center={coords ? [coords.lat, coords.lng] : [DEFAULT_MAP_LAT, DEFAULT_MAP_LNG]}
+              zoom={13}
+              scrollWheelZoom={true}
+              style={{ height: '100%', width: '100%', zIndex: 0 }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <ClickableMap 
+                coords={coords} 
+                onMapClick={(lat, lng) => updateLocationData(lat, lng)} 
+              />
+            </MapContainer>
           </div>
-          {coords && (
-            <p className="text-[11px] font-mono text-muted-foreground">
-              Map pin: {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
-            </p>
-          )}
+          
           <p className="text-[11px] text-muted-foreground">
-            <span className="font-medium text-foreground">Current location</span> uses GPS for up to 10 seconds and picks the most accurate fix. The address and coordinates in the field match the pin on the map.
+            <span className="font-medium text-foreground">Interactive Map:</span> You can manually tap/click anywhere on the map above to drop a pin and auto-fill the address.
           </p>
         </div>
 
@@ -481,9 +501,7 @@ useEffect(() => {
             userEmail={user.email}
             value={formData.reporterPhone}
             onChange={(val) => {
-              // Strip non-numeric characters
               let cleaned = val.replace(/\D/g, '')
-              // Enforce 11 character max length on input
               if (cleaned.length > 11) {
                 cleaned = cleaned.slice(0, 11)
               }
