@@ -220,14 +220,6 @@ export function WildlifeSightingForm() {
       return
     }
 
-    // --- ADDED 11-CHARACTER LIMIT VALIDATION ---
-    const cleanPhone = contactPhone.replace(/\s+/g, '')
-    if (cleanPhone.length !== 11) {
-      toast.error('Contact number must be exactly 11 digits.')
-      return
-    }
-    // -------------------------------------------
-
     if (!formData.behavior) {
       toast.error('Please select a condition or behavior')
       return
@@ -261,7 +253,7 @@ export function WildlifeSightingForm() {
         description: formData.description,
         condition: formData.condition.trim() || undefined,
         behavior: behavior || undefined,
-        reporterPhone: savedContact ? undefined : cleanPhone,
+        reporterPhone: savedContact ? undefined : contactPhone,
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
@@ -371,7 +363,7 @@ export function WildlifeSightingForm() {
         {/* Date & time seen */}
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Date & Time Seen
+            Date &amp; Time Seen
           </label>
           <Input
             type="datetime-local"
@@ -456,12 +448,7 @@ export function WildlifeSightingForm() {
           <ReportContactField
             userEmail={user.email}
             value={formData.reporterPhone}
-            onChange={(reporterPhone) => {
-              // --- THIS STOPS TYPING PAST 11 CHARACTERS ---
-              const limitedPhone = reporterPhone.slice(0, 11)
-              setFormData({ ...formData, reporterPhone: limitedPhone })
-            }}
-            maxLength={11}
+            onChange={(reporterPhone) => setFormData({ ...formData, reporterPhone })}
           />
         ) : null}
 
