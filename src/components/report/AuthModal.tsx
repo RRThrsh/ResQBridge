@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -42,6 +42,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState(emptyAuthForm.email)
   const [code, setCode] = useState(emptyAuthForm.code)
   const [loading, setLoading] = useState(false)
+  const [countdown, setCountdown] = useState(0) // New state for the 180s timer
   const submittingRef = useRef(false)
 
   const emailValid = email.trim().includes('@')
@@ -50,19 +51,30 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const detailsReady = mode === 'sign-up' ? signUpReady : signInReady
   const otpReady = code.length === 6
 
+  // Handle the countdown timer automatically
+  useEffect(() => {
+    if (countdown <= 0) return
+    const timer = setInterval(() => setCountdown((c) => c - 1), 1000)
+    return () => clearInterval(timer)
+  }, [countdown])
+
   function switchMode(next: AuthMode) {
     setMode(next)
     setStep('details')
     setCode('')
+    setCountdown(0)
   }
 
   function backToDetails() {
     setStep('details')
     setCode('')
+    setCountdown(0)
   }
 
-  async function sendCode(e: React.FormEvent) {
-    e.preventDefault()
+  // Make the event parameter optional so we can call it from the resend button
+  async function sendCode(e?: React.FormEvent) {
+    if (e) e.preventDefault()
+    
     const normalizedEmail = email.trim().toLowerCase()
 
     if (mode === 'sign-up') {
@@ -94,6 +106,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       }
       setCode('')
       setStep('otp')
+      setCountdown(180) // Start the 180-second cooldown here
       toast.success(`Code sent to ${normalizedEmail}`)
     } catch (error) {
       toast.error(errorMessage(error, 'Could not send code'))
@@ -206,13 +219,24 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           <SubmitButton loading={loading} disabled={!otpReady}>
             {mode === 'sign-up' ? 'Create account' : 'Sign in'}
           </SubmitButton>
-          <button
-            type="button"
-            className="w-full text-sm text-muted-foreground hover:text-foreground"
-            onClick={backToDetails}
-          >
-            Use a different email
-          </button>
+          
+          <div className="flex flex-col items-center gap-3 pt-2">
+            <button
+              type="button"
+              className="text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+              onClick={() => sendCode()}
+              disabled={loading || countdown > 0}
+            >
+              {countdown > 0 ? `Resend code in ${countdown}s` : 'Resend code'}
+            </button>
+            <button
+              type="button"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              onClick={backToDetails}
+            >
+              Use a different email
+            </button>
+          </div>
         </form>
       )}
     </>
