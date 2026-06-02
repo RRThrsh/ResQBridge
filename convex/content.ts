@@ -99,8 +99,22 @@ async function getItems<T>(
     .withIndex('by_key', (q) => q.eq('key', key))
     .unique()
 
-  if (!row) return fallback
-  return JSON.parse(row.itemsJson) as T[]
+if (!row) return fallback
+
+const parsed = JSON.parse(row.itemsJson)
+
+if (key === 'wildlife') {
+  return parsed.map((item: any) => ({
+    ...item,
+    images: Array.isArray(item.images)
+      ? item.images
+      : item.image
+        ? [item.image]
+        : [],
+  })) as T[]
+}
+
+return parsed as T[]
 }
 
 async function saveItems(
