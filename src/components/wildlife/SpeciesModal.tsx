@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Moon, Sun, Sunset, Leaf, Utensils, MapPin, ShieldAlert, Globe, AlertTriangle } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
@@ -25,7 +26,7 @@ interface SpeciesModalProps {
 
 export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
   if (!species) return null
-
+  const [selectedImage, setSelectedImage] = useState(0)
   const { Icon: ActiveIcon, label: activeLabel, color: activeColor } = activeTimeIcons[species.activeTime]
 
   return (
@@ -37,7 +38,7 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
         {/* Hero image */}
 <div className="relative bg-muted flex justify-center">
   <img
-    src={species.images?.[0]}
+    src={species.images?.[selectedImage]}
     alt={species.commonName}
     className="max-h-[400px] w-auto object-contain"
   />
@@ -63,9 +64,30 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
             )}
             <p className="text-muted-foreground text-xs italic mt-0.5">{species.scientificName}</p>
           </div>
-        </div>
+</div>
 
-        <SheetHeader className="px-6 pt-6 pb-0 sr-only">
+{/* Image Gallery */}
+<div className="flex gap-2 p-4 overflow-x-auto bg-card border-b border-border">
+  {species.images?.map((img, index) => (
+    <button
+      key={index}
+      onClick={() => setSelectedImage(index)}
+      className={`rounded-lg overflow-hidden border-2 ${
+        selectedImage === index
+          ? 'border-primary'
+          : 'border-border'
+      }`}
+    >
+      <img
+        src={img}
+        alt={`${species.commonName}-${index}`}
+        className="w-16 h-16 object-cover"
+      />
+    </button>
+  ))}
+</div>
+
+<SheetHeader className="px-6 pt-6 pb-0 sr-only">
           <span>{species.commonName}</span>
         </SheetHeader>
 
