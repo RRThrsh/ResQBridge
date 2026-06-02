@@ -146,11 +146,9 @@ export function AdminWildlifeDialog({
       const email = normalizeEmail(adminEmail)
       
       // --- FIX: Bridge frontend 'images' array to backend 'image' string ---
-      const { images, ...basePayload } = payload
-      const convexItem = {
-        ...basePayload,
-        image: images?.[0] || '', // Take first image for Convex DB
-      }
+const convexItem = {
+  ...payload,
+}
 
       if (isCreate) {
         const { id, ...createPayload } = convexItem
@@ -318,10 +316,56 @@ export function AdminWildlifeDialog({
               />
             </div>
             
-            <AdminImageUploadField
-              value={draft.images?.[0] || ''}
-              onChange={(img) => setDraft((d) => d && { ...d, images: img ? [img] : [] })}
-            />
+<AdminImageUploadField
+  label="Image 1"
+  value={draft.images?.[0] || ''}
+  onChange={(img) =>
+    setDraft((d) =>
+      d && {
+        ...d,
+        images: [
+          img,
+          d.images?.[1] || '',
+          d.images?.[2] || '',
+        ].filter(Boolean),
+      }
+    )
+  }
+/>
+
+<AdminImageUploadField
+  label="Image 2"
+  value={draft.images?.[1] || ''}
+  onChange={(img) =>
+    setDraft((d) =>
+      d && {
+        ...d,
+        images: [
+          d.images?.[0] || '',
+          img,
+          d.images?.[2] || '',
+        ].filter(Boolean),
+      }
+    )
+  }
+/>
+
+<AdminImageUploadField
+  label="Image 3"
+  value={draft.images?.[2] || ''}
+  onChange={(img) =>
+    setDraft((d) =>
+      d && {
+        ...d,
+        images: [
+          d.images?.[0] || '',
+          d.images?.[1] || '',
+          img,
+        ].filter(Boolean),
+      }
+    )
+  }
+/>
             
             <div>
               <label className="mb-1 block text-xs text-muted-foreground">Description</label>
