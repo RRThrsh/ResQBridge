@@ -43,21 +43,21 @@ export function DomesticReportForm() {
 
   // --- NEW FIX: AUTO-POPULATE PHONE NUMBER ---
   // Safely loads the profile number into the editable form state 
+// --- FIX: Extract OUTSIDE the useEffect for ESLint and TypeScript ---
+  const userContactPhone = profile?.contactPhone;
+
   useEffect(() => {
-    // Extract to a local variable to preserve TypeScript narrowing
-    const phone = profile?.contactPhone;
-    
-    if (phone) {
+    if (userContactPhone) {
       setFormData((prev) => {
         if (!prev.reporterPhone) {
-          let cleaned = phone.replace(/\D/g, '')
+          let cleaned = userContactPhone.replace(/\D/g, '')
           if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
           return { ...prev, reporterPhone: cleaned }
         }
         return prev
       })
     }
-  }, [profile?.contactPhone])
+  }, [userContactPhone]) // <-- Clean dependency array makes Vercel happy
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
