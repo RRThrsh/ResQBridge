@@ -17,7 +17,7 @@ export function validateImageDataUrl(dataUrl: string): string | null {
     return 'Please upload an image'
   }
   if (dataUrl.length > MAX_IMAGE_DATA_URL_LENGTH) {
-    return 'Image is too large. Use a smaller file (5 MB or less).'
+    return 'Image is too large. Use a smaller file (15 MB or less).'
   }
   return null
 }
