@@ -145,7 +145,8 @@ function ClickableMap({
 
   // Listen for manual clicks on the map
   useMapEvents({
-    click(e) {
+    // ADD L.LeafletMouseEvent right here! 👇
+    click(e: L.LeafletMouseEvent) {
       onMapClick(e.latlng.lat, e.latlng.lng)
     },
   })
