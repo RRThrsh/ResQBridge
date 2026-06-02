@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapPin, AlertTriangle, Loader2, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,21 @@ export function DomesticReportForm() {
     seenAt: '',
   })
 
+  // --- NEW FIX: AUTO-POPULATE PHONE NUMBER ---
+  // Safely loads the profile number into the editable form state 
+  useEffect(() => {
+    if (profile?.contactPhone) {
+      setFormData((prev) => {
+        if (!prev.reporterPhone) {
+          let cleaned = profile.contactPhone.replace(/\D/g, '')
+          if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
+          return { ...prev, reporterPhone: cleaned }
+        }
+        return prev
+      })
+    }
+  }, [profile?.contactPhone])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) {
@@ -62,8 +77,9 @@ export function DomesticReportForm() {
       return
     }
 
-    const savedContact = profile?.contactPhone?.trim()
-    const contactPhone = savedContact || formData.reporterPhone.trim()
+    // --- FIX: NO MORE PROFILE OVERRIDE ---
+    // Strictly trust whatever is in the input box right now.
+    const contactPhone = formData.reporterPhone.trim()
     
     if (!contactPhone) {
       toast.error('Contact number is required')
@@ -100,7 +116,7 @@ export function DomesticReportForm() {
         location: formData.location,
         description: descriptionParts.join('\n\n'),
         speciesId: formData.species.trim(),
-        reporterPhone: cleanPhone,
+        reporterPhone: cleanPhone, // Saving strictly cleaned phone number
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
