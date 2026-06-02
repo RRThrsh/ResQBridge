@@ -203,6 +203,14 @@ export function RescuerReportDetailPage() {
           title={report.category === 'wildlife' ? 'Wildlife details' : 'Report details'}
           icon={Bird}
         >
+          {/* Moved Reported Animal block to the top of Wildlife Details */}
+          <div className="space-y-1 mb-3">
+            <span className="text-xs text-muted-foreground font-medium">Reported Animal</span>
+            <p className="text-base font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+              {report.animalName}
+            </p>
+          </div>
+
           <dl className="space-y-3">
             <DetailRow label="Date & time seen" value={formatDateTime(report.seenAt ?? report.createdAt)} />
             <DetailRow label="Quantity" value={String(report.quantity ?? 1)} />
@@ -225,13 +233,6 @@ export function RescuerReportDetailPage() {
         </RescuerDetailSection>
 
         <RescuerDetailSection title="Location" icon={MapPin}>
-          <div className="space-y-1 mb-3">
-            <span className="text-xs text-muted-foreground font-medium">Reported Animal</span>
-            <p className="text-base font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-              {report.animalName}
-            </p>
-          </div>
-
           <div className="space-y-1">
             <span className="text-xs text-muted-foreground font-medium">Address / Landmark</span>
             <p className="font-medium leading-relaxed text-sm">{report.location}</p>
@@ -247,13 +248,13 @@ export function RescuerReportDetailPage() {
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
-                src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                src={`https://maps.google.com/maps?q=$${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
               />
             </div>
 
             {/* Button opens native Google Maps app using exact coordinates */}
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
+              href={`https://www.google.com/maps/search/?api=1&query=$${mapQuery}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted shadow-sm"
