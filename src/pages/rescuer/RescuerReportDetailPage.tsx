@@ -78,7 +78,6 @@ export function RescuerReportDetailPage() {
   const canAct = isActiveDispatchStatus(report.status)
 
   // Use exact coordinates for the map if they exist, otherwise fallback to the text location
-  // Stripping spaces ensures Google doesn't try to auto-resolve it into a nearby business name
   const mapQuery = report.latitude && report.longitude 
     ? `${report.latitude},${report.longitude}` 
     : encodeURIComponent(report.location)
@@ -226,12 +225,20 @@ export function RescuerReportDetailPage() {
         </RescuerDetailSection>
 
         <RescuerDetailSection title="Location" icon={MapPin}>
-          {/* This preserves the text readout of the location for the rescuer */}
-          <p className="font-medium leading-relaxed">{report.location}</p>
+          <div className="space-y-1 mb-3">
+            <span className="text-xs text-muted-foreground font-medium">Reported Animal</span>
+            <p className="text-base font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+              {report.animalName}
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground font-medium">Address / Landmark</span>
+            <p className="font-medium leading-relaxed text-sm">{report.location}</p>
+          </div>
           
           <div className="mt-4 space-y-3">
             <div className="w-full h-48 sm:h-64 rounded-xl overflow-hidden border border-border bg-muted">
-              {/* Added &iwloc= to hide the white info bubble and force strict coordinate routing */}
               <iframe
                 title="Animal Rescue Map Viewport"
                 width="100%"
