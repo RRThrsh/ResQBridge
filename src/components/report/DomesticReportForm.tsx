@@ -64,10 +64,20 @@ export function DomesticReportForm() {
 
     const savedContact = profile?.contactPhone?.trim()
     const contactPhone = savedContact || formData.reporterPhone.trim()
+    
     if (!contactPhone) {
       toast.error('Contact number is required')
       return
     }
+
+    // --- ADDED 11-CHARACTER LIMIT VALIDATION ---
+    // This strips any potential spaces and checks if it's exactly 11 characters
+    const cleanPhone = contactPhone.replace(/\s+/g, '')
+    if (cleanPhone.length !== 11) {
+      toast.error('Contact number must be exactly 11 digits.')
+      return
+    }
+    // -------------------------------------------
 
     setLoading(true)
 
@@ -91,7 +101,7 @@ export function DomesticReportForm() {
         location: formData.location,
         description: descriptionParts.join('\n\n'),
         speciesId: formData.species.trim(),
-        reporterPhone: savedContact ? undefined : contactPhone,
+        reporterPhone: savedContact ? undefined : cleanPhone,
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
@@ -112,7 +122,7 @@ export function DomesticReportForm() {
       <div className="mb-8 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm text-muted-foreground">
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <p>
-          <strong className="font-semibold text-foreground">This report concerns domestic animals. Please note that domestic animal rescue and shelter services are managed by <strong>Nativity's Stray Rescue Shelter</strong>, not PWRCC.
+          <strong className="font-semibold text-foreground">Important Note:</strong> This report concerns domestic animals. Please note that domestic animal rescue and shelter services are managed by <strong>Nativity's Stray Rescue Shelter</strong>, not PWRCC.
         </p>
       </div>
       {/* ----------------------------- */}
@@ -243,6 +253,8 @@ export function DomesticReportForm() {
             userEmail={user.email}
             value={formData.reporterPhone}
             onChange={(reporterPhone) => setFormData({ ...formData, reporterPhone })}
+            maxLength={11}
+            minLength={11}
           />
         ) : null}
 
