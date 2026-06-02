@@ -63,7 +63,8 @@ type WildlifeItem = {
   description: string
   safetyTips: string[]
   ecologicalImportance: string
-  images: string[]
+  images?: string[]
+image?: string
   tags: string[]
 }
 
