@@ -41,13 +41,16 @@ export function DomesticReportForm() {
     seenAt: '',
   })
 
-  // --- TS FIX: Assign to a constant first ---
+  // --- NEW FIX: AUTO-POPULATE PHONE NUMBER ---
+  // Safely loads the profile number into the editable form state 
   useEffect(() => {
-    const savedPhone = profile?.contactPhone
-    if (savedPhone) {
+    // Extract to a local variable to preserve TypeScript narrowing
+    const phone = profile?.contactPhone;
+    
+    if (phone) {
       setFormData((prev) => {
         if (!prev.reporterPhone) {
-          let cleaned = savedPhone.replace(/\D/g, '')
+          let cleaned = phone.replace(/\D/g, '')
           if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
           return { ...prev, reporterPhone: cleaned }
         }
@@ -77,6 +80,8 @@ export function DomesticReportForm() {
       return
     }
 
+    // --- FIX: NO MORE PROFILE OVERRIDE ---
+    // Strictly trust whatever is in the input box right now.
     const contactPhone = formData.reporterPhone.trim()
     
     if (!contactPhone) {
@@ -84,6 +89,8 @@ export function DomesticReportForm() {
       return
     }
 
+    // --- VALIDATION LOGIC ---
+    // Enforces exact 11 digits, strictly starting with "09"
     const cleanPhone = contactPhone.replace(/\D/g, '')
     if (!/^09\d{9}$/.test(cleanPhone)) {
       toast.error('Contact number must be exactly 11 digits and start with "09"')
@@ -112,7 +119,7 @@ export function DomesticReportForm() {
         location: formData.location,
         description: descriptionParts.join('\n\n'),
         speciesId: formData.species.trim(),
-        reporterPhone: cleanPhone,
+        reporterPhone: cleanPhone, // Saving strictly cleaned phone number
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
@@ -129,6 +136,7 @@ export function DomesticReportForm() {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 sm:p-8">
       
+      {/* --- DISCLAIMER NOTE --- */}
       <div className="mb-8 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm text-muted-foreground">
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <p>
@@ -157,6 +165,7 @@ export function DomesticReportForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Species */}
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Species <span className="text-destructive">*</span>
@@ -170,6 +179,7 @@ export function DomesticReportForm() {
             />
           </div>
 
+          {/* Name */}
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               {reportType === 'missing' ? "Pet's Name *" : 'Name (if known)'}
@@ -184,6 +194,7 @@ export function DomesticReportForm() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Color */}
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Color / Markings
@@ -196,6 +207,7 @@ export function DomesticReportForm() {
             />
           </div>
 
+          {/* Location */}
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Location <span className="text-destructive">*</span>
@@ -258,7 +270,9 @@ export function DomesticReportForm() {
             userEmail={user.email}
             value={formData.reporterPhone}
             onChange={(val) => {
+              // Strip non-numeric characters
               let cleaned = val.replace(/\D/g, '')
+              // Enforce 11 character max length on input
               if (cleaned.length > 11) {
                 cleaned = cleaned.slice(0, 11)
               }
@@ -267,6 +281,7 @@ export function DomesticReportForm() {
           />
         ) : null}
 
+        {/* Description */}
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Additional Details <span className="text-destructive">*</span>
@@ -287,6 +302,7 @@ export function DomesticReportForm() {
           <ReportPhotoField value={photos} onChange={setPhotos} />
         </div>
 
+        {/* Warning */}
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex gap-3 items-start">
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
           <p className="text-xs text-amber-500/80 leading-relaxed">
