@@ -63,8 +63,8 @@ type WildlifeItem = {
   description: string
   safetyTips: string[]
   ecologicalImportance: string
-  images?: string[]
 image?: string
+images: string[]
   tags: string[]
 }
 
@@ -216,40 +216,66 @@ export const createWildlifeItem = mutation({
       commonName: v.string(),
       localName: v.string(),
       scientificName: v.string(),
+
       category: wildlifeItemValidator.fields.category,
       status: wildlifeItemValidator.fields.status,
+
       habitat: v.string(),
       diet: v.string(),
+
       activeTime: wildlifeItemValidator.fields.activeTime,
+
       description: v.string(),
       safetyTips: v.array(v.string()),
-ecologicalImportance: v.string(),
+      ecologicalImportance: v.string(),
 
-image: v.optional(v.string()),
-images: v.optional(v.array(v.string())),
+      image: v.optional(v.string()),
+      images: v.optional(v.array(v.string())),
 
-tags: v.array(v.string()),
+      tags: v.array(v.string()),
     }),
   },
+
   returns: v.string(),
+
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const fallback = getMappedDefaultWildlife() // Use the helper
-    const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
-    const baseId = slugId(args.item.commonName, `species-${Date.now()}`)
+
+    const fallback = getMappedDefaultWildlife()
+
+    const items = await getItems<WildlifeItem>(
+      ctx,
+      'wildlife',
+      fallback
+    )
+
+    const baseId = slugId(
+      args.item.commonName,
+      `species-${Date.now()}`
+    )
+
     let id = baseId
     let suffix = 1
+
     while (items.some((item) => item.id === id)) {
       id = `${baseId}-${suffix}`
       suffix += 1
     }
 
-    const nextItem: WildlifeItem = { ...args.item, id }
+    const nextItem: WildlifeItem = {
+      ...args.item,
+      id,
+
+      images:
+        args.item.images ??
+        (args.item.image ? [args.item.image] : []),
+    }
+
     await saveItems(ctx, 'wildlife', [...items, nextItem])
+
     return id
   },
 })
-
 export const createNewsItem = mutation({
   args: {
     adminEmail: v.string(),
