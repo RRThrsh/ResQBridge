@@ -21,7 +21,7 @@ export function AdminImageUploadField({ value, onChange, label = 'Image' }: Prop
     if (!file) return
 
     if (file.size > MAX_IMAGE_FILE_BYTES) {
-      toast.error(`${file.name} must be 5 MB or smaller`)
+      toast.error(`${file.name} must be 15 MB or smaller`)
       return
     }
     if (!file.type.startsWith('image/')) {
