@@ -220,12 +220,14 @@ export function WildlifeSightingForm() {
       return
     }
 
-    // --- NEW VALIDATION LOGIC ---
+    // --- UPDATED VALIDATION LOGIC ---
     // Enforces exact 11 digits, strictly starting with "09"
-    if (!/^09\d{9}$/.test(contactPhone)) {
+    const cleanPhone = contactPhone.replace(/\D/g, '')
+    if (!/^09\d{9}$/.test(cleanPhone)) {
       toast.error('Contact number must be exactly 11 digits and start with "09"')
       return
     }
+    // --------------------------------
 
     if (!formData.behavior) {
       toast.error('Please select a condition or behavior')
@@ -260,7 +262,7 @@ export function WildlifeSightingForm() {
         description: formData.description,
         condition: formData.condition.trim() || undefined,
         behavior: behavior || undefined,
-        reporterPhone: contactPhone,
+        reporterPhone: cleanPhone, // Saving strictly cleaned phone number
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
@@ -456,7 +458,6 @@ export function WildlifeSightingForm() {
             userEmail={user.email}
             value={formData.reporterPhone}
             onChange={(val) => {
-              // --- NEW INPUT FILTERING ---
               // Strip non-numeric characters
               let cleaned = val.replace(/\D/g, '')
               // Enforce 11 character max length on input
