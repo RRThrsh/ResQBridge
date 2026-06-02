@@ -203,6 +203,13 @@ export function RescuerReportDetailPage() {
           title={report.category === 'wildlife' ? 'Wildlife details' : 'Report details'}
           icon={Bird}
         >
+          <div className="space-y-1 mb-3">
+            <span className="text-xs text-muted-foreground font-medium">Reported Animal</span>
+            <p className="text-base font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+              {report.animalName}
+            </p>
+          </div>
+
           <dl className="space-y-3">
             <DetailRow label="Date & time seen" value={formatDateTime(report.seenAt ?? report.createdAt)} />
             <DetailRow label="Quantity" value={String(report.quantity ?? 1)} />
@@ -225,13 +232,6 @@ export function RescuerReportDetailPage() {
         </RescuerDetailSection>
 
         <RescuerDetailSection title="Location" icon={MapPin}>
-          <div className="space-y-1 mb-3">
-            <span className="text-xs text-muted-foreground font-medium">Reported Animal</span>
-            <p className="text-base font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-              {report.animalName}
-            </p>
-          </div>
-
           <div className="space-y-1">
             <span className="text-xs text-muted-foreground font-medium">Address / Landmark</span>
             <p className="font-medium leading-relaxed text-sm">{report.location}</p>
