@@ -27,8 +27,6 @@ import L from 'leaflet'
 const DEFAULT_MAP_LAT = 9.7393
 const DEFAULT_MAP_LNG = 118.7361
 
-// --- FIX 1: ACCURATE PIN PLACEMENT ---
-// Added iconSize and iconAnchor so Leaflet knows exactly where the center of the dot is.
 const customMarkerIcon = L.divIcon({
   className: 'custom-map-marker',
   html: `<div style="background-color: hsl(var(--primary)); width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
@@ -110,7 +108,6 @@ function formatPinLine(lat: number, lng: number, placename: string | null): stri
   return placename ? `${placename} · ${pair}` : pair
 }
 
-// --- FIX 2: STOP THE MAP FROM JUMPING ON CLICK ---
 function ClickableMap({ 
   coords, 
   onMapClick 
@@ -179,8 +176,8 @@ export function DomesticReportForm() {
     }
   }, [userContactPhone])
 
-  // Default source is 'click'
-  const updateLocationData = async (lat: number, lng: number, source: 'gps' | 'click' = 'click') => {
+  // --- VERCEL FIX: Wrapped in useCallback to satisfy ESLint ---
+  const updateLocationData = useCallback(async (lat: number, lng: number, source: 'gps' | 'click' = 'click') => {
     setLocFetching(true)
     setCoords({ lat, lng, source })
     
@@ -198,7 +195,7 @@ export function DomesticReportForm() {
     } finally {
       setLocFetching(false)
     }
-  }
+  }, []) // Empty dependency array
 
   const fetchCurrentLocation = useCallback(async () => {
     if (!('geolocation' in navigator)) {
@@ -225,7 +222,7 @@ export function DomesticReportForm() {
         toast.error('Could not get an accurate location. Try again or enter it manually.')
       }
     }
-  }, [])
+  }, [updateLocationData]) // --- VERCEL FIX: Added missing dependency here ---
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
