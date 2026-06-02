@@ -154,10 +154,13 @@ export function WildlifeSightingForm() {
   // This safely loads their profile number into the editable form state 
   // without locking them out of changing it later.
   useEffect(() => {
-    if (profile?.contactPhone) {
+    // Extract to a local variable to preserve TypeScript narrowing
+    const phone = profile?.contactPhone;
+    
+    if (phone) {
       setFormData((prev) => {
         if (!prev.reporterPhone) {
-          let cleaned = profile.contactPhone.replace(/\D/g, '')
+          let cleaned = phone.replace(/\D/g, '')
           if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
           return { ...prev, reporterPhone: cleaned }
         }
