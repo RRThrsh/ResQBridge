@@ -70,11 +70,11 @@ export function DomesticReportForm() {
       return
     }
 
-    // --- ADDED 11-CHARACTER LIMIT VALIDATION ---
-    // This strips any potential spaces and checks if it's exactly 11 characters
-    const cleanPhone = contactPhone.replace(/\s+/g, '')
-    if (cleanPhone.length !== 11) {
-      toast.error('Contact number must be exactly 11 digits.')
+    // --- UPDATED VALIDATION LOGIC ---
+    // Enforces exact 11 digits, strictly starting with "09"
+    const cleanPhone = contactPhone.replace(/\D/g, '')
+    if (!/^09\d{9}$/.test(cleanPhone)) {
+      toast.error('Contact number must be exactly 11 digits and start with "09"')
       return
     }
     // -------------------------------------------
@@ -101,7 +101,7 @@ export function DomesticReportForm() {
         location: formData.location,
         description: descriptionParts.join('\n\n'),
         speciesId: formData.species.trim(),
-        reporterPhone: savedContact ? undefined : cleanPhone,
+        reporterPhone: cleanPhone,
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
@@ -212,7 +212,7 @@ export function DomesticReportForm() {
 
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Date &amp; Time Seen
+            Date & Time Seen
           </label>
           <Input
             type="datetime-local"
@@ -252,9 +252,16 @@ export function DomesticReportForm() {
           <ReportContactField
             userEmail={user.email}
             value={formData.reporterPhone}
-            onChange={(reporterPhone) => setFormData({ ...formData, reporterPhone })}
-            maxLength={11}
-            minLength={11}
+            onChange={(val) => {
+              // --- NEW INPUT FILTERING ---
+              // Strip non-numeric characters
+              let cleaned = val.replace(/\D/g, '')
+              // Enforce 11 character max length on input
+              if (cleaned.length > 11) {
+                cleaned = cleaned.slice(0, 11)
+              }
+              setFormData({ ...formData, reporterPhone: cleaned })
+            }}
           />
         ) : null}
 
