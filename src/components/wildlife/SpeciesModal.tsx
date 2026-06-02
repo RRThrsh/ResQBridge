@@ -43,14 +43,6 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
   />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-background/50 backdrop-blur-md flex items-center justify-center text-foreground hover:bg-background/80 transition-colors border border-border"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
           {/* Status badge */}
           <div className="absolute top-4 left-4">
             <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-bold border ${statusColors[species.status]}`}>
