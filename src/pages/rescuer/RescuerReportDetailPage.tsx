@@ -221,6 +221,33 @@ export function RescuerReportDetailPage() {
 
         <RescuerDetailSection title="Location" icon={MapPin}>
           <p className="font-medium leading-relaxed">{report.location}</p>
+          
+          {/* Integrated Embedded Map viewport layout */}
+          <div className="mt-4 space-y-3">
+            <div className="w-full h-48 sm:h-64 rounded-xl overflow-hidden border border-border bg-muted">
+              <iframe
+                title="Animal Rescue Map Viewport"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(report.location)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+              />
+            </div>
+
+            {/* View on Google Maps Dynamic Link Button */}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(report.location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted shadow-sm"
+            >
+              <MapPin className="h-4 w-4 text-primary" />
+              View on Google Maps
+            </a>
+          </div>
         </RescuerDetailSection>
 
         <RescuerDetailSection title="Reporter" icon={User}>
