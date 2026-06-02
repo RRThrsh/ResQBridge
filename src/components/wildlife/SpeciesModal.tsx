@@ -37,7 +37,7 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
         {/* Hero image */}
 <div className="relative bg-muted flex justify-center">
   <img
-    src={species.image}
+    src={species.images?.[0]}
     alt={species.commonName}
     className="max-h-[400px] w-auto object-contain"
   />
