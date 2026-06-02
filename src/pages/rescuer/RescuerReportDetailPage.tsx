@@ -77,6 +77,11 @@ export function RescuerReportDetailPage() {
   const reporterName = formatReporterName(report.reporterFirstName, report.reporterLastName)
   const canAct = isActiveDispatchStatus(report.status)
 
+  // Use exact coordinates for the map if they exist, otherwise fallback to the text location
+  const mapQuery = report.latitude && report.longitude 
+    ? `${report.latitude},${report.longitude}` 
+    : encodeURIComponent(report.location)
+
   async function handleMarkEnRoute() {
     if (!rescuer) return
     setLoading(true)
@@ -220,11 +225,12 @@ export function RescuerReportDetailPage() {
         </RescuerDetailSection>
 
         <RescuerDetailSection title="Location" icon={MapPin}>
+          {/* This preserves the text readout of the location for the rescuer */}
           <p className="font-medium leading-relaxed">{report.location}</p>
           
-          {/* Integrated Embedded Map viewport layout */}
           <div className="mt-4 space-y-3">
             <div className="w-full h-48 sm:h-64 rounded-xl overflow-hidden border border-border bg-muted">
+              {/* Embed uses exact coordinates via mapQuery */}
               <iframe
                 title="Animal Rescue Map Viewport"
                 width="100%"
@@ -233,13 +239,13 @@ export function RescuerReportDetailPage() {
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(report.location)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                src={`https://maps.google.com/maps?q=${mapQuery}&z=15&output=embed`}
               />
             </div>
 
-            {/* View on Google Maps Dynamic Link Button */}
+            {/* Button opens native Google Maps app using exact coordinates */}
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(report.location)}`}
+              href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted shadow-sm"
