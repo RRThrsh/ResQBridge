@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MapPin, AlertTriangle, Loader2, Info } from 'lucide-react'
+import { MapPin, AlertTriangle, Loader2, Info, Crosshair } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -17,6 +17,125 @@ import {
   validateReportPhotosForSubmit,
   type ReportPhotoItem,
 } from '@/lib/reportPhotos'
+import { cn } from '@/lib/utils'
+
+// --- NEW IMPORTS FOR INTERACTIVE MAP ---
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+/** Default map center ~PWRCC Puerto Princesa until user fixes location via GPS */
+const DEFAULT_MAP_LAT = 9.7393
+const DEFAULT_MAP_LNG = 118.7361
+
+// --- CUSTOM MARKER AVOIDS BUNDLER ASSET ISSUES ---
+const customMarkerIcon = L.divIcon({
+  className: 'custom-map-marker',
+  html: `<div style="background-color: hsl(var(--primary)); width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transform: translate(-50%, -50%);"></div>`,
+  iconSize: [0, 0],
+})
+
+async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=en`
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'DWARRMS Domestic Report (contact@pwrcc.local)',
+      },
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as { display_name?: string }
+    return data.display_name ?? null
+  } catch {
+    return null
+  }
+}
+
+/** Collect GPS samples and keep the most accurate reading (smallest accuracy radius). */
+function getRefinedPosition(maxWaitMs = 10_000): Promise<{
+  lat: number
+  lng: number
+  accuracyM: number
+}> {
+  return new Promise((resolve, reject) => {
+    let best: { lat: number; lng: number; accuracyM: number } | null = null
+    let settled = false
+
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords
+        const acc = Number.isFinite(accuracy) && accuracy > 0 ? accuracy : 9999
+        if (!best || acc < best.accuracyM) {
+          best = { lat: latitude, lng: longitude, accuracyM: acc }
+          if (acc <= 25) finish(best)
+        }
+      },
+      (err) => {
+        if (best) finish(best)
+        else if (!settled) {
+          settled = true
+          cleanup()
+          reject(err)
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 0 },
+    )
+
+    const timer = window.setTimeout(() => {
+      if (best) finish(best)
+      else if (!settled) {
+        settled = true
+        cleanup()
+        reject(new Error('Location timeout'))
+      }
+    }, maxWaitMs)
+
+    function finish(result: { lat: number; lng: number; accuracyM: number }) {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve(result)
+    }
+
+    function cleanup() {
+      window.clearTimeout(timer)
+      navigator.geolocation.clearWatch(id)
+    }
+  })
+}
+
+function formatPinLine(lat: number, lng: number, placename: string | null): string {
+  const pair = `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+  return placename ? `${placename} · ${pair}` : pair
+}
+
+// --- SUB-COMPONENT: HANDLES MAP CLICKS & FLYING TO GPS ---
+function ClickableMap({ 
+  coords, 
+  onMapClick 
+}: { 
+  coords: {lat: number, lng: number} | null, 
+  onMapClick: (lat: number, lng: number) => void 
+}) {
+  const map = useMap()
+
+  // Fly to the new coordinate when the user hits "Current location"
+  useEffect(() => {
+    if (coords) {
+      map.flyTo([coords.lat, coords.lng], map.getZoom(), { animate: true })
+    }
+  }, [coords, map])
+
+  // Listen for manual clicks on the map
+  useMapEvents({
+    click(e: L.LeafletMouseEvent) {
+      onMapClick(e.latlng.lat, e.latlng.lng)
+    },
+  })
+
+  return coords ? <Marker position={[coords.lat, coords.lng]} icon={customMarkerIcon} /> : null
+}
 
 export function DomesticReportForm() {
   const navigate = useNavigate()
@@ -27,8 +146,12 @@ export function DomesticReportForm() {
     user ? { email: normalizeEmail(user.email) } : 'skip',
   )
   const [loading, setLoading] = useState(false)
+  const [locFetching, setLocFetching] = useState(false)
   const [reportType, setReportType] = useState('missing')
   const [photos, setPhotos] = useState<ReportPhotoItem[]>([])
+  
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
+
   const [formData, setFormData] = useState({
     species: '',
     animalName: '',
@@ -41,9 +164,7 @@ export function DomesticReportForm() {
     seenAt: '',
   })
 
-  // --- NEW FIX: AUTO-POPULATE PHONE NUMBER ---
-  // Safely loads the profile number into the editable form state 
-// --- FIX: Extract OUTSIDE the useEffect for ESLint and TypeScript ---
+  // --- FIX: Extract OUTSIDE the useEffect for ESLint and TypeScript ---
   const userContactPhone = profile?.contactPhone;
 
   useEffect(() => {
@@ -58,6 +179,53 @@ export function DomesticReportForm() {
       })
     }
   }, [userContactPhone]) // <-- Clean dependency array makes Vercel happy
+
+  // Reused handler for both GPS and manual clicks
+  const updateLocationData = async (lat: number, lng: number) => {
+    setLocFetching(true)
+    setCoords({ lat, lng })
+    
+    try {
+      const label = await reverseGeocode(lat, lng)
+      setFormData((prev) => ({
+        ...prev,
+        location: formatPinLine(lat, lng, label),
+      }))
+    } catch {
+      setFormData((prev) => ({
+        ...prev,
+        location: formatPinLine(lat, lng, null),
+      }))
+    } finally {
+      setLocFetching(false)
+    }
+  }
+
+  const fetchCurrentLocation = useCallback(async () => {
+    if (!('geolocation' in navigator)) {
+      toast.error('Location is not supported in this browser')
+      return
+    }
+
+    setLocFetching(true)
+    try {
+      const { lat, lng, accuracyM } = await getRefinedPosition()
+      await updateLocationData(lat, lng)
+
+      const accNote = accuracyM < 9999 ? ` (~${Math.round(accuracyM)} m accuracy)` : ''
+      toast.success(`Location captured${accNote}`)
+    } catch (err: unknown) {
+      setLocFetching(false) // Must clear here if error throws before updateLocationData
+      const geoErr = err as GeolocationPositionError
+      if (geoErr?.code === geoErr?.PERMISSION_DENIED) {
+        toast.error('Location permission denied. Enable location or enter the address manually.')
+      } else if (geoErr?.code === geoErr?.POSITION_UNAVAILABLE) {
+        toast.error('Location unavailable. Try outdoors or check device settings.')
+      } else {
+        toast.error('Could not get an accurate location. Try again or enter it manually.')
+      }
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,6 +292,8 @@ export function DomesticReportForm() {
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
         photoStorageIds: photoStorageIdsForSubmit(photos),
+        latitude: coords?.lat,
+        longitude: coords?.lng,
       })
       navigate('/report/success')
     } catch {
@@ -206,25 +376,68 @@ export function DomesticReportForm() {
               className="h-12 bg-background border-border rounded-xl"
             />
           </div>
+        </div>
 
-          {/* Location */}
-          <div className="space-y-3">
-            <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Location <span className="text-destructive">*</span>
-            </label>
-            <div className="relative">
+        {/* Location (Now Map-Enabled) */}
+        <div className="space-y-3">
+          <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Location <span className="text-destructive">*</span>
+          </label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <div className="relative flex-1 min-w-0">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
               </div>
               <Input
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder="e.g. Rizal Ave, PPC"
-                className="pl-10 h-12 bg-background border-border rounded-xl"
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
+                placeholder="Click the map, use GPS, or describe..."
+                className="pl-10 h-12 bg-background border-border rounded-xl pr-3"
                 required
               />
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={fetchCurrentLocation}
+              disabled={locFetching}
+              className="h-12 shrink-0 px-4 rounded-xl border-border bg-background sm:w-auto"
+            >
+              {locFetching ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Crosshair className="mr-2 h-4 w-4" />
+              )}
+              Current location
+            </Button>
           </div>
+
+          {/* --- INTERACTIVE LEAFLET MAP --- */}
+          <div className={cn(
+            'overflow-hidden rounded-xl border border-border bg-muted/30 relative z-0 h-[260px]',
+          )}>
+            <MapContainer
+              center={coords ? [coords.lat, coords.lng] : [DEFAULT_MAP_LAT, DEFAULT_MAP_LNG]}
+              zoom={13}
+              scrollWheelZoom={true}
+              style={{ height: '100%', width: '100%', zIndex: 0 }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <ClickableMap 
+                coords={coords} 
+                onMapClick={(lat, lng) => updateLocationData(lat, lng)} 
+              />
+            </MapContainer>
+          </div>
+          
+          <p className="text-[11px] text-muted-foreground">
+            <span className="font-medium text-foreground">Interactive Map:</span> You can manually tap/click anywhere on the map above to drop a pin and auto-fill the address.
+          </p>
         </div>
 
         <div className="space-y-3">
