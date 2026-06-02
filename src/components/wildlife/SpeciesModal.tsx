@@ -1,4 +1,4 @@
-import { Moon, Sun, Sunset, X, Leaf, Utensils, MapPin, ShieldAlert, Globe, AlertTriangle } from 'lucide-react'
+import { Moon, Sun, Sunset, Leaf, Utensils, MapPin, ShieldAlert, Globe, AlertTriangle } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
