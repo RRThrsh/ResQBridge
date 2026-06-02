@@ -32,7 +32,7 @@ const wildlifeItemValidator = v.object({
   description: v.string(),
   safetyTips: v.array(v.string()),
   ecologicalImportance: v.string(),
-  image: v.string(),
+  images: v.array(v.string()),
   tags: v.array(v.string()),
 })
 
@@ -60,7 +60,7 @@ type WildlifeItem = {
   description: string
   safetyTips: string[]
   ecologicalImportance: string
-  image: string
+  images: string[]
   tags: string[]
 }
 
@@ -71,7 +71,7 @@ type NewsItem = {
   excerpt: string
   body: string
   date: string
-  image: string
+   image: string
   category: string
 }
 
@@ -197,7 +197,7 @@ export const createWildlifeItem = mutation({
       description: v.string(),
       safetyTips: v.array(v.string()),
       ecologicalImportance: v.string(),
-      image: v.string(),
+      images: v.array(v.string()),
       tags: v.array(v.string()),
     }),
   },
@@ -233,7 +233,7 @@ export const createNewsItem = mutation({
       excerpt: v.string(),
       body: v.string(),
       date: v.string(),
-      image: v.string(),
+ image: v.string(),
       category: v.string(),
     }),
   },
