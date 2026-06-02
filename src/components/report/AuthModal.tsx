@@ -42,7 +42,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState(emptyAuthForm.email)
   const [code, setCode] = useState(emptyAuthForm.code)
   const [loading, setLoading] = useState(false)
-  const [countdown, setCountdown] = useState(0) // New state for the 180s timer
+  const [countdown, setCountdown] = useState(0)
   const submittingRef = useRef(false)
 
   const emailValid = email.trim().includes('@')
@@ -51,7 +51,6 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const detailsReady = mode === 'sign-up' ? signUpReady : signInReady
   const otpReady = code.length === 6
 
-  // Handle the countdown timer automatically
   useEffect(() => {
     if (countdown <= 0) return
     const timer = setInterval(() => setCountdown((c) => c - 1), 1000)
@@ -71,7 +70,6 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     setCountdown(0)
   }
 
-  // Make the event parameter optional so we can call it from the resend button
   async function sendCode(e?: React.FormEvent) {
     if (e) e.preventDefault()
     
@@ -106,7 +104,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       }
       setCode('')
       setStep('otp')
-      setCountdown(180) // Start the 180-second cooldown here
+      setCountdown(180)
       toast.success(`Code sent to ${normalizedEmail}`)
     } catch (error) {
       toast.error(errorMessage(error, 'Could not send code'))
