@@ -78,6 +78,7 @@ export function RescuerReportDetailPage() {
   const canAct = isActiveDispatchStatus(report.status)
 
   // Use exact coordinates for the map if they exist, otherwise fallback to the text location
+  // Stripping spaces ensures Google doesn't try to auto-resolve it into a nearby business name
   const mapQuery = report.latitude && report.longitude 
     ? `${report.latitude},${report.longitude}` 
     : encodeURIComponent(report.location)
@@ -230,7 +231,7 @@ export function RescuerReportDetailPage() {
           
           <div className="mt-4 space-y-3">
             <div className="w-full h-48 sm:h-64 rounded-xl overflow-hidden border border-border bg-muted">
-              {/* Embed uses exact coordinates via mapQuery */}
+              {/* Added &iwloc= to hide the white info bubble and force strict coordinate routing */}
               <iframe
                 title="Animal Rescue Map Viewport"
                 width="100%"
@@ -239,7 +240,7 @@ export function RescuerReportDetailPage() {
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
-                src={`https://maps.google.com/maps?q=${mapQuery}&z=15&output=embed`}
+                src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
               />
             </div>
 
