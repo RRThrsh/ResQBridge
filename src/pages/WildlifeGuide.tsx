@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { type WildlifeSpecies, type Category } from '@/data/wildlife'
 import { useWildlifeContent } from '@/hooks/useSiteContent'
 import { SpeciesCard } from '@/components/wildlife/SpeciesCard'
@@ -14,7 +14,15 @@ export function WildlifeGuide() {
   const [activeCategory, setActiveCategory] = useState<Category>('All')
   const [selectedSpecies, setSelectedSpecies] = useState<WildlifeSpecies | null>(null)
 
-  const wildlifeSpecies = useWildlifeContent()
+  const rawWildlife = useWildlifeContent()
+
+  // --- VERCEL FIX: Bridge database 'image' string to frontend 'images' array ---
+  const wildlifeSpecies = useMemo(() => {
+    return rawWildlife.map((item: any) => ({
+      ...item,
+      images: item.images || (item.image ? [item.image] : [])
+    })) as WildlifeSpecies[]
+  }, [rawWildlife])
 
   const filtered = wildlifeSpecies.filter(s => {
     const matchesSearch =
