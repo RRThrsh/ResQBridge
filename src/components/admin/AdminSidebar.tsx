@@ -48,7 +48,7 @@ export function AdminSidebar({ onNavigate }: Props) {
       <aside className="flex h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
         <div className="border-b border-sidebar-border px-5 py-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
-            PWRRC
+            ResQBridge
           </p>
           <h1
             className="mt-1 text-lg font-bold text-sidebar-foreground"
