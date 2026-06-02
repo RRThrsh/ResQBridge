@@ -71,10 +71,23 @@ type NewsItem = {
   excerpt: string
   body: string
   date: string
-   image: string
+  image: string
   category: string
 }
 
+// --- VERCEL FIX: Helper to safely bridge default data to the new schema ---
+function getMappedDefaultWildlife(): WildlifeItem[] {
+  return defaultWildlife.map((item: any) => {
+    const { image, ...rest } = item; // Pull out the old image property if it exists
+    return {
+      ...rest,
+      safetyTips: Array.isArray(item.safetyTips) ? [...item.safetyTips] : [],
+      tags: Array.isArray(item.tags) ? [...item.tags] : [],
+      // Convert old 'image' string into the new 'images' array
+      images: Array.isArray(item.images) ? [...item.images] : (image ? [image] : []),
+    } as WildlifeItem;
+  });
+}
 
 async function getItems<T>(
   ctx: QueryCtx | MutationCtx,
@@ -120,11 +133,7 @@ export const listWildlife = query({
     return await getItems<WildlifeItem>(
       ctx,
       'wildlife',
-      defaultWildlife.map((item) => ({
-        ...item,
-        safetyTips: [...item.safetyTips],
-        tags: [...item.tags],
-      })),
+      getMappedDefaultWildlife() // Use the helper
     )
   },
 })
@@ -151,7 +160,7 @@ export const seedContent = mutation({
     if (!wildlifeRow) {
       await ctx.db.insert('siteContent', {
         key: 'wildlife',
-        itemsJson: JSON.stringify(defaultWildlife),
+        itemsJson: JSON.stringify(getMappedDefaultWildlife()), // Use the helper
         updatedAt: Date.now(),
       })
     }
@@ -204,11 +213,7 @@ export const createWildlifeItem = mutation({
   returns: v.string(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const fallback = defaultWildlife.map((item) => ({
-      ...item,
-      safetyTips: [...item.safetyTips],
-      tags: [...item.tags],
-    }))
+    const fallback = getMappedDefaultWildlife() // Use the helper
     const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
     const baseId = slugId(args.item.commonName, `species-${Date.now()}`)
     let id = baseId
@@ -233,7 +238,7 @@ export const createNewsItem = mutation({
       excerpt: v.string(),
       body: v.string(),
       date: v.string(),
- image: v.string(),
+      image: v.string(),
       category: v.string(),
     }),
   },
@@ -261,11 +266,7 @@ export const updateWildlifeItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const fallback = defaultWildlife.map((item) => ({
-      ...item,
-      safetyTips: [...item.safetyTips],
-      tags: [...item.tags],
-    }))
+    const fallback = getMappedDefaultWildlife() // Use the helper
     const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
     const next = items.map((item) => (item.id === args.item.id ? args.item : item))
     if (!next.some((item) => item.id === args.item.id)) {
@@ -281,11 +282,7 @@ export const deleteWildlifeItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const fallback = defaultWildlife.map((item) => ({
-      ...item,
-      safetyTips: [...item.safetyTips],
-      tags: [...item.tags],
-    }))
+    const fallback = getMappedDefaultWildlife() // Use the helper
     const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
     const next = items.filter((item) => item.id !== args.itemId)
     if (next.length === items.length) {
