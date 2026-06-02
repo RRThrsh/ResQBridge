@@ -116,7 +116,7 @@ function formatPinLine(lat: number, lng: number, placename: string | null): stri
 
 function googleMapsEmbedUrl(lat: number, lng: number, zoom: number) {
   const q = encodeURIComponent(`${lat},${lng}`)
-  return `https://www.google.com/maps?ll=${lat},${lng}&q=${q}&z=${zoom}&output=embed`
+  return `http://googleusercontent.com/maps.google.com/maps?q=${q}&z=${zoom}&output=embed`
 }
 
 export function WildlifeSightingForm() {
@@ -220,6 +220,13 @@ export function WildlifeSightingForm() {
       return
     }
 
+    // --- NEW VALIDATION LOGIC ---
+    // Enforces exact 11 digits, strictly starting with "09"
+    if (!/^09\d{9}$/.test(contactPhone)) {
+      toast.error('Contact number must be exactly 11 digits and start with "09"')
+      return
+    }
+
     if (!formData.behavior) {
       toast.error('Please select a condition or behavior')
       return
@@ -253,7 +260,7 @@ export function WildlifeSightingForm() {
         description: formData.description,
         condition: formData.condition.trim() || undefined,
         behavior: behavior || undefined,
-        reporterPhone: savedContact ? undefined : contactPhone,
+        reporterPhone: contactPhone,
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
@@ -363,7 +370,7 @@ export function WildlifeSightingForm() {
         {/* Date & time seen */}
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Date &amp; Time Seen
+            Date & Time Seen
           </label>
           <Input
             type="datetime-local"
@@ -448,7 +455,16 @@ export function WildlifeSightingForm() {
           <ReportContactField
             userEmail={user.email}
             value={formData.reporterPhone}
-            onChange={(reporterPhone) => setFormData({ ...formData, reporterPhone })}
+            onChange={(val) => {
+              // --- NEW INPUT FILTERING ---
+              // Strip non-numeric characters
+              let cleaned = val.replace(/\D/g, '')
+              // Enforce 11 character max length on input
+              if (cleaned.length > 11) {
+                cleaned = cleaned.slice(0, 11)
+              }
+              setFormData({ ...formData, reporterPhone: cleaned })
+            }}
           />
         ) : null}
 
