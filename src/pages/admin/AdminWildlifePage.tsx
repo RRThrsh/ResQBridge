@@ -34,6 +34,8 @@ export function AdminWildlifePage() {
   const filtered = useMemo(() => {
     if (!rows) return []
     const q = search.trim().toLowerCase()
+    
+    // --- VERCEL FIX: Map backend image string to frontend images array here ---
     return rows.filter((species) => {
       if (!q) return true
       return (
@@ -41,7 +43,10 @@ export function AdminWildlifePage() {
         species.scientificName.toLowerCase().includes(q) ||
         species.localName.toLowerCase().includes(q)
       )
-    })
+    }).map((item: any) => ({
+      ...item,
+      images: item.images || (item.image ? [item.image] : [])
+    })) as WildlifeSpecies[]
   }, [rows, search])
 
   const pagination = usePaginatedRows(filtered, { resetKey: search })
