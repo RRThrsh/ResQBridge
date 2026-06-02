@@ -52,7 +52,7 @@ function emptySpecies(): WildlifeSpecies {
     description: '',
     safetyTips: [],
     ecologicalImportance: '',
-    images: [], // FIX: Changed from image: '' to images: []
+    images: [], 
     tags: [],
   }
 }
@@ -119,18 +119,11 @@ export function AdminWildlifeDialog({
       diet: draft!.diet.trim(),
       description: draft!.description.trim(),
       ecologicalImportance: draft!.ecologicalImportance.trim(),
-      images: draft!.images || [], // FIX: Replaced image string with images array
+      images: draft!.images || [], 
       safetyTips,
       tags,
       id: draft!.id,
     }
-  }
-
-  function buildCreatePayload() {
-    const payload = buildPayload()
-    const { id, ...rest } = payload
-    void id
-    return rest
   }
 
   async function handleSave() {
@@ -141,7 +134,6 @@ export function AdminWildlifeDialog({
         throw new Error('Common name and scientific name are required.')
       }
 
-      // FIX: Validate all images in the array instead of just one string
       if (payload.images && payload.images.length > 0) {
         for (const img of payload.images) {
           const imageError = validateImageDataUrl(img)
@@ -152,11 +144,21 @@ export function AdminWildlifeDialog({
       }
 
       const email = normalizeEmail(adminEmail)
+      
+      // --- FIX: Bridge frontend 'images' array to backend 'image' string ---
+      const { images, ...basePayload } = payload
+      const convexItem = {
+        ...basePayload,
+        image: images?.[0] || '', // Take first image for Convex DB
+      }
+
       if (isCreate) {
-        await createItem({ adminEmail: email, item: buildCreatePayload() })
+        const { id, ...createPayload } = convexItem
+        // Cast as any to bypass strict Convex generated types during DB insert
+        await createItem({ adminEmail: email, item: createPayload as any })
         toast.success('Species created')
       } else {
-        await updateItem({ adminEmail: email, item: payload })
+        await updateItem({ adminEmail: email, item: convexItem as any })
         toast.success('Species updated')
       }
       onOpenChange(false)
@@ -181,7 +183,6 @@ export function AdminWildlifeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* FIX: Check the first index of the images array for view mode */}
         {isView && displaySpecies?.images && displaySpecies.images.length > 0 ? (
           <img
             src={displaySpecies.images[0]}
@@ -317,7 +318,6 @@ export function AdminWildlifeDialog({
               />
             </div>
             
-            {/* FIX: Bind the single image component to the first index of the images array */}
             <AdminImageUploadField
               value={draft.images?.[0] || ''}
               onChange={(img) => setDraft((d) => d && { ...d, images: img ? [img] : [] })}
