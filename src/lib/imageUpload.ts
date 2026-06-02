@@ -1,4 +1,4 @@
-export const MAX_IMAGE_FILE_BYTES = 5 * 1024 * 1024
+export const MAX_IMAGE_FILE_BYTES = 15 * 1024 * 1024
 export const MAX_IMAGE_DATA_URL_LENGTH = 900_000
 
 export function readImageFile(file: File): Promise<string | null> {
