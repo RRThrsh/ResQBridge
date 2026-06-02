@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { ArrowRight, MapPin, Clock, Loader2, PawPrint, Info } from 'lucide-react'
+import { ArrowRight, MapPin, Clock, Loader2, PawPrint } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatMonthDay } from '@/lib/dates'
@@ -23,34 +23,21 @@ export function DomesticReports() {
     <section id="domestic" className="py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
 
-        <div className="mb-10 space-y-5">
-          {/* Top Row: Title and Button */}
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-primary">Community Board</p>
-              <h2 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-                Domestic Reports
-              </h2>
-            </div>
-            <Link to="/report"
-              className="group inline-flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition-opacity shrink-0">
-              Submit report
-              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </div>
-
-          {/* Disclaimer Note */}
-          <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm text-muted-foreground">
-            <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-            <p>
-              <strong className="font-semibold text-foreground">Important Note:</strong> This section concerns domestic animals. Please note that domestic animal rescue and shelter services are managed by <strong>Nativity's Stray Rescue Shelter</strong>, not PWRCC.
+        <div className="mb-10 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-primary">Community Board</p>
+            <h2 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+              Domestic Reports
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Recent reports of missing, found, stray & injured domestic animals.
             </p>
           </div>
-
-          {/* Subtitle */}
-          <p className="text-sm text-muted-foreground">
-            Recent reports of missing, found, stray & injured domestic animals.
-          </p>
+          <Link to="/report"
+            className="group mt-4 sm:mt-0 inline-flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition-opacity shrink-0">
+            Submit report
+            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         </div>
 
         {reports === undefined ? (
