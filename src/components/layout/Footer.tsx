@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Leaf, MapPin, Phone } from 'lucide-react'
+import { PawPrint, MapPin, Phone } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 const links = {
@@ -27,13 +27,14 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <Link to="/" className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
-                <Leaf className="h-3.5 w-3.5 text-primary" />
+                <PawPrint className="h-3.5 w-3.5 text-primary" />
               </div>
-              <span className="text-sm font-bold" style={{ fontFamily: 'var(--font-heading)' }}>DWARRMS</span>
+              <span className="text-sm font-bold" style={{ fontFamily: 'var(--font-heading)' }}>ResQBridge</span>
             </Link>
             <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
-              Domestic Wildlife Animal Report & Rescue Management System — connecting Palawan
-              communities with wildlife rescue authorities.
+              ResQBridge — A Web-Based Animal Rescue and Reporting System connecting communities,
+  rescuers, and animal welfare organizations across Palawan.
+
             </p>
             <div className="space-y-2">
               <div className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -80,7 +81,7 @@ export function Footer() {
 
         <div className="flex flex-col sm:flex-row justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            © 2026 DWARRMS — Palawan Wildlife Rescue & Conservation Center
+            © 2026 ResQBridge — Palawan Wildlife Rescue & Conservation Center
           </p>
           <p className="text-xs text-muted-foreground">Made for Palawan wildlife 🌿</p>
         </div>
