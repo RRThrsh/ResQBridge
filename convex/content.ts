@@ -32,7 +32,7 @@ const wildlifeItemValidator = v.object({
   description: v.string(),
   safetyTips: v.array(v.string()),
   ecologicalImportance: v.string(),
-  images: v.array(v.string()),
+  images: v.optional(v.array(v.string())),
   tags: v.array(v.string()),
 })
 
