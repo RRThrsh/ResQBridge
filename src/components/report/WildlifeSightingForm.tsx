@@ -153,21 +153,25 @@ export function WildlifeSightingForm() {
   // --- NEW FIX: AUTO-POPULATE PHONE NUMBER ---
   // This safely loads their profile number into the editable form state 
   // without locking them out of changing it later.
-  useEffect(() => {
-    // Extract to a local variable to preserve TypeScript narrowing
-    const phone = profile?.contactPhone;
-    
-    if (phone) {
-      setFormData((prev) => {
-        if (!prev.reporterPhone) {
-          let cleaned = phone.replace(/\D/g, '')
-          if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
-          return { ...prev, reporterPhone: cleaned }
+useEffect(() => {
+  const phone = profile?.contactPhone
+
+  if (phone) {
+    setFormData((prev) => {
+      if (!prev.reporterPhone) {
+        let cleaned = phone.replace(/\D/g, '')
+        if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
+
+        return {
+          ...prev,
+          reporterPhone: cleaned,
         }
-        return prev
-      })
-    }
-  }, [profile?.contactPhone])
+      }
+
+      return prev
+    })
+  }
+}, [profile?.contactPhone])
 
   const fetchCurrentLocation = useCallback(async () => {
     if (!('geolocation' in navigator)) {
