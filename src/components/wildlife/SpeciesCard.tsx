@@ -38,7 +38,7 @@ export function SpeciesCard({ species, onClick, index }: SpeciesCardProps) {
       {/* Image */}
       <div className="relative h-52 overflow-hidden bg-muted">
         <img
-          src={species.image}
+         src={species.images?.[0]}
           alt={species.commonName}
           className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
           loading="lazy"
