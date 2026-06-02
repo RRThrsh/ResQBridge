@@ -19,20 +19,21 @@ import {
 } from '@/lib/reportPhotos'
 import { cn } from '@/lib/utils'
 
-// --- NEW IMPORTS FOR INTERACTIVE MAP ---
+// --- IMPORTS FOR INTERACTIVE MAP ---
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
-/** Default map center ~PWRCC Puerto Princesa until user fixes location via GPS */
 const DEFAULT_MAP_LAT = 9.7393
 const DEFAULT_MAP_LNG = 118.7361
 
-// --- CUSTOM MARKER AVOIDS BUNDLER ASSET ISSUES ---
+// --- FIX 1: ACCURATE PIN PLACEMENT ---
+// Added iconSize and iconAnchor so Leaflet knows exactly where the center of the dot is.
 const customMarkerIcon = L.divIcon({
   className: 'custom-map-marker',
-  html: `<div style="background-color: hsl(var(--primary)); width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transform: translate(-50%, -50%);"></div>`,
-  iconSize: [0, 0],
+  html: `<div style="background-color: hsl(var(--primary)); width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+  iconSize: [18, 18],
+  iconAnchor: [9, 9], // Points to the exact center of the 18x18 div
 })
 
 async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
@@ -52,7 +53,6 @@ async function reverseGeocode(lat: number, lng: number): Promise<string | null> 
   }
 }
 
-/** Collect GPS samples and keep the most accurate reading (smallest accuracy radius). */
 function getRefinedPosition(maxWaitMs = 10_000): Promise<{
   lat: number
   lng: number
@@ -110,24 +110,23 @@ function formatPinLine(lat: number, lng: number, placename: string | null): stri
   return placename ? `${placename} · ${pair}` : pair
 }
 
-// --- SUB-COMPONENT: HANDLES MAP CLICKS & FLYING TO GPS ---
+// --- FIX 2: STOP THE MAP FROM JUMPING ON CLICK ---
 function ClickableMap({ 
   coords, 
   onMapClick 
 }: { 
-  coords: {lat: number, lng: number} | null, 
+  coords: {lat: number, lng: number, source?: 'gps' | 'click'} | null, 
   onMapClick: (lat: number, lng: number) => void 
 }) {
   const map = useMap()
 
-  // Fly to the new coordinate when the user hits "Current location"
+  // ONLY move the camera if the source is GPS. Do nothing to the camera on click.
   useEffect(() => {
-    if (coords) {
-      map.flyTo([coords.lat, coords.lng], map.getZoom(), { animate: true })
+    if (coords && coords.source === 'gps') {
+      map.flyTo([coords.lat, coords.lng], 16, { animate: true })
     }
   }, [coords, map])
 
-  // Listen for manual clicks on the map
   useMapEvents({
     click(e: L.LeafletMouseEvent) {
       onMapClick(e.latlng.lat, e.latlng.lng)
@@ -150,7 +149,8 @@ export function DomesticReportForm() {
   const [reportType, setReportType] = useState('missing')
   const [photos, setPhotos] = useState<ReportPhotoItem[]>([])
   
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
+  // Track where the coordinates came from
+  const [coords, setCoords] = useState<{ lat: number; lng: number; source?: 'gps' | 'click' } | null>(null)
 
   const [formData, setFormData] = useState({
     species: '',
@@ -164,7 +164,6 @@ export function DomesticReportForm() {
     seenAt: '',
   })
 
-  // --- FIX: Extract OUTSIDE the useEffect for ESLint and TypeScript ---
   const userContactPhone = profile?.contactPhone;
 
   useEffect(() => {
@@ -178,12 +177,12 @@ export function DomesticReportForm() {
         return prev
       })
     }
-  }, [userContactPhone]) // <-- Clean dependency array makes Vercel happy
+  }, [userContactPhone])
 
-  // Reused handler for both GPS and manual clicks
-  const updateLocationData = async (lat: number, lng: number) => {
+  // Default source is 'click'
+  const updateLocationData = async (lat: number, lng: number, source: 'gps' | 'click' = 'click') => {
     setLocFetching(true)
-    setCoords({ lat, lng })
+    setCoords({ lat, lng, source })
     
     try {
       const label = await reverseGeocode(lat, lng)
@@ -210,12 +209,13 @@ export function DomesticReportForm() {
     setLocFetching(true)
     try {
       const { lat, lng, accuracyM } = await getRefinedPosition()
-      await updateLocationData(lat, lng)
+      // Pass 'gps' so the map knows to fly here
+      await updateLocationData(lat, lng, 'gps')
 
       const accNote = accuracyM < 9999 ? ` (~${Math.round(accuracyM)} m accuracy)` : ''
       toast.success(`Location captured${accNote}`)
     } catch (err: unknown) {
-      setLocFetching(false) // Must clear here if error throws before updateLocationData
+      setLocFetching(false) 
       const geoErr = err as GeolocationPositionError
       if (geoErr?.code === geoErr?.PERMISSION_DENIED) {
         toast.error('Location permission denied. Enable location or enter the address manually.')
@@ -248,8 +248,6 @@ export function DomesticReportForm() {
       return
     }
 
-    // --- FIX: NO MORE PROFILE OVERRIDE ---
-    // Strictly trust whatever is in the input box right now.
     const contactPhone = formData.reporterPhone.trim()
     
     if (!contactPhone) {
@@ -257,8 +255,6 @@ export function DomesticReportForm() {
       return
     }
 
-    // --- VALIDATION LOGIC ---
-    // Enforces exact 11 digits, strictly starting with "09"
     const cleanPhone = contactPhone.replace(/\D/g, '')
     if (!/^09\d{9}$/.test(cleanPhone)) {
       toast.error('Contact number must be exactly 11 digits and start with "09"')
@@ -287,7 +283,7 @@ export function DomesticReportForm() {
         location: formData.location,
         description: descriptionParts.join('\n\n'),
         speciesId: formData.species.trim(),
-        reporterPhone: cleanPhone, // Saving strictly cleaned phone number
+        reporterPhone: cleanPhone,
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
@@ -306,7 +302,6 @@ export function DomesticReportForm() {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 sm:p-8">
       
-      {/* --- DISCLAIMER NOTE --- */}
       <div className="mb-8 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm text-muted-foreground">
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <p>
@@ -335,7 +330,6 @@ export function DomesticReportForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Species */}
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Species <span className="text-destructive">*</span>
@@ -349,7 +343,6 @@ export function DomesticReportForm() {
             />
           </div>
 
-          {/* Name */}
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               {reportType === 'missing' ? "Pet's Name *" : 'Name (if known)'}
@@ -364,7 +357,6 @@ export function DomesticReportForm() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Color */}
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Color / Markings
@@ -378,7 +370,6 @@ export function DomesticReportForm() {
           </div>
         </div>
 
-        {/* Location (Now Map-Enabled) */}
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Location <span className="text-destructive">*</span>
@@ -414,7 +405,6 @@ export function DomesticReportForm() {
             </Button>
           </div>
 
-          {/* --- INTERACTIVE LEAFLET MAP --- */}
           <div className={cn(
             'overflow-hidden rounded-xl border border-border bg-muted/30 relative z-0 h-[260px]',
           )}>
@@ -430,7 +420,7 @@ export function DomesticReportForm() {
               />
               <ClickableMap 
                 coords={coords} 
-                onMapClick={(lat, lng) => updateLocationData(lat, lng)} 
+                onMapClick={(lat, lng) => updateLocationData(lat, lng, 'click')} 
               />
             </MapContainer>
           </div>
@@ -483,9 +473,7 @@ export function DomesticReportForm() {
             userEmail={user.email}
             value={formData.reporterPhone}
             onChange={(val) => {
-              // Strip non-numeric characters
               let cleaned = val.replace(/\D/g, '')
-              // Enforce 11 character max length on input
               if (cleaned.length > 11) {
                 cleaned = cleaned.slice(0, 11)
               }
@@ -494,7 +482,6 @@ export function DomesticReportForm() {
           />
         ) : null}
 
-        {/* Description */}
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Additional Details <span className="text-destructive">*</span>
@@ -515,7 +502,6 @@ export function DomesticReportForm() {
           <ReportPhotoField value={photos} onChange={setPhotos} />
         </div>
 
-        {/* Warning */}
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex gap-3 items-start">
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
           <p className="text-xs text-amber-500/80 leading-relaxed">
