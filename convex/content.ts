@@ -142,7 +142,7 @@ async function saveItems(
 
 export const listWildlife = query({
   args: {},
-  returns: v.array(wildlifeItemValidator),
+  returns: v.any(),
   handler: async (ctx) => {
     return await getItems<WildlifeItem>(
       ctx,
