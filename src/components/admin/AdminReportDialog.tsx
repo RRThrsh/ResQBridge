@@ -188,19 +188,29 @@ export function AdminReportDialog({
                 ))}
               </div>
 
-              {previewImage && (
-                <div
-                  className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
-                  onClick={() => setPreviewImage(null)}
-                >
-                  <img
-                    src={previewImage}
-                    alt="Preview"
-                    className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-              )}
+{previewImage && (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+    onClick={() => setPreviewImage(null)}
+  >
+    {/* CLOSE BUTTON */}
+    <button
+      onClick={() => setPreviewImage(null)}
+      className="absolute top-4 right-4 text-white text-4xl font-bold hover:opacity-70"
+    >
+      ×
+    </button>
+
+    <img
+      src={previewImage}
+      alt="Preview"
+      className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
+        onClick={(e) => {
+      e.stopPropagation()
+    }}
+    />
+  </div>
+)}
             </div>
           ) : null}
 
