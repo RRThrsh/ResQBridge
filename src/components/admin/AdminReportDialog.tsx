@@ -136,7 +136,7 @@ export function AdminReportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg bg-zinc-950 text-white border-zinc-800">
         <DialogHeader>
           <DialogTitle>{isView ? 'View report' : 'Edit report'}</DialogTitle>
           <DialogDescription>
@@ -239,6 +239,7 @@ export function AdminReportDialog({
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">Animal name</label>
                 <Input
+  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-400"
                   value={draft.animalName}
                   onChange={(e) => setDraft((d) => ({ ...d, animalName: e.target.value }))}
                 />
@@ -246,6 +247,7 @@ export function AdminReportDialog({
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">Location</label>
                 <Input
+  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-400"
                   value={draft.location}
                   onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
                 />
@@ -253,6 +255,7 @@ export function AdminReportDialog({
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">Description</label>
                 <Textarea
+  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-400"
                   value={draft.description}
                   onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
                   rows={3}
@@ -261,6 +264,7 @@ export function AdminReportDialog({
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">Reporter phone</label>
                 <Input
+  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-400"
                   value={draft.reporterPhone}
                   onChange={(e) => setDraft((d) => ({ ...d, reporterPhone: e.target.value }))}
                 />
@@ -272,10 +276,10 @@ export function AdminReportDialog({
                     value={draft.type}
                     onValueChange={(value) => value && setDraft((d) => ({ ...d, type: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-zinc-900 border-zinc-700 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
                       {DOMESTIC_REPORT_TYPES.map((item) => (
                         <SelectItem key={item.value} value={item.value}>
                           {item.label}
@@ -292,10 +296,10 @@ export function AdminReportDialog({
                       value={draft.behavior || ''}
                       onValueChange={(value) => value && setDraft((d) => ({ ...d, behavior: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-zinc-900 border-zinc-700 text-white">
                         <SelectValue placeholder="Select behavior" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
                         {WILDLIFE_BEHAVIORS.map((item) => (
                           <SelectItem key={item.value} value={item.value}>
                             {item.label}
@@ -310,10 +314,10 @@ export function AdminReportDialog({
                       value={draft.condition || ''}
                       onValueChange={(value) => value && setDraft((d) => ({ ...d, condition: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-zinc-900 border-zinc-700 text-white">
                         <SelectValue placeholder="Select condition" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-zinc-900 border-zinc-700 text-white">
                         {WILDLIFE_CONDITIONS.map((item) => (
                           <SelectItem key={item.value} value={item.value}>
                             {item.label}
