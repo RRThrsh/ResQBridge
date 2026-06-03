@@ -4,7 +4,7 @@ import { v } from 'convex/values'
 import { assertAdmin } from './lib/adminAccess'
 import { defaultNews, defaultWildlife } from './lib/defaultContent'
 
-// FIX: Updated this root validator so BOTH create and update actions allow missing fields safely
+// Root validator that handles both singular and plural images
 const wildlifeItemValidator = v.object({
   id: v.string(),
   commonName: v.string(),
@@ -25,8 +25,10 @@ const wildlifeItemValidator = v.object({
   description: v.string(),
   ecologicalImportance: v.string(),
 
-  // These are now optional everywhere!
+  // FIX: Mark BOTH formats as completely optional so old/new code never clashes
+  image: v.optional(v.string()),
   images: v.optional(v.array(v.string())),
+  
   localName: v.optional(v.string()),
   scientificName: v.optional(v.string()),
   status: v.optional(
@@ -219,7 +221,11 @@ export const createWildlifeItem = mutation({
       diet: v.string(),
       activeTime: wildlifeItemValidator.fields.activeTime,
       ecologicalImportance: v.string(),
+      
+      // FIX: Accepting both formats explicitly so old/new code versions don't throw errors
+      image: v.optional(v.string()),
       images: v.optional(v.array(v.string())),
+
       localName: v.optional(v.string()),
       scientificName: v.optional(v.string()),
       status: v.optional(wildlifeItemValidator.fields.status),
@@ -241,6 +247,14 @@ export const createWildlifeItem = mutation({
       suffix += 1
     }
 
+    // Safely collect images whether they come via single string or array structure
+    let finalImages: string[] = []
+    if (Array.isArray(args.item.images)) {
+      finalImages = args.item.images
+    } else if (typeof args.item.image === 'string' && args.item.image) {
+      finalImages = [args.item.image]
+    }
+
     const nextItem: WildlifeItem = {
       id,
       commonName: args.item.commonName,
@@ -250,7 +264,7 @@ export const createWildlifeItem = mutation({
       diet: args.item.diet,
       activeTime: args.item.activeTime as any,
       ecologicalImportance: args.item.ecologicalImportance,
-      images: args.item.images ?? [],
+      images: finalImages,
       localName: args.item.localName ?? "",
       scientificName: args.item.scientificName ?? "",
       status: (args.item.status ?? "protected") as any,
@@ -299,7 +313,13 @@ export const updateWildlifeItem = mutation({
     const fallback = getMappedDefaultWildlife()
     const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
     
-    // FIX: Normalize the updated item here too, filling in the defaults if missing
+    let finalImages: string[] = []
+    if (Array.isArray(args.item.images)) {
+      finalImages = args.item.images
+    } else if (typeof (args.item as any).image === 'string' && (args.item as any).image) {
+      finalImages = [(args.item as any).image]
+    }
+
     const normalizedItem: WildlifeItem = {
       id: args.item.id,
       commonName: args.item.commonName,
@@ -309,7 +329,7 @@ export const updateWildlifeItem = mutation({
       diet: args.item.diet,
       activeTime: args.item.activeTime as any,
       ecologicalImportance: args.item.ecologicalImportance,
-      images: args.item.images ?? [],
+      images: finalImages,
       localName: args.item.localName ?? "",
       scientificName: args.item.scientificName ?? "",
       status: (args.item.status ?? "protected") as any,
