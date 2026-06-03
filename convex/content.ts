@@ -222,8 +222,8 @@ export const createWildlifeItem = mutation({
       activeTime: wildlifeItemValidator.fields.activeTime,
       ecologicalImportance: v.string(),
       
-      // FIX: Accepting both formats explicitly so old/new code versions don't throw errors
       image: v.optional(v.string()),
+      // Expect an array of image strings (e.g., base64 or URLs)
       images: v.optional(v.array(v.string())),
 
       localName: v.optional(v.string()),
@@ -247,12 +247,17 @@ export const createWildlifeItem = mutation({
       suffix += 1
     }
 
-    // Safely collect images whether they come via single string or array structure
+    // Process incoming image data
     let finalImages: string[] = []
     if (Array.isArray(args.item.images)) {
       finalImages = args.item.images
     } else if (typeof args.item.image === 'string' && args.item.image) {
       finalImages = [args.item.image]
+    }
+
+    // ENFORCE LIMIT: Keep only the first 3 pictures if more are sent
+    if (finalImages.length > 3) {
+      finalImages = finalImages.slice(0, 3)
     }
 
     const nextItem: WildlifeItem = {
@@ -264,7 +269,7 @@ export const createWildlifeItem = mutation({
       diet: args.item.diet,
       activeTime: args.item.activeTime as any,
       ecologicalImportance: args.item.ecologicalImportance,
-      images: finalImages,
+      images: finalImages, // Stores up to 3 pictures
       localName: args.item.localName ?? "",
       scientificName: args.item.scientificName ?? "",
       status: (args.item.status ?? "protected") as any,
