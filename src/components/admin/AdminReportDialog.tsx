@@ -61,6 +61,7 @@ export function AdminReportDialog({
 
   const [saving, setSaving] = useState(false)
   const [assignRescuerEmail, setAssignRescuerEmail] = useState('')
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [draft, setDraft] = useState({
     animalName: '',
     location: '',
@@ -181,10 +182,25 @@ export function AdminReportDialog({
                     key={`${index}-${photo.slice(0, 16)}`}
                     src={photo}
                     alt={`${activeReport.animalName} ${index + 1}`}
-                    className="aspect-square w-full rounded-lg border border-border object-cover"
+                    onClick={() => setPreviewImage(photo)}
+                    className="aspect-square w-full rounded-lg border border-border object-cover cursor-pointer hover:opacity-80 transition"
                   />
                 ))}
               </div>
+
+              {previewImage && (
+                <div
+                  className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+                  onClick={() => setPreviewImage(null)}
+                >
+                  <img
+                    src={previewImage}
+                    alt="Preview"
+                    className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              )}
             </div>
           ) : null}
 
