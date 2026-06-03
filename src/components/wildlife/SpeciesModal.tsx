@@ -40,7 +40,7 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
   <img
     src={species.images?.[selectedImage]}
     alt={species.commonName}
-    className="max-h-[400px] w-auto object-contain"
+    className="w-full h-[500px] object-contain bg-black/5"
   />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
