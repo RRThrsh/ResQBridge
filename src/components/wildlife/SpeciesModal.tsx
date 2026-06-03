@@ -28,13 +28,24 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
   if (!species) return null
   const [selectedImage, setSelectedImage] = useState(0)
   const { Icon: ActiveIcon, label: activeLabel, color: activeColor } = activeTimeIcons[species.activeTime]
+const hideScrollbarStyles = `
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+`
+return (
+  <>
+    <style>{hideScrollbarStyles}</style>
 
-  return (
     <Sheet open={!!species} onOpenChange={onClose}>
-      <SheetContent
-        side="right"
-        className="w-full sm:w-[520px] bg-background border-l border-border p-0 overflow-y-auto"
-      >
+<SheetContent
+  side="right"
+  className="w-full sm:w-[520px] bg-background border-l border-border p-0 overflow-y-auto scrollbar-hide"
+  style={{
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+  }}
+>
         {/* Hero image */}
 <div className="relative bg-muted flex justify-center">
   <img
@@ -67,12 +78,21 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
 </div>
 
 {/* Image Gallery */}
-<div className="flex gap-2 p-4 overflow-x-auto bg-card border-b border-border">
+<div
+  className="flex gap-2 overflow-x-auto overflow-y-hidden p-4 bg-card border-b border-border snap-x snap-mandatory touch-pan-x"
+  style={{
+    WebkitOverflowScrolling: 'touch',
+    touchAction: 'pan-x',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+  }}
+  onTouchStart={(e) => e.stopPropagation()}
+>
   {species.images?.map((img, index) => (
     <button
       key={index}
       onClick={() => setSelectedImage(index)}
-      className={`rounded-lg overflow-hidden border-2 ${
+      className={`shrink-0 snap-center rounded-lg overflow-hidden border-2 transition-all ${
         selectedImage === index
           ? 'border-primary'
           : 'border-border'
@@ -81,7 +101,7 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
       <img
         src={img}
         alt={`${species.commonName}-${index}`}
-        className="w-16 h-16 object-cover"
+        className="w-16 h-16 object-cover select-none pointer-events-none"
       />
     </button>
   ))}
@@ -185,5 +205,6 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
         </div>
       </SheetContent>
     </Sheet>
+    </>
   )
 }
