@@ -62,6 +62,10 @@ export function AdminReportDialog({
   const [saving, setSaving] = useState(false)
   const [assignRescuerEmail, setAssignRescuerEmail] = useState('')
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+if (!open && previewImage) {
+  setPreviewImage(null)
+}
   const [draft, setDraft] = useState({
     animalName: '',
     location: '',
@@ -137,6 +141,35 @@ export function AdminReportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      
+                {previewImage && (
+                  <div
+                    className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/90"
+                    onClick={() => setPreviewImage(null)}
+                  >
+                    {/* IMAGE WRAPPER */}
+                    <div
+                      className="relative flex items-center justify-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* CLOSE BUTTON */}
+                      <button
+                        type="button"
+                        onClick={() => setPreviewImage(null)}
+                        className="absolute -top-4 -right-4 z-[999999] flex h-10 w-10 items-center justify-center rounded-full bg-white text-3xl font-bold text-black shadow-lg"
+                      >
+                        ×
+                      </button>
+
+                      {/* IMAGE */}
+                      <img
+                        src={previewImage}
+                        alt="Preview"
+                        className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg bg-background text-foreground dark:bg-zinc-950 dark:text-white dark:border-zinc-800">
         <DialogHeader>
           <DialogTitle>{isView ? 'View report' : 'Edit report'}</DialogTitle>
@@ -188,33 +221,6 @@ export function AdminReportDialog({
                 ))}
               </div>
 
-              {previewImage && (
-                <div
-                  className="fixed inset-0 z-[99999] bg-black/90 flex items-center justify-center p-4"
-                  onClick={() => setPreviewImage(null)}
-                >
-                  {/* CLOSE BUTTON */}
-                  <button
-                    type="button"
-                    onClick={() => setPreviewImage(null)}
-                    className="absolute top-5 right-5 z-[100000] flex h-10 w-10 items-center justify-center rounded-full bg-black/70 text-2xl text-white hover:bg-black"
-                  >
-                    ×
-                  </button>
-
-                  {/* IMAGE CONTAINER */}
-                  <div
-                    className="relative flex max-h-[90vh] max-w-[90vw] items-center justify-center"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <img
-                      src={previewImage}
-                      alt="Preview"
-                      className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain shadow-2xl"
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           ) : null}
 
