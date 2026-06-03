@@ -13,10 +13,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { normalizeEmail } from '@/lib/admin'
 import { formatDateTime } from '@/lib/dates'
-import { useQuery } from 'convex/react'
 import { toast } from 'sonner'
 
 type DialogMode = 'view' | 'edit'
@@ -39,10 +37,6 @@ export function AdminUserDialog({
   onOpenChange,
 }: Props) {
   const updateUser = useMutation(api.admin.updateUser)
-  const admins = useQuery(
-    api.admin.listAdmins,
-    adminEmail ? { adminEmail: normalizeEmail(adminEmail) } : 'skip',
-  )
   const [saving, setSaving] = useState(false)
   const [draft, setDraft] = useState({ firstName: '', lastName: '' })
 
@@ -63,10 +57,6 @@ export function AdminUserDialog({
   if (!userRow) return null
 
   const activeUser = userRow
-  const isDbAdmin = admins?.some(
-    (admin) => normalizeEmail(admin.email) === normalizeEmail(activeUser.email),
-  )
-  const role = activeUser.role ?? (isDbAdmin ? 'admin' : 'user')
 
   async function handleSave() {
     setSaving(true)
@@ -109,12 +99,6 @@ export function AdminUserDialog({
             <div>
               <dt className="text-xs text-muted-foreground">Contact number</dt>
               <dd>{userRow.contactPhone || '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Role</dt>
-              <dd className="mt-1">
-                <Badge variant={role === 'admin' ? 'default' : 'outline'}>{role}</Badge>
-              </dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Joined</dt>
