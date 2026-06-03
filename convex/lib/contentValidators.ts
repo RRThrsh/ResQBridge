@@ -39,7 +39,7 @@ export const newsItemValidator = v.object({
   excerpt: v.string(),
   body: v.string(),
   date: v.string(),
-  image: v.string(),
+images: v.optional(v.array(v.string())),
   category: v.string(),
 })
 
