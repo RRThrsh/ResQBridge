@@ -9,7 +9,6 @@ import { AdminTableActionsCell, AdminTableCell } from '@/components/admin/AdminT
 import { AdminTablePaginationBar } from '@/components/admin/AdminTablePagination'
 import { usePaginatedRows } from '@/hooks/usePaginatedRows'
 import { AdminUserDialog } from '@/components/admin/AdminUserDialog'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { normalizeEmail } from '@/lib/admin'
@@ -35,25 +34,22 @@ export function AdminUsersPage() {
     admin ? { adminEmail: normalizeEmail(admin.email) } : 'skip',
   )
 
-  const admins = useQuery(
-    api.admin.listAdmins,
-    admin ? { adminEmail: normalizeEmail(admin.email) } : 'skip',
-  )
 
-  const adminEmails = useMemo(
-    () => new Set(admins?.map((admin) => normalizeEmail(admin.email)) ?? []),
-    [admins],
-  )
+const users = useMemo(() => {
+  if (!rows) return []
 
-  const users = useMemo(() => {
-    if (!rows) return []
-    const q = search.trim().toLowerCase()
-    return rows.filter((row) => {
+  const q = search.trim().toLowerCase()
+
+  return rows
+    .filter((row) => row.role === 'user')
+    .filter((row) => {
       if (!q) return true
+
       const fullName = `${row.firstName} ${row.lastName}`.toLowerCase()
+
       return row.email.includes(q) || fullName.includes(q)
     })
-  }, [rows, search])
+}, [rows, search])
 
   const pagination = usePaginatedRows(users, { resetKey: search })
 
@@ -117,22 +113,20 @@ export function AdminUsersPage() {
               <tr>
                 <th className="w-[22%] px-4 py-3 font-medium">Name</th>
                 <th className="w-[34%] px-4 py-3 font-medium">Email</th>
-                <th className="w-[12%] px-4 py-3 font-medium">Role</th>
-                <th className="w-[14%] px-4 py-3 font-medium">Joined</th>
+<th className="w-[20%] px-4 py-3 font-medium">Joined</th>
                 <th className="w-14 px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+                  <td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">
                     No users found.
                   </td>
                 </tr>
               ) : (
                 pagination.paginatedRows.map((row) => {
-                  const role =
-                    row.role ?? (adminEmails.has(normalizeEmail(row.email)) ? 'admin' : 'user')
+
                   const isSelf = row.email === admin.email
                   const fullName = `${row.firstName} ${row.lastName}`
 
@@ -143,14 +137,6 @@ export function AdminUsersPage() {
                       </AdminTableCell>
                       <AdminTableCell className="text-muted-foreground" title={row.email}>
                         {row.email}
-                      </AdminTableCell>
-                      <AdminTableCell>
-                        <Badge
-                          variant={role === 'admin' ? 'default' : 'outline'}
-                          className="max-w-full truncate"
-                        >
-                          {role}
-                        </Badge>
                       </AdminTableCell>
                       <AdminTableCell className="text-muted-foreground">
                         {formatDate(row.createdAt)}
