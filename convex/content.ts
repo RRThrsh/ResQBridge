@@ -4,23 +4,16 @@ import { v } from 'convex/values'
 import { assertAdmin } from './lib/adminAccess'
 import { defaultNews, defaultWildlife } from './lib/defaultContent'
 
+// FIX: Updated this root validator so BOTH create and update actions allow missing fields safely
 const wildlifeItemValidator = v.object({
   id: v.string(),
   commonName: v.string(),
-  localName: v.string(),
-  scientificName: v.string(),
   category: v.union(
     v.literal('mammal'),
     v.literal('bird'),
     v.literal('reptile'),
     v.literal('amphibian'),
     v.literal('marine'),
-  ),
-  status: v.union(
-    v.literal('critically-endangered'),
-    v.literal('endangered'),
-    v.literal('vulnerable'),
-    v.literal('protected'),
   ),
   habitat: v.string(),
   diet: v.string(),
@@ -30,13 +23,22 @@ const wildlifeItemValidator = v.object({
     v.literal('crepuscular'),
   ),
   description: v.string(),
-  safetyTips: v.array(v.string()),
-ecologicalImportance: v.string(),
+  ecologicalImportance: v.string(),
 
-
-images: v.optional(v.array(v.string())),
-
-tags: v.array(v.string()),
+  // These are now optional everywhere!
+  images: v.optional(v.array(v.string())),
+  localName: v.optional(v.string()),
+  scientificName: v.optional(v.string()),
+  status: v.optional(
+    v.union(
+      v.literal('critically-endangered'),
+      v.literal('endangered'),
+      v.literal('vulnerable'),
+      v.literal('protected'),
+    )
+  ),
+  safetyTips: v.optional(v.array(v.string())),
+  tags: v.optional(v.array(v.string())),
 })
 
 const newsItemValidator = v.object({
@@ -63,7 +65,7 @@ type WildlifeItem = {
   description: string
   safetyTips: string[]
   ecologicalImportance: string
-images: string[]
+  images: string[]
   tags: string[]
 }
 
@@ -78,15 +80,13 @@ type NewsItem = {
   category: string
 }
 
-// --- VERCEL FIX: Helper to safely bridge default data to the new schema ---
 function getMappedDefaultWildlife(): WildlifeItem[] {
   return defaultWildlife.map((item: any) => {
-    const { image, ...rest } = item; // Pull out the old image property if it exists
+    const { image, ...rest } = item;
     return {
       ...rest,
       safetyTips: Array.isArray(item.safetyTips) ? [...item.safetyTips] : [],
       tags: Array.isArray(item.tags) ? [...item.tags] : [],
-      // Convert old 'image' string into the new 'images' array
       images: Array.isArray(item.images) ? [...item.images] : (image ? [image] : []),
     } as WildlifeItem;
   });
@@ -102,22 +102,22 @@ async function getItems<T>(
     .withIndex('by_key', (q) => q.eq('key', key))
     .unique()
 
-if (!row) return fallback
+  if (!row) return fallback
 
-const parsed = JSON.parse(row.itemsJson)
+  const parsed = JSON.parse(row.itemsJson)
 
-if (key === 'wildlife') {
-  return parsed.map((item: any) => ({
-    ...item,
-    images: Array.isArray(item.images)
-      ? item.images
-      : item.image
-        ? [item.image]
-        : [],
-  })) as T[]
-}
+  if (key === 'wildlife') {
+    return parsed.map((item: any) => ({
+      ...item,
+      images: Array.isArray(item.images)
+        ? item.images
+        : item.image
+          ? [item.image]
+          : [],
+    })) as T[]
+  }
 
-return parsed as T[]
+  return parsed as T[]
 }
 
 async function saveItems(
@@ -150,7 +150,7 @@ export const listWildlife = query({
     return await getItems<WildlifeItem>(
       ctx,
       'wildlife',
-      getMappedDefaultWildlife() // Use the helper
+      getMappedDefaultWildlife()
     )
   },
 })
@@ -177,7 +177,7 @@ export const seedContent = mutation({
     if (!wildlifeRow) {
       await ctx.db.insert('siteContent', {
         key: 'wildlife',
-        itemsJson: JSON.stringify(getMappedDefaultWildlife()), // Use the helper
+        itemsJson: JSON.stringify(getMappedDefaultWildlife()),
         updatedAt: Date.now(),
       })
     }
@@ -213,64 +213,56 @@ export const createWildlifeItem = mutation({
     adminEmail: v.string(),
     item: v.object({
       commonName: v.string(),
-      localName: v.string(),
-      scientificName: v.string(),
-
+      description: v.string(),
       category: wildlifeItemValidator.fields.category,
-      status: wildlifeItemValidator.fields.status,
-
       habitat: v.string(),
       diet: v.string(),
-
       activeTime: wildlifeItemValidator.fields.activeTime,
-
-      description: v.string(),
-      safetyTips: v.array(v.string()),
       ecologicalImportance: v.string(),
-
       images: v.optional(v.array(v.string())),
-
-      tags: v.array(v.string()),
+      localName: v.optional(v.string()),
+      scientificName: v.optional(v.string()),
+      status: v.optional(wildlifeItemValidator.fields.status),
+      safetyTips: v.optional(v.array(v.string())),
+      tags: v.optional(v.array(v.string())),
     }),
   },
-
   returns: v.string(),
-
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-
     const fallback = getMappedDefaultWildlife()
+    const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
 
-    const items = await getItems<WildlifeItem>(
-      ctx,
-      'wildlife',
-      fallback
-    )
-
-    const baseId = slugId(
-      args.item.commonName,
-      `species-${Date.now()}`
-    )
-
+    const baseId = slugId(args.item.commonName, `species-${Date.now()}`)
     let id = baseId
     let suffix = 1
-
     while (items.some((item) => item.id === id)) {
       id = `${baseId}-${suffix}`
       suffix += 1
     }
 
-const nextItem: WildlifeItem = {
-  ...args.item,
-  id,
-  images: args.item.images ?? [],
-}
+    const nextItem: WildlifeItem = {
+      id,
+      commonName: args.item.commonName,
+      description: args.item.description,
+      category: args.item.category as any,
+      habitat: args.item.habitat,
+      diet: args.item.diet,
+      activeTime: args.item.activeTime as any,
+      ecologicalImportance: args.item.ecologicalImportance,
+      images: args.item.images ?? [],
+      localName: args.item.localName ?? "",
+      scientificName: args.item.scientificName ?? "",
+      status: (args.item.status ?? "protected") as any,
+      safetyTips: args.item.safetyTips ?? [],
+      tags: args.item.tags ?? [],
+    }
 
     await saveItems(ctx, 'wildlife', [...items, nextItem])
-
     return id
   },
 })
+
 export const createNewsItem = mutation({
   args: {
     adminEmail: v.string(),
@@ -287,11 +279,7 @@ export const createNewsItem = mutation({
   returns: v.string(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const items = await getItems<NewsItem>(
-      ctx,
-      'news',
-      defaultNews.map((item) => ({ ...item })),
-    )
+    const items = await getItems<NewsItem>(ctx, 'news', defaultNews.map((item) => ({ ...item })))
     const prefix = args.item.type === 'event' ? 'ev' : 'nw'
     const id = `${prefix}-${Date.now()}`
     const nextItem: NewsItem = { ...args.item, id }
@@ -308,25 +296,35 @@ export const updateWildlifeItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const fallback = getMappedDefaultWildlife() // Use the helper
+    const fallback = getMappedDefaultWildlife()
     const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
-    const normalizedItem = {
-  ...args.item,
-  images: Array.isArray(args.item.images)
-    ? args.item.images
-    : [],
-}
+    
+    // FIX: Normalize the updated item here too, filling in the defaults if missing
+    const normalizedItem: WildlifeItem = {
+      id: args.item.id,
+      commonName: args.item.commonName,
+      description: args.item.description,
+      category: args.item.category as any,
+      habitat: args.item.habitat,
+      diet: args.item.diet,
+      activeTime: args.item.activeTime as any,
+      ecologicalImportance: args.item.ecologicalImportance,
+      images: args.item.images ?? [],
+      localName: args.item.localName ?? "",
+      scientificName: args.item.scientificName ?? "",
+      status: (args.item.status ?? "protected") as any,
+      safetyTips: args.item.safetyTips ?? [],
+      tags: args.item.tags ?? [],
+    }
 
-const next = items.map((item) =>
-  item.id === args.item.id
-    ? normalizedItem
-    : {
-        ...item,
-        images: Array.isArray(item.images)
-          ? item.images
-          : [],
-      }
-)
+    const next = items.map((item) =>
+      item.id === args.item.id
+        ? normalizedItem
+        : {
+            ...item,
+            images: Array.isArray(item.images) ? item.images : [],
+          }
+    )
     if (!next.some((item) => item.id === args.item.id)) {
       throw new Error('Species not found.')
     }
@@ -340,7 +338,7 @@ export const deleteWildlifeItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const fallback = getMappedDefaultWildlife() // Use the helper
+    const fallback = getMappedDefaultWildlife()
     const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
     const next = items.filter((item) => item.id !== args.itemId)
     if (next.length === items.length) {
@@ -359,11 +357,7 @@ export const updateNewsItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const items = await getItems<NewsItem>(
-      ctx,
-      'news',
-      defaultNews.map((item) => ({ ...item })),
-    )
+    const items = await getItems<NewsItem>(ctx, 'news', defaultNews.map((item) => ({ ...item })))
     const next = items.map((item) => (item.id === args.item.id ? args.item : item))
     if (!next.some((item) => item.id === args.item.id)) {
       throw new Error('Item not found.')
@@ -378,11 +372,7 @@ export const deleteNewsItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const items = await getItems<NewsItem>(
-      ctx,
-      'news',
-      defaultNews.map((item) => ({ ...item })),
-    )
+    const items = await getItems<NewsItem>(ctx, 'news', defaultNews.map((item) => ({ ...item })))
     const next = items.filter((item) => item.id !== args.itemId)
     if (next.length === items.length) {
       throw new Error('Item not found.')
