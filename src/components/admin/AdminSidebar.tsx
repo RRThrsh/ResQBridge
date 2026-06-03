@@ -86,12 +86,14 @@ export function AdminSidebar({ onNavigate }: Props) {
         </nav>
 
         <div className="space-y-1 border-t border-sidebar-border p-3">
-          <a
-            href="/"
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            View public site
-          </a>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          View public site
+        </a>
           <button
             type="button"
             onClick={() => setSignOutOpen(true)}
@@ -107,9 +109,7 @@ export function AdminSidebar({ onNavigate }: Props) {
         open={signOutOpen}
         onOpenChange={setSignOutOpen}
         title="Sign out?"
-        description="You will leave the admin panel and return to the public PWRRC website. You can sign in again anytime."
-        confirmLabel="Sign out"
-        confirmVariant="default"
+        description="You will leave the admin panel and return to the public ResQBridge website. You can sign in again anytime."
         onConfirm={confirmSignOut}
       />
     </>
