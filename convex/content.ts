@@ -33,7 +33,7 @@ const wildlifeItemValidator = v.object({
   safetyTips: v.array(v.string()),
 ecologicalImportance: v.string(),
 
-image: v.optional(v.string()),
+
 images: v.optional(v.array(v.string())),
 
 tags: v.array(v.string()),
@@ -63,7 +63,6 @@ type WildlifeItem = {
   description: string
   safetyTips: string[]
   ecologicalImportance: string
-image?: string
 images: string[]
   tags: string[]
 }
@@ -229,7 +228,6 @@ export const createWildlifeItem = mutation({
       safetyTips: v.array(v.string()),
       ecologicalImportance: v.string(),
 
-      image: v.optional(v.string()),
       images: v.optional(v.array(v.string())),
 
       tags: v.array(v.string()),
@@ -262,14 +260,11 @@ export const createWildlifeItem = mutation({
       suffix += 1
     }
 
-    const nextItem: WildlifeItem = {
-      ...args.item,
-      id,
-
-      images:
-        args.item.images ??
-        (args.item.image ? [args.item.image] : []),
-    }
+const nextItem: WildlifeItem = {
+  ...args.item,
+  id,
+  images: args.item.images ?? [],
+}
 
     await saveItems(ctx, 'wildlife', [...items, nextItem])
 
@@ -315,7 +310,23 @@ export const updateWildlifeItem = mutation({
     await assertAdmin(ctx, args.adminEmail)
     const fallback = getMappedDefaultWildlife() // Use the helper
     const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
-    const next = items.map((item) => (item.id === args.item.id ? args.item : item))
+    const normalizedItem = {
+  ...args.item,
+  images: Array.isArray(args.item.images)
+    ? args.item.images
+    : [],
+}
+
+const next = items.map((item) =>
+  item.id === args.item.id
+    ? normalizedItem
+    : {
+        ...item,
+        images: Array.isArray(item.images)
+          ? item.images
+          : [],
+      }
+)
     if (!next.some((item) => item.id === args.item.id)) {
       throw new Error('Species not found.')
     }
