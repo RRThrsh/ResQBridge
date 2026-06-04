@@ -126,12 +126,10 @@ export function AccountPage() {
       
       // Determine what to save to the database's primary 'email' field
       // If they provided a phone number, we use that as the primary DB identifier
-      const finalPrimaryIdentifier = phoneInput.trim() ? phoneInput.trim() : emailInput.trim()
       const finalContactPhone = emailInput.trim() ? phoneInput.trim() : ''
 
       const updated = await updateProfile({
         email: normalizeEmail(accountUser.email), // Target the current user
-        newEmail: normalizeEmail(finalPrimaryIdentifier), // Assuming your backend supports changing this
         firstName,
         lastName,
         contactPhone: finalContactPhone,
