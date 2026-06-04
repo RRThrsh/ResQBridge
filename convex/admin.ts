@@ -374,6 +374,8 @@ export const getReportAnalytics = query({
           v.literal('en_route'),
           v.literal('rescue_success'),
           v.literal('rescue_failed'),
+          v.literal('published'), // <-- ADD THIS!
+          v.literal('rejected')   // <-- ADD THIS!
         ),
         label: v.string(),
         count: v.number(),
