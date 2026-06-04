@@ -19,7 +19,7 @@ export function DomesticReportDetailPage() {
   const [loading, setLoading] = useState(false)
   const [confirmApprove, setConfirmApprove] = useState(false)
   const [confirmReject, setConfirmReject] = useState(false)
-
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
   // @ts-ignore
   const updateStatus = useMutation((api as any).reports.update)
 
@@ -36,7 +36,6 @@ export function DomesticReportDetailPage() {
       </div>
     )
   }
-
   if (!row) {
     return (
       <DomesticLayout title="Report" backTo="/pwrcc/domestic">
@@ -140,11 +139,12 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {allPhotos.map((url, i) => (
               <div key={i} className="overflow-hidden rounded-2xl border border-border bg-muted/30">
-                <img 
-                  src={url} 
-                  alt={`${rawData.animalName || 'Animal Photo'} - Image ${i + 1}`} 
-                  className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
-                />
+              <img
+                src={url}
+                alt={`${rawData.animalName || 'Animal Photo'} - Image ${i + 1}`}
+                className="w-full h-48 cursor-pointer object-cover transition-transform duration-300 hover:scale-105"
+                onClick={() => setPreviewImage(url)}
+              />
               </div>
             ))}
           </div>
@@ -189,6 +189,19 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
       </div>
       <ConfirmDialog open={confirmApprove} onOpenChange={setConfirmApprove} title="Approve and Publish?" description="This will make the domestic report visible on the public feed." confirmLabel="Publish Report" confirmVariant="default" loading={loading} onConfirm={() => handleStatusChange('published')} />
       <ConfirmDialog open={confirmReject} onOpenChange={setConfirmReject} title="Reject Report?" description="This will decline the report and it will not be shown to the public." confirmLabel="Reject Report" loading={loading} onConfirm={() => handleStatusChange('rejected')} />
+    {previewImage && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+    onClick={() => setPreviewImage(null)}
+  >
+    <img
+      src={previewImage}
+      alt="Preview"
+      className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain"
+      onClick={(e) => e.stopPropagation()}
+    />
+  </div>
+)}
     </DomesticLayout>
   )
 }
