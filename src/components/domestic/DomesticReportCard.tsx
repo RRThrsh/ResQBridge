@@ -6,7 +6,7 @@ import { statusLabel } from '@/lib/reports'
 import { cn } from '@/lib/utils'
 
 type Props = {
-  report: any // Accepts raw Convex fields
+  report: any
   variant?: 'default' | 'compact'
 }
 
@@ -14,24 +14,19 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
   const isCompact = variant === 'compact'
   const rawData = report as any
 
-  // ---------------------------------------------------------
-  // 1. CATCH-ALL PHOTO RESOLVER (Same as detail page)
-  // ---------------------------------------------------------
   let finalPhotoUrl = rawData.photoUrl || rawData.imageUrl || rawData.photo || rawData.photoDataUrl
-  
   if (!finalPhotoUrl && rawData.photoDataUrls?.length > 0) finalPhotoUrl = rawData.photoDataUrls[0]
   if (!finalPhotoUrl && rawData.photos?.length > 0) finalPhotoUrl = rawData.photos[0]
   if (!finalPhotoUrl && rawData.imageUrls?.length > 0) finalPhotoUrl = rawData.imageUrls[0]
 
-  // Direct Convex Storage ID constructor using your dynamic Environment Variable
   const storageId = rawData.photoStorageId || rawData.storageId || rawData.imageId || (rawData.photoStorageIds && rawData.photoStorageIds[0])
   
   if (!finalPhotoUrl && storageId) {
-    const convexUrl = import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud';
-    finalPhotoUrl = `${convexUrl}/api/storage/${storageId}`;
+    // FIX: Safely remove any trailing slashes from the environment variable
+    const baseUrl = (import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud').replace(/\/$/, '');
+    finalPhotoUrl = `${baseUrl}/api/storage/${storageId}`;
   }
 
-  // Count remaining photos for the +1 badge
   const photoCount = rawData.photoStorageIds?.length || rawData.photoDataUrls?.length || rawData.photos?.length || 0
   const extraPhotos = photoCount > 1 ? photoCount - 1 : 0
 
