@@ -38,33 +38,29 @@ async function sendOtpEmail(
 }
 
 // --- NEW: SMS SENDER VIA PHILSMS ---
-async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
-  // 1. Strip everything except pure numbers
+async function sendOtpSms(phone: string, code: string) {
+  // 1. Format the phone number to +63
   let cleanNumber = phone.replace(/\D/g, '')
   let formattedPhone = ''
   
-  // 2. Aggressively format to +63 standard
   if (cleanNumber.length === 11 && cleanNumber.startsWith('09')) {
-    // They typed 09539814023 -> turn to +639539814023
     formattedPhone = '+63' + cleanNumber.substring(1)
   } else if (cleanNumber.length === 10 && cleanNumber.startsWith('9')) {
-    // The zero got dropped (9539814023) -> turn to +639539814023
     formattedPhone = '+63' + cleanNumber
   } else if (cleanNumber.length === 12 && cleanNumber.startsWith('63')) {
-    // They typed 639539814023 -> turn to +639539814023
     formattedPhone = '+' + cleanNumber
   } else {
-    // Fallback just in case
     formattedPhone = '+' + cleanNumber
   }
 
-  // @ts-ignore
-  const philsmsToken = await ctx.runQuery(api.settings.getSmsToken) // Make sure this matches your DB query!
+  // 2. Grab your token directly from the environment variables!
+  const philsmsToken = process.env.PHILSMS_API_TOKEN
   
   if (!philsmsToken) {
-    throw new Error('PhilSMS API token is missing in the database.')
+    throw new Error('PhilSMS API token is missing in Convex environment variables.')
   }
 
+  // 3. Send the request
   const response = await fetch('https://dashboard.philsms.com/api/v3/sms/send', {
     method: 'POST',
     headers: {
@@ -73,19 +69,21 @@ async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
       'Accept': 'application/json',
     },
     body: JSON.stringify({
-      recipient: formattedPhone, // Now sending the strict +63 format!
+      recipient: formattedPhone, // Now sending the perfect +63 format
       sender_id: 'PhilSMS', 
       type: 'plain',
       message: `Your verification code is: ${code}. Please do not share this with anyone.`,
     }),
   })
 
+  // Capture the actual error from PhilSMS
   if (!response.ok) {
     const errorText = await response.text()
     console.error('PhilSMS API Error:', errorText)
     throw new Error(`PhilSMS rejected the request: ${errorText}`)
   }
 }
+
 // --- UPDATED: USER SEND OTP ---
 const userSendOtp = httpAction(async (ctx, request) => {
   try {
@@ -142,10 +140,10 @@ const userSendOtp = httpAction(async (ctx, request) => {
     })
 
     try {
-      // THE MAGIC SWITCH: Route to Email or SMS based on the type
+      // THE MAGIC SWITCH
       if (type === 'phone') {
-        // Now passing ctx so the DB query inside sendOtpSms works
-        await sendOtpSms(ctx, identifier, code)
+        // No ctx needed here since we are using process.env!
+        await sendOtpSms(identifier, code)
       } else {
         await sendOtpEmail(ctx, {
           email: identifier,
