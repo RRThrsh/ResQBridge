@@ -58,12 +58,13 @@ export function DomesticReportDetailPage() {
   if (!finalPhotoUrl && rawData.photos?.length > 0) finalPhotoUrl = rawData.photos[0]
   if (!finalPhotoUrl && rawData.imageUrls?.length > 0) finalPhotoUrl = rawData.imageUrls[0]
 
-  // Direct Convex Storage ID constructor (forces the image to load from your specific database)
+  // Direct Convex Storage ID constructor using your dynamic Environment Variable
   const storageId = rawData.photoStorageId || rawData.storageId || rawData.imageId || (rawData.photoStorageIds && rawData.photoStorageIds[0])
   if (!finalPhotoUrl && storageId) {
-    finalPhotoUrl = `https://pleasant-otter-637.convex.cloud/api/storage/${storageId}`
+    // This dynamically pulls your Production URL in Vercel, and Dev URL on your computer!
+    const convexUrl = import.meta.env.VITE_CONVEX_URL;
+    finalPhotoUrl = `${convexUrl}/api/storage/${storageId}`;
   }
-
   // ---------------------------------------------------------
   // 2. NAME & CONDITION FIX 
   // ---------------------------------------------------------
