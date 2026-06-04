@@ -15,6 +15,8 @@ export const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
   en_route: 'En route',
   rescue_success: 'Rescue success',
   rescue_failed: 'Rescue failed',
+  published: 'Published',
+  rejected: 'Rejected',
 }
 
 export const DOMESTIC_TYPE_LABELS: Record<string, string> = {
