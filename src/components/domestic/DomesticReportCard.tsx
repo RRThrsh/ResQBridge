@@ -3,27 +3,41 @@ import { ChevronRight, MapPin } from 'lucide-react'
 import { RescuerStatusBadge } from '@/components/rescuer/RescuerStatusBadge'
 import { formatDate } from '@/lib/dates'
 import { statusLabel } from '@/lib/reports'
-import { getReportPhotos } from '@/lib/reportPhotos'
 import { cn } from '@/lib/utils'
 
 type Props = {
-  report: any // Changed to any to catch raw Convex fields if mapping missed them
+  report: any // Accepts raw Convex fields
   variant?: 'default' | 'compact'
 }
 
 export function DomesticReportCard({ report, variant = 'default' }: Props) {
   const isCompact = variant === 'compact'
+  const rawData = report as any
 
-  // Safety net: Check all common image fields from your database, then fallback to the helper
-  const actualPhoto = report.photoUrl || report.imageUrl || (report.photos && report.photos[0]) || getReportPhotos(report)[0]
+  // ---------------------------------------------------------
+  // 1. CATCH-ALL PHOTO RESOLVER (Same as detail page)
+  // ---------------------------------------------------------
+  let finalPhotoUrl = rawData.photoUrl || rawData.imageUrl || rawData.photo || rawData.photoDataUrl
   
-  // Count remaining photos if it's an array
-  const photoCount = report.photos?.length || getReportPhotos(report).length
+  if (!finalPhotoUrl && rawData.photoDataUrls?.length > 0) finalPhotoUrl = rawData.photoDataUrls[0]
+  if (!finalPhotoUrl && rawData.photos?.length > 0) finalPhotoUrl = rawData.photos[0]
+  if (!finalPhotoUrl && rawData.imageUrls?.length > 0) finalPhotoUrl = rawData.imageUrls[0]
+
+  // Direct Convex Storage ID constructor using your dynamic Environment Variable
+  const storageId = rawData.photoStorageId || rawData.storageId || rawData.imageId || (rawData.photoStorageIds && rawData.photoStorageIds[0])
+  
+  if (!finalPhotoUrl && storageId) {
+    const convexUrl = import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud';
+    finalPhotoUrl = `${convexUrl}/api/storage/${storageId}`;
+  }
+
+  // Count remaining photos for the +1 badge
+  const photoCount = rawData.photoStorageIds?.length || rawData.photoDataUrls?.length || rawData.photos?.length || 0
   const extraPhotos = photoCount > 1 ? photoCount - 1 : 0
 
   return (
     <Link
-      to={`/pwrcc/domestic/reports/${report.id || report._id}`}
+      to={`/pwrcc/domestic/reports/${rawData.id || rawData._id}`}
       className={cn(
         'group flex gap-4 rounded-2xl border border-border bg-card p-3 sm:p-4',
         'transition-all hover:border-primary/30 hover:shadow-sm',
@@ -35,11 +49,11 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
           isCompact ? 'h-16 w-16' : 'h-20 w-20 sm:h-24 sm:w-24',
         )}
       >
-        {actualPhoto ? (
+        {finalPhotoUrl ? (
           <>
             <img
-              src={actualPhoto}
-              alt={report.animalName || 'Report photo'}
+              src={finalPhotoUrl}
+              alt={rawData.animalName || 'Report photo'}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             {extraPhotos > 0 ? (
@@ -57,10 +71,10 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
 
       <div className="flex min-w-0 flex-1 flex-col justify-center">
         <div className="mb-1.5 flex flex-wrap items-center gap-2">
-          <RescuerStatusBadge status={report.status} compact />
-          {report.reportNumber ? (
+          <RescuerStatusBadge status={rawData.status} compact />
+          {rawData.reportNumber ? (
             <span className="text-[10px] font-mono text-muted-foreground">
-              {report.reportNumber}
+              {rawData.reportNumber}
             </span>
           ) : null}
         </div>
@@ -72,20 +86,20 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
           )}
           style={{ fontFamily: 'var(--font-heading)' }}
         >
-          {report.animalName || 'Unknown Animal'}
+          {rawData.animalName || 'Unknown Animal'}
         </h3>
 
         <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="h-3 w-3 shrink-0" />
-          <span className="truncate">{report.location || 'No location provided'}</span>
+          <span className="truncate">{rawData.location || 'No location provided'}</span>
         </p>
 
         <p className="mt-1.5 text-[11px] text-muted-foreground capitalize">
           Domestic Report
           <span className="mx-1.5 text-border">·</span>
-          {formatDate(report.seenAt ?? report.createdAt ?? Date.now())}
+          {formatDate(rawData.seenAt ?? rawData.createdAt ?? Date.now())}
           <span className="mx-1.5 text-border">·</span>
-          {statusLabel(report.status)}
+          {statusLabel(rawData.status)}
         </p>
       </div>
 
