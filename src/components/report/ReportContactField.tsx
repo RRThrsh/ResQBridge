@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
@@ -11,6 +12,9 @@ type Props = {
 }
 
 export function ReportContactField({ userEmail, value, onChange }: Props) {
+  // 1. Add a state to track if the user wants to edit their saved number
+  const [isEditing, setIsEditing] = useState(false)
+
   const profile = useQuery(api.users.getProfile, {
     email: normalizeEmail(userEmail),
   })
@@ -25,12 +29,26 @@ export function ReportContactField({ userEmail, value, onChange }: Props) {
   }
 
   const savedPhone = profile?.contactPhone?.trim()
-  if (savedPhone) {
+
+  // 2. If they have a saved phone AND they haven't clicked edit, show the read-only view
+  if (savedPhone && !isEditing) {
     return (
       <div className="space-y-3">
-        <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Contact Number
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Contact Number
+          </label>
+          <button 
+            type="button" 
+            onClick={() => {
+              setIsEditing(true)
+              onChange(savedPhone) // Pre-fill the parent's state with the saved number
+            }}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Change
+          </button>
+        </div>
         <p className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-medium text-foreground">
           {savedPhone}
         </p>
@@ -41,11 +59,27 @@ export function ReportContactField({ userEmail, value, onChange }: Props) {
     )
   }
 
+  // 3. Render the input field if there is no saved phone OR if isEditing is true
   return (
     <div className="space-y-3">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Contact Number <span className="text-destructive">*</span>
-      </label>
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Contact Number <span className="text-destructive">*</span>
+        </label>
+        {/* Optional: Allow them to cancel editing and go back to the saved number */}
+        {savedPhone && isEditing && (
+          <button 
+            type="button" 
+            onClick={() => {
+              setIsEditing(false)
+              onChange('') // Clear the parent's state to fall back to the saved one
+            }}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
       <Input
         type="tel"
         value={value}
@@ -55,7 +89,9 @@ export function ReportContactField({ userEmail, value, onChange }: Props) {
         required
       />
       <p className="text-xs text-muted-foreground">
-        Required once per account. You will not need to enter it again on future reports.
+        {savedPhone 
+          ? "Update the number for this report and future reports." 
+          : "Required once per account. You will not need to enter it again on future reports."}
       </p>
     </div>
   )
