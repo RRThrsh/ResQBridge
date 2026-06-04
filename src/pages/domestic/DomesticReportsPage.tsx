@@ -172,14 +172,7 @@ export function DomesticReportsPage() {
           ) : (
             <div className="space-y-3">
               {list.map((report: any) => (
-                // WRAPPED IN A LINK HERE
-                <Link 
-                  key={report.id} 
-                  to={`/pwrcc/domestic/${report.id}`} 
-                  className="block transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
-                >
-                  <DomesticReportCard report={report} />
-                </Link>
+                <DomesticReportCard key={report.id} report={report} />
               ))}
             </div>
           )}
