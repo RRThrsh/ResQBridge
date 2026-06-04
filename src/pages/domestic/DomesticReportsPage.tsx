@@ -53,7 +53,7 @@ export function DomesticReportsPage() {
   // @ts-ignore
   const publishedRows = useQuery((api as any).domestic.listPublishedReports)
 
-  // FIX: We bypass the `rescuerReportToStored` helper here so the Card gets pristine Storage IDs
+  // 🚨 THE FIX: We bypass the filter so the Card receives the actual photoStorageIds!
   const pending = useMemo(() => (pendingRows ? pendingRows : []), [pendingRows])
   const published = useMemo(() => (publishedRows ? publishedRows : []), [publishedRows])
 
