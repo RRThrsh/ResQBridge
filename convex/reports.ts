@@ -69,13 +69,18 @@ async function getOwnedReport(
 export const listPublicDomestic = query({
   args: {},
   returns: v.array(publicDomesticReportValidator),
+
   handler: async (ctx) => {
     const rows = await ctx.db.query('reports').collect()
+
     const domestic = rows
       .filter((row) => row.category === 'domestic')
+      .filter((row) => row.status === 'published')
       .sort((a, b) => b.createdAt - a.createdAt)
 
-    return Promise.all(domestic.map((row) => toPublicDomesticReport(ctx, row)))
+    return Promise.all(
+      domestic.map((row) => toPublicDomesticReport(ctx, row))
+    )
   },
 })
 
