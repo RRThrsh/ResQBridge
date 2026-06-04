@@ -30,6 +30,7 @@ import type * as lib_reportPhotos from "../lib/reportPhotos.js";
 import type * as lib_reportStatus from "../lib/reportStatus.js";
 import type * as lib_rescuerAccess from "../lib/rescuerAccess.js";
 import type * as migrations from "../migrations.js";
+import type * as notifications from "../notifications.js";
 import type * as otp from "../otp.js";
 import type * as reportPhotoStorage from "../reportPhotoStorage.js";
 import type * as reports from "../reports.js";
@@ -66,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   "lib/reportStatus": typeof lib_reportStatus;
   "lib/rescuerAccess": typeof lib_rescuerAccess;
   migrations: typeof migrations;
+  notifications: typeof notifications;
   otp: typeof otp;
   reportPhotoStorage: typeof reportPhotoStorage;
   reports: typeof reports;

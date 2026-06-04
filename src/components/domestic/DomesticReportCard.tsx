@@ -17,18 +17,15 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
   // ---------------------------------------------------------
   // 1. EXACT SAME PHOTO LOGIC AS THE DETAIL PAGE
   // ---------------------------------------------------------
-  let allPhotos: string[] = []
-  const baseUrl = (import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud').replace(/\/$/, '')
+let allPhotos: string[] = []
 
-  if (rawData.photoStorageIds && Array.isArray(rawData.photoStorageIds)) {
-    allPhotos = rawData.photoStorageIds.map((id: string) => `${baseUrl}/api/storage/${id}`)
-  } else if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
-    allPhotos = rawData.photoDataUrls
-  } else if (rawData.photos && Array.isArray(rawData.photos)) {
-    allPhotos = rawData.photos
-  } else if (rawData.photoUrl) {
-    allPhotos = [rawData.photoUrl]
-  }
+if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
+  allPhotos = rawData.photoDataUrls
+} else if (rawData.photos && Array.isArray(rawData.photos)) {
+  allPhotos = rawData.photos
+} else if (rawData.photoUrl) {
+  allPhotos = [rawData.photoUrl]
+}
 
   // Grab the first photo for the card cover
   const finalPhotoUrl = allPhotos.length > 0 ? allPhotos[0] : null
