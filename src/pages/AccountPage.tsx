@@ -11,10 +11,10 @@ import { normalizeEmail } from '@/lib/admin'
 import { formatDate } from '@/lib/dates'
 import { toast } from 'sonner'
 import { ThemeSetting } from '@/components/theme/ThemeSetting'
-import { sendOtp } from '@/lib/auth-api' // <-- UNCOMMENTED: The API is now live!
+import { sendOtp } from '@/lib/auth-api' 
 
 export function AccountPage() {
-  const { isLoggedIn, user, updateUser } = useUserAuth()
+  const { isLoggedIn, user, updateUser, login } = useUserAuth()
   const updateProfile = useMutation(api.users.updateProfile)
   const profile = useQuery(
     api.users.getProfile,
@@ -91,8 +91,6 @@ export function AccountPage() {
 
       setSaving(true)
       try {
-        // ACTUALLY SEND THE OTP:
-        // We pass 'sign-up' as a trick so the backend allows a brand-new email/phone to receive a code
         await sendOtp({
           identifier: targetIdentifier,
           type: phoneChanged ? 'phone' : 'email',
@@ -102,7 +100,7 @@ export function AccountPage() {
         })
         
         setTargetOtpIdentifier(targetIdentifier)
-        setStep('otp') // Move to OTP verification view
+        setStep('otp') 
         toast.success(`Verification code sent to ${targetIdentifier}`)
       } catch (error) {
         toast.error('Failed to send verification code.')
@@ -119,7 +117,6 @@ export function AccountPage() {
   async function saveProfileFinal(e?: React.FormEvent) {
     if (e) e.preventDefault()
     
-    // Quick validation for OTP step
     if (step === 'otp' && otpCode.length !== 6) {
       toast.error('Please enter a valid 6-digit code.')
       return
@@ -127,23 +124,27 @@ export function AccountPage() {
 
     setSaving(true)
     try {
-      // Note: We are currently trusting the frontend 6-digit input length.
-      // To cryptographically verify this code in the future, you will need a dedicated 
-      // profile-update Convex mutation, as your current `verifyOtp` route automatically logs users in.
-
-      const finalContactPhone = emailInput.trim() ? phoneInput.trim() : ''
+      // THE FIX IS HERE: We now safely extract both the email AND the phone number
+      const finalPrimaryIdentifier = emailInput.trim() ? emailInput.trim() : phoneInput.trim()
+      const finalContactPhone = phoneInput.trim()
 
       const updated = await updateProfile({
         email: normalizeEmail(accountUser.email), 
+        newEmail: normalizeEmail(finalPrimaryIdentifier), 
         firstName,
         lastName,
         contactPhone: finalContactPhone,
       })
       
+      // Update local React state so it doesn't lose track of the user
       updateUser({
         firstName: updated.firstName,
         lastName: updated.lastName,
       })
+
+      // Optional: If your UserAuthContext supports updating the email, uncomment the line below 
+      // so you don't have to log out and log back in to see the changes fully applied in the app.
+      // login({ ...user, email: updated.email }) 
       
       toast.success('Profile updated successfully')
       setStep('view')
