@@ -50,8 +50,13 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 transition-colors group-hover:bg-primary/20">
-              <PawPrint className="h-3.5 w-3.5 text-primary" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden border border-primary/20 bg-primary/10 transition-colors group-hover:bg-primary/20">
+  <img
+    src="/resq.png"
+    alt="ResQBridge Logo"
+    className="h-full w-full object-cover"
+  />
+</div>
             </div>
             <span className="text-sm font-bold tracking-tight text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
               ResQBridge
