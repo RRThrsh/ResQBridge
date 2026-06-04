@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
-import { Loader2, Pencil, ShieldCheck } from 'lucide-react'
+import { Loader2, Pencil } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +11,6 @@ import { normalizeEmail } from '@/lib/admin'
 import { formatDate } from '@/lib/dates'
 import { toast } from 'sonner'
 import { ThemeSetting } from '@/components/theme/ThemeSetting'
-import { sendOtp } from '@/lib/auth-api' 
 
 export function AccountPage() {
   const { isLoggedIn, user, updateUser } = useUserAuth()
@@ -20,28 +19,16 @@ export function AccountPage() {
     api.users.getProfile,
     user ? { email: normalizeEmail(user.email) } : 'skip',
   )
-  
-  // UI State Machine: 'view' -> 'edit' -> 'otp'
-  const [step, setStep] = useState<'view' | 'edit' | 'otp'>('view')
+
+  const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  // Form Data
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [emailInput, setEmailInput] = useState('')
-  const [phoneInput, setPhoneInput] = useState('')
-  
-  // OTP Verification State
-  const [otpCode, setOtpCode] = useState('')
-  const [originalEmail, setOriginalEmail] = useState('')
-  const [originalPhone, setOriginalPhone] = useState('')
-  const [targetOtpIdentifier, setTargetOtpIdentifier] = useState('')
 
   if (!isLoggedIn || !user) {
     return <Navigate to="/" replace />
   }
-
-  const accountUser = user
 
   // Automatically detect if the stored "email" is actually a phone number
   function isPhoneNumber(identifier: string) {
@@ -51,104 +38,34 @@ export function AccountPage() {
 
   function startEditing() {
     if (!profile) return
-    
-    // Smart Mapping: Route the database 'email' to the correct visual input
-    const isStoredPhone = isPhoneNumber(profile.email)
-    const currentEmail = isStoredPhone ? '' : profile.email
-    const currentPhone = isStoredPhone ? profile.email : (profile.contactPhone ?? '')
-
-    setOriginalEmail(currentEmail)
-    setOriginalPhone(currentPhone)
-    
     setFirstName(profile.firstName)
     setLastName(profile.lastName)
-    setEmailInput(currentEmail)
-    setPhoneInput(currentPhone)
-    
-    setStep('edit')
+    setIsEditing(true)
   }
 
   function cancelEditing() {
-    setStep('view')
-    setOtpCode('')
+    setIsEditing(false)
   }
 
-  // Intercept the save to check if contact info was changed
-  async function handleSaveRequest(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-
-    const emailChanged = emailInput !== originalEmail
-    const phoneChanged = phoneInput !== originalPhone
-
-    if (emailChanged || phoneChanged) {
-      // Determine which one needs verification (prioritizing the phone if both changed)
-      const targetIdentifier = phoneChanged ? phoneInput : emailInput
-      
-      if (!targetIdentifier.trim()) {
-        toast.error('Contact information cannot be empty.')
-        return
-      }
-
-      setSaving(true)
-      try {
-        await sendOtp({
-          identifier: targetIdentifier,
-          type: phoneChanged ? 'phone' : 'email',
-          mode: 'sign-up', 
-          firstName: firstName,
-          lastName: lastName,
-        })
-        
-        setTargetOtpIdentifier(targetIdentifier)
-        setStep('otp') 
-        toast.success(`Verification code sent to ${targetIdentifier}`)
-      } catch (error) {
-        toast.error('Failed to send verification code.')
-      } finally {
-        setSaving(false)
-      }
-    } else {
-      // If only name changed, save immediately without OTP
-      saveProfileFinal()
-    }
-  }
-
-  // The final save that runs AFTER the OTP is successfully verified
-  async function saveProfileFinal(e?: React.FormEvent) {
-    if (e) e.preventDefault()
-    
-    if (step === 'otp' && otpCode.length !== 6) {
-      toast.error('Please enter a valid 6-digit code.')
-      return
-    }
-
     setSaving(true)
+    
     try {
-      // THE FIX IS HERE: We now safely extract both the email AND the phone number
-      const finalPrimaryIdentifier = emailInput.trim() ? emailInput.trim() : phoneInput.trim()
-      const finalContactPhone = phoneInput.trim()
-
       const updated = await updateProfile({
-        email: normalizeEmail(accountUser.email), 
-        newEmail: normalizeEmail(finalPrimaryIdentifier), 
+        email: normalizeEmail(user.email),
         firstName,
         lastName,
-        contactPhone: finalContactPhone,
+        contactPhone: profile?.contactPhone ?? '', // Keep their existing phone info unchanged
       })
-      
-      // Update local React state so it doesn't lose track of the user
+
       updateUser({
         firstName: updated.firstName,
         lastName: updated.lastName,
       })
 
-      // Optional: If your UserAuthContext supports updating the email, uncomment the line below 
-      // so you don't have to log out and log back in to see the changes fully applied in the app.
-      // login({ ...user, email: updated.email }) 
-      
       toast.success('Profile updated successfully')
-      setStep('view')
-      setOtpCode('')
+      setIsEditing(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update profile')
     } finally {
@@ -174,8 +91,8 @@ export function AccountPage() {
             My Account
           </h1>
           <p className="text-sm text-muted-foreground">
-            {step === 'edit'
-              ? 'Update your profile below. Changes to your contact info require verification.'
+            {isEditing
+              ? 'Update your name below. Your contact info is used for sign-in and cannot be changed here.'
               : 'Your profile details. Your contact info is used for sign-in.'}
           </p>
         </div>
@@ -206,7 +123,7 @@ export function AccountPage() {
                 <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>Profile</CardTitle>
                 <CardDescription>Personal details for your DWARRMS account</CardDescription>
               </div>
-              {step === 'view' ? (
+              {!isEditing ? (
                 <Button
                   type="button"
                   variant="ghost"
@@ -221,7 +138,7 @@ export function AccountPage() {
             <CardContent>
               
               {/* --- VIEW MODE --- */}
-              {step === 'view' && (
+              {!isEditing ? (
                 <dl className="grid gap-3 text-sm">
                   <div>
                     <dt className="text-xs text-muted-foreground">Name</dt>
@@ -242,17 +159,16 @@ export function AccountPage() {
                     <dd>{formatDate(profile.createdAt)}</dd>
                   </div>
                 </dl>
-              )}
-
-              {/* --- EDIT MODE --- */}
-              {step === 'edit' && (
-                <form onSubmit={handleSaveRequest} className="space-y-4">
+              ) : (
+                /* --- EDIT MODE --- */
+                <form onSubmit={handleSave} className="space-y-4">
                   <div>
                     <label className="mb-1 block text-xs text-muted-foreground">First name</label>
                     <Input
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
+                      autoFocus
                     />
                   </div>
                   <div>
@@ -263,25 +179,28 @@ export function AccountPage() {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">Primary Email</label>
-                    <Input
-                      type="email"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      placeholder="name@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">Mobile Number</label>
-                    <Input
-                      type="tel"
-                      value={phoneInput}
-                      onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, ''))}
-                      placeholder="09123456789"
-                      maxLength={11}
-                    />
-                  </div>
+                  
+                  {/* Safely show their login identifier as read-only based on type */}
+                  {isPhoneNumber(profile.email) ? (
+                    <div>
+                      <label className="mb-1 block text-xs text-muted-foreground">Mobile Number</label>
+                      <Input
+                        value={profile.email}
+                        disabled
+                        className="bg-muted/40 cursor-not-allowed text-muted-foreground"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="mb-1 block text-xs text-muted-foreground">Primary Email</label>
+                      <Input
+                        value={profile.email}
+                        disabled
+                        className="bg-muted/40 cursor-not-allowed text-muted-foreground"
+                      />
+                    </div>
+                  )}
+
                   <div className="flex gap-2 pt-2">
                     <Button
                       type="button"
@@ -294,49 +213,6 @@ export function AccountPage() {
                     </Button>
                     <Button type="submit" disabled={saving} className="rounded-xl">
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save changes'}
-                    </Button>
-                  </div>
-                </form>
-              )}
-
-              {/* --- OTP VERIFICATION MODE --- */}
-              {step === 'otp' && (
-                <form onSubmit={saveProfileFinal} className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="flex flex-col items-center justify-center space-y-3 pb-2 pt-4">
-                    <ShieldCheck className="h-10 w-10 text-primary" />
-                    <div className="text-center">
-                      <h3 className="font-semibold text-foreground">Verify your new contact info</h3>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        We sent a 6-digit code to <span className="font-medium text-foreground">{targetOtpIdentifier}</span>
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Input
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      placeholder="000000"
-                      maxLength={6}
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      className="h-12 text-center text-xl font-mono tracking-[0.35em]"
-                      autoFocus
-                    />
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setStep('edit')}
-                      disabled={saving}
-                      className="rounded-xl"
-                    >
-                      Back
-                    </Button>
-                    <Button type="submit" disabled={saving || otpCode.length !== 6} className="rounded-xl flex-1">
-                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify & Save'}
                     </Button>
                   </div>
                 </form>
