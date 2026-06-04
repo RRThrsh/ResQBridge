@@ -223,8 +223,13 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             type={loginMethod === 'email' ? 'email' : 'tel'}
             placeholder={loginMethod === 'email' ? 'Email address' : 'Phone number (e.g. 09123456789)'}
             value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
+            onChange={(e) => {
+              // Automatically strip out non-numbers if they are using the phone tab
+              const val = loginMethod === 'phone' ? e.target.value.replace(/\D/g, '') : e.target.value;
+              setIdentifier(val);
+            }}
             autoComplete="username"
+            maxLength={loginMethod === 'phone' ? 11 : undefined} // THE FIX: Limits to 11 chars only on Phone mode
             required
           />
           <SubmitButton loading={loading} disabled={!detailsReady}>
