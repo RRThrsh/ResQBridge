@@ -55,10 +55,14 @@ export function DomesticReportDetailPage() {
   let allPhotos: string[] = []
   
   // FIX: Safely remove trailing slashes to prevent broken //api/storage URLs
-  const baseUrl = (import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud').replace(/\/$/, '')
+  const baseUrl = import.meta.env.VITE_CONVEX_URL?.replace(/\/$/, '')
 
   if (rawData.photoStorageIds && Array.isArray(rawData.photoStorageIds)) {
-    allPhotos = rawData.photoStorageIds.map((id: string) => `${baseUrl}/api/storage/${id}`)
+    allPhotos = rawData.photoStorageIds.map(
+  (id: string) => `${baseUrl}/api/storage/${id}`
+)
+
+console.log(allPhotos)
   } else if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
     allPhotos = rawData.photoDataUrls
   } else if (rawData.photos && Array.isArray(rawData.photos)) {
