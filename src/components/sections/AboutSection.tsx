@@ -3,23 +3,26 @@ import { Separator } from '@/components/ui/separator'
 import { Card } from '@/components/ui/card'
 
 export function AboutSection() {
-  const features = [
-    {
-      icon: Shield,
-      title: 'Wildlife Protection',
-      description: 'Coordinating rescue and response for endangered and protected wildlife species across Palawan.',
-    },
-    {
-      icon: Globe,
-      title: 'Community Reporting',
-      description: 'Empowering every Palawan resident to contribute to wildlife conservation through easy digital reporting.',
-    },
-    {
-      icon: HeartHandshake,
-      title: 'Rescue & Rehabilitation',
-      description: 'Connecting the public with authorized wildlife responders for safe, humane animal rescue.',
-    },
-  ]
+const features = [
+  {
+    icon: Shield,
+    title: 'Animal Protection',
+    description:
+      'Coordinating rescue, response, and protection efforts for both domestic and wildlife animals in need across the community.',
+  },
+  {
+    icon: Globe,
+    title: 'Community Reporting',
+    description:
+      'Empowering citizens to report injured, stray, abandoned, abused, and wildlife animals through an accessible digital platform.',
+  },
+  {
+    icon: HeartHandshake,
+    title: 'Rescue & Rehabilitation',
+    description:
+      'Connecting the public with authorized responders and partner organizations to ensure safe rescue, proper care, and rehabilitation of domestic and wildlife animals.',
+  },
+]
 
   return (
     <section id="about" className="py-24 relative overflow-hidden bg-background">
@@ -84,7 +87,7 @@ export function AboutSection() {
                     className="text-foreground font-bold text-xl"
                     style={{ fontFamily: 'var(--font-heading)' }}
                   >
-                    Support the Wildlife
+                    Support the Animals
                   </h3>
                   <p className="text-muted-foreground text-xs">Help us care for the animals</p>
                 </div>
