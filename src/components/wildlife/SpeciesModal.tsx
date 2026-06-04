@@ -42,7 +42,7 @@ function handleTouchEnd(e: React.TouchEvent) {
   // Swipe left
   if (diff > 50) {
     setSelectedImage((prev) =>
-      (prev + 1) % species.images.length
+      (prev + 1) % (species?.images?.length || 1)
     )
   }
 
@@ -50,7 +50,7 @@ function handleTouchEnd(e: React.TouchEvent) {
   if (diff < -50) {
     setSelectedImage((prev) =>
       prev === 0
-        ? species.images.length - 1
+        ? (species?.images?.length || 1) - 1
         : prev - 1
     )
   }
