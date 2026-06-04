@@ -50,7 +50,7 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
 
           {/* Logo */}
 <Link to="/" className="flex items-center gap-2 group">
-  <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden border border-primary/20 bg-primary/10 transition-colors group-hover:bg-primary/20">
+  <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden bg-primary/10 transition-colors group-hover:bg-primary/20">
     <img
       src="/resq.png"
       alt="ResQBridge Logo"
