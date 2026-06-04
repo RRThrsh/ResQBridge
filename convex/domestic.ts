@@ -19,7 +19,6 @@ export const isDomesticApprover = query({
     return user?.role === 'admin' || user?.role === 'domestic_approver'
   },
 })
-
 // 2. Fetch reports that are waiting for approval
 export const listPendingReports = query({
   args: {},
