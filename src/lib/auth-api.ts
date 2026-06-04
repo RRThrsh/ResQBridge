@@ -6,7 +6,8 @@ export type AuthMode = 'sign-in' | 'sign-up'
 
 interface SendOtpInput {
   mode: AuthMode
-  email: string
+  identifier: string       // Swapped from email
+  type: 'email' | 'phone'  // Added the new type
   firstName?: string
   lastName?: string
 }
@@ -43,10 +44,15 @@ async function authFetch(path: string, body: Record<string, unknown>): Promise<R
 }
 
 export async function sendOtp(input: SendOtpInput): Promise<void> {
-  const email = normalizeEmail(input.email)
+  // Only normalize if it's an email, otherwise just trim the phone number
+  const normalizedId = input.type === 'email' 
+    ? normalizeEmail(input.identifier) 
+    : input.identifier.trim()
+
   const response = await authFetch('/api/auth/send-otp', {
     mode: input.mode,
-    email,
+    identifier: normalizedId,
+    type: input.type,
     ...(input.mode === 'sign-up'
       ? {
           firstName: input.firstName?.trim() ?? '',
@@ -61,13 +67,16 @@ export async function sendOtp(input: SendOtpInput): Promise<void> {
 }
 
 export async function verifyOtp(
-  email: string,
+  identifier: string,
   code: string,
   mode: AuthMode,
 ): Promise<AuthUser> {
-  const normalizedEmail = normalizeEmail(email)
+  // Check if it's an email so we don't accidentally break a phone number string
+  const isEmail = identifier.includes('@')
+  const normalizedId = isEmail ? normalizeEmail(identifier) : identifier.trim()
+
   const response = await authFetch('/api/auth/verify-otp', {
-    email: normalizedEmail,
+    identifier: normalizedId,
     code: code.trim(),
     mode,
   })
@@ -78,7 +87,8 @@ export async function verifyOtp(
 
   const data = (await response.json()) as { user: AuthUser }
   return {
-    email: normalizeEmail(data.user.email),
+    // Fallback to empty string if they logged in with phone and have no email attached yet
+    email: data.user.email ? normalizeEmail(data.user.email) : '',
     firstName: data.user.firstName,
     lastName: data.user.lastName,
     role: 'user',
