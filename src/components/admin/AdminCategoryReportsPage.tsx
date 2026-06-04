@@ -237,7 +237,6 @@ import { useMemo, useState } from 'react'
                       report.reporterLastName,
                     )
                     
-                    // Always strictly format just the date
                     const dateLine = formatDate(report.createdAt)
 
                     return (
@@ -284,7 +283,11 @@ import { useMemo, useState } from 'react'
                         <AdminTableActionsCell>
                           <AdminTableActions
                             viewOnly={isDomestic}
-                            showAssign={!isDomestic && canAdminAssignRescuer(report.status)}
+                            showAssign={
+                              !isDomestic &&
+                              report.status !== 'en_route' &&
+                              canAdminAssignRescuer(report.status)
+                            }
                             onAssign={() => openAssignDialog(report)}
                             onAction={(action) => handleAction(report, action)}
                           />
