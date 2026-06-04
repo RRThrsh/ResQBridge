@@ -9,12 +9,10 @@ export const alertAdmin = internalAction({
     location: v.string()
   },
   handler: async (ctx, args) => {
-    // 1. EMAIL LOGIC
-    // e.g., await fetch('https://api.resend.com/emails', { ... })
+    // 1. EMAIL LOGIC GOES HERE
     console.log(`Sending Email: New wildlife report for ${args.species} at ${args.location}`)
 
-    // 2. SMS LOGIC
-    // e.g., await fetch('https://api.twilio.com/...', { ... })
+    // 2. SMS LOGIC GOES HERE
     console.log(`Sending SMS: Admin alert for report ${args.reportId}`)
   },
 })
