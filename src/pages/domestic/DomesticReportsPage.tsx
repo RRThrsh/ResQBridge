@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
 import { CheckCircle2, Clock, Loader2, Sparkles } from 'lucide-react'
-import { Link } from 'react-router-dom' // Added Link
 import { api } from '../../../convex/_generated/api'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 import { DomesticReportCard } from '@/components/domestic/DomesticReportCard' 
