@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { ChevronRight, MapPin } from 'lucide-react'
 import { RescuerStatusBadge } from '@/components/rescuer/RescuerStatusBadge'
 import { formatDate } from '@/lib/dates'
-import { statusLabel, type RescuerStoredReport } from '@/lib/reports'
+import { statusLabel } from '@/lib/reports'
 import { getReportPhotos } from '@/lib/reportPhotos'
 import { cn } from '@/lib/utils'
 
