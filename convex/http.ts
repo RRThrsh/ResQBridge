@@ -43,19 +43,20 @@ async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
   let formattedPhone = phone.replace(/\D/g, '') // Remove any spaces, dashes, or + signs
   
   if (formattedPhone.length === 10 && formattedPhone.startsWith('9')) {
-    // If they typed 9123456789, turn it into 09123456789
+    // If they typed 9539814023, turn it into 09539814023
     formattedPhone = '0' + formattedPhone
   } else if (formattedPhone.length === 12 && formattedPhone.startsWith('63')) {
-    // If they typed 639123456789, turn it into 09123456789
+    // If they typed 639539814023, turn it into 09539814023
     formattedPhone = '0' + formattedPhone.substring(2)
   } else {
-    // Fallback if they typed it normally (e.g. 09...)
+    // Fallback
     formattedPhone = phone.trim()
   }
 
   // 2. Fetch your token
+  // ⚠️ CHANGE THIS TO YOUR ACTUAL DATABASE QUERY
   // @ts-ignore
-  const philsmsToken = await ctx.runQuery(api.settings.getSmsToken) // Make sure this matches your actual DB query!
+  const philsmsToken = await ctx.runQuery(api.settings.getSmsToken) 
   
   if (!philsmsToken) {
     throw new Error('PhilSMS API token is missing in the database.')
@@ -70,7 +71,7 @@ async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
       'Accept': 'application/json',
     },
     body: JSON.stringify({
-      recipient: formattedPhone, // Now using the perfectly formatted number
+      recipient: formattedPhone, // Notice we are sending formattedPhone here!
       sender_id: 'PhilSMS', 
       type: 'plain',
       message: `Your verification code is: ${code}. Please do not share this with anyone.`,
