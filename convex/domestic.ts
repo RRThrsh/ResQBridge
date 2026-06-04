@@ -48,30 +48,26 @@ export const isDomesticApprover = query({
 export const listPendingReports = query({
   args: {},
   handler: async (ctx) => {
-    const rows = await ctx.db
+    // Return pure, raw data so the photos don't get deleted
+    return await ctx.db
       .query('reports')
       .filter((q) => q.eq(q.field('category'), 'domestic'))
       .filter((q) => q.eq(q.field('status'), 'pending'))
       .order('desc')
       .collect()
-      
-    // 🚨 UNLOCK THE IMAGES BEFORE SENDING TO THE DASHBOARD
-    return Promise.all(rows.map((row) => withResolvedReportPhotos(ctx, row)))
   },
 })
 
 export const listPublishedReports = query({
   args: {},
   handler: async (ctx) => {
-    const rows = await ctx.db
+    // Return pure, raw data so the photos don't get deleted
+    return await ctx.db
       .query('reports')
       .filter((q) => q.eq(q.field('category'), 'domestic'))
       .filter((q) => q.eq(q.field('status'), 'published'))
       .order('desc')
       .collect()
-      
-    // 🚨 UNLOCK THE IMAGES BEFORE SENDING TO THE DASHBOARD
-    return Promise.all(rows.map((row) => withResolvedReportPhotos(ctx, row)))
   },
 })
 
