@@ -7,6 +7,8 @@ export const REPORT_STATUSES = [
   'en_route',
   'rescue_success',
   'rescue_failed',
+  'published', // <-- Added
+  'rejected',  // <-- Added
 ] as const
 
 export type ReportStatus = (typeof REPORT_STATUSES)[number]
@@ -20,6 +22,8 @@ export const reportStatusValidator = v.union(
   v.literal('en_route'),
   v.literal('rescue_success'),
   v.literal('rescue_failed'),
+  v.literal('published'), // <-- Added
+  v.literal('rejected'),  // <-- Added
 )
 
 /** Schema validator during migration (legacy + new). */
@@ -31,6 +35,8 @@ export const reportStatusSchemaValidator = v.union(
   v.literal('en_route'),
   v.literal('rescue_success'),
   v.literal('rescue_failed'),
+  v.literal('published'), // <-- Added
+  v.literal('rejected'),  // <-- Added
 )
 
 export function normalizeReportStatus(
@@ -51,7 +57,7 @@ export function generateReportNumber(id: Id<'reports'>): string {
 }
 
 export function isTerminalStatus(status: ReportStatus): boolean {
-  return status === 'rescue_success' || status === 'rescue_failed'
+  return status === 'rescue_success' || status === 'rescue_failed' || status === 'published' || status === 'rejected'
 }
 
 export function isTerminalStatusValue(status: string): boolean {
