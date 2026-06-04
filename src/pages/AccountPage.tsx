@@ -14,7 +14,7 @@ import { ThemeSetting } from '@/components/theme/ThemeSetting'
 import { sendOtp } from '@/lib/auth-api' 
 
 export function AccountPage() {
-  const { isLoggedIn, user, updateUser} = useUserAuth()
+  const { isLoggedIn, user, updateUser } = useUserAuth()
   const updateProfile = useMutation(api.users.updateProfile)
   const profile = useQuery(
     api.users.getProfile,
