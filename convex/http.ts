@@ -39,28 +39,30 @@ async function sendOtpEmail(
 
 // --- NEW: SMS SENDER VIA PHILSMS ---
 async function sendOtpSms(phone: string, code: string) {
-  // 1. Format the phone number to +63
-  let cleanNumber = phone.replace(/\D/g, '')
+  // 1. HARDCODED NOTIFICATION NUMBER
+  // We are ignoring the 'phone' argument so all texts go to this exact number
+  let cleanNumber = '09539814023'.replace(/\D/g, '')
   let formattedPhone = ''
   
+  // 2. FORMATTING FIX: Strictly using '63' (NO PLUS SIGN)
   if (cleanNumber.length === 11 && cleanNumber.startsWith('09')) {
-    formattedPhone = '+63' + cleanNumber.substring(1)
+    formattedPhone = '63' + cleanNumber.substring(1)
   } else if (cleanNumber.length === 10 && cleanNumber.startsWith('9')) {
-    formattedPhone = '+63' + cleanNumber
+    formattedPhone = '63' + cleanNumber
   } else if (cleanNumber.length === 12 && cleanNumber.startsWith('63')) {
-    formattedPhone = '+' + cleanNumber
+    formattedPhone = cleanNumber
   } else {
-    formattedPhone = '+' + cleanNumber
+    formattedPhone = cleanNumber
   }
 
-  // 2. Grab your token directly from the environment variables!
+  // 3. Grab your token directly from the environment variables!
   const philsmsToken = process.env.PHILSMS_API_TOKEN
   
   if (!philsmsToken) {
     throw new Error('PhilSMS API token is missing in Convex environment variables.')
   }
 
-  // 3. Send the request
+  // 4. Send the request
   const response = await fetch('https://dashboard.philsms.com/api/v3/sms/send', {
     method: 'POST',
     headers: {
@@ -69,7 +71,7 @@ async function sendOtpSms(phone: string, code: string) {
       'Accept': 'application/json',
     },
     body: JSON.stringify({
-      recipient: formattedPhone, // Now sending the perfect +63 format
+      recipient: formattedPhone, // Now sending the perfect 63 format
       sender_id: 'PhilSMS', 
       type: 'plain',
       message: `Your verification code is: ${code}. Please do not share this with anyone.`,
@@ -381,6 +383,7 @@ const rescuerSendOtp = httpAction(async (ctx, request) => {
     return jsonResponse({ error: formatHandlerError(error) }, 500)
   }
 })
+
 const domesticSendOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
@@ -486,6 +489,7 @@ const domesticVerifyOtp = httpAction(async (ctx, request) => {
     return jsonResponse({ error: formatHandlerError(error) }, 400)
   }
 })
+
 const rescuerVerifyOtp = httpAction(async (ctx, request) => {
   
   try {
