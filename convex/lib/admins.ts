@@ -1,7 +1,7 @@
 export const DEFAULT_ADMIN = {
-  email: 'codewithxiao@gmail.com',
-  firstName: 'Xiao',
-  lastName: 'Dev',
+  email: 'ralphbandahala05@gmail.com',
+  firstName: 'Ralph',
+  lastName: 'vincent',
 } as const
 
 export function normalizeEmail(email: string) {
