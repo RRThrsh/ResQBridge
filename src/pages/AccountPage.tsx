@@ -112,7 +112,7 @@ export function AccountPage() {
           <Card className="mb-6 border-border">
             <CardHeader>
               <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>Appearance</CardTitle>
-              <CardDescription>Choose how DWARRMS looks on this device</CardDescription>
+              <CardDescription>Choose how ResQBridge looks on this device</CardDescription>
             </CardHeader>
             <CardContent>
               <ThemeSetting />
