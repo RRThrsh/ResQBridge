@@ -5,16 +5,16 @@ import { Loader2 } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 import { normalizeEmail } from '@/lib/admin'
-// We will create these components next!
 import { DomesticShell } from '@/components/domestic/DomesticShell' 
 import { DomesticLogin } from '@/pages/domestic/DomesticLogin'
 import { DomesticReportsPage } from '@/pages/domestic/DomesticReportsPage'
+// ADDED THIS IMPORT:
+import { DomesticReportDetailPage } from '@/pages/domestic/DomesticReportDetailPage'
 import { Toaster } from '@/components/ui/sonner'
 
 function DomesticGuard({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, domesticApprover, logout } = useDomesticAuth()
   
-  // Checks if the logged-in email is officially an authorized Domestic Approver
   // @ts-ignore
   const allowed = useQuery(
     (api as any).domestic.isDomesticApprover,
@@ -58,20 +58,18 @@ export function DomesticApp() {
             </DomesticGuard>
           }
         >
-          {/* Default dashboard route */}
           <Route index element={<DomesticReportsPage />} />
-          {/* We can add a DomesticProfilePage later if you want them to edit their info! */}
         </Route>
         
-        {/* We will build the Approval Detail Page next */}
-        {/* <Route
+        {/* THIS IS NOW UNCOMMENTED AND ACTIVE! */}
+        <Route
           path="reports/:reportId"
           element={
             <DomesticGuard>
               <DomesticReportDetailPage />
             </DomesticGuard>
           }
-        /> */}
+        />
         
         <Route path="*" element={<Navigate to="/pwrcc/domestic" replace />} />
       </Routes>
