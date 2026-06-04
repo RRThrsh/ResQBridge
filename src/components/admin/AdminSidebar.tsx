@@ -10,6 +10,7 @@ import {
   Truck,
   UserCircle,
   Users,
+  Home,
 } from 'lucide-react'
 import { AdminConfirmDialog } from '@/components/admin/AdminConfirmDialog'
 import { cn } from '@/lib/utils'
@@ -23,6 +24,7 @@ const navItems = [
   { to: '/pwrcc/admin/wildlife', label: 'Wildlife Guide', icon: Leaf },
   { to: '/pwrcc/admin/news', label: 'News & Events', icon: Newspaper },
   { to: '/pwrcc/admin/rescuers', label: 'Rescuers', icon: Truck },
+  { to: '/pwrcc/admin/domestic-approvers', label: 'Domestic Approvers', icon: Home }, // <--- ADD THIS HERE
   { to: '/pwrcc/admin/admins', label: 'Admins', icon: Shield },
   { to: '/pwrcc/admin/profile', label: 'My profile', icon: UserCircle },
 ] as const
