@@ -14,6 +14,7 @@ import { ReportSuccess } from '@/pages/ReportSuccess'
 import { NotFound } from '@/pages/NotFound'
 import { AdminApp } from '@/pages/admin/AdminApp'
 import { RescuerApp } from '@/pages/rescuer/RescuerApp'
+import { DomesticApp } from '@/pages/domestic/DomesticApp'
 import { Toaster } from '@/components/ui/sonner'
 import { useScrollToHash } from '@/hooks/useScrollToHash'
 
@@ -80,6 +81,7 @@ export default function App() {
           <Routes>
             <Route path="/pwrcc/admin/*" element={<AdminApp />} />
             <Route path="/pwrcc/rescuer/*" element={<RescuerApp />} />
+            <Route path="/pwrcc/domestic/*" element={<DomesticApp />} />
             <Route path="/*" element={<PublicApp />} />
           </Routes>
         </RouteWrapper>
