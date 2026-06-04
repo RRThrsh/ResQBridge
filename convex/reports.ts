@@ -223,3 +223,13 @@ export const remove = mutation({
     return null
   },
 })
+
+// Add this to the bottom of convex/reports.ts
+export const getReportById = query({
+  args: {
+    reportId: v.id('reports'),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.reportId)
+  },
+})
