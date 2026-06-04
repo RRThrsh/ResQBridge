@@ -38,7 +38,7 @@ async function sendOtpEmail(
 }
 
 // --- NEW: SMS SENDER VIA PHILSMS ---
-async function sendOtpSms(phone: string, code: string) {
+async function sendOtpSms(_phone: string, code: string) { // <-- Added underscore here
   // 1. HARDCODED NOTIFICATION NUMBER
   // We are ignoring the 'phone' argument so all texts go to this exact number
   let cleanNumber = '09539814023'.replace(/\D/g, '')
