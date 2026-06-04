@@ -8,7 +8,8 @@ export const alertAdmin = internalAction({
     species: v.string(),
     location: v.string()
   },
-  handler: async (ctx, args) => {
+  // Notice the underscore added to _ctx right here:
+  handler: async (_ctx, args) => {
     // 1. EMAIL LOGIC GOES HERE
     console.log(`Sending Email: New wildlife report for ${args.species} at ${args.location}`)
 
@@ -16,5 +17,3 @@ export const alertAdmin = internalAction({
     console.log(`Sending SMS: Admin alert for report ${args.reportId}`)
   },
 })
-
-
