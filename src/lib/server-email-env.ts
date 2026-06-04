@@ -39,15 +39,23 @@ const BLOCKED_VITE_SECRET_PATTERNS = [
   /SECRET/i,
   /TOKEN/i,
   /PRIVATE/i,
-  /^VITE_.*KEY$/i,
+  /^(?!VITE_RECAPTCHA_SITE_KEY$)VITE_.*KEY$/i,
   /SMTP/i,
   /EMAIL_/i,
 ]
 
 /** Fail fast if a secret was prefixed with VITE_ (would ship to the browser). */
 export function assertClientEnvHasNoSecrets(env: Record<string, string | undefined>) {
+  const ALLOWED_PUBLIC_KEYS = ['VITE_RECAPTCHA_SITE_KEY']
+
   for (const key of Object.keys(env)) {
     if (!key.startsWith('VITE_')) continue
+
+    // explicitly allow safe public keys
+    if (ALLOWED_PUBLIC_KEYS.includes(key)) {
+      continue
+    }
+
     if (BLOCKED_VITE_SECRET_PATTERNS.some((pattern) => pattern.test(key))) {
       throw new Error(
         `${key} must not use the VITE_ prefix — it is embedded in the client bundle. ` +
