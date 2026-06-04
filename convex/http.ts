@@ -38,11 +38,14 @@ async function sendOtpEmail(
 }
 
 // --- NEW: SMS SENDER VIA PHILSMS ---
-async function sendOtpSms(phone: string, code: string) {
-  const philsmsToken = process.env.PHILSMS_API_TOKEN
+async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
+  // ⚠️ ACTION REQUIRED ⚠️ 
+  // Change "api.settings.getSmsToken" to the actual file and function you made in Convex
+  // @ts-ignore
+  const philsmsToken = await ctx.runQuery(api.settings.getSmsToken)
   
   if (!philsmsToken) {
-    throw new Error('PhilSMS API token is missing in Convex environment variables.')
+    throw new Error('PhilSMS API token is missing in the database.')
   }
 
   const response = await fetch('https://dashboard.philsms.com/api/v3/sms/send', {
@@ -60,7 +63,7 @@ async function sendOtpSms(phone: string, code: string) {
     }),
   })
 
-  // THE FIX: Capture the actual error from PhilSMS
+  // Capture the actual error from PhilSMS
   if (!response.ok) {
     const errorText = await response.text()
     console.error('PhilSMS API Error:', errorText)
@@ -126,7 +129,8 @@ const userSendOtp = httpAction(async (ctx, request) => {
     try {
       // THE MAGIC SWITCH: Route to Email or SMS based on the type
       if (type === 'phone') {
-        await sendOtpSms(identifier, code)
+        // Now passing ctx so the DB query inside sendOtpSms works
+        await sendOtpSms(ctx, identifier, code)
       } else {
         await sendOtpEmail(ctx, {
           email: identifier,
