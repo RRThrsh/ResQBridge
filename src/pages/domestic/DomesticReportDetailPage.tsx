@@ -50,21 +50,21 @@ export function DomesticReportDetailPage() {
   const rawData = row as any
 
   // ---------------------------------------------------------
-  // 1. CATCH-ALL PHOTO RESOLVER
+  // 1. ALL-PHOTOS GALLERY BUILDER
   // ---------------------------------------------------------
-  let finalPhotoUrl = rawData.photoUrl || rawData.imageUrl || rawData.photo || rawData.photoDataUrl
-  
-  if (!finalPhotoUrl && rawData.photoDataUrls?.length > 0) finalPhotoUrl = rawData.photoDataUrls[0]
-  if (!finalPhotoUrl && rawData.photos?.length > 0) finalPhotoUrl = rawData.photos[0]
-  if (!finalPhotoUrl && rawData.imageUrls?.length > 0) finalPhotoUrl = rawData.imageUrls[0]
+  let allPhotos: string[] = []
+  const convexUrl = import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud'
 
-  // Direct Convex Storage ID constructor using your dynamic Environment Variable
-  const storageId = rawData.photoStorageId || rawData.storageId || rawData.imageId || (rawData.photoStorageIds && rawData.photoStorageIds[0])
-  if (!finalPhotoUrl && storageId) {
-    // This dynamically pulls your Production URL in Vercel, and Dev URL on your computer!
-    const convexUrl = import.meta.env.VITE_CONVEX_URL;
-    finalPhotoUrl = `${convexUrl}/api/storage/${storageId}`;
+  if (rawData.photoStorageIds && Array.isArray(rawData.photoStorageIds)) {
+    allPhotos = rawData.photoStorageIds.map((id: string) => `${convexUrl}/api/storage/${id}`)
+  } else if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
+    allPhotos = rawData.photoDataUrls
+  } else if (rawData.photos && Array.isArray(rawData.photos)) {
+    allPhotos = rawData.photos
+  } else if (rawData.photoUrl) {
+    allPhotos = [rawData.photoUrl]
   }
+
   // ---------------------------------------------------------
   // 2. NAME & CONDITION FIX 
   // ---------------------------------------------------------
@@ -87,7 +87,6 @@ export function DomesticReportDetailPage() {
   const locationString = rawData.location || 'Unknown location'
   let mapQuery = encodeURIComponent(locationString)
 
-  // Grab exact coordinates if they exist after a middle dot '·'
   if (locationString.includes('·')) {
     const coords = locationString.split('·').pop()?.trim() 
     if (coords) mapQuery = encodeURIComponent(coords)
@@ -96,7 +95,6 @@ export function DomesticReportDetailPage() {
   }
   
   const mapLink = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`
-
   const canAct = rawData.status === 'pending'
 
   async function handleStatusChange(newStatus: 'published' | 'rejected') {
@@ -123,57 +121,35 @@ export function DomesticReportDetailPage() {
 
   const actionFooter = canAct ? (
     <div className="mx-auto max-w-2xl space-y-2 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 flex gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        className="h-12 flex-1 rounded-xl border-destructive/40 text-base font-semibold text-destructive hover:bg-destructive/10"
-        disabled={loading}
-        onClick={() => setConfirmReject(true)}
-      >
-        <X className="mr-2 h-5 w-5" />
-        Reject
+      <Button type="button" variant="outline" className="h-12 flex-1 rounded-xl border-destructive/40 text-base font-semibold text-destructive hover:bg-destructive/10" disabled={loading} onClick={() => setConfirmReject(true)}>
+        <X className="mr-2 h-5 w-5" /> Reject
       </Button>
-      <Button
-        type="button"
-        className="h-12 flex-1 rounded-xl bg-emerald-600 text-base font-semibold hover:bg-emerald-700 text-white"
-        disabled={loading}
-        onClick={() => setConfirmApprove(true)}
-      >
-        {loading ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : (
-          <>
-            <Check className="mr-2 h-5 w-5" />
-            Approve & Publish
-          </>
-        )}
+      <Button type="button" className="h-12 flex-1 rounded-xl bg-emerald-600 text-base font-semibold hover:bg-emerald-700 text-white" disabled={loading} onClick={() => setConfirmApprove(true)}>
+        {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Check className="mr-2 h-5 w-5" /> Approve & Publish</>}
       </Button>
     </div>
   ) : undefined
 
   return (
-    <DomesticLayout
-      title={rawData.animalName || 'Domestic Report'}
-      subtitle={rawData.reportNumber ?? undefined}
-      backTo="/pwrcc/domestic"
-      footer={actionFooter}
-    >
+    <DomesticLayout title={rawData.animalName || 'Domestic Report'} subtitle={rawData.reportNumber ?? undefined} backTo="/pwrcc/domestic" footer={actionFooter}>
       <div className="space-y-6 pb-2">
         <div className="text-center">
           <RescuerStatusBadge status={rawData.status as any} className="mb-4" />
-          <p className="text-xs font-mono text-muted-foreground">
-            {rawData.reportNumber ?? rawData._id}
-          </p>
+          <p className="text-xs font-mono text-muted-foreground">{rawData.reportNumber ?? rawData._id}</p>
         </div>
 
-        {/* CATCH-ALL IMAGE RENDERER */}
-        {finalPhotoUrl ? (
-          <div className="overflow-hidden rounded-2xl border border-border bg-muted/30">
-            <img 
-              src={finalPhotoUrl} 
-              alt={rawData.animalName || 'Animal Photo'} 
-              className="w-full object-contain max-h-[400px]"
-            />
+        {/* NEW PHOTO GALLERY GRID */}
+        {allPhotos.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {allPhotos.map((url, i) => (
+              <div key={i} className="overflow-hidden rounded-2xl border border-border bg-muted/30">
+                <img 
+                  src={url} 
+                  alt={`${rawData.animalName || 'Animal Photo'} - Image ${i + 1}`} 
+                  className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            ))}
           </div>
         ) : null}
 
@@ -181,42 +157,19 @@ export function DomesticReportDetailPage() {
           <dl className="space-y-3">
             <DetailRow label="Date & time seen" value={formatDateTime(rawData.seenAt ?? rawData._creationTime)} />
             <DetailRow label="Animal Type" value={rawData.type || rawData.animalType || 'Not specified'} />
-            <DetailRow
-              label="Condition"
-              value={condition.replace(/-/g, ' ')}
-              highlight
-            />
-            {rawData.description ? (
-              <DetailRow label="Description" value={rawData.description} />
-            ) : null}
+            <DetailRow label="Condition" value={condition.replace(/-/g, ' ')} highlight />
+            {rawData.description ? <DetailRow label="Description" value={rawData.description} /> : null}
           </dl>
         </RescuerDetailSection>
 
-        {/* LOCATION & GOOGLE MAPS MINI MAP */}
         <RescuerDetailSection title="Location" icon={MapPin}>
           <div className="space-y-3">
             <p className="font-medium leading-relaxed text-sm">{locationString}</p>
-            
             <div className="w-full overflow-hidden rounded-xl border border-border/50 bg-muted/30">
-              <iframe 
-                src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`} 
-                width="100%" 
-                height="200" 
-                style={{ border: 0 }} 
-                allowFullScreen 
-                loading="lazy" 
-                referrerPolicy="no-referrer-when-downgrade"
-              />
+              <iframe src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`} width="100%" height="200" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
             </div>
-
-            <a 
-              href={mapLink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline pt-1"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Open in full Google Maps
+            <a href={mapLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline pt-1">
+              <ExternalLink className="h-3.5 w-3.5" /> Open in full Google Maps
             </a>
           </div>
         </RescuerDetailSection>
@@ -229,49 +182,20 @@ export function DomesticReportDetailPage() {
               <dd className="mt-1 font-medium">
                 {rawData.reporterPhone || rawData.phone ? (
                   <a href={`tel:${(rawData.reporterPhone || rawData.phone).replace(/\s/g, '')}`} className="inline-flex items-center gap-2 text-primary hover:opacity-80">
-                    {rawData.reporterPhone || rawData.phone}
-                    <Phone className="h-4 w-4" />
+                    {rawData.reporterPhone || rawData.phone} <Phone className="h-4 w-4" />
                   </a>
-                ) : (
-                  'Not provided'
-                )}
+                ) : 'Not provided'}
               </dd>
             </div>
           </dl>
         </RescuerDetailSection>
       </div>
-
-      <ConfirmDialog
-        open={confirmApprove}
-        onOpenChange={setConfirmApprove}
-        title="Approve and Publish?"
-        description="This will make the domestic report visible on the public feed."
-        confirmLabel="Publish Report"
-        confirmVariant="default"
-        loading={loading}
-        onConfirm={() => handleStatusChange('published')}
-      />
-
-      <ConfirmDialog
-        open={confirmReject}
-        onOpenChange={setConfirmReject}
-        title="Reject Report?"
-        description="This will decline the report and it will not be shown to the public."
-        confirmLabel="Reject Report"
-        loading={loading}
-        onConfirm={() => handleStatusChange('rejected')}
-      />
+      <ConfirmDialog open={confirmApprove} onOpenChange={setConfirmApprove} title="Approve and Publish?" description="This will make the domestic report visible on the public feed." confirmLabel="Publish Report" confirmVariant="default" loading={loading} onConfirm={() => handleStatusChange('published')} />
+      <ConfirmDialog open={confirmReject} onOpenChange={setConfirmReject} title="Reject Report?" description="This will decline the report and it will not be shown to the public." confirmLabel="Reject Report" loading={loading} onConfirm={() => handleStatusChange('rejected')} />
     </DomesticLayout>
   )
 }
 
 function DetailRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={`mt-0.5 font-medium ${highlight ? 'text-primary' : 'text-foreground'} capitalize`}>
-        {value}
-      </dd>
-    </div>
-  )
+  return <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className={`mt-0.5 font-medium ${highlight ? 'text-primary' : 'text-foreground'} capitalize`}>{value}</dd></div>
 }
