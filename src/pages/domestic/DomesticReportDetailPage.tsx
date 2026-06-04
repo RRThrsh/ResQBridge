@@ -37,6 +37,9 @@ export function DomesticReportDetailPage() {
     )
   }
 
+  // FIX: Moved rawData declaration above the if (!row) block
+  const rawData = row as any
+
   if (!row) {
     return (
       <DomesticLayout title="Report" backTo="/pwrcc/domestic">
@@ -54,8 +57,6 @@ export function DomesticReportDetailPage() {
       </DomesticLayout>
     )
   }
-
-  const rawData = row as any
 
   // ---------------------------------------------------------
   // 1. BULLETPROOF PHOTO RESOLVER
