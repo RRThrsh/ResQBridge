@@ -22,7 +22,6 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
   const storageId = rawData.photoStorageId || rawData.storageId || rawData.imageId || (rawData.photoStorageIds && rawData.photoStorageIds[0])
   
   if (!finalPhotoUrl && storageId) {
-    // FIX: Safely remove any trailing slashes from the environment variable
     const baseUrl = (import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud').replace(/\/$/, '');
     finalPhotoUrl = `${baseUrl}/api/storage/${storageId}`;
   }
