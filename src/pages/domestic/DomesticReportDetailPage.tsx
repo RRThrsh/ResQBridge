@@ -47,27 +47,53 @@ export function DomesticReportDetailPage() {
     )
   }
 
-  // --- RAW DATA MAPPING ---
-  // We bypass strict typing here to grab the exact fields your database saved
   const rawData = row as any
-  
-  // 1. Photo Fix: Check all possible fields where your image might be saved
-  const actualPhoto = rawData.photoUrl || rawData.imageUrl || (rawData.photos && rawData.photos[0])
 
-  // 2. Name Fix: Catch missing names to prevent "undefined undefined"
-  const firstName = rawData.reporterFirstName || rawData.firstName || ''
-  const lastName = rawData.reporterLastName || rawData.lastName || ''
-  let reporterName = `${firstName} ${lastName}`.trim()
-  if (!reporterName || reporterName === 'undefined undefined' || reporterName === 'undefined') {
-    reporterName = rawData.reporterName || rawData.userName || 'Not provided'
+  // ---------------------------------------------------------
+  // 1. BULLETPROOF PHOTO RESOLVER
+  // ---------------------------------------------------------
+  let finalPhotoUrl = rawData.photoUrl || rawData.imageUrl || rawData.photo || rawData.photoDataUrl
+  
+  if (!finalPhotoUrl && rawData.photoDataUrls?.length > 0) finalPhotoUrl = rawData.photoDataUrls[0]
+  if (!finalPhotoUrl && rawData.photos?.length > 0) finalPhotoUrl = rawData.photos[0]
+
+  // If it's saved as a Convex Storage ID, we manually build the secure URL for your exact database
+  const storageId = rawData.photoStorageId || rawData.storageId || (rawData.photoStorageIds && rawData.photoStorageIds[0])
+  if (!finalPhotoUrl && storageId) {
+    finalPhotoUrl = `https://pleasant-otter-637.convex.cloud/api/storage/${storageId}`
   }
 
-  // 3. Condition Fix
-  const condition = rawData.animalCondition || rawData.condition || 'Not provided'
+  // ---------------------------------------------------------
+  // 2. NAME & CONDITION FIX (Filtering out literal "undefined" strings)
+  // ---------------------------------------------------------
+  let fName = rawData.reporterFirstName || rawData.firstName || ''
+  let lName = rawData.reporterLastName || rawData.lastName || ''
+  if (fName === 'undefined') fName = ''
+  if (lName === 'undefined') lName = ''
+  
+  let reporterName = `${fName} ${lName}`.trim()
+  if (!reporterName || reporterName === 'undefined' || reporterName === 'undefined undefined') {
+    reporterName = rawData.reporterName || rawData.userName || rawData.name || 'Anonymous Reporter'
+  }
 
-  // 4. Map Link Fix
+  let condition = rawData.animalCondition || rawData.condition || rawData.healthCondition || 'Not provided'
+  if (condition === 'undefined' || condition === 'null') condition = 'Not provided'
+
+  // ---------------------------------------------------------
+  // 3. MAP LOCATION PARSER (Extracting Exact Lat/Lng)
+  // ---------------------------------------------------------
   const locationString = rawData.location || 'Unknown location'
-  const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationString)}`
+  let mapQuery = encodeURIComponent(locationString)
+
+  // If the string contains the middle dot '·', slice it to only grab the coordinates at the end
+  if (locationString.includes('·')) {
+    const coords = locationString.split('·').pop()?.trim() // gets "9.751433, 118.766869"
+    if (coords) mapQuery = encodeURIComponent(coords)
+  } else if (rawData.latitude && rawData.longitude) {
+    mapQuery = encodeURIComponent(`${rawData.latitude},${rawData.longitude}`)
+  }
+  
+  const mapLink = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`
 
   const canAct = rawData.status === 'pending'
 
@@ -138,13 +164,13 @@ export function DomesticReportDetailPage() {
           </p>
         </div>
 
-        {/* PHOTO RENDERER */}
-        {actualPhoto ? (
-          <div className="overflow-hidden rounded-2xl border border-border bg-muted">
+        {/* IMAGE RENDERER */}
+        {finalPhotoUrl ? (
+          <div className="overflow-hidden rounded-2xl border border-border bg-muted/30">
             <img 
-              src={actualPhoto} 
+              src={finalPhotoUrl} 
               alt={rawData.animalName || 'Animal Photo'} 
-              className="w-full object-cover max-h-[400px]"
+              className="w-full object-contain max-h-[400px]"
             />
           </div>
         ) : null}
@@ -164,7 +190,7 @@ export function DomesticReportDetailPage() {
           </dl>
         </RescuerDetailSection>
 
-        {/* LOCATION WITH GOOGLE MAPS LINK */}
+        {/* LOCATION & GOOGLE MAPS LINK */}
         <RescuerDetailSection title="Location" icon={MapPin}>
           <div className="space-y-2">
             <p className="font-medium leading-relaxed text-sm">{locationString}</p>
