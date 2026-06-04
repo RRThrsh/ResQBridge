@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Moon, Sun, Sunset, Leaf, Utensils, MapPin, ShieldAlert, Globe, AlertTriangle } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
@@ -28,11 +28,39 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
   if (!species) return null
   const [selectedImage, setSelectedImage] = useState(0)
   const { Icon: ActiveIcon, label: activeLabel, color: activeColor } = activeTimeIcons[species.activeTime]
+  const touchStartX = useRef(0)
+  const touchEndX = useRef(0)
+function handleTouchStart(e: React.TouchEvent) {
+  touchStartX.current = e.changedTouches[0].screenX
+}
+
+function handleTouchEnd(e: React.TouchEvent) {
+  touchEndX.current = e.changedTouches[0].screenX
+
+  const diff = touchStartX.current - touchEndX.current
+
+  // Swipe left
+  if (diff > 50) {
+    setSelectedImage((prev) =>
+      (prev + 1) % species.images.length
+    )
+  }
+
+  // Swipe right
+  if (diff < -50) {
+    setSelectedImage((prev) =>
+      prev === 0
+        ? species.images.length - 1
+        : prev - 1
+    )
+  }
+}
 const hideScrollbarStyles = `
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 `
+
 return (
   <>
     <style>{hideScrollbarStyles}</style>
@@ -47,7 +75,12 @@ return (
   }}
 >
         {/* Hero image */}
-<div className="relative bg-muted flex justify-center">
+<div
+  className="relative bg-muted flex justify-center select-none"
+  style={{ touchAction: 'pan-y' }}
+  onTouchStart={handleTouchStart}
+  onTouchEnd={handleTouchEnd}
+>
   <img
     src={species.images?.[selectedImage]}
     alt={species.commonName}
