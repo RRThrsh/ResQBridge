@@ -83,9 +83,9 @@ export function DomesticReportsPage() {
 
   // NOTE: You will need to create these Convex queries to fetch reports where category === 'domestic'
   // @ts-ignore
-  const pendingRows = useQuery(api.domestic.listPendingReports)
+  const pendingRows = useQuery((api as any).domestic.listPendingReports)
   // @ts-ignore
-  const publishedRows = useQuery(api.domestic.listPublishedReports)
+  const publishedRows = useQuery((api as any).domestic.listPublishedReports)
 
   const pending = useMemo(
     () => (pendingRows ? pendingRows.map(rescuerReportToStored) : []),
