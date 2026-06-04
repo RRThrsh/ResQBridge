@@ -33,7 +33,12 @@ async function resolveReporterPhone(
     .withIndex('by_email', (q) => q.eq('email', userEmail))
     .unique()
 
-  const fromProfile = user?.contactPhone?.trim()
+  // 🚨 THE GUARD: If the admin deleted them, throw an error instantly!
+  if (!user) {
+    throw new Error('Unauthorized: Your account has been deleted or does not exist.')
+  }
+
+  const fromProfile = user.contactPhone?.trim()
   if (fromProfile) {
     return fromProfile
   }
@@ -43,9 +48,8 @@ async function resolveReporterPhone(
     throw new Error('Contact number is required to submit a report.')
   }
 
-  if (user) {
-    await ctx.db.patch(user._id, { contactPhone: fromInput })
-  }
+  // We no longer need `if (user)` because our guard above guarantees the user exists!
+  await ctx.db.patch(user._id, { contactPhone: fromInput })
 
   return fromInput
 }
