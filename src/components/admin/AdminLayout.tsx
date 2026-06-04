@@ -17,6 +17,7 @@ const titles: Record<string, string> = {
   '/pwrcc/admin/reports/domestic': 'Domestic reports',
   '/pwrcc/admin/users': 'Users',
   '/pwrcc/admin/rescuers': 'Rescuers',
+  '/pwrcc/admin/domestic-approvers': 'Domestic Approvers', // <--- ADD THIS HERE
   '/pwrcc/admin/wildlife': 'Wildlife Guide',
   '/pwrcc/admin/news': 'News & Events',
   '/pwrcc/admin/admins': 'Admins',
