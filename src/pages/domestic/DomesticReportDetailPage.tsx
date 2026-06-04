@@ -52,25 +52,16 @@ export function DomesticReportDetailPage() {
   // ---------------------------------------------------------
   // 1. ALL-PHOTOS GALLERY BUILDER
   // ---------------------------------------------------------
-  let allPhotos: string[] = []
-  
   // FIX: Safely remove trailing slashes to prevent broken //api/storage URLs
-  const baseUrl = import.meta.env.VITE_CONVEX_URL?.replace(/\/$/, '')
+let allPhotos: string[] = []
 
-  if (rawData.photoStorageIds && Array.isArray(rawData.photoStorageIds)) {
-    allPhotos = rawData.photoStorageIds.map(
-  (id: string) => `${baseUrl}/api/storage/${id}`
-)
-
-console.log(allPhotos)
-  } else if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
-    allPhotos = rawData.photoDataUrls
-  } else if (rawData.photos && Array.isArray(rawData.photos)) {
-    allPhotos = rawData.photos
-  } else if (rawData.photoUrl) {
-    allPhotos = [rawData.photoUrl]
-  }
-
+if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
+  allPhotos = rawData.photoDataUrls
+} else if (rawData.photos && Array.isArray(rawData.photos)) {
+  allPhotos = rawData.photos
+} else if (rawData.photoUrl) {
+  allPhotos = [rawData.photoUrl]
+}
   // ---------------------------------------------------------
   // 2. NAME & CONDITION FIX 
   // ---------------------------------------------------------
