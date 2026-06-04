@@ -39,30 +39,32 @@ async function sendOtpEmail(
 
 // --- NEW: SMS SENDER VIA PHILSMS ---
 async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
-  // 1. Format the phone number properly for the Philippines
-  let formattedPhone = phone.replace(/\D/g, '') // Remove any spaces, dashes, or + signs
+  // 1. Strip everything except pure numbers
+  let cleanNumber = phone.replace(/\D/g, '')
+  let formattedPhone = ''
   
-  if (formattedPhone.length === 10 && formattedPhone.startsWith('9')) {
-    // If they typed 9539814023, turn it into 09539814023
-    formattedPhone = '0' + formattedPhone
-  } else if (formattedPhone.length === 12 && formattedPhone.startsWith('63')) {
-    // If they typed 639539814023, turn it into 09539814023
-    formattedPhone = '0' + formattedPhone.substring(2)
+  // 2. Aggressively format to +63 standard
+  if (cleanNumber.length === 11 && cleanNumber.startsWith('09')) {
+    // They typed 09539814023 -> turn to +639539814023
+    formattedPhone = '+63' + cleanNumber.substring(1)
+  } else if (cleanNumber.length === 10 && cleanNumber.startsWith('9')) {
+    // The zero got dropped (9539814023) -> turn to +639539814023
+    formattedPhone = '+63' + cleanNumber
+  } else if (cleanNumber.length === 12 && cleanNumber.startsWith('63')) {
+    // They typed 639539814023 -> turn to +639539814023
+    formattedPhone = '+' + cleanNumber
   } else {
-    // Fallback
-    formattedPhone = phone.trim()
+    // Fallback just in case
+    formattedPhone = '+' + cleanNumber
   }
 
-  // 2. Fetch your token
-  // ⚠️ CHANGE THIS TO YOUR ACTUAL DATABASE QUERY
   // @ts-ignore
-  const philsmsToken = await ctx.runQuery(api.settings.getSmsToken) 
+  const philsmsToken = await ctx.runQuery(api.settings.getSmsToken) // Make sure this matches your DB query!
   
   if (!philsmsToken) {
     throw new Error('PhilSMS API token is missing in the database.')
   }
 
-  // 3. Send the request
   const response = await fetch('https://dashboard.philsms.com/api/v3/sms/send', {
     method: 'POST',
     headers: {
@@ -71,7 +73,7 @@ async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
       'Accept': 'application/json',
     },
     body: JSON.stringify({
-      recipient: formattedPhone, // Notice we are sending formattedPhone here!
+      recipient: formattedPhone, // Now sending the strict +63 format!
       sender_id: 'PhilSMS', 
       type: 'plain',
       message: `Your verification code is: ${code}. Please do not share this with anyone.`,
@@ -84,7 +86,6 @@ async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
     throw new Error(`PhilSMS rejected the request: ${errorText}`)
   }
 }
-
 // --- UPDATED: USER SEND OTP ---
 const userSendOtp = httpAction(async (ctx, request) => {
   try {
