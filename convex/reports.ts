@@ -230,6 +230,10 @@ export const getReportById = query({
     reportId: v.id('reports'),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.reportId)
+    const row = await ctx.db.get(args.reportId)
+    if (!row) return null
+    
+    // THIS UNLOCKS THE IMAGE URL BEFORE SENDING IT TO THE FRONTEND
+    return await withResolvedReportPhotos(ctx, row)
   },
 })
