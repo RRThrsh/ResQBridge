@@ -21,12 +21,14 @@ export function AdminImageUploadField({
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // 🐛 FIX 1: Changed api.storage to api.reportPhotoStorage
   const generateUploadUrl = useMutation(
-    api.storage.generateUploadUrl,
+    api.reportPhotoStorage.generateUploadUrl,
   )
 
+  // 🐛 FIX 2: Changed api.storage to api.reportPhotoStorage
   const getImageUrl = useMutation(
-    api.storage.getImageUrl,
+    api.reportPhotoStorage.getImageUrl,
   )
 
   const [uploading, setUploading] = useState(false)
