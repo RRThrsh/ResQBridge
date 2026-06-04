@@ -49,19 +49,22 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
         <div className="flex h-14 items-center justify-between gap-6">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden border border-primary/20 bg-primary/10 transition-colors group-hover:bg-primary/20">
-  <img
-    src="/resq.png"
-    alt="ResQBridge Logo"
-    className="h-full w-full object-cover"
-  />
-</div>
-            </div>
-            <span className="text-sm font-bold tracking-tight text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-              ResQBridge
-            </span>
-          </Link>
+<Link to="/" className="flex items-center gap-2 group">
+  <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden border border-primary/20 bg-primary/10 transition-colors group-hover:bg-primary/20">
+    <img
+      src="/resq.png"
+      alt="ResQBridge Logo"
+      className="h-full w-full object-cover"
+    />
+  </div>
+
+  <span
+    className="text-sm font-bold tracking-tight text-foreground"
+    style={{ fontFamily: 'var(--font-heading)' }}
+  >
+    ResQBridge
+  </span>
+</Link>
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-1">
