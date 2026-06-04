@@ -1,19 +1,16 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery } from 'convex/react'
-import { CheckCircle2, Loader2, MapPin, Phone, User, Check, X } from 'lucide-react'
+import { CheckCircle2, Loader2, MapPin, Phone, User, Check, X, ExternalLink } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { ReportPhotosGallery } from '@/components/report/ReportPhotosGallery'
 import { RescuerDetailSection } from '@/components/rescuer/RescuerDetailSection'
 import { DomesticLayout } from '@/components/domestic/DomesticLayout'
 import { RescuerStatusBadge } from '@/components/rescuer/RescuerStatusBadge'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 import { formatDateTime } from '@/lib/dates'
-import { formatReporterName, rescuerReportToStored } from '@/lib/reports'
 import { Button } from '@/components/ui/button'
-import { getReportPhotos } from '@/lib/reportPhotos'
 import { toast } from 'sonner'
 
 export function DomesticReportDetailPage() {
@@ -23,16 +20,14 @@ export function DomesticReportDetailPage() {
   const [confirmApprove, setConfirmApprove] = useState(false)
   const [confirmReject, setConfirmReject] = useState(false)
 
-  // @ts-ignore - Bypassing strict TS check for missing generated types
+  // @ts-ignore
   const updateStatus = useMutation((api as any).reports.update)
 
-  // @ts-ignore - Bypassing strict TS check for missing generated types
+  // @ts-ignore
   const row = useQuery(
     (api as any).reports.getReportById,
     reportId ? { reportId: reportId as Id<'reports'> } : 'skip'
   )
-
-  const report = row ? rescuerReportToStored(row) : null
 
   if (!domesticApprover || row === undefined) {
     return (
@@ -42,7 +37,7 @@ export function DomesticReportDetailPage() {
     )
   }
 
-  if (!report) {
+  if (!row) {
     return (
       <DomesticLayout title="Report" backTo="/pwrcc/domestic">
         <p className="py-12 text-center text-sm text-muted-foreground">
@@ -52,20 +47,41 @@ export function DomesticReportDetailPage() {
     )
   }
 
-  const reporterName = formatReporterName(report.reporterFirstName, report.reporterLastName)
-  const canAct = report.status === 'pending'
+  // --- RAW DATA MAPPING ---
+  // We bypass strict typing here to grab the exact fields your database saved
+  const rawData = row as any
+  
+  // 1. Photo Fix: Check all possible fields where your image might be saved
+  const actualPhoto = rawData.photoUrl || rawData.imageUrl || (rawData.photos && rawData.photos[0])
+
+  // 2. Name Fix: Catch missing names to prevent "undefined undefined"
+  const firstName = rawData.reporterFirstName || rawData.firstName || ''
+  const lastName = rawData.reporterLastName || rawData.lastName || ''
+  let reporterName = `${firstName} ${lastName}`.trim()
+  if (!reporterName || reporterName === 'undefined undefined' || reporterName === 'undefined') {
+    reporterName = rawData.reporterName || rawData.userName || 'Not provided'
+  }
+
+  // 3. Condition Fix
+  const condition = rawData.animalCondition || rawData.condition || 'Not provided'
+
+  // 4. Map Link Fix
+  const locationString = rawData.location || 'Unknown location'
+  const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationString)}`
+
+  const canAct = rawData.status === 'pending'
 
   async function handleStatusChange(newStatus: 'published' | 'rejected') {
-    if (!domesticApprover || !report) return
+    if (!domesticApprover || !row) return
     setLoading(true)
     try {
       await updateStatus({
-        reportId: report.id as Id<'reports'>,
-        userEmail: report.userEmail, 
-        animalName: report.animalName,
-        location: report.location,
-        type: report.type,
-        status: newStatus as any, // Bypassing TS strict string assignment
+        reportId: rawData._id as Id<'reports'>,
+        userEmail: rawData.userEmail || rawData.email, 
+        animalName: rawData.animalName,
+        location: rawData.location,
+        type: rawData.type || rawData.animalType,
+        status: newStatus as any,
       })
       toast.success(`Report ${newStatus === 'published' ? 'published to public feed' : 'rejected'}.`)
       setConfirmApprove(false)
@@ -109,45 +125,58 @@ export function DomesticReportDetailPage() {
 
   return (
     <DomesticLayout
-      title={report.animalName}
-      subtitle={report.reportNumber ?? undefined}
+      title={rawData.animalName || 'Domestic Report'}
+      subtitle={rawData.reportNumber ?? undefined}
       backTo="/pwrcc/domestic"
       footer={actionFooter}
     >
       <div className="space-y-6 pb-2">
         <div className="text-center">
-          <RescuerStatusBadge status={report.status as any} className="mb-4" />
+          <RescuerStatusBadge status={rawData.status as any} className="mb-4" />
           <p className="text-xs font-mono text-muted-foreground">
-            {report.reportNumber ?? report.id}
+            {rawData.reportNumber ?? rawData._id}
           </p>
         </div>
 
-        {getReportPhotos(report).length > 0 ? (
-          <ReportPhotosGallery
-            photos={getReportPhotos(report)}
-            alt={report.animalName}
-            variant="hero"
-          />
+        {/* PHOTO RENDERER */}
+        {actualPhoto ? (
+          <div className="overflow-hidden rounded-2xl border border-border bg-muted">
+            <img 
+              src={actualPhoto} 
+              alt={rawData.animalName || 'Animal Photo'} 
+              className="w-full object-cover max-h-[400px]"
+            />
+          </div>
         ) : null}
 
         <RescuerDetailSection title="Domestic Report Details" icon={CheckCircle2}>
           <dl className="space-y-3">
-            <DetailRow label="Date & time seen" value={formatDateTime(report.seenAt ?? report.createdAt)} />
-            <DetailRow label="Animal Type" value={report.type} />
+            <DetailRow label="Date & time seen" value={formatDateTime(rawData.seenAt ?? rawData._creationTime)} />
+            <DetailRow label="Animal Type" value={rawData.type || rawData.animalType || 'Not specified'} />
             <DetailRow
               label="Condition"
-              value={report.condition ? report.condition.replace(/-/g, ' ') : 'Not provided'}
+              value={condition.replace(/-/g, ' ')}
               highlight
             />
-            {report.description ? (
-              <DetailRow label="Description" value={report.description} />
+            {rawData.description ? (
+              <DetailRow label="Description" value={rawData.description} />
             ) : null}
           </dl>
         </RescuerDetailSection>
 
+        {/* LOCATION WITH GOOGLE MAPS LINK */}
         <RescuerDetailSection title="Location" icon={MapPin}>
-          <div className="space-y-1">
-            <p className="font-medium leading-relaxed text-sm">{report.location}</p>
+          <div className="space-y-2">
+            <p className="font-medium leading-relaxed text-sm">{locationString}</p>
+            <a 
+              href={mapLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              View on Google Maps
+            </a>
           </div>
         </RescuerDetailSection>
 
@@ -157,9 +186,9 @@ export function DomesticReportDetailPage() {
             <div>
               <dt className="text-xs text-muted-foreground">Contact</dt>
               <dd className="mt-1 font-medium">
-                {report.reporterPhone ? (
-                  <a href={`tel:${report.reporterPhone.replace(/\s/g, '')}`} className="inline-flex items-center gap-2 text-primary hover:opacity-80">
-                    {report.reporterPhone}
+                {rawData.reporterPhone || rawData.phone ? (
+                  <a href={`tel:${(rawData.reporterPhone || rawData.phone).replace(/\s/g, '')}`} className="inline-flex items-center gap-2 text-primary hover:opacity-80">
+                    {rawData.reporterPhone || rawData.phone}
                     <Phone className="h-4 w-4" />
                   </a>
                 ) : (
@@ -199,7 +228,9 @@ function DetailRow({ label, value, highlight }: { label: string; value: string; 
   return (
     <div>
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={`mt-0.5 font-medium ${highlight ? 'text-primary' : ''}`}>{value}</dd>
+      <dd className={`mt-0.5 font-medium ${highlight ? 'text-primary' : 'text-foreground'} capitalize`}>
+        {value}
+      </dd>
     </div>
   )
 }
