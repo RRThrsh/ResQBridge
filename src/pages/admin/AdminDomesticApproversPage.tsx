@@ -163,7 +163,19 @@ export function AdminDomesticApproversPage() {
         <AdminTablePaginationBar pagination={pagination} />
       </div>
 
-      {/* TODO: We will add the Add/Edit dialogs here next! */}
+      {<AdminAddDomesticApproverDialog
+        adminEmail={admin.email}
+        open={addOpen}
+        onOpenChange={setAddOpen}
+      />
+
+      <AdminDomesticApproverDialog
+        approverRow={selected}
+        actorEmail={admin.email}
+        mode={dialogMode}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
 
       <AdminConfirmDialog
         open={deleteOpen}
