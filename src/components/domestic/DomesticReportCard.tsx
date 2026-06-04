@@ -14,20 +14,27 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
   const isCompact = variant === 'compact'
   const rawData = report as any
 
-  let finalPhotoUrl = rawData.photoUrl || rawData.imageUrl || rawData.photo || rawData.photoDataUrl
-  if (!finalPhotoUrl && rawData.photoDataUrls?.length > 0) finalPhotoUrl = rawData.photoDataUrls[0]
-  if (!finalPhotoUrl && rawData.photos?.length > 0) finalPhotoUrl = rawData.photos[0]
-  if (!finalPhotoUrl && rawData.imageUrls?.length > 0) finalPhotoUrl = rawData.imageUrls[0]
+  // ---------------------------------------------------------
+  // 1. BULLETPROOF PHOTO EXTRACTOR (Copied from Detail Page)
+  // ---------------------------------------------------------
+  let allPhotos: string[] = []
+  const baseUrl = (import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud').replace(/\/$/, '')
 
-  const storageId = rawData.photoStorageId || rawData.storageId || rawData.imageId || (rawData.photoStorageIds && rawData.photoStorageIds[0])
-  
-  if (!finalPhotoUrl && storageId) {
-    const baseUrl = (import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud').replace(/\/$/, '');
-    finalPhotoUrl = `${baseUrl}/api/storage/${storageId}`;
+  // We now catch the resolved `photoUrls` that the backend is sending us!
+  if (rawData.photoUrls && Array.isArray(rawData.photoUrls)) {
+    allPhotos = rawData.photoUrls
+  } else if (rawData.photoStorageIds && Array.isArray(rawData.photoStorageIds)) {
+    allPhotos = rawData.photoStorageIds.map((id: string) => `${baseUrl}/api/storage/${id}`)
+  } else if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
+    allPhotos = rawData.photoDataUrls
+  } else if (rawData.photos && Array.isArray(rawData.photos)) {
+    allPhotos = rawData.photos
+  } else if (rawData.photoUrl) {
+    allPhotos = [rawData.photoUrl]
   }
 
-  const photoCount = rawData.photoStorageIds?.length || rawData.photoDataUrls?.length || rawData.photos?.length || 0
-  const extraPhotos = photoCount > 1 ? photoCount - 1 : 0
+  const finalPhotoUrl = allPhotos.length > 0 ? allPhotos[0] : null
+  const extraPhotos = allPhotos.length > 1 ? allPhotos.length - 1 : 0
 
   return (
     <Link
