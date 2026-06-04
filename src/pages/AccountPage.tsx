@@ -52,7 +52,6 @@ export function AccountPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     
-    // Extra safety check for TypeScript
     if (!user?.email) {
       toast.error('Could not verify your account details.')
       return
@@ -65,7 +64,7 @@ export function AccountPage() {
         email: normalizeEmail(user.email),
         firstName,
         lastName,
-        contactPhone: profile?.contactPhone ?? '', // Keep existing phone info unchanged
+        contactPhone: profile?.contactPhone ?? '', 
       })
 
       updateUser({
@@ -155,14 +154,20 @@ export function AccountPage() {
                       {profile.firstName} {profile.lastName}
                     </dd>
                   </div>
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Contact Number</dt>
-                    <dd>{isPhoneNumber(profile.email) ? profile.email : (profile.contactPhone || 'Not set')}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Email</dt>
-                    <dd>{!isPhoneNumber(profile.email) ? profile.email : 'Not set'}</dd>
-                  </div>
+
+                  {/* Conditionally render ONLY the correct contact method */}
+                  {isPhoneNumber(profile.email) ? (
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Mobile Number</dt>
+                      <dd className="font-medium">{profile.email}</dd>
+                    </div>
+                  ) : (
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Primary Email</dt>
+                      <dd className="font-medium">{profile.email}</dd>
+                    </div>
+                  )}
+
                   <div>
                     <dt className="text-xs text-muted-foreground">Member since</dt>
                     <dd>{formatDate(profile.createdAt)}</dd>
@@ -196,7 +201,7 @@ export function AccountPage() {
                       <Input
                         value={profile.email}
                         disabled
-                        className="bg-muted/40 cursor-not-allowed text-muted-foreground"
+                        className="bg-muted/40 cursor-not-allowed text-muted-foreground font-medium"
                       />
                     </div>
                   ) : (
@@ -205,7 +210,7 @@ export function AccountPage() {
                       <Input
                         value={profile.email}
                         disabled
-                        className="bg-muted/40 cursor-not-allowed text-muted-foreground"
+                        className="bg-muted/40 cursor-not-allowed text-muted-foreground font-medium"
                       />
                     </div>
                   )}
