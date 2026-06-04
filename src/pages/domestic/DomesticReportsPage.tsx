@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
-import { CheckCircle2, Clock, Loader2, Home, Sparkles } from 'lucide-react'
+import { CheckCircle2, Clock, Loader2, Sparkles } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
-import { normalizeEmail } from '@/lib/admin'
 // NOTE: You might need to adapt your RescuerReportCard into a DomesticReportCard
 import { DomesticReportCard } from '@/components/domestic/DomesticReportCard' 
 import { rescuerReportToStored } from '@/lib/reports'
