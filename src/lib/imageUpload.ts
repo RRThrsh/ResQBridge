@@ -21,3 +21,15 @@ export function validateImageDataUrl(dataUrl: string): string | null {
   }
   return null
 }
+
+// 🐛 THIS IS THE MISSING FIX: 
+// Added the validateImageFile function that AdminImageUploadField is looking for!
+export function validateImageFile(file: File): string | null {
+  if (!file.type.startsWith('image/')) {
+    return 'Please select a valid image file.'
+  }
+  if (file.size > MAX_IMAGE_FILE_BYTES) {
+    return 'Image is too large. Use a smaller file (50 MB or less).'
+  }
+  return null
+}
