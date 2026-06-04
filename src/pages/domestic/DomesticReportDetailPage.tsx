@@ -43,6 +43,14 @@ export function DomesticReportDetailPage() {
         <p className="py-12 text-center text-sm text-muted-foreground">
           Report not found.
         </p>
+        {/* 🔍 DEVELOPER X-RAY: This will reveal the exact database field names */}
+      <RescuerDetailSection title="Database X-Ray" icon={CheckCircle2}>
+        <div className="p-4 bg-slate-950 rounded-lg overflow-x-auto">
+          <pre className="text-emerald-400 font-mono text-[11px] leading-relaxed">
+            {JSON.stringify(rawData, null, 2)}
+          </pre>
+        </div>
+      </RescuerDetailSection>
       </DomesticLayout>
     )
   }
