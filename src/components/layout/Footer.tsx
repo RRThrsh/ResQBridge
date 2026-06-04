@@ -31,21 +31,51 @@ export function Footer() {
               </div>
               <span className="text-sm font-bold" style={{ fontFamily: 'var(--font-heading)' }}>ResQBridge</span>
             </Link>
-            <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
-              ResQBridge — A Web-Based Animal Rescue and Reporting System connecting communities,
-  rescuers, and animal welfare organizations across Palawan.
+<p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
+  ResQBridge is a Web-Based Animal Rescue and Reporting System connecting
+  communities, rescuers, and animal welfare organizations across Palawan.
+</p>
 
-            </p>
-            <div className="space-y-2">
-              <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
-                <span>Irawan, Puerto Princesa City, Palawan 5300</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Phone className="h-3.5 w-3.5 shrink-0 text-primary/60" />
-                <span>0995-033-8967</span>
-              </div>
-            </div>
+<div className="space-y-4">
+
+  {/* Wildlife Shelter */}
+  <div className="space-y-1">
+    <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
+      Wildlife Shelter
+    </p>
+
+    <div className="flex items-start gap-2 text-xs text-muted-foreground">
+      <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+      <span>Irawan, Puerto Princesa City, Palawan 5300</span>
+    </div>
+
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <Phone className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+      <span>0995-033-8967</span>
+    </div>
+  </div>
+
+  {/* Domestic Shelter */}
+  <div className="space-y-1">
+    <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
+      Domestic Shelter
+    </p>
+
+    <div className="flex items-start gap-2 text-xs text-muted-foreground">
+      <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+      <span>
+        Sitio Baruang, Bgy. Macarascas, Puerto Princesa,
+        Philippines, 5300
+      </span>
+    </div>
+
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <Phone className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+      <span>0938 927 0317</span>
+    </div>
+  </div>
+
+</div>
           </div>
 
           {/* Pages */}
