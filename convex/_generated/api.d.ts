@@ -33,6 +33,7 @@ import type * as otp from "../otp.js";
 import type * as reportPhotoStorage from "../reportPhotoStorage.js";
 import type * as reports from "../reports.js";
 import type * as rescuers from "../rescuers.js";
+import type * as storage from "../storage.js";
 import type * as users from "../users.js";
 
 import type {
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   reportPhotoStorage: typeof reportPhotoStorage;
   reports: typeof reports;
   rescuers: typeof rescuers;
+  storage: typeof storage;
   users: typeof users;
 }>;
 

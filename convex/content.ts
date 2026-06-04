@@ -265,16 +265,7 @@ finalImages = [args.item.image]
     if (finalImages.length > 3) {
       finalImages = finalImages.slice(0, 3)
     }
-    const totalImageSize = finalImages.reduce(
-      (acc, img) => acc + img.length,
-      0
-    )
 
-    if (totalImageSize > 120000) {
-      throw new Error(
-        'Total image size is too large. Use smaller images.'
-      )
-    }
     const nextItem: WildlifeItem = {
       id,
       commonName: args.item.commonName,
