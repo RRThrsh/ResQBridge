@@ -22,9 +22,14 @@ export default defineSchema({
     email: v.string(),
     firstName: v.string(),
     lastName: v.string(),
-    role: v.optional(
-      v.union(v.literal('admin'), v.literal('user'), v.literal('rescuer')),
-    ),
+role: v.optional(
+  v.union(
+    v.literal('admin'),
+    v.literal('user'),
+    v.literal('rescuer'),
+    v.literal('domestic_approver'),
+  ),
+),
     contactPhone: v.optional(v.string()),
     createdAt: v.number(),
   }).index('by_email', ['email']),
