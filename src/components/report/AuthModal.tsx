@@ -27,9 +27,10 @@ export function AuthModal({ open, onClose }: Props) {
 const emptyAuthForm = {
   mode: 'sign-in' as AuthMode,
   step: 'details' as const,
+  loginMethod: 'email' as 'email' | 'phone', // New state for the toggle
   firstName: '',
   lastName: '',
-  identifier: '', // Replaced 'email' with a generic 'identifier'
+  identifier: '', 
   code: '',
 }
 
@@ -37,6 +38,10 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const { login } = useUserAuth()
   const [mode, setMode] = useState<AuthMode>(emptyAuthForm.mode)
   const [step, setStep] = useState<'details' | 'otp'>(emptyAuthForm.step)
+  
+  // The state that controls whether they are using Email or Phone
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>(emptyAuthForm.loginMethod)
+  
   const [firstName, setFirstName] = useState(emptyAuthForm.firstName)
   const [lastName, setLastName] = useState(emptyAuthForm.lastName)
   const [identifier, setIdentifier] = useState(emptyAuthForm.identifier)
@@ -45,11 +50,12 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const [countdown, setCountdown] = useState(0)
   const submittingRef = useRef(false)
 
-  // Smart Validation Logic
+  // Explicit Validation Logic based on the toggle
   const normalizedId = identifier.trim().toLowerCase()
-  const isEmail = normalizedId.includes('@')
-  const isPhone = normalizedId.replace(/\D/g, '').length >= 10
-  const identifierValid = isEmail || isPhone
+  const identifierValid = 
+    loginMethod === 'email' 
+      ? normalizedId.includes('@') 
+      : normalizedId.replace(/\D/g, '').length >= 10
 
   const signUpReady = firstName.trim() && lastName.trim() && identifierValid
   const signInReady = identifierValid
@@ -69,6 +75,12 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     setCountdown(0)
   }
 
+  // Handle switching between Email/Phone (clears the input so they don't submit a phone number as an email)
+  function switchLoginMethod(method: 'email' | 'phone') {
+    setLoginMethod(method)
+    setIdentifier('')
+  }
+
   function backToDetails() {
     setStep('details')
     setCode('')
@@ -86,7 +98,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     }
     
     if (!identifierValid) {
-      toast.error('Enter a valid email or phone number')
+      toast.error(`Enter a valid ${loginMethod === 'email' ? 'email' : 'phone number'}`)
       return
     }
 
@@ -95,11 +107,10 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     setLoading(true)
     
     try {
-      // Pass the identifier and the type (email vs phone) to your API
       await sendOtp({
         mode,
         identifier: normalizedId,
-        type: isEmail ? 'email' : 'phone',
+        type: loginMethod, // Directly use the toggle state here
         ...(mode === 'sign-up'
           ? { firstName: firstName.trim(), lastName: lastName.trim() }
           : {}),
@@ -129,7 +140,6 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     submittingRef.current = true
     setLoading(true)
     try {
-      // Update verify to pass the identifier instead of just email
       login(await verifyOtp(identifier, code, mode))
       onClose()
       toast.success(mode === 'sign-up' ? 'Account created' : 'Signed in')
@@ -154,12 +164,13 @@ function AuthForm({ onClose }: { onClose: () => void }) {
         <DialogDescription>
           {step === 'details'
             ? mode === 'sign-up'
-              ? 'Sign up with your name and email or phone. We will send a one-time code.'
-              : 'Sign in with your email or phone. We will send a one-time code.'
+              ? 'Sign up with your name and contact info. We will send a one-time code.'
+              : 'Sign in to your account. We will send a one-time code.'
             : `6-digit code sent to ${identifier}`}
         </DialogDescription>
       </div>
 
+      {/* Sign In / Sign Up Toggle */}
       {step === 'details' && (
         <Tabs value={mode} onValueChange={(value) => switchMode(value as AuthMode)} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-background border border-border h-10 p-1">
@@ -198,13 +209,22 @@ function AuthForm({ onClose }: { onClose: () => void }) {
               />
             </div>
           )}
+
+          {/* NEW: Email / Phone Toggle */}
+          <Tabs value={loginMethod} onValueChange={(value) => switchLoginMethod(value as 'email' | 'phone')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-muted h-9 p-1">
+              <TabsTrigger value="email" className="text-xs">Email</TabsTrigger>
+              <TabsTrigger value="phone" className="text-xs">Phone Number</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Dynamic Input based on the toggle */}
           <Input
-            type="text"
-            placeholder="Email or Phone Number"
+            type={loginMethod === 'email' ? 'email' : 'tel'}
+            placeholder={loginMethod === 'email' ? 'Email address' : 'Phone number (e.g. 09123456789)'}
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             autoComplete="username"
-            autoFocus={mode === 'sign-in'}
             required
           />
           <SubmitButton loading={loading} disabled={!detailsReady}>
