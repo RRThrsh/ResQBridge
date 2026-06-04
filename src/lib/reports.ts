@@ -3,6 +3,7 @@ import { getReportPhotos, primaryReportPhoto } from '@/lib/reportPhotos'
 
 export const REPORT_STATUSES = [
   'pending',
+  'published',
   'accepted',
   'en_route',
   'rescue_success',
@@ -193,6 +194,8 @@ export function statusLabel(status: ReportStatus) {
   switch (status) {
     case 'pending':
       return 'Under Review'
+    case 'published':
+      return 'Published'
     case 'accepted':
       return 'Accepted'
     case 'en_route':
@@ -210,6 +213,8 @@ export function statusBadgeLabel(status: ReportStatus) {
   switch (status) {
     case 'pending':
       return 'PENDING'
+    case 'published':
+      return 'PUBLISHED'
     case 'accepted':
       return 'ACCEPTED'
     case 'en_route':
@@ -250,6 +255,11 @@ export function statusTone(status: ReportStatus) {
       return {
         badge: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
         dot: 'bg-sky-500',
+      }
+    case 'published':
+      return {
+        badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+        dot: 'bg-emerald-500',
       }
     case 'rescue_success':
       return {
