@@ -108,7 +108,7 @@ export function DomesticReportsPage() {
           ) : (
             <div className="space-y-3">
               {list.map((report: any) => (
-                <DomesticReportCard key={report.id || report._id} report={report} />
+                <DomesticReportCard key={report._id} report={report} />
               ))}
             </div>
           )}

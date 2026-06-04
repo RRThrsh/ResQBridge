@@ -35,7 +35,7 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
 
   return (
     <Link
-      to={`/pwrcc/domestic/reports/${rawData.id || rawData._id}`}
+      to={`/pwrcc/domestic/reports/${rawData._id}`}
       className={cn(
         'group flex gap-4 rounded-2xl border border-border bg-card p-3 sm:p-4',
         'transition-all hover:border-primary/30 hover:shadow-sm',
