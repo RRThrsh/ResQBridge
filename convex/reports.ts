@@ -2,6 +2,7 @@ import { mutation, query } from './_generated/server'
 import type { MutationCtx, QueryCtx } from './_generated/server'
 import { v } from 'convex/values'
 import type { Id } from './_generated/dataModel'
+import { internal } from './_generated/api' // <-- ADDED THIS IMPORT
 import { reportCreateOptionalFields, reportDocValidator } from './lib/reportFields'
 import {
   normalizeReportPhotos,
@@ -147,6 +148,16 @@ export const create = mutation({
       reportNumber: generateReportNumber(reportId),
     })
 
+    // --- ADDED THIS NOTIFICATION TRIGGER ---
+    if (args.category === 'wildlife') {
+      await ctx.scheduler.runAfter(0, internal.notifications.alertAdmin, {
+        reportId: reportId,
+        species: args.animalName,
+        location: args.location
+      })
+    }
+    // ---------------------------------------
+
     return reportId
   },
 })
@@ -224,7 +235,6 @@ export const remove = mutation({
   },
 })
 
-// Add this to the bottom of convex/reports.ts
 export const getReportById = query({
   args: {
     reportId: v.id('reports'),
@@ -233,7 +243,6 @@ export const getReportById = query({
     const row = await ctx.db.get(args.reportId)
     if (!row) return null
     
-    // THIS UNLOCKS THE IMAGE URL BEFORE SENDING IT TO THE FRONTEND
     return await withResolvedReportPhotos(ctx, row)
   },
 })
