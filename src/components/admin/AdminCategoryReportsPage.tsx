@@ -236,9 +236,9 @@ import { useMemo, useState } from 'react'
                       report.reporterFirstName,
                       report.reporterLastName,
                     )
-                    const dateLine = isDomestic
-                      ? formatDate(report.createdAt)
-                      : `${formatDate(report.createdAt)} · ${formatReportType(report.type)}`
+                    
+                    // Always strictly format just the date
+                    const dateLine = formatDate(report.createdAt)
 
                     return (
                       <tr key={report.id} className="border-b border-border/60">
