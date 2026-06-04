@@ -39,15 +39,29 @@ async function sendOtpEmail(
 
 // --- NEW: SMS SENDER VIA PHILSMS ---
 async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
-  // ⚠️ ACTION REQUIRED ⚠️ 
-  // Change "api.settings.getSmsToken" to the actual file and function you made in Convex
+  // 1. Format the phone number properly for the Philippines
+  let formattedPhone = phone.replace(/\D/g, '') // Remove any spaces, dashes, or + signs
+  
+  if (formattedPhone.length === 10 && formattedPhone.startsWith('9')) {
+    // If they typed 9123456789, turn it into 09123456789
+    formattedPhone = '0' + formattedPhone
+  } else if (formattedPhone.length === 12 && formattedPhone.startsWith('63')) {
+    // If they typed 639123456789, turn it into 09123456789
+    formattedPhone = '0' + formattedPhone.substring(2)
+  } else {
+    // Fallback if they typed it normally (e.g. 09...)
+    formattedPhone = phone.trim()
+  }
+
+  // 2. Fetch your token
   // @ts-ignore
-  const philsmsToken = await ctx.runQuery(api.settings.getSmsToken)
+  const philsmsToken = await ctx.runQuery(api.settings.getSmsToken) // Make sure this matches your actual DB query!
   
   if (!philsmsToken) {
     throw new Error('PhilSMS API token is missing in the database.')
   }
 
+  // 3. Send the request
   const response = await fetch('https://dashboard.philsms.com/api/v3/sms/send', {
     method: 'POST',
     headers: {
@@ -56,14 +70,13 @@ async function sendOtpSms(ctx: ActionCtx, phone: string, code: string) {
       'Accept': 'application/json',
     },
     body: JSON.stringify({
-      recipient: phone,
-      sender_id: 'PhilSMS', // Change this if you purchased a custom sender ID
+      recipient: formattedPhone, // Now using the perfectly formatted number
+      sender_id: 'PhilSMS', 
       type: 'plain',
       message: `Your verification code is: ${code}. Please do not share this with anyone.`,
     }),
   })
 
-  // Capture the actual error from PhilSMS
   if (!response.ok) {
     const errorText = await response.text()
     console.error('PhilSMS API Error:', errorText)
