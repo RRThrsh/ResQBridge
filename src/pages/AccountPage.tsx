@@ -32,12 +32,6 @@ export function AccountPage() {
     return <Navigate to="/" replace />
   }
 
-  // Automatically detect if the stored "email" is actually a phone number
-  function isPhoneNumber(identifier: string) {
-    if (!identifier) return false
-    return /^\+?\d+$/.test(identifier.replace(/\D/g, ''))
-  }
-
   function startEditing() {
     if (!profile) return
     setFirstName(profile.firstName)
@@ -155,18 +149,11 @@ export function AccountPage() {
                     </dd>
                   </div>
 
-                  {/* Conditionally render ONLY the correct contact method */}
-                  {isPhoneNumber(profile.email) ? (
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Mobile Number</dt>
-                      <dd className="font-medium">{profile.email}</dd>
-                    </div>
-                  ) : (
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Primary Email</dt>
-                      <dd className="font-medium">{profile.email}</dd>
-                    </div>
-                  )}
+                  {/* Unified Contact Label */}
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Email / Phone Number</dt>
+                    <dd className="font-medium">{profile.email}</dd>
+                  </div>
 
                   <div>
                     <dt className="text-xs text-muted-foreground">Member since</dt>
@@ -194,26 +181,15 @@ export function AccountPage() {
                     />
                   </div>
                   
-                  {/* Safely show their login identifier as read-only based on type */}
-                  {isPhoneNumber(profile.email) ? (
-                    <div>
-                      <label className="mb-1 block text-xs text-muted-foreground">Mobile Number</label>
-                      <Input
-                        value={profile.email}
-                        disabled
-                        className="bg-muted/40 cursor-not-allowed text-muted-foreground font-medium"
-                      />
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="mb-1 block text-xs text-muted-foreground">Primary Email</label>
-                      <Input
-                        value={profile.email}
-                        disabled
-                        className="bg-muted/40 cursor-not-allowed text-muted-foreground font-medium"
-                      />
-                    </div>
-                  )}
+                  {/* Unified Read-Only Contact Field */}
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Email / Phone Number</label>
+                    <Input
+                      value={profile.email}
+                      disabled
+                      className="bg-muted/40 cursor-not-allowed text-muted-foreground font-medium"
+                    />
+                  </div>
 
                   <div className="flex gap-2 pt-2">
                     <Button
