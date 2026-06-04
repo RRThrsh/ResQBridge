@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapPin, AlertTriangle, Loader2, Info, Crosshair } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -161,18 +161,19 @@ export function DomesticReportForm() {
     seenAt: '',
   })
 
-  const userContactPhone = profile?.contactPhone;
+const userContactPhone = profile?.contactPhone;
+  const hasPrefilledPhone = useRef(false); // Track if it has been pre-filled
 
   useEffect(() => {
-    if (userContactPhone) {
+    // Only pre-fill if we have a number AND we haven't done it yet
+    if (userContactPhone && !hasPrefilledPhone.current) {
       setFormData((prev) => {
-        if (!prev.reporterPhone) {
-          let cleaned = userContactPhone.replace(/\D/g, '')
-          if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
-          return { ...prev, reporterPhone: cleaned }
-        }
-        return prev
+        let cleaned = userContactPhone.replace(/\D/g, '')
+        if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
+        return { ...prev, reporterPhone: cleaned }
       })
+      // Lock it so it never runs again, allowing the user to edit/delete freely
+      hasPrefilledPhone.current = true;
     }
   }, [userContactPhone])
 
