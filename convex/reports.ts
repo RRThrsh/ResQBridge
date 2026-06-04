@@ -18,7 +18,7 @@ import {
   normalizeReportStatus,
   reportStatusValidator,
 } from './lib/reportStatus'
-
+import { internal } from './_generated/api'
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
@@ -151,7 +151,15 @@ export const create = mutation({
     await ctx.db.patch(reportId, {
       reportNumber: generateReportNumber(reportId),
     })
-
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.alertAdmin,
+      {
+        reportId,
+        species: args.animalName,
+        location: args.location,
+      }
+    )
     return reportId
   },
 })
