@@ -37,43 +37,35 @@ export function DomesticReportDetailPage() {
     )
   }
 
-  // FIX: Moved rawData declaration above the if (!row) block
-  const rawData = row as any
-
   if (!row) {
     return (
       <DomesticLayout title="Report" backTo="/pwrcc/domestic">
         <p className="py-12 text-center text-sm text-muted-foreground">
           Report not found.
         </p>
-        {/* 🔍 DEVELOPER X-RAY: This will reveal the exact database field names */}
-      <RescuerDetailSection title="Database X-Ray" icon={CheckCircle2}>
-        <div className="p-4 bg-slate-950 rounded-lg overflow-x-auto">
-          <pre className="text-emerald-400 font-mono text-[11px] leading-relaxed">
-            {JSON.stringify(rawData, null, 2)}
-          </pre>
-        </div>
-      </RescuerDetailSection>
       </DomesticLayout>
     )
   }
 
+  const rawData = row as any
+
   // ---------------------------------------------------------
-  // 1. BULLETPROOF PHOTO RESOLVER
+  // 1. CATCH-ALL PHOTO RESOLVER
   // ---------------------------------------------------------
   let finalPhotoUrl = rawData.photoUrl || rawData.imageUrl || rawData.photo || rawData.photoDataUrl
   
   if (!finalPhotoUrl && rawData.photoDataUrls?.length > 0) finalPhotoUrl = rawData.photoDataUrls[0]
   if (!finalPhotoUrl && rawData.photos?.length > 0) finalPhotoUrl = rawData.photos[0]
+  if (!finalPhotoUrl && rawData.imageUrls?.length > 0) finalPhotoUrl = rawData.imageUrls[0]
 
-  // If it's saved as a Convex Storage ID, we manually build the secure URL for your exact database
-  const storageId = rawData.photoStorageId || rawData.storageId || (rawData.photoStorageIds && rawData.photoStorageIds[0])
+  // Direct Convex Storage ID constructor (forces the image to load from your specific database)
+  const storageId = rawData.photoStorageId || rawData.storageId || rawData.imageId || (rawData.photoStorageIds && rawData.photoStorageIds[0])
   if (!finalPhotoUrl && storageId) {
     finalPhotoUrl = `https://pleasant-otter-637.convex.cloud/api/storage/${storageId}`
   }
 
   // ---------------------------------------------------------
-  // 2. NAME & CONDITION FIX (Filtering out literal "undefined" strings)
+  // 2. NAME & CONDITION FIX 
   // ---------------------------------------------------------
   let fName = rawData.reporterFirstName || rawData.firstName || ''
   let lName = rawData.reporterLastName || rawData.lastName || ''
@@ -89,14 +81,14 @@ export function DomesticReportDetailPage() {
   if (condition === 'undefined' || condition === 'null') condition = 'Not provided'
 
   // ---------------------------------------------------------
-  // 3. MAP LOCATION PARSER (Extracting Exact Lat/Lng)
+  // 3. MAP LOCATION & MINI-MAP PARSER
   // ---------------------------------------------------------
   const locationString = rawData.location || 'Unknown location'
   let mapQuery = encodeURIComponent(locationString)
 
-  // If the string contains the middle dot '·', slice it to only grab the coordinates at the end
+  // Grab exact coordinates if they exist after a middle dot '·'
   if (locationString.includes('·')) {
-    const coords = locationString.split('·').pop()?.trim() // gets "9.751433, 118.766869"
+    const coords = locationString.split('·').pop()?.trim() 
     if (coords) mapQuery = encodeURIComponent(coords)
   } else if (rawData.latitude && rawData.longitude) {
     mapQuery = encodeURIComponent(`${rawData.latitude},${rawData.longitude}`)
@@ -173,7 +165,7 @@ export function DomesticReportDetailPage() {
           </p>
         </div>
 
-        {/* IMAGE RENDERER */}
+        {/* CATCH-ALL IMAGE RENDERER */}
         {finalPhotoUrl ? (
           <div className="overflow-hidden rounded-2xl border border-border bg-muted/30">
             <img 
@@ -199,12 +191,11 @@ export function DomesticReportDetailPage() {
           </dl>
         </RescuerDetailSection>
 
-        {/* LOCATION & GOOGLE MAPS LINK */}
+        {/* LOCATION & GOOGLE MAPS MINI MAP */}
         <RescuerDetailSection title="Location" icon={MapPin}>
           <div className="space-y-3">
             <p className="font-medium leading-relaxed text-sm">{locationString}</p>
             
-            {/* MINI MAP EMBED */}
             <div className="w-full overflow-hidden rounded-xl border border-border/50 bg-muted/30">
               <iframe 
                 src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`} 
