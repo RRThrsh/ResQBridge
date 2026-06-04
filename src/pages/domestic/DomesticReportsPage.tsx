@@ -82,7 +82,9 @@ export function DomesticReportsPage() {
   const [tab, setTab] = useState<Tab>('pending')
 
   // NOTE: You will need to create these Convex queries to fetch reports where category === 'domestic'
+  // @ts-ignore
   const pendingRows = useQuery(api.domestic.listPendingReports)
+  // @ts-ignore
   const publishedRows = useQuery(api.domestic.listPublishedReports)
 
   const pending = useMemo(
