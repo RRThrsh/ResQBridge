@@ -17,6 +17,7 @@ import { AdminWildlifePage } from '@/pages/admin/AdminWildlifePage'
 import { AdminProfilePage } from '@/pages/admin/AdminProfilePage'
 import { AdminAdminsPage } from '@/pages/admin/AdminAdminsPage'
 import { AdminRescuersPage } from '@/pages/admin/AdminRescuersPage'
+import { AdminDomesticApproversPage } from '@/pages/admin/AdminDomesticApproversPage'
 import { Toaster } from '@/components/ui/sonner'
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
@@ -71,6 +72,7 @@ export function AdminApp() {
           <Route path="wildlife" element={<AdminWildlifePage />} />
           <Route path="news" element={<AdminNewsPage />} />
           <Route path="rescuers" element={<AdminRescuersPage />} />
+          <Route path="domestic-approvers" element={<AdminDomesticApproversPage />} /> {/* <--- ADD THIS HERE */}
           <Route path="admins" element={<AdminAdminsPage />} />
           <Route path="profile" element={<AdminProfilePage />} />
         </Route>
