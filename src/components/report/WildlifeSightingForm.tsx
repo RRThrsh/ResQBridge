@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
@@ -181,20 +181,21 @@ export function WildlifeSightingForm() {
   })
 
   // --- VERCEL FIX: EXTRACT OUTSIDE USEEFFECT ---
-  const userContactPhone = profile?.contactPhone;
+const userContactPhone = profile?.contactPhone;
+  const hasPrefilledPhone = useRef(false); // Add this flag
 
   useEffect(() => {
-    if (userContactPhone) {
+    // Only run if we have a phone number AND we haven't pre-filled it yet
+    if (userContactPhone && !hasPrefilledPhone.current) {
       setFormData((prev) => {
-        if (!prev.reporterPhone) {
-          let cleaned = userContactPhone.replace(/\D/g, '')
-          if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
-          return { ...prev, reporterPhone: cleaned }
-        }
-        return prev
+        let cleaned = userContactPhone.replace(/\D/g, '')
+        if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
+        return { ...prev, reporterPhone: cleaned }
       })
+      // Set flag to true so it never auto-fills again, even if the user clears the input
+      hasPrefilledPhone.current = true; 
     }
-  }, [userContactPhone]) // Clean dependency array to pass Vercel Build
+  }, [userContactPhone])
 
   const updateLocationData = async (lat: number, lng: number, source: 'gps' | 'click' = 'click') => {
     setLocFetching(true)
