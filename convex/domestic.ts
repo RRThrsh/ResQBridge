@@ -4,7 +4,29 @@ import { v } from 'convex/values'
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
+export const getDomesticApproverForLogin = query({
+  args: { email: v.string() },
 
+  handler: async (ctx, args) => {
+    const email = normalizeEmail(args.email)
+
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .unique()
+
+    if (!user || user.role !== 'domestic_approver') {
+      return null
+    }
+
+    return {
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: 'domestic_approver' as const,
+    }
+  },
+})
 export const isDomesticApprover = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
