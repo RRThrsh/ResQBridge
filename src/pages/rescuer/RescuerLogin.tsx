@@ -8,7 +8,7 @@ import { useRescuerAuth } from '@/context/RescuerAuthContext'
 import { sendRescuerOtp, verifyRescuerOtp } from '@/lib/rescuer-auth-api'
 import { toast } from 'sonner'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
-
+import { Helmet } from 'react-helmet-async'
 const RESCUER_OTP_EMAIL_KEY = 'pwrrc_rescuer_otp_email'
 
 export function RescuerLogin() {
@@ -82,7 +82,12 @@ export function RescuerLogin() {
     }
   }
 
-  return (
+ return (
+  <>
+    <Helmet>
+      <meta name="robots" content="noindex,nofollow" />
+    </Helmet>
+
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
       <div className="absolute right-4 top-4">
         <ThemeToggle />
@@ -154,5 +159,6 @@ export function RescuerLogin() {
         </CardContent>
       </Card>
     </div>
+    </>
   )
 }

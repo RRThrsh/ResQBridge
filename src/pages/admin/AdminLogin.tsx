@@ -8,7 +8,7 @@ import { useAdminAuth } from '@/context/AdminAuthContext'
 import { sendAdminOtp, verifyAdminOtp } from '@/lib/admin-auth-api'
 import { toast } from 'sonner'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
-
+import { Helmet } from 'react-helmet-async'
 const ADMIN_OTP_EMAIL_KEY = 'pwrrc_admin_otp_email'
 
 export function AdminLogin() {
@@ -82,7 +82,12 @@ export function AdminLogin() {
     }
   }
 
-  return (
+return (
+  <>
+    <Helmet>
+      <meta name="robots" content="noindex,nofollow" />
+    </Helmet>
+
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
       <div className="absolute right-4 top-4">
         <ThemeToggle />
@@ -155,5 +160,6 @@ export function AdminLogin() {
         </CardContent>
       </Card>
     </div>
+    </>
   )
 }
