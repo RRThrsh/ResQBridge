@@ -1,5 +1,6 @@
 import { query, mutation } from './_generated/server'
 import { v } from 'convex/values'
+import { withResolvedReportPhotos } from './lib/reportPhotos'
 // 🚨 WE IMPORT THE PHOTO UNLOCKER HERE
 
 function normalizeEmail(email: string) {
@@ -48,12 +49,16 @@ export const listPendingReports = query({
   args: {},
   handler: async (ctx) => {
     // Return pure, raw data so the photos don't get deleted
-    return await ctx.db
-      .query('reports')
-      .filter((q) => q.eq(q.field('category'), 'domestic'))
-      .filter((q) => q.eq(q.field('status'), 'pending'))
-      .order('desc')
-      .collect()
+const rows = await ctx.db
+  .query('reports')
+  .filter((q) => q.eq(q.field('category'), 'domestic'))
+  .filter((q) => q.eq(q.field('status'), 'pending'))
+  .order('desc')
+  .collect()
+
+return await Promise.all(
+  rows.map((row) => withResolvedReportPhotos(ctx, row))
+)
   },
 })
 
@@ -61,12 +66,16 @@ export const listPublishedReports = query({
   args: {},
   handler: async (ctx) => {
     // Return pure, raw data so the photos don't get deleted
-    return await ctx.db
-      .query('reports')
-      .filter((q) => q.eq(q.field('category'), 'domestic'))
-      .filter((q) => q.eq(q.field('status'), 'published'))
-      .order('desc')
-      .collect()
+const rows = await ctx.db
+  .query('reports')
+  .filter((q) => q.eq(q.field('category'), 'domestic'))
+  .filter((q) => q.eq(q.field('status'), 'published'))
+  .order('desc')
+  .collect()
+
+return await Promise.all(
+  rows.map((row) => withResolvedReportPhotos(ctx, row))
+)
   },
 })
 
