@@ -60,8 +60,11 @@ async function sendOtpSms(phone: string, code: string) {
     }),
   })
 
+  // THE FIX: Capture the actual error from PhilSMS
   if (!response.ok) {
-    throw new Error('Failed to send SMS via PhilSMS')
+    const errorText = await response.text()
+    console.error('PhilSMS API Error:', errorText)
+    throw new Error(`PhilSMS rejected the request: ${errorText}`)
   }
 }
 
