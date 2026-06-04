@@ -201,16 +201,30 @@ export function DomesticReportDetailPage() {
 
         {/* LOCATION & GOOGLE MAPS LINK */}
         <RescuerDetailSection title="Location" icon={MapPin}>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="font-medium leading-relaxed text-sm">{locationString}</p>
+            
+            {/* MINI MAP EMBED */}
+            <div className="w-full overflow-hidden rounded-xl border border-border/50 bg-muted/30">
+              <iframe 
+                src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`} 
+                width="100%" 
+                height="200" 
+                style={{ border: 0 }} 
+                allowFullScreen 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+
             <a 
               href={mapLink} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline pt-1"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              View on Google Maps
+              Open in full Google Maps
             </a>
           </div>
         </RescuerDetailSection>
