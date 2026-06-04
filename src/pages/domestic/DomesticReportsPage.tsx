@@ -170,7 +170,7 @@ export function DomesticReportsPage() {
             <EmptyState tab={tab} />
           ) : (
             <div className="space-y-3">
-              {list.map((report) => (
+              {list.map((report: any) => (
                 <DomesticReportCard key={report.id} report={report} />
               ))}
             </div>
