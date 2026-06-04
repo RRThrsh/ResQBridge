@@ -135,7 +135,7 @@ export const updateProfile = mutation({
     newEmail: v.optional(v.string()), // <-- ADDED: Allows the frontend to pass the new email/phone
     firstName: v.string(),
     lastName: v.string(),
-    contactPhone: v.string(),
+    contactPhone: v.optional(v.string()), // <-- CHANGE THIS to v.optional!
   },
   returns: userProfileValidator,
   handler: async (ctx, args) => {
