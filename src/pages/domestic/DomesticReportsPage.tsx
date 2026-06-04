@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
 import { CheckCircle2, Clock, Loader2, Sparkles } from 'lucide-react'
+import { Link } from 'react-router-dom' // Added Link
 import { api } from '../../../convex/_generated/api'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
-// NOTE: You might need to adapt your RescuerReportCard into a DomesticReportCard
 import { DomesticReportCard } from '@/components/domestic/DomesticReportCard' 
 import { rescuerReportToStored } from '@/lib/reports'
 import { cn } from '@/lib/utils'
@@ -81,7 +81,6 @@ export function DomesticReportsPage() {
   const { domesticApprover } = useDomesticAuth()
   const [tab, setTab] = useState<Tab>('pending')
 
-  // NOTE: You will need to create these Convex queries to fetch reports where category === 'domestic'
   // @ts-ignore
   const pendingRows = useQuery((api as any).domestic.listPendingReports)
   // @ts-ignore
@@ -173,7 +172,14 @@ export function DomesticReportsPage() {
           ) : (
             <div className="space-y-3">
               {list.map((report: any) => (
-                <DomesticReportCard key={report.id} report={report} />
+                // WRAPPED IN A LINK HERE
+                <Link 
+                  key={report.id} 
+                  to={`/pwrcc/domestic/${report.id}`} 
+                  className="block transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
+                >
+                  <DomesticReportCard report={report} />
+                </Link>
               ))}
             </div>
           )}
