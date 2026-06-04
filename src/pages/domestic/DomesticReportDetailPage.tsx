@@ -70,9 +70,18 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
   if (lName === 'undefined') lName = ''
   
   let reporterName = `${fName} ${lName}`.trim()
-  if (!reporterName || reporterName === 'undefined' || reporterName === 'undefined undefined') {
-    reporterName = rawData.reporterName || rawData.userName || rawData.name || 'Anonymous Reporter'
-  }
+if (
+  !reporterName ||
+  reporterName === 'undefined' ||
+  reporterName === 'undefined undefined'
+) {
+  reporterName =
+    rawData.reporterName ||
+    rawData.userName ||
+    rawData.name ||
+    rawData.userEmail?.split('@')[0] ||
+    'Unknown Reporter'
+}
 
   let condition = rawData.animalCondition || rawData.condition || rawData.healthCondition || 'Not provided'
   if (condition === 'undefined' || condition === 'null') condition = 'Not provided'
