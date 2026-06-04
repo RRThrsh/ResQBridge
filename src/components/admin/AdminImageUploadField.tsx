@@ -1,8 +1,10 @@
-import { useRef } from 'react'
-import { Camera, X } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { useMutation } from 'convex/react'
+import { Camera, Loader2, X } from 'lucide-react'
+import { api } from '../../../convex/_generated/api'
 import {
   MAX_IMAGE_FILE_BYTES,
-  readImageFile,
+  validateImageFile,
 } from '@/lib/imageUpload'
 import { toast } from 'sonner'
 
@@ -12,42 +14,88 @@ type Props = {
   label?: string
 }
 
-export function AdminImageUploadField({ value, onChange, label = 'Image' }: Props) {
+export function AdminImageUploadField({
+  value,
+  onChange,
+  label = 'Image',
+}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const generateUploadUrl = useMutation(
+    api.storage.generateUploadUrl,
+  )
+
+  const getImageUrl = useMutation(
+    api.storage.getImageUrl,
+  )
+
+  const [uploading, setUploading] = useState(false)
+
+  async function handleFileChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = e.target.files?.[0]
+
     e.target.value = ''
+
     if (!file) return
 
-    if (file.size > MAX_IMAGE_FILE_BYTES) {
-      toast.error(`${file.name} must be 50 MB or smaller`)
-      return
-    }
-    if (!file.type.startsWith('image/')) {
-      toast.error(`${file.name} must be a JPG, PNG, or WebP image`)
+    const validationError = validateImageFile(file)
+
+    if (validationError) {
+      toast.error(validationError)
       return
     }
 
-    const dataUrl = await readImageFile(file)
-    if (!dataUrl) {
-      toast.error(`Could not read ${file.name}`)
-      return
-    }
+    try {
+      setUploading(true)
 
-    onChange(dataUrl)
-    toast.success('Image uploaded')
+      // Generate upload URL
+      const uploadUrl = await generateUploadUrl()
+
+      // Upload file to Convex Storage
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      })
+
+      if (!response.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const { storageId } = await response.json()
+
+      // Get permanent image URL
+      const imageUrl = await getImageUrl({
+        storageId,
+      })
+
+      onChange(imageUrl)
+
+      toast.success('Image uploaded')
+    } catch {
+      toast.error('Could not upload image')
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs text-muted-foreground">{label}</label>
+      <label className="block text-xs text-muted-foreground">
+        {label}
+      </label>
+
       <input
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={handleFileChange}
+        disabled={uploading}
       />
 
       {value ? (
@@ -60,6 +108,7 @@ export function AdminImageUploadField({ value, onChange, label = 'Image' }: Prop
           >
             <X className="h-3.5 w-3.5" />
           </button>
+
           <img
             src={value}
             alt="Species preview"
@@ -71,14 +120,28 @@ export function AdminImageUploadField({ value, onChange, label = 'Image' }: Prop
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
-        className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-border p-6 text-center transition-colors hover:bg-accent/40"
+        disabled={uploading}
+        className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-border p-6 text-center transition-colors hover:bg-accent/40 disabled:opacity-60"
       >
-        <Camera className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
+        {uploading ? (
+          <Loader2 className="mx-auto mb-2 h-7 w-7 animate-spin text-muted-foreground" />
+        ) : (
+          <Camera className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
+        )}
+
         <p className="mb-1 text-sm font-medium text-foreground">
-          {value ? 'Replace image' : 'Click to upload image'}
+          {uploading
+            ? 'Uploading image...'
+            : value
+              ? 'Replace image'
+              : 'Click to upload image'}
         </p>
-        <p className="text-xs text-muted-foreground">JPG, PNG, WebP up to 50 MB</p>
+
+        <p className="text-xs text-muted-foreground">
+          JPG, PNG, WebP up to {MAX_IMAGE_FILE_BYTES / 1024 / 1024} MB
+        </p>
       </button>
     </div>
   )
 }
+```

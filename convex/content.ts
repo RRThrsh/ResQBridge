@@ -252,20 +252,11 @@ export const createWildlifeItem = mutation({
     if (Array.isArray(args.item.images)) {
       finalImages = args.item.images.map((img) => {
   // Limit every image to ~200KB base64
-  if (img.length > 900000) {
-    throw new Error(
-      'Image is too large. Please upload smaller images (max 200KB each).'
-    )
-  }
 
   return img
 })
     } else if (typeof args.item.image === 'string' && args.item.image) {
-      if (args.item.image.length > 900000) {
-  throw new Error(
-    'Image is too large. Please upload a smaller image (max 900KB).'
-  )
-}
+
 
 finalImages = [args.item.image]
     }
@@ -274,7 +265,16 @@ finalImages = [args.item.image]
     if (finalImages.length > 3) {
       finalImages = finalImages.slice(0, 3)
     }
+    const totalImageSize = finalImages.reduce(
+      (acc, img) => acc + img.length,
+      0
+    )
 
+    if (totalImageSize > 120000) {
+      throw new Error(
+        'Total image size is too large. Use smaller images.'
+      )
+    }
     const nextItem: WildlifeItem = {
       id,
       commonName: args.item.commonName,
@@ -336,24 +336,15 @@ export const updateWildlifeItem = mutation({
     let finalImages: string[] = []
     if (Array.isArray(args.item.images)) {
       finalImages = args.item.images.map((img) => {
-  if (img.length > 900000) {
-    throw new Error(
-      'Image is too large. Please upload smaller images (max 900KB each).'
-    )
-  }
+
 
   return img
 })
     } else if (typeof (args.item as any).image === 'string' && (args.item as any).image) {
-      if ((args.item as any).image.length > 900000) {
-  throw new Error(
-    'Image is too large. Please upload a smaller image (max 900KB).'
-  )
-}
+
 
 finalImages = [(args.item as any).image]
     }
-
     const normalizedItem: WildlifeItem = {
       id: args.item.id,
       commonName: args.item.commonName,
