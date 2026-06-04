@@ -29,7 +29,7 @@ const emptyAuthForm = {
   step: 'details' as const,
   firstName: '',
   lastName: '',
-  email: '',
+  identifier: '', // Replaced 'email' with a generic 'identifier'
   code: '',
 }
 
@@ -39,15 +39,20 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<'details' | 'otp'>(emptyAuthForm.step)
   const [firstName, setFirstName] = useState(emptyAuthForm.firstName)
   const [lastName, setLastName] = useState(emptyAuthForm.lastName)
-  const [email, setEmail] = useState(emptyAuthForm.email)
+  const [identifier, setIdentifier] = useState(emptyAuthForm.identifier)
   const [code, setCode] = useState(emptyAuthForm.code)
   const [loading, setLoading] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const submittingRef = useRef(false)
 
-  const emailValid = email.trim().includes('@')
-  const signUpReady = firstName.trim() && lastName.trim() && emailValid
-  const signInReady = emailValid
+  // Smart Validation Logic
+  const normalizedId = identifier.trim().toLowerCase()
+  const isEmail = normalizedId.includes('@')
+  const isPhone = normalizedId.replace(/\D/g, '').length >= 10
+  const identifierValid = isEmail || isPhone
+
+  const signUpReady = firstName.trim() && lastName.trim() && identifierValid
+  const signInReady = identifierValid
   const detailsReady = mode === 'sign-up' ? signUpReady : signInReady
   const otpReady = code.length === 6
 
@@ -73,31 +78,34 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   async function sendCode(e?: React.FormEvent) {
     if (e) e.preventDefault()
     
-    const normalizedEmail = email.trim().toLowerCase()
-
     if (mode === 'sign-up') {
       if (!firstName.trim() || !lastName.trim()) {
         toast.error('Enter your first and last name')
         return
       }
     }
-    if (!normalizedEmail.includes('@')) {
-      toast.error('Enter a valid email')
+    
+    if (!identifierValid) {
+      toast.error('Enter a valid email or phone number')
       return
     }
 
     if (submittingRef.current) return
     submittingRef.current = true
     setLoading(true)
+    
     try {
+      // Pass the identifier and the type (email vs phone) to your API
       await sendOtp({
         mode,
-        email: normalizedEmail,
+        identifier: normalizedId,
+        type: isEmail ? 'email' : 'phone',
         ...(mode === 'sign-up'
           ? { firstName: firstName.trim(), lastName: lastName.trim() }
           : {}),
       })
-      setEmail(normalizedEmail)
+      
+      setIdentifier(normalizedId)
       if (mode === 'sign-up') {
         setFirstName(firstName.trim())
         setLastName(lastName.trim())
@@ -105,7 +113,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       setCode('')
       setStep('otp')
       setCountdown(60)
-      toast.success(`Code sent to ${normalizedEmail}`)
+      toast.success(`Code sent to ${normalizedId}`)
     } catch (error) {
       toast.error(errorMessage(error, 'Could not send code'))
     } finally {
@@ -121,7 +129,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     submittingRef.current = true
     setLoading(true)
     try {
-      login(await verifyOtp(email, code, mode))
+      // Update verify to pass the identifier instead of just email
+      login(await verifyOtp(identifier, code, mode))
       onClose()
       toast.success(mode === 'sign-up' ? 'Account created' : 'Signed in')
     } catch (error) {
@@ -145,9 +154,9 @@ function AuthForm({ onClose }: { onClose: () => void }) {
         <DialogDescription>
           {step === 'details'
             ? mode === 'sign-up'
-              ? 'Sign up with your name and email. We will send a one-time code.'
-              : 'Sign in with your email. We will send a one-time code.'
-            : `6-digit code sent to ${email}`}
+              ? 'Sign up with your name and email or phone. We will send a one-time code.'
+              : 'Sign in with your email or phone. We will send a one-time code.'
+            : `6-digit code sent to ${identifier}`}
         </DialogDescription>
       </div>
 
@@ -190,11 +199,11 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             </div>
           )}
           <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="off"
+            type="text"
+            placeholder="Email or Phone Number"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            autoComplete="username"
             autoFocus={mode === 'sign-in'}
             required
           />
@@ -232,7 +241,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               onClick={backToDetails}
             >
-              Use a different email
+              Use a different email or phone
             </button>
           </div>
         </form>
