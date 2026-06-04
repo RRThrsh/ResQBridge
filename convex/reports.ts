@@ -2,7 +2,6 @@ import { mutation, query } from './_generated/server'
 import type { MutationCtx, QueryCtx } from './_generated/server'
 import { v } from 'convex/values'
 import type { Id } from './_generated/dataModel'
-import { internal } from './_generated/api' // <-- ADDED THIS IMPORT
 import { reportCreateOptionalFields, reportDocValidator } from './lib/reportFields'
 import {
   normalizeReportPhotos,
@@ -122,14 +121,9 @@ export const create = mutation({
     })
 
     const reporterPhone = await resolveReporterPhone(ctx, userEmail, args.reporterPhone)
-const user = await ctx.db
-  .query('users')
-  .withIndex('by_email', (q) => q.eq('email', userEmail))
-  .unique()
+
     const reportId = await ctx.db.insert('reports', {
       userEmail,
-      reporterFirstName: user?.firstName || '',
-reporterLastName: user?.lastName || '',
       category: args.category,
       type: args.type,
       animalName: args.animalName.trim(),
@@ -152,16 +146,6 @@ reporterLastName: user?.lastName || '',
     await ctx.db.patch(reportId, {
       reportNumber: generateReportNumber(reportId),
     })
-
-    // --- ADDED THIS NOTIFICATION TRIGGER ---
-    if (args.category === 'wildlife') {
-      await ctx.scheduler.runAfter(0, internal.notifications.alertAdmin, {
-        reportId: reportId,
-        species: args.animalName,
-        location: args.location
-      })
-    }
-    // ---------------------------------------
 
     return reportId
   },
@@ -240,6 +224,7 @@ export const remove = mutation({
   },
 })
 
+// Add this to the bottom of convex/reports.ts
 export const getReportById = query({
   args: {
     reportId: v.id('reports'),
@@ -248,6 +233,7 @@ export const getReportById = query({
     const row = await ctx.db.get(args.reportId)
     if (!row) return null
     
+    // THIS UNLOCKS THE IMAGE URL BEFORE SENDING IT TO THE FRONTEND
     return await withResolvedReportPhotos(ctx, row)
   },
 })
