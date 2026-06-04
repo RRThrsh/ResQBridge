@@ -128,7 +128,7 @@ return (
 
 <div className="flex justify-center">
   <ReCAPTCHA
-    sitekey={import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY}
+    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
     onChange={(token: string | null) => setCaptchaToken(token)}
   />
 </div>
