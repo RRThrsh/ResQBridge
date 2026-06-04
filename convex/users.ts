@@ -132,6 +132,7 @@ export const getProfile = query({
 export const updateProfile = mutation({
   args: {
     email: v.string(),
+    newEmail: v.optional(v.string()), // <-- ADDED: Allows the frontend to pass the new email/phone
     firstName: v.string(),
     lastName: v.string(),
     contactPhone: v.string(),
@@ -139,6 +140,10 @@ export const updateProfile = mutation({
   returns: userProfileValidator,
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email)
+    
+    // Determine the final email/phone to save
+    const finalEmailToSave = args.newEmail ? normalizeEmail(args.newEmail) : email
+    
     const firstName = args.firstName.trim()
     const lastName = args.lastName.trim()
     const contactPhone = normalizeContactPhone(args.contactPhone)
@@ -147,16 +152,30 @@ export const updateProfile = mutation({
       throw new Error('First and last name are required.')
     }
 
-    const admin = await getAdminByEmail(ctx, email)
+    // Check if the new contact info belongs to an Admin or Rescuer
+    const admin = await getAdminByEmail(ctx, finalEmailToSave)
     if (admin) {
-      throw new Error('This email is reserved for admin access.')
+      throw new Error('This contact is reserved for admin access.')
     }
 
-    const rescuer = await getRescuerByEmail(ctx, email)
+    const rescuer = await getRescuerByEmail(ctx, finalEmailToSave)
     if (rescuer) {
-      throw new Error('This email is reserved for rescuer access.')
+      throw new Error('This contact is reserved for rescuer access.')
     }
 
+    // Ensure the new email/phone isn't already taken by another user
+    if (finalEmailToSave !== email) {
+      const emailTaken = await ctx.db
+        .query('users')
+        .withIndex('by_email', (q) => q.eq('email', finalEmailToSave))
+        .unique()
+      
+      if (emailTaken) {
+        throw new Error('This email or phone number is already in use by another account.')
+      }
+    }
+
+    // Find the current user
     const user = await ctx.db
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', email))
@@ -166,8 +185,15 @@ export const updateProfile = mutation({
       throw new Error('User not found.')
     }
 
-    await ctx.db.patch(user._id, { firstName, lastName, contactPhone })
+    // Apply the patch with the NEW email
+    await ctx.db.patch(user._id, { 
+      email: finalEmailToSave, 
+      firstName, 
+      lastName, 
+      contactPhone 
+    })
 
-    return { email, firstName, lastName, role: 'user' as const }
+    // Return the updated data so the frontend syncs up perfectly
+    return { email: finalEmailToSave, firstName, lastName, role: 'user' as const }
   },
 })
