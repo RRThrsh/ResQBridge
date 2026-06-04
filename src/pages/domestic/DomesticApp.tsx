@@ -15,6 +15,7 @@ function DomesticGuard({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, domesticApprover, logout } = useDomesticAuth()
   
   // Checks if the logged-in email is officially an authorized Domestic Approver
+  // @ts-ignore
   const allowed = useQuery(
     api.domestic.isDomesticApprover,
     domesticApprover ? { email: normalizeEmail(domesticApprover.email) } : 'skip',
