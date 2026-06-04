@@ -5,21 +5,20 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
 
-// 1. Check if the user is an authorized Domestic Approver
 export const isDomesticApprover = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email)
+
     const user = await ctx.db
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', email))
       .unique()
-    
-    // Check if they exist and have the correct role (allows both admins and dedicated approvers)
+
     return user?.role === 'admin' || user?.role === 'domestic_approver'
   },
 })
-// 2. Fetch reports that are waiting for approval
+
 export const listPendingReports = query({
   args: {},
   handler: async (ctx) => {
@@ -32,23 +31,21 @@ export const listPendingReports = query({
   },
 })
 
-// 3. Fetch reports that have already been published
 export const listPublishedReports = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db
       .query('reports')
       .filter((q) => q.eq(q.field('category'), 'domestic'))
-      .filter((q) => q.eq(q.field('status'), 'published')) 
+      .filter((q) => q.eq(q.field('status'), 'published'))
       .order('desc')
       .collect()
   },
 })
 
-// 4. List all approvers for the Admin Dashboard
 export const listApprovers = query({
   args: { adminEmail: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
     const approvers = await ctx.db
       .query('users')
       .filter((q) => q.eq(q.field('role'), 'domestic_approver'))
@@ -65,7 +62,6 @@ export const listApprovers = query({
   },
 })
 
-// 5. Add a new approver from the Admin Dashboard
 export const addApprover = mutation({
   args: {
     adminEmail: v.string(),
@@ -76,6 +72,7 @@ export const addApprover = mutation({
   },
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email)
+
     const existing = await ctx.db
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', email))
@@ -89,14 +86,13 @@ export const addApprover = mutation({
       email,
       firstName: args.firstName.trim(),
       lastName: args.lastName.trim(),
-      role: 'domestic_approver', 
+      role: 'domestic_approver',
       contactPhone: args.contactPhone.trim(),
       createdAt: Date.now(),
     })
   },
 })
 
-// 6. Update an existing approver's details
 export const updateApprover = mutation({
   args: {
     adminEmail: v.string(),
@@ -107,12 +103,15 @@ export const updateApprover = mutation({
   },
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.targetEmail)
+
     const user = await ctx.db
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', email))
       .unique()
 
-    if (!user) throw new Error('Approver not found.')
+    if (!user) {
+      throw new Error('Approver not found.')
+    }
 
     await ctx.db.patch(user._id, {
       firstName: args.firstName.trim(),
@@ -122,7 +121,6 @@ export const updateApprover = mutation({
   },
 })
 
-// 7. Remove an approver's access entirely
 export const removeApprover = mutation({
   args: {
     adminEmail: v.string(),
@@ -130,13 +128,16 @@ export const removeApprover = mutation({
   },
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.targetEmail)
+
     const user = await ctx.db
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', email))
       .unique()
 
-    if (!user) throw new Error('Approver not found.')
-    
-    await ctx.db.delete(user._id) 
+    if (!user) {
+      throw new Error('Approver not found.')
+    }
+
+    await ctx.db.delete(user._id)
   },
 })

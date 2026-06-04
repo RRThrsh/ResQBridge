@@ -10,6 +10,7 @@
 
 import type * as admin from "../admin.js";
 import type * as content from "../content.js";
+import type * as domestic from "../domestic.js";
 import type * as email from "../email.js";
 import type * as http from "../http.js";
 import type * as lib_adminAccess from "../lib/adminAccess.js";
@@ -45,6 +46,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   content: typeof content;
+  domestic: typeof domestic;
   email: typeof email;
   http: typeof http;
   "lib/adminAccess": typeof lib_adminAccess;
