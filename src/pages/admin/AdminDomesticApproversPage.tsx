@@ -5,8 +5,6 @@ import { api } from '../../../convex/_generated/api'
 import { AdminConfirmDialog } from '@/components/admin/AdminConfirmDialog'
 import { AdminTableActions, type AdminRowAction } from '@/components/admin/AdminTableActions'
 import { AdminTableActionsCell, AdminTableCell } from '@/components/admin/AdminTableCell'
-import { AdminAddDomesticApproverDialog } from '@/components/admin/AdminAddDomesticApproverDialog'
-import { AdminDomesticApproverDialog } from '@/components/admin/AdminDomesticApproverDialog'
 import { AdminTablePaginationBar } from '@/components/admin/AdminTablePagination'
 import { usePaginatedRows } from '@/hooks/usePaginatedRows'
 import { Button } from '@/components/ui/button'
@@ -15,12 +13,14 @@ import { useAdminAuth } from '@/context/AdminAuthContext'
 import { normalizeEmail } from '@/lib/admin'
 import { formatDate } from '@/lib/dates'
 import { toast } from 'sonner'
+import { AdminAddDomesticApproverDialog } from '@/components/admin/AdminAddDomesticApproverDialog'
+import { AdminDomesticApproverDialog } from '@/components/admin/AdminDomesticApproverDialog'
 
-// We will move this type to the Dialog component later!
 export type ApproverTableRow = {
   email: string
   firstName: string
   lastName: string
+  contactPhone: string
   createdAt: number
 }
 
@@ -29,10 +29,8 @@ type DialogMode = 'view' | 'edit'
 export function AdminDomesticApproversPage() {
   const { admin } = useAdminAuth()
   
-  // @ts-ignore - Bypassing strict TS until we add the backend functions
   const removeApprover = useMutation((api as any).domestic.removeApprover)
   
-  // @ts-ignore - Bypassing strict TS until we add the backend functions
   const approvers = useQuery(
     (api as any).domestic.listApprovers,
     admin ? { adminEmail: normalizeEmail(admin.email) } : 'skip',
@@ -163,7 +161,7 @@ export function AdminDomesticApproversPage() {
         <AdminTablePaginationBar pagination={pagination} />
       </div>
 
-      {<AdminAddDomesticApproverDialog
+      <AdminAddDomesticApproverDialog
         adminEmail={admin.email}
         open={addOpen}
         onOpenChange={setAddOpen}
