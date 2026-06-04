@@ -17,7 +17,8 @@ import { RescuerApp } from '@/pages/rescuer/RescuerApp'
 import { DomesticApp } from '@/pages/domestic/DomesticApp'
 import { Toaster } from '@/components/ui/sonner'
 import { useScrollToHash } from '@/hooks/useScrollToHash'
-
+console.log('CONVEX SITE:', import.meta.env.VITE_CONVEX_SITE_URL)
+console.log('CONVEX URL:', import.meta.env.VITE_CONVEX_URL)
 function RouteWrapper({ children }: { children: React.ReactNode }) {
   useScrollToHash()
   return <>{children}</>
