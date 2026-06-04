@@ -102,13 +102,14 @@ export function AdminLogin() {
             <form onSubmit={sendCode} className="space-y-4">
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">Admin email</label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="off"
-                  required
-                />
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
+                required
+                className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
+              />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send verification code'}
@@ -125,8 +126,8 @@ export function AdminLogin() {
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
-                className="text-center text-lg tracking-[0.3em]"
                 required
+                className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary text-center text-lg tracking-[0.3em]"
               />
               <Button type="submit" className="w-full" disabled={loading || code.length !== 6}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
