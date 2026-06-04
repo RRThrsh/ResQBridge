@@ -122,9 +122,14 @@ export const create = mutation({
     })
 
     const reporterPhone = await resolveReporterPhone(ctx, userEmail, args.reporterPhone)
-
+const user = await ctx.db
+  .query('users')
+  .withIndex('by_email', (q) => q.eq('email', userEmail))
+  .unique()
     const reportId = await ctx.db.insert('reports', {
       userEmail,
+      reporterFirstName: user?.firstName || '',
+reporterLastName: user?.lastName || '',
       category: args.category,
       type: args.type,
       animalName: args.animalName.trim(),

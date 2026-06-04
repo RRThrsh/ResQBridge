@@ -71,6 +71,8 @@ role: v.optional(
     seenAt: v.optional(v.number()),
     quantity: v.optional(v.number()),
     reportedSize: v.optional(v.string()),
+    reporterFirstName: v.optional(v.string()),
+reporterLastName: v.optional(v.string()),
     reporterPhone: v.optional(v.string()),
     createdAt: v.number(),
   })
