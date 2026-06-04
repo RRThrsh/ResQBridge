@@ -146,7 +146,7 @@ export const updateProfile = mutation({
     
     const firstName = args.firstName.trim()
     const lastName = args.lastName.trim()
-    const contactPhone = normalizeContactPhone(args.contactPhone)
+    const contactPhone = args.contactPhone ? normalizeContactPhone(args.contactPhone) : undefined
 
     if (!firstName || !lastName) {
       throw new Error('First and last name are required.')
