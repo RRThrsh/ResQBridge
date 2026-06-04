@@ -73,6 +73,7 @@ function PublicApp() {
 export default function App() {
   return (
     <AuthProviders>
+      <AuthSync /> {/* <--- THE INVISIBLE GUARD SITS RIGHT HERE! */}
       <BrowserRouter>
         <RouteWrapper>
           <Routes>
