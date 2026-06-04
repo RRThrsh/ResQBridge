@@ -15,15 +15,12 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
   const rawData = report as any
 
   // ---------------------------------------------------------
-  // 1. BULLETPROOF PHOTO EXTRACTOR (Copied from Detail Page)
+  // 1. EXACT SAME PHOTO LOGIC AS THE DETAIL PAGE
   // ---------------------------------------------------------
   let allPhotos: string[] = []
   const baseUrl = (import.meta.env.VITE_CONVEX_URL || 'https://pleasant-otter-637.convex.cloud').replace(/\/$/, '')
 
-  // We now catch the resolved `photoUrls` that the backend is sending us!
-  if (rawData.photoUrls && Array.isArray(rawData.photoUrls)) {
-    allPhotos = rawData.photoUrls
-  } else if (rawData.photoStorageIds && Array.isArray(rawData.photoStorageIds)) {
+  if (rawData.photoStorageIds && Array.isArray(rawData.photoStorageIds)) {
     allPhotos = rawData.photoStorageIds.map((id: string) => `${baseUrl}/api/storage/${id}`)
   } else if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
     allPhotos = rawData.photoDataUrls
@@ -33,7 +30,10 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
     allPhotos = [rawData.photoUrl]
   }
 
+  // Grab the first photo for the card cover
   const finalPhotoUrl = allPhotos.length > 0 ? allPhotos[0] : null
+  
+  // Calculate how many EXTRA photos there are for the +2 badge
   const extraPhotos = allPhotos.length > 1 ? allPhotos.length - 1 : 0
 
   return (
@@ -98,7 +98,7 @@ export function DomesticReportCard({ report, variant = 'default' }: Props) {
         <p className="mt-1.5 text-[11px] text-muted-foreground capitalize">
           Domestic Report
           <span className="mx-1.5 text-border">·</span>
-          {formatDate(rawData.seenAt ?? rawData.createdAt ?? Date.now())}
+          {formatDate(rawData.seenAt ?? rawData.createdAt ?? rawData._creationTime ?? Date.now())}
           <span className="mx-1.5 text-border">·</span>
           {statusLabel(rawData.status)}
         </p>
