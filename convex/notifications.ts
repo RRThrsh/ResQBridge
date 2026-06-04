@@ -12,25 +12,73 @@ export const alertAdmin = internalAction({
   },
 
   handler: async (_ctx, args) => {
+    console.log('ALERT ADMIN TRIGGERED')
+
     try {
+      // =========================
+      // EMAIL NOTIFICATION
+      // =========================
       await resend.emails.send({
         from: 'ResQBridge <onboarding@resend.dev>',
-        to: 'ralphbandahala05@gmail.com',
+        to: 'vinsainttt99@gmail.com',
         subject: 'New Domestic Report Submitted',
         html: `
           <h2>New Report Submitted</h2>
-
           <p><strong>Animal:</strong> ${args.species}</p>
-
           <p><strong>Location:</strong> ${args.location}</p>
-
           <p><strong>Report ID:</strong> ${args.reportId}</p>
         `,
       })
 
       console.log('Admin email sent successfully.')
-    } catch (error) {
-      console.error('Failed to send email:', error)
+
+      // =========================
+      // SMS NOTIFICATION
+      // =========================
+      let cleanNumber = '09539814023'.replace(/\D/g, '')
+      let formattedPhone = ''
+
+      if (cleanNumber.length === 11 && cleanNumber.startsWith('09')) {
+        formattedPhone = '+63' + cleanNumber.substring(1)
+      } else if (cleanNumber.length === 10 && cleanNumber.startsWith('9')) {
+        formattedPhone = '+63' + cleanNumber
+      } else if (cleanNumber.length === 12 && cleanNumber.startsWith('63')) {
+        formattedPhone = '+' + cleanNumber
+      } else {
+        formattedPhone = '+' + cleanNumber
+      }
+
+      const response = await fetch(
+        'https://dashboard.philsms.com/api/v3/sms/send',
+        {
+          method: 'POST',
+          headers: {
+            // FIX: Restored backticks here
+            Authorization: `Bearer ${process.env.PHILSMS_API_TOKEN}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            recipient: formattedPhone,
+            sender_id: 'PhilSMS', // <-- CHANGED from 'sender' to 'sender_id'
+            type: 'plain',
+            // FIX: Restored backticks here
+            message: `New Wildlife Report Submitted\n\nAnimal: ${args.species}\nLocation: ${args.location}`,
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        // FIX: Restored backticks here
+        throw new Error(`PhilSMS API Error: ${response.status} - ${errorData}`)
+      }
+
+      const result = await response.json()
+      console.log('SMS RESPONSE:', result)
+      
+    } catch (error: any) {
+      console.error('NOTIFICATION ERROR:', error.message || error)
     }
   },
 })
