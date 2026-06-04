@@ -1,9 +1,12 @@
 import { query, mutation } from './_generated/server'
 import { v } from 'convex/values'
+// 🚨 WE IMPORT THE PHOTO UNLOCKER HERE
+import { withResolvedReportPhotos } from './lib/reportPhotos'
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
+
 export const getDomesticApproverForLogin = query({
   args: { email: v.string() },
 
@@ -27,6 +30,7 @@ export const getDomesticApproverForLogin = query({
     }
   },
 })
+
 export const isDomesticApprover = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
@@ -44,24 +48,30 @@ export const isDomesticApprover = query({
 export const listPendingReports = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db
+    const rows = await ctx.db
       .query('reports')
       .filter((q) => q.eq(q.field('category'), 'domestic'))
       .filter((q) => q.eq(q.field('status'), 'pending'))
       .order('desc')
       .collect()
+      
+    // 🚨 UNLOCK THE IMAGES BEFORE SENDING TO THE DASHBOARD
+    return Promise.all(rows.map((row) => withResolvedReportPhotos(ctx, row)))
   },
 })
 
 export const listPublishedReports = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db
+    const rows = await ctx.db
       .query('reports')
       .filter((q) => q.eq(q.field('category'), 'domestic'))
       .filter((q) => q.eq(q.field('status'), 'published'))
       .order('desc')
       .collect()
+      
+    // 🚨 UNLOCK THE IMAGES BEFORE SENDING TO THE DASHBOARD
+    return Promise.all(rows.map((row) => withResolvedReportPhotos(ctx, row)))
   },
 })
 
