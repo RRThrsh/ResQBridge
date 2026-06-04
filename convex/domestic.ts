@@ -1,7 +1,6 @@
 import { query, mutation } from './_generated/server'
 import { v } from 'convex/values'
 // 🚨 WE IMPORT THE PHOTO UNLOCKER HERE
-import { withResolvedReportPhotos } from './lib/reportPhotos'
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
