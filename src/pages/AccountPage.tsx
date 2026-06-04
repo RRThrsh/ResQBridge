@@ -15,9 +15,11 @@ import { ThemeSetting } from '@/components/theme/ThemeSetting'
 export function AccountPage() {
   const { isLoggedIn, user, updateUser } = useUserAuth()
   const updateProfile = useMutation(api.users.updateProfile)
+  
+  // Safely pass the email only if the user object exists
   const profile = useQuery(
     api.users.getProfile,
-    user ? { email: normalizeEmail(user.email) } : 'skip',
+    user?.email ? { email: normalizeEmail(user.email) } : 'skip',
   )
 
   const [isEditing, setIsEditing] = useState(false)
@@ -49,6 +51,13 @@ export function AccountPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
+    
+    // Extra safety check for TypeScript
+    if (!user?.email) {
+      toast.error('Could not verify your account details.')
+      return
+    }
+
     setSaving(true)
     
     try {
@@ -56,7 +65,7 @@ export function AccountPage() {
         email: normalizeEmail(user.email),
         firstName,
         lastName,
-        contactPhone: profile?.contactPhone ?? '', // Keep their existing phone info unchanged
+        contactPhone: profile?.contactPhone ?? '', // Keep existing phone info unchanged
       })
 
       updateUser({
