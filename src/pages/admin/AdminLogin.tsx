@@ -9,6 +9,7 @@ import { sendAdminOtp, verifyAdminOtp } from '@/lib/admin-auth-api'
 import { toast } from 'sonner'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { Helmet } from 'react-helmet-async'
+import ReCAPTCHA from 'react-google-recaptcha'
 const ADMIN_OTP_EMAIL_KEY = 'pwrrc_admin_otp_email'
 
 export function AdminLogin() {
@@ -18,6 +19,7 @@ export function AdminLogin() {
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const verifyingRef = useRef(false)
 
   useEffect(() => {
@@ -37,7 +39,10 @@ export function AdminLogin() {
   async function sendCode(e: React.FormEvent) {
     e.preventDefault()
     if (loading) return
-
+if (!captchaToken) {
+  toast.error('Please complete the reCAPTCHA.')
+  return
+}
     setLoading(true)
     try {
       const normalizedEmail = email.trim().toLowerCase()
@@ -104,18 +109,29 @@ return (
         </CardHeader>
         <CardContent>
           {step === 'email' ? (
+
             <form onSubmit={sendCode} className="space-y-4">
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Admin email</label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="off"
-                required
-                className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
-              />
-              </div>
+<div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    Admin email
+  </label>
+
+  <Input
+    type="email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    autoComplete="off"
+    required
+    className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
+  />
+</div>
+
+<div className="flex justify-center">
+  <ReCAPTCHA
+    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+    onChange={(token) => setCaptchaToken(token)}
+  />
+</div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send verification code'}
               </Button>
@@ -134,6 +150,7 @@ return (
                 required
                 className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary text-center text-lg tracking-[0.3em]"
               />
+
               <Button type="submit" className="w-full" disabled={loading || code.length !== 6}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
               </Button>
