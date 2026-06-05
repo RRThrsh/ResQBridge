@@ -111,18 +111,24 @@ async function handleVerifyResetOtp() {
   setLoading(true)
 
   try {
-    await verifyAdminOtp(email.trim().toLowerCase(), forgotOtp)
+    await verifyAdminOtp(
+      email.trim().toLowerCase(),
+      forgotOtp,
+    )
+
     setOtpVerified(true)
+
     toast.success('OTP verified successfully')
   } catch (error) {
     toast.error(
-      error instanceof Error ? error.message : 'Invalid OTP code',
+      error instanceof Error
+        ? error.message
+        : 'Invalid OTP code',
     )
   } finally {
     setLoading(false)
   }
 }
-
   
   async function verifyCode(e: React.FormEvent) {
     e.preventDefault()
