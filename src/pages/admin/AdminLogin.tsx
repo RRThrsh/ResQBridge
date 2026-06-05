@@ -30,7 +30,6 @@ export function AdminLogin() {
   const resetPassword = useMutation(api.admin.resetAdminPasswordWithOtp)
 
   const [forgotMode, setForgotMode] = useState(false)
-  const [forgotOtpSent, setForgotOtpSent] = useState(false)
   const [forgotOtp, setForgotOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -89,7 +88,6 @@ export function AdminLogin() {
     await sendAdminOtp(normalizedEmail)
 
     setForgotMode(true)
-    setForgotOtpSent(true)
 
     toast.success(`Reset code sent to ${normalizedEmail}`)
   } catch (error) {
@@ -163,7 +161,6 @@ export function AdminLogin() {
     toast.success('Password reset successful')
 
     setForgotMode(false)
-    setForgotOtpSent(false)
     setForgotOtp('')
     setNewPassword('')
     setConfirmPassword('')
