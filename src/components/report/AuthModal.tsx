@@ -162,7 +162,7 @@ if (mode === 'sign-up' && password !== confirmPassword) {
     submittingRef.current = true
     setLoading(true)
     try {
-      login(await verifyOtp(identifier, code, mode))
+      login(await verifyOtp(identifier, code, mode, password))
       onClose()
       toast.success(mode === 'sign-up' ? 'Account created' : 'Signed in')
     } catch (error) {
