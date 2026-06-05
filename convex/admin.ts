@@ -782,3 +782,87 @@ export const ensureAdminAccount = mutation({
     }
   },
 })
+
+export const changeAdminPassword = mutation({
+  args: {
+    adminEmail: v.string(),
+    targetEmail: v.string(),
+    currentPassword: v.string(),
+    newPassword: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await assertAdmin(ctx, args.adminEmail)
+
+    const targetEmail = normalizeEmail(args.targetEmail)
+    const target = await getAdminByEmail(ctx, targetEmail)
+    
+    if (!target) {
+      throw new Error('Admin not found.')
+    }
+
+    // Treat an undefined password in the database as an empty string for comparison
+    const storedPassword = target.password ?? ""
+    if (storedPassword !== args.currentPassword) {
+      throw new Error('Incorrect current password.')
+    }
+
+    if (args.newPassword.length < 8) {
+      throw new Error('New password must be at least 8 characters.')
+    }
+
+    // Update the password
+    await ctx.db.patch(target._id, { password: args.newPassword })
+
+    return null
+  },
+})
+
+export const resetAdminPasswordWithOtp = mutation({
+  args: {
+    adminEmail: v.string(),
+    targetEmail: v.string(),
+    otpCode: v.string(),
+    newPassword: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await assertAdmin(ctx, args.adminEmail)
+
+    const targetEmail = normalizeEmail(args.targetEmail)
+    const target = await getAdminByEmail(ctx, targetEmail)
+    
+    if (!target) {
+      throw new Error('Admin not found.')
+    }
+
+    if (args.newPassword.length < 8) {
+      throw new Error('New password must be at least 8 characters.')
+    }
+
+    // 1. Fetch OTP codes for this admin from the verificationCodes table
+    const otpRecords = await ctx.db
+      .query('verificationCodes')
+      .withIndex('by_email_scope', (q) =>
+        q.eq('email', targetEmail).eq('scope', 'admin')
+      )
+      .collect()
+
+    // 2. Find a code that matches and hasn't expired
+    const validRecord = otpRecords.find(
+      (r) => r.code === args.otpCode && r.expiresAt > Date.now()
+    )
+
+    if (!validRecord) {
+      throw new Error('Invalid or expired verification code.')
+    }
+
+    // 3. Update the password
+    await ctx.db.patch(target._id, { password: args.newPassword })
+
+    // 4. Delete the used OTP code so it can't be reused
+    await ctx.db.delete(validRecord._id)
+
+    return null
+  },
+})
