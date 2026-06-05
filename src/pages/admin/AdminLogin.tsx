@@ -23,13 +23,16 @@ export function AdminLogin() {
   const wasLoggedIn = useRef(isLoggedIn)
   const [step, setStep] = useState<'credentials' | 'otp'>('credentials')
   const [email, setEmail] = useState('')
+  const [forgotEmail, setForgotEmail] = useState('')
   const [password, setPassword] = useState('') // Added password state
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const resetPassword = useMutation(api.admin.resetAdminPasswordWithOtp)
 
-  const [forgotMode, setForgotMode] = useState(false)
+  const [forgotStep, setForgotStep] = useState<
+    'email' | 'otp' | 'password' | null
+  >(null)
   const [forgotOtp, setForgotOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -75,27 +78,24 @@ export function AdminLogin() {
   }
   
   async function handleForgotPassword() {
-  if (!email.trim()) {
-    toast.error('Enter your admin email first.')
+  if (!forgotEmail.trim()) {
+    toast.error('Enter your admin email.')
     return
   }
 
   setLoading(true)
 
   try {
-    const normalizedEmail = email.trim().toLowerCase()
+    await sendAdminOtp(forgotEmail.trim().toLowerCase())
 
-    // send OTP WITHOUT password
-    await sendAdminOtp(normalizedEmail)
+    setForgotStep('otp')
 
-    setForgotMode(true)
-
-    toast.success(`Reset code sent to ${normalizedEmail}`)
+    toast.success('OTP sent successfully')
   } catch (error) {
     toast.error(
       error instanceof Error
         ? error.message
-        : 'Could not send reset code',
+        : 'Could not send OTP',
     )
   } finally {
     setLoading(false)
@@ -112,7 +112,7 @@ async function handleVerifyResetOtp() {
 
   try {
     await verifyAdminOtp(
-      email.trim().toLowerCase(),
+      forgotEmail.trim().toLowerCase(),
       forgotOtp,
     )
 
@@ -176,8 +176,8 @@ async function handleVerifyResetOtp() {
 
   try {
     await resetPassword({
-      adminEmail: email.trim().toLowerCase(),
-      targetEmail: email.trim().toLowerCase(),
+      adminEmail: forgotEmail.trim().toLowerCase()
+      targetEmail: forgotEmail.trim().toLowerCase()
       otpCode: forgotOtp,
       newPassword,
     })
@@ -220,7 +220,7 @@ async function handleVerifyResetOtp() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {step === 'credentials' && !forgotMode ? (
+            {step === 'credentials' && !forgotStep ? (
               <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                 <div>
                   <label className="mb-1 block text-xs text-muted-foreground">
@@ -254,7 +254,7 @@ async function handleVerifyResetOtp() {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={handleForgotPassword}
+                    onClick={() => setForgotStep('email')}
                     className="text-xs text-primary hover:underline"
                     disabled={loading}
                 >
@@ -272,16 +272,52 @@ async function handleVerifyResetOtp() {
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign In & Send Code'}
                 </Button>
               </form>
-            ) : forgotMode ? (
+            ) : forgotStep ? (
 
-<form onSubmit={handleResetPassword} className="space-y-4">
-  <p className="text-sm text-muted-foreground">
-    Enter the reset code sent to{' '}
-    <span className="text-foreground">{email}</span>
-  </p>
+<form
+  onSubmit={(e) => {
+    e.preventDefault()
 
-  {!otpVerified ? (
+    if (forgotStep === 'email') {
+      handleForgotPassword()
+    }
+
+    if (forgotStep === 'password') {
+      handleResetPassword(e)
+    }
+  }}
+  className="space-y-4"
+>
+  {forgotStep === 'email' && (
     <>
+      <p className="text-sm text-muted-foreground">
+        Enter your admin email
+      </p>
+
+      <Input
+        type="email"
+        value={forgotEmail}
+        onChange={(e) => setForgotEmail(e.target.value)}
+        placeholder="admin@email.com"
+        required
+      />
+
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          'Send OTP'
+        )}
+      </Button>
+    </>
+  )}
+
+  {forgotStep === 'otp' && (
+    <>
+      <p className="text-sm text-muted-foreground">
+        Enter the OTP sent to {forgotEmail}
+      </p>
+
       <Input
         inputMode="numeric"
         maxLength={6}
@@ -291,14 +327,17 @@ async function handleVerifyResetOtp() {
         }
         placeholder="000000"
         required
-        className="bg-card text-foreground border-border text-center text-lg tracking-[0.3em]"
+        className="text-center text-lg tracking-[0.3em]"
       />
 
       <Button
         type="button"
         className="w-full"
         disabled={loading || forgotOtp.length !== 6}
-        onClick={handleVerifyResetOtp}
+        onClick={async () => {
+          await handleVerifyResetOtp()
+          setForgotStep('password')
+        }}
       >
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -307,7 +346,9 @@ async function handleVerifyResetOtp() {
         )}
       </Button>
     </>
-  ) : (
+  )}
+
+  {forgotStep === 'password' && (
     <>
       <Input
         type="password"
@@ -340,7 +381,8 @@ async function handleVerifyResetOtp() {
     variant="ghost"
     className="w-full"
     onClick={() => {
-      setForgotMode(false)
+      setForgotStep(null)
+      setForgotEmail('')
       setForgotOtp('')
       setNewPassword('')
       setConfirmPassword('')
