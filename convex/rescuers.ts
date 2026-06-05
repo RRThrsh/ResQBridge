@@ -19,7 +19,6 @@ const rescuerProfileValidator = v.object({
   email: v.string(),
   firstName: v.string(),
   lastName: v.string(),
-  password: v.optional(v.string()),
   contactPhone: v.string(),
   password: v.optional(v.string()),
 })
