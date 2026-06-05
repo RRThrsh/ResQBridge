@@ -15,8 +15,9 @@ const ADMIN_OTP_EMAIL_KEY = 'pwrrc_admin_otp_email'
 export function AdminLogin() {
   const { login, isLoggedIn } = useAdminAuth()
   const wasLoggedIn = useRef(isLoggedIn)
-  const [step, setStep] = useState<'email' | 'otp'>('email')
+  const [step, setStep] = useState<'credentials' | 'otp'>('credentials')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('') // Added password state
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
@@ -25,8 +26,9 @@ export function AdminLogin() {
   useEffect(() => {
     if (wasLoggedIn.current && !isLoggedIn) {
       setEmail('')
+      setPassword('')
       setCode('')
-      setStep('email')
+      setStep('credentials')
       sessionStorage.removeItem(ADMIN_OTP_EMAIL_KEY)
     }
     wasLoggedIn.current = isLoggedIn
@@ -36,23 +38,24 @@ export function AdminLogin() {
     return <Navigate to="/pwrcc/admin" replace />
   }
 
-  async function sendCode(e: React.FormEvent) {
+  async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (loading) return
-if (!captchaToken) {
-  toast.error('Please complete the reCAPTCHA.')
-  return
-}
+    if (!captchaToken) {
+      toast.error('Please complete the reCAPTCHA.')
+      return
+    }
     setLoading(true)
     try {
       const normalizedEmail = email.trim().toLowerCase()
-      await sendAdminOtp(normalizedEmail)
+      // Pass the password to your API function
+      await sendAdminOtp(normalizedEmail, password)
       setEmail(normalizedEmail)
       sessionStorage.setItem(ADMIN_OTP_EMAIL_KEY, normalizedEmail)
       setStep('otp')
       toast.success(`Code sent to ${normalizedEmail}`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not send code')
+      toast.error(error instanceof Error ? error.message : 'Invalid credentials')
     } finally {
       setLoading(false)
     }
@@ -69,7 +72,7 @@ if (!captchaToken) {
 
     if (!otpEmail) {
       toast.error('Email session expired. Request a new code.')
-      setStep('email')
+      setStep('credentials')
       return
     }
 
@@ -87,96 +90,110 @@ if (!captchaToken) {
     }
   }
 
-return (
-  <>
-    <Helmet>
-      <meta name="robots" content="noindex,nofollow" />
-    </Helmet>
+  return (
+    <>
+      <Helmet>
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
 
-    <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="absolute right-4 top-4">
-        <ThemeToggle />
+      <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="absolute right-4 top-4">
+          <ThemeToggle />
+        </div>
+        <Card className="w-full max-w-md border-border">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
+              <Shield className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>PWRRC Admin</CardTitle>
+            <CardDescription>
+              Admin sign-in only. Enter your credentials to receive a verification code.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {step === 'credentials' ? (
+              <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">
+                    Admin email
+                  </label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                    className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
+                  />
+                </div>
+                
+                {/* New Password Field */}
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">
+                    Password
+                  </label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                    className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
+                  />
+                </div>
+
+                <div className="flex justify-center">
+                  <ReCAPTCHA
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                    onChange={(token: string | null) => setCaptchaToken(token)}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign In & Send Code'}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={verifyCode} className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Enter the 6-digit code sent to <span className="text-foreground">{email}</span>
+                </p>
+                <Input
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  required
+                  className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary text-center text-lg tracking-[0.3em]"
+                />
+
+                <Button type="submit" className="w-full" disabled={loading || code.length !== 6}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify OTP'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    setStep('credentials')
+                    setCode('')
+                    setPassword('') // Clear password on go back
+                    sessionStorage.removeItem(ADMIN_OTP_EMAIL_KEY)
+                  }}
+                >
+                  Go back
+                </Button>
+              </form>
+            )}
+
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              <Link to="/" className="text-primary hover:opacity-80">
+                Back to public site
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
       </div>
-      <Card className="w-full max-w-md border-border">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
-            <Shield className="h-6 w-6 text-primary" />
-          </div>
-          <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>PWRRC Admin</CardTitle>
-          <CardDescription>
-            Admin sign-in only. Enter your authorized email to receive a verification code.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {step === 'email' ? (
-
-            <form onSubmit={sendCode} className="space-y-4">
-<div>
-  <label className="mb-1 block text-xs text-muted-foreground">
-    Admin email
-  </label>
-
-  <Input
-    type="email"
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-    autoComplete="off"
-    required
-    className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
-  />
-</div>
-
-<div className="flex justify-center">
-  <ReCAPTCHA
-    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-    onChange={(token: string | null) => setCaptchaToken(token)}
-  />
-</div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send verification code'}
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={verifyCode} className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Enter the 6-digit code sent to <span className="text-foreground">{email}</span>
-              </p>
-              <Input
-                inputMode="numeric"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                required
-                className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary text-center text-lg tracking-[0.3em]"
-              />
-
-              <Button type="submit" className="w-full" disabled={loading || code.length !== 6}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => {
-                  setStep('email')
-                  setCode('')
-                  sessionStorage.removeItem(ADMIN_OTP_EMAIL_KEY)
-                }}
-              >
-                Use a different email
-              </Button>
-            </form>
-          )}
-
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            <Link to="/" className="text-primary hover:opacity-80">
-              Back to public site
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
     </>
   )
 }
