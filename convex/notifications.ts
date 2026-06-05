@@ -3,6 +3,7 @@
 import nodemailer from 'nodemailer'
 import { internalAction } from './_generated/server'
 import { v } from 'convex/values'
+
 function stripQuotes(value: string) {
   return value.replace(/^["']|["']$/g, '').trim()
 }
@@ -11,7 +12,7 @@ function resolveSmtpConfig() {
   const user = stripQuotes(process.env.EMAIL_USER ?? '')
   const pass = stripQuotes(process.env.EMAIL_PASS ?? '').replace(/\s+/g, '')
 
-  const isGmail = user.toLowerCase().endsWith('@gmail.com')
+  // UPDATE: Removed `isGmail` declaration to fix TS6133
 
   return {
     host: 'smtp.gmail.com',
@@ -34,6 +35,7 @@ const transporter = nodemailer.createTransport({
   secure: config.secure,
   auth: config.auth,
 })
+
 export const alertAdmin = internalAction({
   args: {
     reportId: v.id('reports'),
@@ -109,7 +111,6 @@ console.log('FORMATTED PHONE:', formattedPhone)
         {
           method: 'POST',
           headers: {
-            // FIX: Restored backticks here
             Authorization: `Bearer ${process.env.PHILSMS_API_TOKEN}`,
             'Content-Type': 'application/json',
             Accept: 'application/json',
@@ -125,7 +126,6 @@ console.log('FORMATTED PHONE:', formattedPhone)
 
       if (!response.ok) {
         const errorData = await response.text()
-        // FIX: Restored backticks here
         throw new Error(`PhilSMS API Error: ${response.status} - ${errorData}`)
       }
 
@@ -137,6 +137,7 @@ console.log('FORMATTED PHONE:', formattedPhone)
     }
   },
 })
+
 export const notifyRescuer = internalAction({
   args: {
     rescuerEmail: v.string(),
