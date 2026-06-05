@@ -26,22 +26,14 @@ export type RescuerTableRow = {
   createdAt: number
 }
 
-type DialogMode =
-  | 'view'
-  | 'edit'
+type DialogMode = 'view' | 'edit'
 
 type Props = {
-  rescuerRow:
-    | RescuerTableRow
-    | null
-
+  rescuerRow: RescuerTableRow | null
   actorEmail: string
   mode: DialogMode
   open: boolean
-
-  onOpenChange: (
-    open: boolean,
-  ) => void
+  onOpenChange: (open: boolean) => void
 }
 
 export function AdminRescuerDialog({
@@ -51,56 +43,33 @@ export function AdminRescuerDialog({
   open,
   onOpenChange,
 }: Props) {
-  const updateRescuer =
-    useMutation(
-      api.rescuers
-        .updateRescuer,
-    )
+  const updateRescuer = useMutation(api.rescuers.updateRescuer)
+  const resetRescuerPassword = useMutation(api.rescuers.resetRescuerPassword) // Added mutation
 
-  const [saving, setSaving] =
-    useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const [draft, setDraft] =
-    useState({
-      firstName: '',
-      lastName: '',
-      contactPhone: '',
-      password: '',
-    })
+  const [draft, setDraft] = useState({
+    firstName: '',
+    lastName: '',
+    contactPhone: '',
+    password: '',
+  })
 
   const isView = mode === 'view'
 
   const draftSyncKey =
-    open &&
-    !isView &&
-    rescuerRow
-      ? rescuerRow.email
-      : null
+    open && !isView && rescuerRow ? rescuerRow.email : null
 
-  const [
-    prevDraftSyncKey,
-    setPrevDraftSyncKey,
-  ] = useState<
-    string | null
-  >(null)
+  const [prevDraftSyncKey, setPrevDraftSyncKey] = useState<string | null>(null)
 
-  if (
-    draftSyncKey !==
-      prevDraftSyncKey &&
-    rescuerRow
-  ) {
-    setPrevDraftSyncKey(
-      draftSyncKey,
-    )
+  if (draftSyncKey !== prevDraftSyncKey && rescuerRow) {
+    setPrevDraftSyncKey(draftSyncKey)
 
     if (draftSyncKey) {
       setDraft({
-        firstName:
-          rescuerRow.firstName,
-        lastName:
-          rescuerRow.lastName,
-        contactPhone:
-          rescuerRow.contactPhone,
+        firstName: rescuerRow.firstName,
+        lastName: rescuerRow.lastName,
+        contactPhone: rescuerRow.contactPhone,
         password: '',
       })
     }
@@ -109,42 +78,35 @@ export function AdminRescuerDialog({
   if (!rescuerRow) return null
 
   async function handleSave() {
+    // Explicit null check fixes TS18047
+    if (!rescuerRow) return;
+
     setSaving(true)
 
     try {
+      // 1. Update the profile (without the password to fix TS2353)
       await updateRescuer({
-        adminEmail:
-          normalizeEmail(
-            actorEmail,
-          ),
-
-        targetEmail:
-          rescuerRow!.email,
-
-        firstName:
-          draft.firstName,
-
-        lastName:
-          draft.lastName,
-
-        contactPhone:
-          draft.contactPhone,
-
-        password:
-          draft.password.trim() ||
-          undefined,
+        adminEmail: normalizeEmail(actorEmail),
+        targetEmail: rescuerRow.email,
+        firstName: draft.firstName,
+        lastName: draft.lastName,
+        contactPhone: draft.contactPhone,
       })
 
-      toast.success(
-        'Rescuer updated',
-      )
+      // 2. Update the password using your existing backend mutation
+      const newPassword = draft.password.trim()
+      if (newPassword) {
+        await resetRescuerPassword({
+          email: rescuerRow.email,
+          newPassword: newPassword,
+        })
+      }
 
+      toast.success('Rescuer updated')
       onOpenChange(false)
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Could not update rescuer',
+        error instanceof Error ? error.message : 'Could not update rescuer',
       )
     } finally {
       setSaving(false)
@@ -152,73 +114,37 @@ export function AdminRescuerDialog({
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={
-        onOpenChange
-      }
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isView
-              ? 'View rescuer'
-              : 'Edit rescuer'}
+            {isView ? 'View rescuer' : 'Edit rescuer'}
           </DialogTitle>
-
-          <DialogDescription>
-            {rescuerRow.email}
-          </DialogDescription>
+          <DialogDescription>{rescuerRow.email}</DialogDescription>
         </DialogHeader>
 
         {isView ? (
           <dl className="grid gap-3 text-sm">
             <div>
-              <dt className="text-xs text-muted-foreground">
-                Name
-              </dt>
-
+              <dt className="text-xs text-muted-foreground">Name</dt>
               <dd className="font-medium">
-                {
-                  rescuerRow.firstName
-                }{' '}
-                {
-                  rescuerRow.lastName
-                }
+                {rescuerRow.firstName} {rescuerRow.lastName}
               </dd>
             </div>
 
             <div>
-              <dt className="text-xs text-muted-foreground">
-                Email
-              </dt>
-
-              <dd>
-                {rescuerRow.email}
-              </dd>
+              <dt className="text-xs text-muted-foreground">Email</dt>
+              <dd>{rescuerRow.email}</dd>
             </div>
 
             <div>
-              <dt className="text-xs text-muted-foreground">
-                Contact number
-              </dt>
-
-              <dd>
-                {rescuerRow.contactPhone ||
-                  '—'}
-              </dd>
+              <dt className="text-xs text-muted-foreground">Contact number</dt>
+              <dd>{rescuerRow.contactPhone || '—'}</dd>
             </div>
 
             <div>
-              <dt className="text-xs text-muted-foreground">
-                Rescuer since
-              </dt>
-
-              <dd>
-                {formatDateTime(
-                  rescuerRow.createdAt,
-                )}
-              </dd>
+              <dt className="text-xs text-muted-foreground">Rescuer since</dt>
+              <dd>{formatDateTime(rescuerRow.createdAt)}</dd>
             </div>
           </dl>
         ) : (
@@ -227,17 +153,10 @@ export function AdminRescuerDialog({
               <label className="mb-1 block text-xs text-muted-foreground">
                 First name
               </label>
-
               <Input
-                value={
-                  draft.firstName
-                }
+                value={draft.firstName}
                 onChange={(e) =>
-                  setDraft((d) => ({
-                    ...d,
-                    firstName:
-                      e.target.value,
-                  }))
+                  setDraft((d) => ({ ...d, firstName: e.target.value }))
                 }
               />
             </div>
@@ -246,17 +165,10 @@ export function AdminRescuerDialog({
               <label className="mb-1 block text-xs text-muted-foreground">
                 Last name
               </label>
-
               <Input
-                value={
-                  draft.lastName
-                }
+                value={draft.lastName}
                 onChange={(e) =>
-                  setDraft((d) => ({
-                    ...d,
-                    lastName:
-                      e.target.value,
-                  }))
+                  setDraft((d) => ({ ...d, lastName: e.target.value }))
                 }
               />
             </div>
@@ -265,18 +177,11 @@ export function AdminRescuerDialog({
               <label className="mb-1 block text-xs text-muted-foreground">
                 Contact number
               </label>
-
               <Input
                 type="tel"
-                value={
-                  draft.contactPhone
-                }
+                value={draft.contactPhone}
                 onChange={(e) =>
-                  setDraft((d) => ({
-                    ...d,
-                    contactPhone:
-                      e.target.value,
-                  }))
+                  setDraft((d) => ({ ...d, contactPhone: e.target.value }))
                 }
               />
             </div>
@@ -285,18 +190,11 @@ export function AdminRescuerDialog({
               <label className="mb-1 block text-xs text-muted-foreground">
                 New Password
               </label>
-
               <Input
                 type="password"
-                value={
-                  draft.password
-                }
+                value={draft.password}
                 onChange={(e) =>
-                  setDraft((d) => ({
-                    ...d,
-                    password:
-                      e.target.value,
-                  }))
+                  setDraft((d) => ({ ...d, password: e.target.value }))
                 }
                 placeholder="Leave blank to keep current password"
               />
@@ -308,23 +206,13 @@ export function AdminRescuerDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
-              onOpenChange(false)
-            }
+            onClick={() => onOpenChange(false)}
           >
-            {isView
-              ? 'Close'
-              : 'Cancel'}
+            {isView ? 'Close' : 'Cancel'}
           </Button>
 
           {!isView && (
-            <Button
-              type="button"
-              onClick={
-                handleSave
-              }
-              disabled={saving}
-            >
+            <Button type="button" onClick={handleSave} disabled={saving}>
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
