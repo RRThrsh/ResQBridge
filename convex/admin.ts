@@ -827,8 +827,7 @@ export const resetAdminPasswordWithOtp = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await assertAdmin(ctx, args.adminEmail)
-
+    
     const targetEmail = normalizeEmail(args.targetEmail)
     const target = await getAdminByEmail(ctx, targetEmail)
     
