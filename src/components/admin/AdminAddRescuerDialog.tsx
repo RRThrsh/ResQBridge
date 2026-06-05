@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { Loader2 } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
+
 import {
   Dialog,
   DialogContent,
@@ -10,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { normalizeEmail } from '@/lib/admin'
@@ -21,37 +23,81 @@ type Props = {
   onOpenChange: (open: boolean) => void
 }
 
-export function AdminAddRescuerDialog({ adminEmail, open, onOpenChange }: Props) {
-  const addRescuer = useMutation(api.rescuers.addRescuer)
-  const [email, setEmail] = useState('')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [contactPhone, setContactPhone] = useState('')
-  const [saving, setSaving] = useState(false)
+export function AdminAddRescuerDialog({
+  adminEmail,
+  open,
+  onOpenChange,
+}: Props) {
+  const addRescuer =
+    useMutation(
+      api.rescuers.addRescuer,
+    )
+
+  const [email, setEmail] =
+    useState('')
+
+  const [
+    firstName,
+    setFirstName,
+  ] = useState('')
+
+  const [lastName, setLastName] =
+    useState('')
+
+  const [
+    contactPhone,
+    setContactPhone,
+  ] = useState('')
+
+  const [password, setPassword] =
+    useState('ChangeMe123!')
+
+  const [saving, setSaving] =
+    useState(false)
 
   function resetForm() {
     setEmail('')
     setFirstName('')
     setLastName('')
     setContactPhone('')
+    setPassword('ChangeMe123!')
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(
+    e: React.FormEvent,
+  ) {
     e.preventDefault()
+
     setSaving(true)
+
     try {
       await addRescuer({
-        adminEmail: normalizeEmail(adminEmail),
-        email: normalizeEmail(email),
+        adminEmail:
+          normalizeEmail(
+            adminEmail,
+          ),
+
+        email:
+          normalizeEmail(email),
+
         firstName,
         lastName,
         contactPhone,
+        password,
       })
-      toast.success('Rescuer added. They can sign in at /pwrcc/rescuer/login.')
+
+      toast.success(
+        'Rescuer added successfully.',
+      )
+
       resetForm()
       onOpenChange(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not add rescuer')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Could not add rescuer',
+      )
     } finally {
       setSaving(false)
     }
@@ -67,56 +113,125 @@ export function AdminAddRescuerDialog({ adminEmail, open, onOpenChange }: Props)
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add rescuer</DialogTitle>
+          <DialogTitle>
+            Add rescuer
+          </DialogTitle>
+
           <DialogDescription>
-            Grant rescuer access to a new email. They will sign in with a one-time code sent to
-            that address.
+            Create a rescuer account
+            with password login and
+            OTP verification.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="grid gap-3">
+        <form
+          onSubmit={handleSubmit}
+          className="grid gap-3"
+        >
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Email</label>
+            <label className="mb-1 block text-xs text-muted-foreground">
+              Email
+            </label>
+
             <Input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) =>
+                setEmail(
+                  e.target.value,
+                )
+              }
               required
             />
           </div>
+
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">First name</label>
+            <label className="mb-1 block text-xs text-muted-foreground">
+              First name
+            </label>
+
             <Input
               value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              onChange={(e) =>
+                setFirstName(
+                  e.target.value,
+                )
+              }
               required
             />
           </div>
+
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Last name</label>
+            <label className="mb-1 block text-xs text-muted-foreground">
+              Last name
+            </label>
+
             <Input
               value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              onChange={(e) =>
+                setLastName(
+                  e.target.value,
+                )
+              }
               required
             />
           </div>
+
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Contact number</label>
+            <label className="mb-1 block text-xs text-muted-foreground">
+              Contact number
+            </label>
+
             <Input
               type="tel"
               value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
+              onChange={(e) =>
+                setContactPhone(
+                  e.target.value,
+                )
+              }
               placeholder="For dispatch and follow-up"
               required
             />
           </div>
 
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">
+              Temporary password
+            </label>
+
+            <Input
+              type="text"
+              value={password}
+              onChange={(e) =>
+                setPassword(
+                  e.target.value,
+                )
+              }
+              required
+            />
+          </div>
+
           <DialogFooter className="pt-2 sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                onOpenChange(false)
+              }
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add rescuer'}
+
+            <Button
+              type="submit"
+              disabled={saving}
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'Add rescuer'
+              )}
             </Button>
           </DialogFooter>
         </form>
