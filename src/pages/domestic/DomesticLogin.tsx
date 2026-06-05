@@ -607,7 +607,7 @@ export function DomesticLogin() {
                 to="/"
                 className="text-primary hover:opacity-80"
               >
-                Back to public site
+                Go to public site
               </Link>
             </p>
           </CardContent>
