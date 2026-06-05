@@ -8,6 +8,7 @@ interface SendOtpInput {
   mode: AuthMode
   identifier: string       // Swapped from email
   type: 'email' | 'phone'  // Added the new type
+  password?: string
   firstName?: string
   lastName?: string
 }
@@ -53,6 +54,7 @@ export async function sendOtp(input: SendOtpInput): Promise<void> {
     mode: input.mode,
     identifier: normalizedId,
     type: input.type,
+    password: input.password,
     ...(input.mode === 'sign-up'
       ? {
           firstName: input.firstName?.trim() ?? '',
