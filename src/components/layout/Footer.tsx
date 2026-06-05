@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { PawPrint, MapPin, Phone } from 'lucide-react'
+import { MapPin, Phone } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 const links = {
@@ -26,9 +26,13 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2 space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
-                <PawPrint className="h-3.5 w-3.5 text-primary" />
-              </div>
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 overflow-hidden">
+              <img
+                src="/resq.png"
+                alt="ResQBridge Logo"
+                className="h-5 w-5 object-contain"
+              />
+            </div>
               <span className="text-sm font-bold" style={{ fontFamily: 'var(--font-heading)' }}>ResQBridge</span>
             </Link>
 <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
