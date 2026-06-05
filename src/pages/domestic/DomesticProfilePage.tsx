@@ -1,9 +1,9 @@
-import { Mail, Shield, User, UserCircle } from 'lucide-react'
+import { Mail, Pencil, Shield, User, UserCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ThemeSetting } from '@/components/theme/ThemeSetting'
 import { DomesticLayout } from '@/components/domestic/DomesticLayout'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
-
+import { Button } from '@/components/ui/button'
 export function DomesticProfilePage() {
   const { domesticApprover } = useDomesticAuth()
 
@@ -71,18 +71,29 @@ export function DomesticProfilePage() {
         </Card>
 
         <Card className="border-border">
-          <CardHeader>
-            <CardTitle
-              className="text-base"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              Profile Details
-            </CardTitle>
+<CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+  <div className="space-y-1.5">
+    <CardTitle
+      className="text-base"
+      style={{ fontFamily: 'var(--font-heading)' }}
+    >
+      Profile Details
+    </CardTitle>
 
-            <CardDescription>
-              Your domestic approver account information
-            </CardDescription>
-          </CardHeader>
+    <CardDescription>
+      Your domestic approver account information
+    </CardDescription>
+  </div>
+
+  <Button
+    type="button"
+    variant="ghost"
+    size="icon"
+    aria-label="Edit profile"
+  >
+    <Pencil className="h-4 w-4" />
+  </Button>
+</CardHeader>
 
           <CardContent>
             <dl className="grid gap-4 text-sm">
