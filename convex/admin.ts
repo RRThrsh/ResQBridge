@@ -454,3 +454,63 @@ export const resetAdminPasswordWithOtp = mutation({
     return null
   },
 })
+export const updateActiveSession = mutation({
+  args: {
+    email: v.string(),
+    sessionId: v.string(),
+  },
+
+  returns: v.null(),
+
+  handler: async (ctx, args) => {
+    const admin = await getAdminByEmail(
+      ctx,
+      normalizeEmail(args.email),
+    )
+
+    if (!admin) {
+      throw new Error('Admin not found.')
+    }
+
+    await ctx.db.patch(admin._id, {
+      activeSessionId: args.sessionId,
+    })
+
+    return null
+  },
+})
+
+export const getAdminByEmailQuery = query({
+  args: {
+    email: v.string(),
+  },
+
+  returns: v.union(
+    v.null(),
+    v.object({
+      email: v.string(),
+      firstName: v.string(),
+      lastName: v.string(),
+      activeSessionId: v.optional(v.string()),
+    }),
+  ),
+
+  handler: async (ctx, args) => {
+    const admin = await getAdminByEmail(
+      ctx,
+      normalizeEmail(args.email),
+    )
+
+    if (!admin) {
+      return null
+    }
+
+    return {
+      email: admin.email,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      activeSessionId: admin.activeSessionId,
+    }
+  },
+})
+

@@ -1,3 +1,4 @@
+
 import {
   createContext,
   useContext,
@@ -7,6 +8,13 @@ import {
 
 import type { ReactNode } from 'react'
 
+import {
+  useMutation,
+  useQuery,
+} from 'convex/react'
+
+import { api } from '../../convex/_generated/api'
+
 import type { AdminUser } from '@/types/auth'
 
 import { normalizeEmail } from '@/lib/admin'
@@ -14,29 +22,37 @@ import { normalizeEmail } from '@/lib/admin'
 interface AdminAuthContextType {
   isLoggedIn: boolean
   admin: AdminUser | null
-  login: (admin: AdminUser) => void
+  login: (admin: AdminUser) => Promise<void>
   updateAdmin: (
-    patch: Pick<AdminUser, 'firstName' | 'lastName'>,
+    patch: Pick<
+      AdminUser,
+      'firstName' | 'lastName'
+    >,
   ) => void
   logout: () => void
 }
 
 const STORAGE_KEY = 'pwrrc_admin'
 
-const SESSION_KEY = 'pwrrc_admin_session'
+const SESSION_KEY =
+  'pwrrc_admin_session'
 
 const AdminAuthContext =
-  createContext<AdminAuthContextType | undefined>(
-    undefined,
-  )
+  createContext<
+    AdminAuthContextType | undefined
+  >(undefined)
 
 function loadStoredAdmin(): AdminUser | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw =
+      localStorage.getItem(
+        STORAGE_KEY,
+      )
 
     if (!raw) return null
 
-    const parsed = JSON.parse(raw) as AdminUser
+    const parsed =
+      JSON.parse(raw) as AdminUser
 
     if (
       parsed.email &&
@@ -46,7 +62,9 @@ function loadStoredAdmin(): AdminUser | null {
     ) {
       return {
         ...parsed,
-        email: normalizeEmail(parsed.email),
+        email: normalizeEmail(
+          parsed.email,
+        ),
       }
     }
 
@@ -66,57 +84,61 @@ export function AdminAuthProvider({
       loadStoredAdmin(),
     )
 
-  useEffect(() => {
-    function checkSession() {
-      const storedAdmin =
-        localStorage.getItem(STORAGE_KEY)
-
-      const storedSession =
-        localStorage.getItem(SESSION_KEY)
-
-      if (!storedAdmin || !storedSession) {
-        setAdmin(null)
-        return
-      }
-
-      try {
-        const parsed = JSON.parse(storedAdmin)
-
-        if (
-          parsed.activeSessionId &&
-          parsed.activeSessionId !== storedSession
-        ) {
-          logout()
+  const dbAdmin = useQuery(
+    api.admin.getAdminByEmailQuery,
+    admin
+      ? {
+          email: normalizeEmail(
+            admin.email,
+          ),
         }
-      } catch {
-        logout()
-      }
-    }
+      : 'skip',
+  )
 
-    window.addEventListener(
-      'storage',
-      checkSession,
+  const updateSession =
+    useMutation(
+      api.admin.updateActiveSession,
     )
 
-    checkSession()
+  useEffect(() => {
+    if (!admin || !dbAdmin) return
 
-    return () => {
-      window.removeEventListener(
-        'storage',
-        checkSession,
+    const localSession =
+      localStorage.getItem(
+        SESSION_KEY,
+      )
+
+    if (
+      dbAdmin.activeSessionId &&
+      dbAdmin.activeSessionId !==
+        localSession
+    ) {
+      logout()
+
+      alert(
+        'Your account was logged in on another device.',
       )
     }
-  }, [])
+  }, [dbAdmin])
 
-  const login = (nextAdmin: AdminUser) => {
+  const login = async (
+    nextAdmin: AdminUser,
+  ) => {
     const activeSessionId =
       crypto.randomUUID()
 
     const adminUser = {
       ...nextAdmin,
-      email: normalizeEmail(nextAdmin.email),
+      email: normalizeEmail(
+        nextAdmin.email,
+      ),
       activeSessionId,
     }
+
+    await updateSession({
+      email: adminUser.email,
+      sessionId: activeSessionId,
+    })
 
     setAdmin(adminUser)
 
@@ -157,15 +179,20 @@ export function AdminAuthProvider({
   const logout = () => {
     setAdmin(null)
 
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(
+      STORAGE_KEY,
+    )
 
-    localStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem(
+      SESSION_KEY,
+    )
   }
 
   return (
     <AdminAuthContext.Provider
       value={{
-        isLoggedIn: admin !== null,
+        isLoggedIn:
+          admin !== null,
         admin,
         login,
         updateAdmin,
