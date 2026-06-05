@@ -68,7 +68,7 @@ export const getAdminForLogin = query({
       email: v.string(),
       firstName: v.string(),
       lastName: v.string(),
-      password: v.string(), // <--- ADD THIS LINE
+      password: v.string(), 
     }),
   ),
   handler: async (ctx, args) => {
@@ -78,6 +78,8 @@ export const getAdminForLogin = query({
       email: admin.email,
       firstName: admin.firstName,
       lastName: admin.lastName,
+      // ADD THIS LINE: safely return the password, or an empty string if it's an old account
+      password: admin.password ?? "", 
     }
   },
 })
