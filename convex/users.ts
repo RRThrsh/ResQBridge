@@ -87,7 +87,6 @@ export const createUser = mutation({
         email: existing.email,
         firstName: existing.firstName,
         lastName: existing.lastName,
-        password: user.password,
         role: 'user' as const,
       }
     }
