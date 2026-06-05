@@ -95,13 +95,13 @@ export const getRescuerForLogin = query({
     const rescuer = await getRescuerByEmail(ctx, args.email)
     if (!rescuer) return null
     
-return {
-  email: rescuer.email,
-  firstName: rescuer.firstName,
-  lastName: rescuer.lastName,
-  contactPhone: rescuer.contactPhone ?? '',
-  password: rescuer.password,
-}
+    return {
+      email: rescuer.email,
+      firstName: rescuer.firstName,
+      lastName: rescuer.lastName,
+      contactPhone: rescuer.contactPhone ?? '',
+      password: rescuer.password,
+    }
   },
 })
 
@@ -248,14 +248,13 @@ export const addRescuer = mutation({
       })
     }
 
-return {
-  email,
-  firstName,
-  lastName,
-  contactPhone,
-  password: args.password,
-}
-
+    return {
+      email,
+      firstName,
+      lastName,
+      contactPhone,
+      password: args.password,
+    }
   },
 })
 
@@ -266,6 +265,7 @@ export const updateRescuer = mutation({
     firstName: v.string(),
     lastName: v.string(),
     contactPhone: v.string(),
+    password: v.optional(v.string()), // 👈 Added optional password argument
   },
   returns: rescuerProfileValidator,
   handler: async (ctx, args) => {
@@ -284,18 +284,37 @@ export const updateRescuer = mutation({
       throw new Error('First and last name are required.')
     }
 
-    await ctx.db.patch(target._id, { firstName, lastName, contactPhone })
+    // Build the patch object dynamically so we only update the password if it's passed in
+    const patchData: { firstName: string; lastName: string; contactPhone: string; password?: string } = { 
+      firstName, 
+      lastName, 
+      contactPhone 
+    }
+    
+    if (args.password) {
+      patchData.password = args.password
+    }
 
+    // Patch the rescuer table
+    await ctx.db.patch(target._id, patchData)
+
+    // Patch the users table
     const userRow = await ctx.db
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', targetEmail))
       .unique()
 
     if (userRow) {
-      await ctx.db.patch(userRow._id, { firstName, lastName, role: 'rescuer', contactPhone })
+      await ctx.db.patch(userRow._id, { ...patchData, role: 'rescuer' })
     }
 
-    return { email: targetEmail, firstName, lastName, contactPhone }
+    return { 
+      email: targetEmail, 
+      firstName, 
+      lastName, 
+      contactPhone,
+      password: args.password 
+    }
   },
 })
 
