@@ -47,7 +47,7 @@ export function AdminSidebar({ onNavigate }: Props) {
 
   return (
     <>
-      <aside className="flex h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <aside className="flex h-[100dvh] w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground overflow-y-auto">
         <div className="border-b border-sidebar-border px-5 py-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
             ResQBridge
@@ -65,7 +65,7 @@ export function AdminSidebar({ onNavigate }: Props) {
         ) : null}
         </div>
 
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="flex-1 space-y-1 p-3 pb-24">
           {navItems.map(({ to, label, icon: Icon, ...rest }) => (
             <NavLink
               key={to}
