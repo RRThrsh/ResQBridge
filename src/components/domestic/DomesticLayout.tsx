@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { ArrowLeft, LogOut, Home, UserCircle } from 'lucide-react'
+import { Link, } from 'react-router-dom'
+import { ArrowLeft, Home} from 'lucide-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
+
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 import { cn } from '@/lib/utils'
 
@@ -26,9 +26,9 @@ export function DomesticLayout({
   className,
 }: Props) {
   const { domesticApprover, logout } = useDomesticAuth()
-  const { pathname } = useLocation()
+
   const [signOutOpen, setSignOutOpen] = useState(false)
-  const onProfilePage = pathname.startsWith('/pwrcc/domestic/profile')
+
 
   function confirmSignOut() {
     logout()
@@ -36,7 +36,7 @@ export function DomesticLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,var(--color-primary)/0.12,transparent)]" />
 
       <header className="z-20 shrink-0 border-b border-border/80 bg-background/80 backdrop-blur-md">
@@ -74,26 +74,6 @@ export function DomesticLayout({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1">
-            {!backTo && !onProfilePage ? (
-              <Link
-                to="/pwrcc/domestic/profile"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                aria-label="My account"
-              >
-                <UserCircle className="h-4 w-4" />
-              </Link>
-            ) : null}
-            <ThemeToggle size="sm" />
-            <button
-              type="button"
-              onClick={() => setSignOutOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
         </div>
         {subtitle ? (
           <p className="mx-auto max-w-2xl px-4 pb-3 text-xs text-muted-foreground sm:px-6">
@@ -102,12 +82,12 @@ export function DomesticLayout({
         ) : null}
       </header>
 
-<main
-  className={cn(
-    'mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8',
-    className,
-  )}
->
+      <main
+        className={cn(
+          'mx-auto min-h-0 w-full max-w-2xl flex-1 overflow-y-auto overscroll-y-contain px-4 py-6 sm:px-6 sm:py-8',
+          className,
+        )}
+      >
         {children}
       </main>
 
