@@ -45,6 +45,7 @@ export const getByEmail = query({
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      password: user.password,
       role: 'user' as const,
     }
   },
