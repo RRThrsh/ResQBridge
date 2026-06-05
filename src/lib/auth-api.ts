@@ -72,6 +72,7 @@ export async function verifyOtp(
   identifier: string,
   code: string,
   mode: AuthMode,
+  password?: string,
 ): Promise<AuthUser> {
   // Check if it's an email so we don't accidentally break a phone number string
   const isEmail = identifier.includes('@')
@@ -81,6 +82,7 @@ export async function verifyOtp(
     identifier: normalizedId,
     code: code.trim(),
     mode,
+    password,
   })
 
   if (!response.ok) {
