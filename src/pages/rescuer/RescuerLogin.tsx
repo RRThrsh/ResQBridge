@@ -33,9 +33,9 @@ const convex = new ConvexHttpClient(
 const RESCUER_OTP_EMAIL_KEY =
   'pwrrc_rescuer_otp_email'
 
-export function DomesticLogin() {
+export function RescuerLogin() {
   const { login, isLoggedIn } =
-    useDomesticAuth()
+    useRescuerAuth()
 
   const wasLoggedIn =
     useRef(isLoggedIn)
@@ -124,7 +124,7 @@ export function DomesticLogin() {
           .trim()
           .toLowerCase()
 
-      await sendDomesticOtp(
+      await sendRescuerOtp(
         normalized,
         password,
       )
@@ -191,7 +191,7 @@ export function DomesticLogin() {
 
     try {
       login(
-        await verifyDomesticOtp(
+        await verifyRescuerOtp(
           otpEmail,
           code,
         ),
@@ -227,7 +227,7 @@ export function DomesticLogin() {
     }
 
     try {
-      await sendDomesticOtp(
+      await sendRescuerOtp(
         forgotIdentifier,
         'reset-temp',
       )
@@ -246,7 +246,7 @@ export function DomesticLogin() {
 
   async function handleForgotVerifyOtp() {
     try {
-      await verifyDomesticOtp(
+      await verifyRescuerOtp(
         forgotIdentifier,
         forgotOtp,
       )
