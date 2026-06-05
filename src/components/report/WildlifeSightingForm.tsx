@@ -451,17 +451,25 @@ onChange={(e) =>
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Reported Size
             </label>
-<Input
-  value={formData.reportedSize || ''}
-  onChange={(e) =>
+<Select
+  value={formData.reportedSize}
+  onValueChange={(value) =>
     setFormData({
       ...formData,
-      reportedSize: e.target.value,
+      reportedSize: value || '',
     })
   }
-  placeholder="e.g. Small, medium"
-  className="h-12 bg-background border-border rounded-xl"
-/>
+>
+  <SelectTrigger className="h-12 bg-background border-border rounded-xl">
+    <SelectValue placeholder="Select size" />
+  </SelectTrigger>
+
+  <SelectContent>
+    <SelectItem value="small">Small</SelectItem>
+    <SelectItem value="medium">Medium</SelectItem>
+    <SelectItem value="large">Large</SelectItem>
+  </SelectContent>
+</Select>
           </div>
         </div>
 
