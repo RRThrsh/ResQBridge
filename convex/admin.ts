@@ -68,6 +68,7 @@ export const getAdminForLogin = query({
       email: v.string(),
       firstName: v.string(),
       lastName: v.string(),
+      password: v.string(), // <--- ADD THIS LINE
     }),
   ),
   handler: async (ctx, args) => {
