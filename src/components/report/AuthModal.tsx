@@ -66,7 +66,9 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     setMode(next); setStep('details'); setCode(''); setCountdown(0); setPassword(''); setConfirmPassword('');
   };
 
-  const wrapLoad = async (fn: () => Promise<void>) => {
+  const wrapLoad = async (
+  fn: () => Promise<unknown>,
+) => {
     if (submittingRef.current) return;
     submittingRef.current = true;
     setLoading(true);
