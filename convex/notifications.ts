@@ -78,12 +78,26 @@ console.log('ADMIN EMAILS:', adminEmails)
 const emailResult = await transporter.sendMail({
   from: `"${config.fromName}" <${config.fromAddress}>`,
   to: adminEmails,
-  subject: 'New Wildlife Report Submitted',
+
+  subject: 'PWRRC Wildlife Report Alert',
+
+  text: `
+New Wildlife Report Submitted
+
+Animal: ${args.species}
+Location: ${args.location}
+
+Please check now.
+`,
+
   html: `
-    <h2>New Report Submitted</h2>
+    <h2>New Wildlife Report Submitted</h2>
+
     <p><strong>Animal:</strong> ${args.species}</p>
+
     <p><strong>Location:</strong> ${args.location}</p>
-    
+
+    <p>Please check now.</p>
   `,
 })
 
