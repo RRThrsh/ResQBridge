@@ -18,7 +18,13 @@ import {
   type ReportPhotoItem,
 } from '@/lib/reportPhotos'
 import { cn } from '@/lib/utils'
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 // --- IMPORTS FOR INTERACTIVE MAP ---
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -453,17 +459,29 @@ const userContactPhone = profile?.contactPhone;
               className="h-12 bg-background border-border rounded-xl"
             />
           </div>
-          <div className="space-y-3">
-            <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Reported Size
-            </label>
-            <Input
-              value={formData.reportedSize}
-              onChange={(e) => setFormData({ ...formData, reportedSize: e.target.value })}
-              placeholder="e.g. Small, medium"
-              className="h-12 bg-background border-border rounded-xl"
-            />
-          </div>
+<div className="space-y-3">
+  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+    Reported Size
+  </label>
+
+  <Select
+    value={formData.reportedSize}
+    onValueChange={(value) =>
+      setFormData({ ...formData, reportedSize: value })
+    }
+  >
+    <SelectTrigger className="h-12 bg-background border-border rounded-xl">
+      <SelectValue placeholder="Select size" />
+    </SelectTrigger>
+
+    <SelectContent>
+      <SelectItem value="small">Small</SelectItem>
+      <SelectItem value="medium">Medium</SelectItem>
+      <SelectItem value="large">Large</SelectItem>
+      <SelectItem value="extra-large">Extra Large</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
         </div>
 
         {user ? (
