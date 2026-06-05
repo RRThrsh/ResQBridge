@@ -300,7 +300,27 @@ export const listAdmins = query({
       }))
   },
 })
+export const getAdminsForNotifications = query({
+  args: {},
 
+  returns: v.array(
+    v.object({
+      email: v.string(),
+      firstName: v.string(),
+      lastName: v.string(),
+    }),
+  ),
+
+  handler: async (ctx) => {
+    const admins = await ctx.db.query('admins').collect()
+
+    return admins.map((admin) => ({
+      email: admin.email,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+    }))
+  },
+})
 export const getStats = query({
   args: { adminEmail: v.string() },
   returns: v.object({

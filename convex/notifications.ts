@@ -1,7 +1,7 @@
 import { internalAction } from './_generated/server'
 import { v } from 'convex/values'
 import { Resend } from 'resend'
-import { internal } from './_generated/api'
+
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export const alertAdmin = internalAction({
@@ -21,10 +21,16 @@ export const alertAdmin = internalAction({
 // =========================
 // GET ALL ADMINS
 // =========================
-const admins = await _ctx.runQuery(internal.users.getAdmins)
+const admins = await _ctx.runQuery(
+  'admin:getAdminsForNotifications' as any
+)
 
 const adminEmails = admins
-  .map((admin) => admin.email)
+  .map((admin: {
+    email: string
+    firstName: string
+    lastName: string
+  }) => admin.email)
   .filter(Boolean)
 
 if (adminEmails.length === 0) {
