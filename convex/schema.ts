@@ -3,42 +3,42 @@ import { v } from 'convex/values'
 import { reportStatusSchemaValidator } from './lib/reportStatus'
 
 export default defineSchema({
-  admins: defineTable({
-    email: v.string(),
-    firstName: v.string(),
-    lastName: v.string(),
-    createdAt: v.number(),
-    // Added password field for admin login
-    password: v.optional(v.string()), 
-  }).index('by_email', ['email']),
+admins: defineTable({
+  email: v.string(),
+  firstName: v.string(),
+  lastName: v.string(),
+  createdAt: v.number(),
+  password: v.optional(v.string()),
+  activeSessionId: v.optional(v.string()),
+}).index('by_email', ['email']),
 
-  rescuers: defineTable({
-    email: v.string(),
-    firstName: v.string(),
-    lastName: v.string(),
-    contactPhone: v.optional(v.string()),
-    createdAt: v.number(),
-    // Added password field for rescuer login
-    password: v.optional(v.string()), 
-  }).index('by_email', ['email']),
+rescuers: defineTable({
+  email: v.string(),
+  firstName: v.string(),
+  lastName: v.string(),
+  contactPhone: v.optional(v.string()),
+  createdAt: v.number(),
+  password: v.optional(v.string()),
+  activeSessionId: v.optional(v.string()),
+}).index('by_email', ['email']),
 
-  users: defineTable({
-    email: v.string(),
-    firstName: v.string(),
-    lastName: v.string(),
-    role: v.optional(
-      v.union(
-        v.literal('admin'),
-        v.literal('user'),
-        v.literal('rescuer'),
-        v.literal('domestic_approver'),
-      ),
+users: defineTable({
+  email: v.string(),
+  firstName: v.string(),
+  lastName: v.string(),
+  role: v.optional(
+    v.union(
+      v.literal('admin'),
+      v.literal('user'),
+      v.literal('rescuer'),
+      v.literal('domestic_approver'),
     ),
-    contactPhone: v.optional(v.string()),
-    createdAt: v.number(),
-    // Added password field for user and domestic_approver login
-    password: v.optional(v.string()), 
-  }).index('by_email', ['email']),
+  ),
+  contactPhone: v.optional(v.string()),
+  createdAt: v.number(),
+  password: v.optional(v.string()),
+  activeSessionId: v.optional(v.string()),
+}).index('by_email', ['email']),
 
   siteContent: defineTable({
     key: v.union(v.literal('wildlife'), v.literal('news')),
