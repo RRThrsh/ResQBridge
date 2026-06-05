@@ -82,7 +82,7 @@ if (!latestReport) {
           <div className="space-y-3 text-sm">
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground shrink-0">Tracking ID</span>
-              <span className="font-mono text-foreground text-right">{latestReport._id.slice(-8).toUpperCase()}</span>
+              <span className="font-mono text-foreground text-right">{latestReport.id.slice(-8).toUpperCase()}</span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground shrink-0">Type</span>
