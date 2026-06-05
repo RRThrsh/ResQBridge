@@ -86,7 +86,14 @@ export const listPublicDomestic = query({
 
 export const listByUserEmail = query({
   args: { userEmail: v.string() },
-  returns: v.array(reportDocValidator),
+  returns: v.array(
+  v.object({
+    ...reportDocValidator.fields,
+
+    reporterFirstName: v.optional(v.string()),
+    reporterLastName: v.optional(v.string()),
+  }),
+),
   handler: async (ctx, args) => {
     const userEmail = normalizeEmail(args.userEmail)
     const rows = await ctx.db

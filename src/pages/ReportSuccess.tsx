@@ -27,11 +27,38 @@ export function ReportSuccess() {
     )
   }
 
-  const latestReport = rows[0] ? docToStored(rows[0]) : null
+ let latestReport = null
 
-  if (!latestReport) {
-    return <Navigate to="/" replace />
-  }
+try {
+  latestReport =
+    rows && rows.length > 0
+      ? docToStored(rows[0])
+      : null
+} catch (error) {
+  console.error('Failed to parse latest report:', error)
+}
+
+if (!latestReport) {
+  return (
+    <div className="min-h-screen pt-32 pb-20 flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-lg font-semibold text-foreground mb-2">
+          No Report Found
+        </p>
+
+        <p className="text-sm text-muted-foreground mb-6">
+          Your report may still be processing.
+        </p>
+
+        <Link to="/">
+          <Button>
+            Return Home
+          </Button>
+        </Link>
+      </div>
+    </div>
+  )
+}
 
   return (
     <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center">
@@ -55,7 +82,7 @@ export function ReportSuccess() {
           <div className="space-y-3 text-sm">
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground shrink-0">Tracking ID</span>
-              <span className="font-mono text-foreground text-right">{latestReport.id.slice(-8).toUpperCase()}</span>
+              <span className="font-mono text-foreground text-right">{latestReport._id.slice(-8).toUpperCase()}</span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground shrink-0">Type</span>
