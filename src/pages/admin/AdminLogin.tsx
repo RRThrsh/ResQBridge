@@ -115,8 +115,6 @@ async function handleVerifyResetOtp() {
       forgotOtp,
     )
 
-    setOtpVerified(true)
-
     toast.success('OTP verified successfully')
   } catch (error) {
     toast.error(
@@ -385,7 +383,6 @@ async function handleVerifyResetOtp() {
       setForgotOtp('')
       setNewPassword('')
       setConfirmPassword('')
-      setOtpVerified(false)
     }}
   >
     Back to Login
