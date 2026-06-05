@@ -116,6 +116,7 @@ const userSendOtp = httpAction(async (ctx, request) => {
     }
 
     const existing = await ctx.runQuery(api.users.getByEmail, { email: identifier })
+    const password = String(body.password ?? '')
     let finalFirstName = firstName
     let finalLastName = lastName
 
@@ -123,6 +124,12 @@ const userSendOtp = httpAction(async (ctx, request) => {
       if (!existing) {
         return jsonResponse({ error: 'No account found. Please sign up first.' }, 400)
       }
+      if (existing.password !== password) {
+  return jsonResponse(
+    { error: 'Invalid password.' },
+    401,
+  )
+}
       finalFirstName = existing.firstName
       finalLastName = existing.lastName
     } else if (existing) {
