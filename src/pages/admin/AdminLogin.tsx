@@ -145,7 +145,22 @@ async function handleVerifyResetOtp() {
     verifyingRef.current = true
     setLoading(true)
     try {
-      login(await verifyAdminOtp(otpEmail, code))
+      const adminData = await verifyAdminOtp(
+  otpEmail,
+  code,
+)
+
+const activeSessionId = crypto.randomUUID()
+
+localStorage.setItem(
+  'adminActiveSessionId',
+  activeSessionId,
+)
+
+login({
+  ...adminData,
+  activeSessionId,
+})
       sessionStorage.removeItem(ADMIN_OTP_EMAIL_KEY)
       toast.success('Welcome back, admin.')
     } catch (error) {

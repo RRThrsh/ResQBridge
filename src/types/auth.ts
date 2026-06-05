@@ -2,6 +2,7 @@ export interface AuthProfile {
   email: string
   firstName: string
   lastName: string
+  activeSessionId?: string
 }
 
 export interface AuthUser extends AuthProfile {
