@@ -1,4 +1,3 @@
-```tsx
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { Loader2 } from 'lucide-react'
@@ -325,4 +324,3 @@ export function AdminDomesticApproverDialog({
     </Dialog>
   )
 }
-```
