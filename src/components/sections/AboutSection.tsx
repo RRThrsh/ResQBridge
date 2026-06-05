@@ -95,7 +95,8 @@ const features = [
 
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 relative z-10">
                 <p className="text-amber-500 text-xs leading-relaxed font-medium">
-                  <strong>Note:</strong> PWRCC does not accept cash donations. We gladly welcome in-kind donations to help care for our rescued animals.
+                  <strong>Note:</strong> Our partner rescue organizations do not accept cash donations. In-kind donations are greatly appreciated for the care of rescued animals.
+
                 </p>
               </div>
 
