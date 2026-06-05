@@ -1,7 +1,7 @@
 import { internalAction } from './_generated/server'
 import { v } from 'convex/values'
 import { Resend } from 'resend'
-
+import { internal } from './_generated/api'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export const alertAdmin = internalAction({
@@ -18,17 +18,33 @@ export const alertAdmin = internalAction({
       // =========================
       // EMAIL NOTIFICATION
       // =========================
-      await resend.emails.send({
-        from: 'ResQBridge <onboarding@resend.dev>',
-        to: 'vinsainttt99@gmail.com',
-        subject: 'New Domestic Report Submitted',
-        html: `
-          <h2>New Report Submitted</h2>
-          <p><strong>Animal:</strong> ${args.species}</p>
-          <p><strong>Location:</strong> ${args.location}</p>
-          <p><strong>Report ID:</strong> ${args.reportId}</p>
-        `,
-      })
+// =========================
+// GET ALL ADMINS
+// =========================
+const admins = await _ctx.runQuery(internal.users.getAdmins)
+
+const adminEmails = admins
+  .map((admin) => admin.email)
+  .filter(Boolean)
+
+if (adminEmails.length === 0) {
+  throw new Error('No admin emails found.')
+}
+
+// =========================
+// EMAIL NOTIFICATION
+// =========================
+await resend.emails.send({
+  from: 'ResQBridge <onboarding@resend.dev>',
+  to: adminEmails,
+  subject: 'New Domestic Report Submitted',
+  html: `
+    <h2>New Report Submitted</h2>
+    <p><strong>Animal:</strong> ${args.species}</p>
+    <p><strong>Location:</strong> ${args.location}</p>
+    <p><strong>Report ID:</strong> ${args.reportId}</p>
+  `,
+})
 
       console.log('Admin email sent successfully.')
 

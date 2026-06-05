@@ -12,6 +12,16 @@ const userProfileValidator = v.object({
   role: v.literal('user'),
 })
 
+export const getAdmins = query({
+  args: {},
+
+  handler: async (ctx) => {
+    return await ctx.db
+      .query('users')
+      .filter((q) => q.eq(q.field('role'), 'admin'))
+      .collect()
+  },
+})
 export const getByEmail = query({
   args: { email: v.string() },
   returns: v.union(userProfileValidator, v.null()),
