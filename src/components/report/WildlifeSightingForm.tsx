@@ -176,7 +176,7 @@ export function WildlifeSightingForm() {
     behaviorOther: '',
     reporterPhone: '',
     quantity: '1',
-    reportedSize: '',
+    reportedSize: '' as string,
     seenAt: '',
   })
 
@@ -347,7 +347,12 @@ useEffect(() => {
           </label>
           <Input
             value={formData.species}
-            onChange={(e) => setFormData({ ...formData, species: e.target.value })}
+onChange={(e) =>
+  setFormData({
+    ...formData,
+    species: e.target.value,
+  })
+}
             placeholder="e.g. Palawan Bearcat, Philippine Cockatoo"
             className="h-12 bg-background border-border rounded-xl"
             required
@@ -446,12 +451,17 @@ useEffect(() => {
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Reported Size
             </label>
-            <Input
-              value={formData.reportedSize}
-              onChange={(e) => setFormData({ ...formData, reportedSize: e.target.value })}
-              placeholder="e.g. Small, medium"
-              className="h-12 bg-background border-border rounded-xl"
-            />
+<Input
+  value={formData.reportedSize || ''}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      reportedSize: e.target.value,
+    })
+  }
+  placeholder="e.g. Small, medium"
+  className="h-12 bg-background border-border rounded-xl"
+/>
           </div>
         </div>
 

@@ -467,7 +467,10 @@ const userContactPhone = profile?.contactPhone;
   <Select
     value={formData.reportedSize}
     onValueChange={(value) =>
-      setFormData({ ...formData, reportedSize: value })
+      setFormData({
+  ...formData,
+  reportedSize: value ?? '',
+})
     }
   >
     <SelectTrigger className="h-12 bg-background border-border rounded-xl">
