@@ -1,5 +1,5 @@
 export const DEFAULT_ADMIN = {
-  email: 'ralphbandahala05@gmail.com',
+  email: 'dwarms.official@gmail.com',
   firstName: 'Ralph',
   lastName: 'vincent',
   // Add a strong initial password here. 
