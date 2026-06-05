@@ -578,6 +578,21 @@ async function assignRescuerToReportHandler(
     ...(status === 'pending' ? { status: 'accepted' as const } : {}),
     assignedRescuerEmail: rescuerEmail,
   })
+
+  // =========================
+  // NOTIFY RESCUER
+  // =========================
+  await ctx.scheduler.runAfter(
+    0,
+    internal.notifications.notifyRescuer,
+    {
+      rescuerEmail: rescuer.email,
+      rescuerPhone: rescuer.contactPhone ?? '',
+      animalName: doc.animalName,
+      location: doc.location,
+      reportNumber: doc.reportNumber ?? '',
+    }
+  )
 }
 
 export const assignRescuerToReport = mutation({

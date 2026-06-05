@@ -40,10 +40,13 @@ if (adminEmails.length === 0) {
 // =========================
 // EMAIL NOTIFICATION
 // =========================
-await resend.emails.send({
+
+console.log('ADMIN EMAILS:', adminEmails)
+
+const emailResult = await resend.emails.send({
   from: 'ResQBridge <onboarding@resend.dev>',
-  to: adminEmails,
-  subject: 'New Domestic Report Submitted',
+  to: ['vinsainttt99@gmail.com'],
+  subject: 'New Wildlife Report Submitted',
   html: `
     <h2>New Report Submitted</h2>
     <p><strong>Animal:</strong> ${args.species}</p>
@@ -52,7 +55,7 @@ await resend.emails.send({
   `,
 })
 
-      console.log('Admin email sent successfully.')
+console.log('EMAIL RESULT:', emailResult)
 
       // =========================
       // SMS NOTIFICATION
@@ -69,7 +72,8 @@ await resend.emails.send({
       } else {
         formattedPhone = '+' + cleanNumber
       }
-
+      console.log('PHILSMS TOKEN EXISTS:', !!process.env.PHILSMS_API_TOKEN)
+console.log('FORMATTED PHONE:', formattedPhone)
       const response = await fetch(
         'https://dashboard.philsms.com/api/v3/sms/send',
         {
@@ -81,11 +85,10 @@ await resend.emails.send({
             Accept: 'application/json',
           },
           body: JSON.stringify({
-            recipient: formattedPhone,
-            sender_id: 'PhilSMS', // <-- CHANGED from 'sender' to 'sender_id'
+            recipient: formattedPhone.replace('+', ''),
+            sender_id: 'PhilSMS',
             type: 'plain',
-            // FIX: Restored backticks here
-            message: `New Wildlife Report Submitted\n\nAnimal: ${args.species}\nLocation: ${args.location}`,
+            message: 'New Report Submitted. Please check now.',
           }),
         }
       )
@@ -101,6 +104,78 @@ await resend.emails.send({
       
     } catch (error: any) {
       console.error('NOTIFICATION ERROR:', error.message || error)
+    }
+  },
+})
+export const notifyRescuer = internalAction({
+  args: {
+    rescuerEmail: v.string(),
+    rescuerPhone: v.optional(v.string()),
+    animalName: v.string(),
+    location: v.string(),
+    reportNumber: v.string(),
+  },
+
+  handler: async (_ctx, args) => {
+    try {
+      console.log('NOTIFY RESCUER TRIGGERED')
+
+      // =========================
+      // EMAIL
+      // =========================
+      const emailResult = await resend.emails.send({
+        from: 'ResQBridge <onboarding@resend.dev>',
+        to: [args.rescuerEmail],
+        subject: 'New Rescue Assignment',
+        html: `
+          <h2>New Rescue Assignment</h2>
+
+          <p><strong>Report Number:</strong> ${args.reportNumber}</p>
+
+          <p><strong>Animal:</strong> ${args.animalName}</p>
+
+          <p><strong>Location:</strong> ${args.location}</p>
+
+          <p>Please check now.</p>
+        `,
+      })
+
+      console.log('RESCUER EMAIL RESULT:', emailResult)
+
+      // =========================
+      // SMS
+      // =========================
+      if (args.rescuerPhone) {
+        const cleanPhone = args.rescuerPhone.replace(/\D/g, '')
+
+        const response = await fetch(
+          'https://dashboard.philsms.com/api/v3/sms/send',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.PHILSMS_API_TOKEN}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+
+            body: JSON.stringify({
+              recipient: cleanPhone,
+              sender_id: 'PhilSMS',
+              type: 'plain',
+              message: 'New Rescue Assignment. Please check now.',
+            }),
+          }
+        )
+
+        const result = await response.json()
+
+        console.log('RESCUER SMS RESULT:', result)
+      }
+    } catch (error: any) {
+      console.error(
+        'RESCUER NOTIFICATION ERROR:',
+        error.message || error
+      )
     }
   },
 })
