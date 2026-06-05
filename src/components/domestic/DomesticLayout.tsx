@@ -82,7 +82,7 @@ export function DomesticLayout({
           </div>
 
 <div className="flex shrink-0 items-center gap-1">
-  {!backTo && !onProfilePage ? (
+  {!onProfilePage && (
     <Link
       to="/pwrcc/domestic/profile"
       className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -90,7 +90,7 @@ export function DomesticLayout({
     >
       <UserCircle className="h-4 w-4" />
     </Link>
-  ) : null}
+  )}
 
   <ThemeToggle size="sm" />
 
