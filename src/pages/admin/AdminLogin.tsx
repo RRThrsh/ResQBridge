@@ -176,15 +176,14 @@ async function handleVerifyResetOtp() {
 
   try {
     await resetPassword({
-      adminEmail: forgotEmail.trim().toLowerCase()
-      targetEmail: forgotEmail.trim().toLowerCase()
+      adminEmail: forgotEmail.trim().toLowerCase(),
+      targetEmail: forgotEmail.trim().toLowerCase(),
       otpCode: forgotOtp,
       newPassword,
     })
 
     toast.success('Password reset successful')
 
-    setForgotMode(false)
     setForgotOtp('')
     setNewPassword('')
     setConfirmPassword('')
