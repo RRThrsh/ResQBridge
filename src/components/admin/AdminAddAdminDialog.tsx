@@ -26,16 +26,24 @@ export function AdminAddAdminDialog({ adminEmail, open, onOpenChange }: Props) {
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [password, setPassword] = useState('') // Added password state
   const [saving, setSaving] = useState(false)
 
   function resetForm() {
     setEmail('')
     setFirstName('')
     setLastName('')
+    setPassword('')
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters long')
+      return
+    }
+
     setSaving(true)
     try {
       await addAdmin({
@@ -43,8 +51,9 @@ export function AdminAddAdminDialog({ adminEmail, open, onOpenChange }: Props) {
         email: normalizeEmail(email),
         firstName,
         lastName,
+        password, // Pass the new password to Convex
       })
-      toast.success('Admin added. They can sign in with OTP using that email.')
+      toast.success('Admin added. Provide them with their password.')
       resetForm()
       onOpenChange(false)
     } catch (error) {
@@ -66,8 +75,7 @@ export function AdminAddAdminDialog({ adminEmail, open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle>Add admin</DialogTitle>
           <DialogDescription>
-            Grant admin access to a new email. They will sign in with a one-time code sent to
-            that address.
+            Grant admin access to a new email. They will need this password and a one-time code to sign in.
           </DialogDescription>
         </DialogHeader>
 
@@ -95,6 +103,18 @@ export function AdminAddAdminDialog({ adminEmail, open, onOpenChange }: Props) {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               required
+            />
+          </div>
+          
+          {/* New Password Field */}
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">Initial Password</label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
             />
           </div>
 
