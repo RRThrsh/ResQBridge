@@ -11,7 +11,7 @@ import { DomesticReportsPage } from '@/pages/domestic/DomesticReportsPage'
 // ADDED THIS IMPORT:
 import { DomesticReportDetailPage } from '@/pages/domestic/DomesticReportDetailPage'
 import { Toaster } from '@/components/ui/sonner'
-
+import { DomesticProfilePage } from '@/pages/domestic/DomesticProfilePage'
 function DomesticGuard({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, domesticApprover, logout } = useDomesticAuth()
   
@@ -51,15 +51,20 @@ export function DomesticApp() {
     <>
       <Routes>
         <Route path="login" element={<DomesticLogin />} />
-        <Route
-          element={
-            <DomesticGuard>
-              <DomesticShell />
-            </DomesticGuard>
-          }
-        >
-          <Route index element={<DomesticReportsPage />} />
-        </Route>
+<Route
+  element={
+    <DomesticGuard>
+      <DomesticShell />
+    </DomesticGuard>
+  }
+>
+  <Route index element={<DomesticReportsPage />} />
+
+  <Route
+    path="profile"
+    element={<DomesticProfilePage />}
+  />
+</Route>
         
         {/* THIS IS NOW UNCOMMENTED AND ACTIVE! */}
         <Route
