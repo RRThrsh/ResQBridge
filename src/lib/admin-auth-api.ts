@@ -36,11 +36,13 @@ async function adminAuthFetch(
   }
 }
 
-export async function sendAdminOtp(email: string): Promise<void> {
+// UPDATE: Added password parameter to fix the TS2554 error
+export async function sendAdminOtp(email: string, password?: string): Promise<void> {
   const normalizedEmail = normalizeEmail(email)
 
   const response = await adminAuthFetch('/api/admin/auth/send-otp', {
     email: normalizedEmail,
+    password, // Pass the password to your custom auth endpoint
   })
 
   if (!response.ok) {
