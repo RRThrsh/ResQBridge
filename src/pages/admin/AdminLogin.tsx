@@ -181,9 +181,13 @@ async function handleVerifyResetOtp() {
 
     toast.success('Password reset successful')
 
-    setForgotOtp('')
-    setNewPassword('')
-    setConfirmPassword('')
+setForgotStep(null)
+setForgotEmail('')
+setForgotOtp('')
+setNewPassword('')
+setConfirmPassword('')
+
+setStep('credentials')
   } catch (error) {
     toast.error(
       error instanceof Error
