@@ -36,12 +36,20 @@ async function rescuerAuthFetch(
   }
 }
 
-export async function sendRescuerOtp(email: string): Promise<void> {
+export async function sendRescuerOtp(
+  email: string,
+  password?: string,
+): Promise<void> {
+
   const normalizedEmail = normalizeEmail(email)
 
-  const response = await rescuerAuthFetch('/api/rescuer/auth/send-otp', {
+const response = await rescuerAuthFetch(
+  '/api/rescuer/auth/send-otp',
+  {
     email: normalizedEmail,
-  })
+    password,
+  },
+)
 
   if (!response.ok) {
     throw new Error(await parseAuthError(response))
