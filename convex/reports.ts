@@ -158,15 +158,17 @@ export const create = mutation({
     await ctx.db.patch(reportId, {
       reportNumber: generateReportNumber(reportId),
     })
-    await ctx.scheduler.runAfter(
-      0,
-      internal.notifications.alertAdmin,
-      {
-        reportId,
-        species: args.animalName,
-        location: args.location,
-      }
-    )
+if (args.category === 'wildlife') {
+  await ctx.scheduler.runAfter(
+    0,
+    internal.notifications.alertAdmin,
+    {
+      reportId,
+      species: args.animalName,
+      location: args.location,
+    }
+  )
+}
     return reportId
   },
 })

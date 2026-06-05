@@ -117,7 +117,7 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">
             © 2026 ResQBridge — Palawan Wildlife Rescue & Conservation Center
           </p>
-          <p className="text-xs text-muted-foreground">Made for Palawan wildlife 🌿</p>
+          {/* <p className="text-xs text-muted-foreground">Made for Palawan wildlife 🌿</p> */}
         </div>
       </div>
     </footer>
