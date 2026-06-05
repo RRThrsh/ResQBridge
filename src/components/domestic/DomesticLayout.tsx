@@ -81,30 +81,28 @@ export function DomesticLayout({
             </div>
           </div>
 
-{!onProfilePage ? (
-  <div className="flex shrink-0 items-center gap-1">
-    {!backTo ? (
-      <Link
-        to="/pwrcc/domestic/profile"
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        aria-label="My account"
-      >
-        <UserCircle className="h-4 w-4" />
-      </Link>
-    ) : null}
-
-    <ThemeToggle size="sm" />
-
-    <button
-      type="button"
-      onClick={() => setSignOutOpen(true)}
+<div className="flex shrink-0 items-center gap-1">
+  {!backTo && !onProfilePage ? (
+    <Link
+      to="/pwrcc/domestic/profile"
       className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      aria-label="Sign out"
+      aria-label="My account"
     >
-      <LogOut className="h-4 w-4" />
-    </button>
-  </div>
-) : null}
+      <UserCircle className="h-4 w-4" />
+    </Link>
+  ) : null}
+
+  <ThemeToggle size="sm" />
+
+  <button
+    type="button"
+    onClick={() => setSignOutOpen(true)}
+    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    aria-label="Sign out"
+  >
+    <LogOut className="h-4 w-4" />
+  </button>
+</div>
         </div>
 
         {subtitle ? (
