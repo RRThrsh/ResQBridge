@@ -827,38 +827,21 @@ export const resetAdminPasswordWithOtp = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    
-    const targetEmail = normalizeEmail(args.targetEmail)
-    const target = await getAdminByEmail(ctx, targetEmail)
-    
-    if (!target) {
-      throw new Error('Admin not found.')
-    }
+  const targetEmail = normalizeEmail(args.targetEmail)
 
-    // DEBUGGING: Log what we are looking for
-    console.log(`Searching for OTP. Email: ${targetEmail}, Scope: admin, Code Typed: ${args.otpCode}`)
+  const target = await getAdminByEmail(ctx, targetEmail)
 
-    const otpRecords = await ctx.db
-      .query('verificationCodes')
-      .filter((q) => q.eq(q.field('email'), targetEmail))
-      .collect()
+  if (!target) {
+    throw new Error('Admin not found.')
+  }
 
-    // DEBUGGING: Log what we actually found in the database
-    console.log("OTP Records found in database:", otpRecords)
+  if (args.newPassword.length < 8) {
+    throw new Error('Password must be at least 8 characters.')
+  }
 
-    const validRecord = otpRecords.find(
-      (r) => r.code === args.otpCode && r.expiresAt > Date.now()
-    )
+  await ctx.db.patch(target._id, {
+    password: args.newPassword,
+  })
 
-    if (!validRecord) {
-      console.error("Match Failed! Either the code is wrong, expired, or doesn't exist.")
-      // We use ConvexError here so the frontend can actually read the message!
-      throw new Error('Invalid or expired verification code.')
-    }
-
-    await ctx.db.patch(target._id, { password: args.newPassword })
-    await ctx.db.delete(validRecord._id)
-
-    return null
-  },
-})
+  return null
+}
