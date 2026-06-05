@@ -54,6 +54,7 @@ export const createUser = mutation({
     email: v.string(),
     firstName: v.string(),
     lastName: v.string(),
+    password: v.string(),
   },
   returns: userProfileValidator,
   handler: async (ctx, args) => {
@@ -92,6 +93,7 @@ export const createUser = mutation({
       email,
       firstName,
       lastName,
+      password: args.password,
       role: 'user',
       createdAt: Date.now(),
     })
@@ -205,5 +207,27 @@ export const updateProfile = mutation({
 
     // Return the updated data so the frontend syncs up perfectly
     return { email: finalEmailToSave, firstName, lastName, role: 'user' as const }
+  },
+})
+
+export const validateUserPassword = query({
+  args: {
+    email: v.string(),
+    password: v.string(),
+  },
+
+  returns: v.boolean(),
+
+  handler: async (ctx, args) => {
+    const email = normalizeEmail(args.email)
+
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .unique()
+
+    if (!user) return false
+
+    return user.password === args.password
   },
 })
