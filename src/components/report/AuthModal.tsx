@@ -45,6 +45,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const [firstName, setFirstName] = useState(emptyAuthForm.firstName)
   const [lastName, setLastName] = useState(emptyAuthForm.lastName)
   const [identifier, setIdentifier] = useState(emptyAuthForm.identifier)
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [code, setCode] = useState(emptyAuthForm.code)
   const [loading, setLoading] = useState(false)
   const [countdown, setCountdown] = useState(0)
@@ -58,7 +60,15 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       : normalizedId.replace(/\D/g, '').length >= 10
 
   const signUpReady = firstName.trim() && lastName.trim() && identifierValid
-  const signInReady = identifierValid
+  const passwordValid = password.length >= 8
+
+  const signUpReady =
+    firstName.trim() &&
+    lastName.trim() &&
+    identifierValid &&
+    passwordValid &&
+    password === confirmPassword
+  const signInReady = identifierValid && passwordValid
   const detailsReady = mode === 'sign-up' ? signUpReady : signInReady
   const otpReady = code.length === 6
 
@@ -73,6 +83,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     setStep('details')
     setCode('')
     setCountdown(0)
+    setPassword('')
+    setConfirmPassword('')
   }
 
   // Handle switching between Email/Phone (clears the input so they don't submit a phone number as an email)
@@ -101,7 +113,16 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       toast.error(`Enter a valid ${loginMethod === 'email' ? 'email' : 'phone number'}`)
       return
     }
+    if (password.length < 8) {
+  toast.error('Password must be at least 8 characters')
+  return
+}
 
+if (mode === 'sign-up' && password !== confirmPassword) {
+  toast.error('Passwords do not match')
+  return
+}  
+    
     if (submittingRef.current) return
     submittingRef.current = true
     setLoading(true)
@@ -111,6 +132,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
         mode,
         identifier: normalizedId,
         type: loginMethod, // Directly use the toggle state here
+        password,
         ...(mode === 'sign-up'
           ? { firstName: firstName.trim(), lastName: lastName.trim() }
           : {}),
@@ -232,6 +254,29 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             maxLength={loginMethod === 'phone' ? 11 : undefined} // THE FIX: Limits to 11 chars only on Phone mode
             required
           />
+          <Input
+  type="password"
+  placeholder="Password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  autoComplete={
+    mode === 'sign-up'
+      ? 'new-password'
+      : 'current-password'
+  }
+  required
+/>
+
+{mode === 'sign-up' && (
+  <Input
+    type="password"
+    placeholder="Confirm password"
+    value={confirmPassword}
+    onChange={(e) => setConfirmPassword(e.target.value)}
+    autoComplete="new-password"
+    required
+  />
+)}
           <SubmitButton loading={loading} disabled={!detailsReady}>
             Send code
           </SubmitButton>
