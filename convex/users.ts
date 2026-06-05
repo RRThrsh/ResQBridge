@@ -9,6 +9,7 @@ const userProfileValidator = v.object({
   email: v.string(),
   firstName: v.string(),
   lastName: v.string(),
+  password: v.optional(v.string()),
   role: v.literal('user'),
 })
 
@@ -85,6 +86,7 @@ export const createUser = mutation({
         email: existing.email,
         firstName: existing.firstName,
         lastName: existing.lastName,
+        password: user.password,
         role: 'user' as const,
       }
     }
