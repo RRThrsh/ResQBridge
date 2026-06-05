@@ -22,13 +22,22 @@ export function optionsResponse() {
 }
 
 export function getOtpSecret(): string {
-  const secret = process.env.OTP_INTERNAL_SECRET?.trim()
-  if (!secret) {
+  const secret =
+    process.env['OTP_INTERNAL_SECRET'] ||
+    process.env.OTP_INTERNAL_SECRET ||
+    ''
+
+  const trimmed = secret.trim()
+
+  if (!trimmed) {
+    console.log('Available env:', Object.keys(process.env))
+
     throw new Error(
       'OTP is not configured on the server. Set OTP_INTERNAL_SECRET in Convex environment variables.',
     )
   }
-  return secret
+
+  return trimmed
 }
 
 export async function readJsonBody(request: Request): Promise<Record<string, unknown>> {

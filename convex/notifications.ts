@@ -1,9 +1,39 @@
+'use node'
+
+import nodemailer from 'nodemailer'
 import { internalAction } from './_generated/server'
 import { v } from 'convex/values'
-import { Resend } from 'resend'
+function stripQuotes(value: string) {
+  return value.replace(/^["']|["']$/g, '').trim()
+}
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function resolveSmtpConfig() {
+  const user = stripQuotes(process.env.EMAIL_USER ?? '')
+  const pass = stripQuotes(process.env.EMAIL_PASS ?? '').replace(/\s+/g, '')
 
+  const isGmail = user.toLowerCase().endsWith('@gmail.com')
+
+  return {
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user,
+      pass,
+    },
+    fromName: 'Palawan Wildlife Rescue',
+    fromAddress: user,
+  }
+}
+
+const config = resolveSmtpConfig()
+
+const transporter = nodemailer.createTransport({
+  host: config.host,
+  port: config.port,
+  secure: config.secure,
+  auth: config.auth,
+})
 export const alertAdmin = internalAction({
   args: {
     reportId: v.id('reports'),
@@ -43,15 +73,15 @@ if (adminEmails.length === 0) {
 
 console.log('ADMIN EMAILS:', adminEmails)
 
-const emailResult = await resend.emails.send({
-  from: 'ResQBridge <onboarding@resend.dev>',
-  to: ['vinsainttt99@gmail.com'],
+const emailResult = await transporter.sendMail({
+  from: `"${config.fromName}" <${config.fromAddress}>`,
+  to: adminEmails,
   subject: 'New Wildlife Report Submitted',
   html: `
     <h2>New Report Submitted</h2>
     <p><strong>Animal:</strong> ${args.species}</p>
     <p><strong>Location:</strong> ${args.location}</p>
-    <p><strong>Report ID:</strong> ${args.reportId}</p>
+    
   `,
 })
 
@@ -123,9 +153,9 @@ export const notifyRescuer = internalAction({
       // =========================
       // EMAIL
       // =========================
-      const emailResult = await resend.emails.send({
-        from: 'ResQBridge <onboarding@resend.dev>',
-        to: [args.rescuerEmail],
+        const emailResult = await transporter.sendMail({
+          from: `"${config.fromName}" <${config.fromAddress}>`,
+          to: args.rescuerEmail,
         subject: 'New Rescue Assignment',
         html: `
           <h2>New Rescue Assignment</h2>
@@ -159,7 +189,7 @@ export const notifyRescuer = internalAction({
             },
 
             body: JSON.stringify({
-              recipient: cleanPhone,
+              recipient: '+63' + cleanPhone.substring(1),
               sender_id: 'PhilSMS',
               type: 'plain',
               message: 'New Rescue Assignment. Please check now.',

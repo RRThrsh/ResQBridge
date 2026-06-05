@@ -18,7 +18,11 @@ export function HeroSection({ onReportClick }: { onReportClick: () => void }) {
         {/* Eyebrow */}
         <div className="animate-fade-up mb-8 flex justify-center">
           <Badge variant="outline" className="gap-1.5 border-primary/20 bg-primary/5 text-primary text-xs font-medium px-3 py-1 rounded-full">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse inline-block" />
+            <img
+  src="/resq.png"
+  alt="PWRRC Logo"
+  className="h-4 w-4 object-contain"
+/>
             Palawan Wildlife Rescue & Conservation Center
           </Badge>
         </div>
