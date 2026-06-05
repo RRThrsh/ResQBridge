@@ -287,7 +287,7 @@ export function RescuerLogin() {
 
     try {
       await convex.mutation(
-        api.rescuers.resetRescuerPassword
+        api.rescuers.resetRescuerPassword,
         {
           email: forgotIdentifier,
           newPassword,
