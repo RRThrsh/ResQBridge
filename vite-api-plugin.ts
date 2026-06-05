@@ -481,6 +481,7 @@ async function handleUserVerifyOtp(
   email: string,
   code: string,
   mode: AuthMode,
+  password: string,
 ) {
   try {
     const convex = getConvexClientForOtp(options.otpEnv)
@@ -506,10 +507,11 @@ async function handleUserVerifyOtp(
     let user: { email: string; firstName: string; lastName: string; role: 'user' }
     if (mode === 'sign-up') {
       user = await convex.mutation(api.users.createUser, {
-        email,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-      })
+  email,
+  firstName: profile.firstName,
+  lastName: profile.lastName,
+  password,
+})
     } else {
       const existing = await convex.query(api.users.getByEmail, { email })
       if (!existing) {
@@ -680,7 +682,16 @@ async function handleApi(
         .toLowerCase()
       const code = String(body.code ?? '').trim()
       const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
-      await handleUserVerifyOtp(res, options, email, code, mode)
+      const password = String(body.password ?? '')
+
+await handleUserVerifyOtp(
+  res,
+  options,
+  email,
+  code,
+  mode,
+  password,
+)
       return true
     } catch (error) {
       console.error('user verify-otp error:', error)
