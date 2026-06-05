@@ -1,6 +1,25 @@
 import type { AuthUser } from '@/types/auth'
 import { normalizeEmail } from '@/lib/admin'
 import { getAuthApiUrl, parseAuthError } from '@/lib/auth-api-base'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '../../convex/_generated/api'
+
+const convex = new ConvexHttpClient(
+  import.meta.env.VITE_CONVEX_URL,
+)
+
+export async function resetUserPassword(
+  email: string,
+  newPassword: string,
+) {
+  return await convex.mutation(
+    api.users.resetUserPassword,
+    {
+      email,
+      newPassword,
+    },
+  )
+}
 
 export type AuthMode = 'sign-in' | 'sign-up'
 
