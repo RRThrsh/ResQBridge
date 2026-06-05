@@ -13,9 +13,15 @@ import { getRescuerByEmail } from './lib/rescuerAccess'
 const userRoleValidator = v.optional(v.union(v.literal('admin'), v.literal('user'), v.literal('rescuer'), v.literal('domestic_approver')))
 
 const userDocValidator = v.object({
-  _id: v.id('users'), _creationTime: v.number(), email: v.string(),
-  firstName: v.string(), lastName: v.string(), role: userRoleValidator,
-  contactPhone: v.optional(v.string()), createdAt: v.number(),
+  _id: v.id('users'),
+  _creationTime: v.number(),
+  email: v.string(),
+  firstName: v.string(),
+  lastName: v.string(),
+  password: v.optional(v.string()),
+  role: userRoleValidator,
+  contactPhone: v.optional(v.string()),
+  createdAt: v.number(),
 })
 
 const adminReportDocValidator = v.object({
