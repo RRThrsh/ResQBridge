@@ -43,15 +43,26 @@ async function domesticAuthFetch(
   }
 }
 
-export async function sendDomesticOtp(email: string): Promise<void> {
-  const normalizedEmail = normalizeEmail(email)
+export async function sendDomesticOtp(
+  identifier: string,
+  password?: string,
+): Promise<void> {
+  const normalized =
+    normalizeEmail(identifier)
 
-  const response = await domesticAuthFetch('/api/domestic/auth/send-otp', {
-    email: normalizedEmail,
-  })
+  const response =
+    await domesticAuthFetch(
+      '/api/domestic/auth/send-otp',
+      {
+        email: normalized,
+        password,
+      },
+    )
 
   if (!response.ok) {
-    throw new Error(await parseAuthError(response))
+    throw new Error(
+      await parseAuthError(response),
+    )
   }
 }
 
