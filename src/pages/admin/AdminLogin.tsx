@@ -36,7 +36,6 @@ export function AdminLogin() {
   const [forgotOtp, setForgotOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [otpVerified, setOtpVerified] = useState(false)
   const verifyingRef = useRef(false)
 
   useEffect(() => {
