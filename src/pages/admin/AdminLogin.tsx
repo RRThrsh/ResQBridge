@@ -33,6 +33,7 @@ export function AdminLogin() {
   const [forgotOtp, setForgotOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [otpVerified, setOtpVerified] = useState(false)
   const verifyingRef = useRef(false)
 
   useEffect(() => {
@@ -101,6 +102,28 @@ export function AdminLogin() {
   }
 }
   
+async function handleVerifyResetOtp() {
+  if (forgotOtp.length !== 6) {
+    toast.error('Enter valid OTP code')
+    return
+  }
+
+  setLoading(true)
+
+  try {
+    await verifyAdminOtp(email.trim().toLowerCase(), forgotOtp)
+    setOtpVerified(true)
+    toast.success('OTP verified successfully')
+  } catch (error) {
+    toast.error(
+      error instanceof Error ? error.message : 'Invalid OTP code',
+    )
+  } finally {
+    setLoading(false)
+  }
+}
+
+  
   async function verifyCode(e: React.FormEvent) {
     e.preventDefault()
     if (code.length !== 6 || verifyingRef.current) return
@@ -132,11 +155,6 @@ export function AdminLogin() {
 
   async function handleResetPassword(e: React.FormEvent) {
   e.preventDefault()
-
-  if (forgotOtp.length !== 6) {
-    toast.error('Enter valid OTP code')
-    return
-  }
 
   if (newPassword !== confirmPassword) {
     toast.error('Passwords do not match')
@@ -250,73 +268,82 @@ export function AdminLogin() {
               </form>
             ) : forgotMode ? (
 
-  <form onSubmit={handleResetPassword} className="space-y-4">
-    <p className="text-sm text-muted-foreground">
-      Enter the reset code sent to{' '}
-      <span className="text-foreground">{email}</span>
-    </p>
+<form onSubmit={handleResetPassword} className="space-y-4">
+  <p className="text-sm text-muted-foreground">
+    Enter the reset code sent to{' '}
+    <span className="text-foreground">{email}</span>
+  </p>
 
-```
-<Input
-  inputMode="numeric"
-  maxLength={6}
-  value={forgotOtp}
-  onChange={(e) =>
-    setForgotOtp(
-      e.target.value.replace(/\D/g, '').slice(0, 6),
-    )
-  }
-  placeholder="000000"
-  required
-  className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary text-center text-lg tracking-[0.3em]"
-/>
+  {!otpVerified ? (
+    <>
+      <Input
+        inputMode="numeric"
+        maxLength={6}
+        value={forgotOtp}
+        onChange={(e) =>
+          setForgotOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
+        }
+        placeholder="000000"
+        required
+        className="bg-card text-foreground border-border text-center text-lg tracking-[0.3em]"
+      />
 
-<Input
-  type="password"
-  placeholder="New Password"
-  value={newPassword}
-  onChange={(e) => setNewPassword(e.target.value)}
-  required
-  className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
-/>
-
-<Input
-  type="password"
-  placeholder="Confirm New Password"
-  value={confirmPassword}
-  onChange={(e) => setConfirmPassword(e.target.value)}
-  required
-  className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
-/>
-
-<Button
-  type="submit"
-  className="w-full"
-  disabled={loading}
->
-  {loading ? (
-    <Loader2 className="h-4 w-4 animate-spin" />
+      <Button
+        type="button"
+        className="w-full"
+        disabled={loading || forgotOtp.length !== 6}
+        onClick={handleVerifyResetOtp}
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          'Verify OTP'
+        )}
+      </Button>
+    </>
   ) : (
-    'Reset Password'
+    <>
+      <Input
+        type="password"
+        placeholder="New Password"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        required
+      />
+
+      <Input
+        type="password"
+        placeholder="Confirm New Password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        required
+      />
+
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          'Reset Password'
+        )}
+      </Button>
+    </>
   )}
-</Button>
 
-<Button
-  type="button"
-  variant="ghost"
-  className="w-full"
-  onClick={() => {
-    setForgotMode(false)
-    setForgotOtp('')
-    setNewPassword('')
-    setConfirmPassword('')
-  }}
->
-  Back to Login
-</Button>
-```
-
-  </form>
+  <Button
+    type="button"
+    variant="ghost"
+    className="w-full"
+    onClick={() => {
+      setForgotMode(false)
+      setForgotOtp('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setOtpVerified(false)
+    }}
+  >
+    Back to Login
+  </Button>
+</form>
 ) : (
 
               <form onSubmit={verifyCode} className="space-y-4">
