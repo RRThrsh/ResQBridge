@@ -62,20 +62,6 @@ export function HeroSection({ onReportClick }: { onReportClick: () => void }) {
         </div>
 
         {/* Stat strip */}
-        <div className="animate-fade-up delay-500 mt-16 flex items-center justify-center gap-10 sm:gap-16">
-          {[
-            { value: '8+', label: 'Species monitored' },
-            { value: '24 / 7', label: 'Emergency response' },
-            { value: '100 %', label: 'Free service' },
-          ].map(s => (
-            <div key={s.label} className="text-center">
-              <p className="text-2xl font-black text-foreground tabular-nums" style={{ fontFamily: 'var(--font-heading)' }}>
-                {s.value}
-              </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">{s.label}</p>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Bottom fade */}

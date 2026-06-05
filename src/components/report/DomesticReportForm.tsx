@@ -481,7 +481,6 @@ const userContactPhone = profile?.contactPhone;
       <SelectItem value="small">Small</SelectItem>
       <SelectItem value="medium">Medium</SelectItem>
       <SelectItem value="large">Large</SelectItem>
-      <SelectItem value="extra-large">Extra Large</SelectItem>
     </SelectContent>
   </Select>
 </div>
