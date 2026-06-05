@@ -1,6 +1,5 @@
 import { httpRouter } from 'convex/server'
-import { httpAction } from './_generated/server'
-import type { ActionCtx } from './_generated/server'
+import { httpAction, type ActionCtx } from './_generated/server'
 import { api, internal } from './_generated/api'
 import { normalizeEmail } from './lib/admins'
 import { generateOtp } from './lib/generateOtp'
@@ -21,13 +20,7 @@ const OTP_TTL_MS = 5 * 60 * 1000
 // --- EMAIL SENDER ---
 async function sendOtpEmail(
   ctx: ActionCtx,
-  args: {
-    email: string
-    firstName: string
-    lastName: string
-    subject: string
-    code: string
-  },
+  args: { email: string; firstName: string; lastName: string; subject: string; code: string }
 ) {
   await ctx.runAction(internal.email.sendVerificationEmail, {
     to: args.email,
@@ -37,8 +30,8 @@ async function sendOtpEmail(
   })
 }
 
-// --- NEW: SMS SENDER VIA PHILSMS ---
-async function sendOtpSms(_phone: string, code: string) { // <-- Added underscore here
+// --- SMS SENDER VIA PHILSMS ---
+async function sendOtpSms(_phone: string, code: string) {
   // 1. HARDCODED NOTIFICATION NUMBER
   // We are ignoring the 'phone' argument so all texts go to this exact number
   let cleanNumber = '09539814023'.replace(/\D/g, '')
@@ -86,34 +79,26 @@ async function sendOtpSms(_phone: string, code: string) { // <-- Added underscor
   }
 }
 
-// --- UPDATED: USER SEND OTP ---
+// --- USER SEND OTP ---
 const userSendOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
     
-    // Extract the new payload variables coming from our React frontend
     const identifier = String(body.identifier ?? '').trim()
     const type = body.type === 'phone' ? 'phone' : 'email'
     const mode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
     const firstName = String(body.firstName ?? '').trim()
     const lastName = String(body.lastName ?? '').trim()
 
-    if (!identifier) {
-      return jsonResponse({ error: 'An email or phone number is required.' }, 400)
-    }
+    if (!identifier) return jsonResponse({ error: 'An email or phone number is required.' }, 400)
 
     const secret = getOtpSecret()
 
-    // We use the identifier as the "email" in the DB to avoid breaking your schema
     const isAdmin = await ctx.runQuery(api.admin.isAdmin, { email: identifier })
-    if (isAdmin) {
-      return jsonResponse({ error: 'This contact is for admin access only.' }, 400)
-    }
+    if (isAdmin) return jsonResponse({ error: 'This contact is for admin access only.' }, 400)
 
     const isRescuer = await ctx.runQuery(api.rescuers.isRescuer, { email: identifier })
-    if (isRescuer) {
-      return jsonResponse({ error: 'This contact is for rescuer access only.' }, 400)
-    }
+    if (isRescuer) return jsonResponse({ error: 'This contact is for rescuer access only.' }, 400)
 
     const existing = await ctx.runQuery(api.users.getByEmail, { email: identifier })
     const password = String(body.password ?? '')
@@ -121,18 +106,10 @@ const userSendOtp = httpAction(async (ctx, request) => {
     let finalLastName = lastName
 
     if (mode === 'sign-in') {
-      if (!existing) {
-        return jsonResponse({ error: 'No account found. Please sign up first.' }, 400)
+      if (!existing) return jsonResponse({ error: 'No account found. Please sign up first.' }, 400)
+      if (password !== 'reset-temp' && existing.password !== password) {
+        return jsonResponse({ error: 'Invalid password.' }, 401)
       }
-      if (
-  password !== 'reset-temp' &&
-  existing.password !== password
-) {
-  return jsonResponse(
-    { error: 'Invalid password.' },
-    401,
-  )
-}
       finalFirstName = existing.firstName
       finalLastName = existing.lastName
     } else if (existing) {
@@ -142,7 +119,7 @@ const userSendOtp = httpAction(async (ctx, request) => {
     const code = generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
       secret,
-      email: identifier, // Save the phone/email to the DB
+      email: identifier,
       scope: 'user',
       code,
       firstName: finalFirstName,
@@ -152,9 +129,7 @@ const userSendOtp = httpAction(async (ctx, request) => {
     })
 
     try {
-      // THE MAGIC SWITCH
       if (type === 'phone') {
-        // No ctx needed here since we are using process.env!
         await sendOtpSms(identifier, code)
       } else {
         await sendOtpEmail(ctx, {
@@ -166,11 +141,7 @@ const userSendOtp = httpAction(async (ctx, request) => {
         })
       }
     } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, {
-        secret,
-        email: identifier,
-        scope: 'user',
-      })
+      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email: identifier, scope: 'user' })
       return jsonResponse({ error: formatHandlerError(error) }, 500)
     }
 
@@ -180,7 +151,7 @@ const userSendOtp = httpAction(async (ctx, request) => {
   }
 })
 
-// --- UPDATED: USER VERIFY OTP ---
+// --- USER VERIFY OTP ---
 const userVerifyOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
@@ -189,51 +160,32 @@ const userVerifyOtp = httpAction(async (ctx, request) => {
     const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
     const password = String(body.password ?? '')
 
-    if (!identifier) {
-      return jsonResponse({ error: 'Please enter a valid email or phone number.' }, 400)
-    }
+    if (!identifier) return jsonResponse({ error: 'Please enter a valid email or phone number.' }, 400)
 
     const secret = getOtpSecret()
 
     const isAdmin = await ctx.runQuery(api.admin.isAdmin, { email: identifier })
-    if (isAdmin) {
-      return jsonResponse({ error: 'This contact is for admin access only.' }, 400)
-    }
+    if (isAdmin) return jsonResponse({ error: 'This contact is for admin access only.' }, 400)
 
     const isRescuer = await ctx.runQuery(api.rescuers.isRescuer, { email: identifier })
-    if (isRescuer) {
-      return jsonResponse({ error: 'This contact is for rescuer access only.' }, 400)
-    }
+    if (isRescuer) return jsonResponse({ error: 'This contact is for rescuer access only.' }, 400)
 
     const profile = await ctx.runMutation(api.otp.validateVerificationCode, {
-      secret,
-      email: identifier,
-      scope: 'user',
-      code,
-      mode,
+      secret, email: identifier, scope: 'user', code, mode,
     })
 
-    let user: { email: string; firstName: string; lastName: string; role: 'user' }
+    let user
     if (mode === 'sign-up') {
       user = await ctx.runMutation(api.users.createUser, {
-        email: identifier,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        password,
+        email: identifier, firstName: profile.firstName, lastName: profile.lastName, password,
       })
     } else {
       const existing = await ctx.runQuery(api.users.getByEmail, { email: identifier })
-      if (!existing) {
-        return jsonResponse({ error: 'No account found. Please sign up first.' }, 400)
-      }
+      if (!existing) return jsonResponse({ error: 'No account found. Please sign up first.' }, 400)
       user = existing
     }
 
-    await ctx.runMutation(api.otp.consumeVerificationCode, {
-      secret,
-      email: identifier,
-      scope: 'user',
-    })
+    await ctx.runMutation(api.otp.consumeVerificationCode, { secret, email: identifier, scope: 'user' })
 
     return jsonResponse({ success: true, user }, 200)
   } catch (error) {
@@ -241,56 +193,34 @@ const userVerifyOtp = httpAction(async (ctx, request) => {
   }
 })
 
-// Admins and Rescuers code remains exactly the same below
+// --- ADMINS ---
 const adminSendOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
 
-    if (!email.includes('@')) {
-      return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
-    }
+    if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
     const secret = getOtpSecret()
-
     await ctx.runMutation(api.admin.bootstrapAdmins, {})
 
     const allowed = await ctx.runQuery(api.admin.isAdmin, { email })
-    if (!allowed) {
-      return jsonResponse({ error: 'This email is not authorized for admin access.' }, 400)
-    }
+    if (!allowed) return jsonResponse({ error: 'This email is not authorized for admin access.' }, 400)
 
     const profile = await ctx.runQuery(api.admin.getAdminForLogin, { email })
-    if (!profile) {
-      return jsonResponse({ error: 'Admin account not found.' }, 400)
-    }
+    if (!profile) return jsonResponse({ error: 'Admin account not found.' }, 400)
 
     const code = generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
-      secret,
-      email,
-      scope: 'admin',
-      code,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      mode: 'sign-in',
-      expiresAt: Date.now() + OTP_TTL_MS,
+      secret, email, scope: 'admin', code,
+      firstName: profile.firstName, lastName: profile.lastName,
+      mode: 'sign-in', expiresAt: Date.now() + OTP_TTL_MS,
     })
 
     try {
-      await sendOtpEmail(ctx, {
-        email,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        subject: 'Your PWRRC Admin verification code',
-        code,
-      })
+      await sendOtpEmail(ctx, { email, firstName: profile.firstName, lastName: profile.lastName, subject: 'Your PWRRC Admin verification code', code })
     } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, {
-        secret,
-        email,
-        scope: 'admin',
-      })
+      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'admin' })
       return jsonResponse({ error: formatHandlerError(error) }, 500)
     }
 
@@ -306,87 +236,47 @@ const adminVerifyOtp = httpAction(async (ctx, request) => {
     const email = normalizeEmail(String(body.email ?? ''))
     const code = normalizeOtpCode(String(body.code ?? ''))
 
-    if (!email.includes('@')) {
-      return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
-    }
+    if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
     const secret = getOtpSecret()
+    await ctx.runMutation(api.otp.verifyVerificationCode, { secret, email, scope: 'admin', code })
+    const admin = await ctx.runMutation(api.admin.ensureAdminAccount, { adminEmail: email })
 
-    await ctx.runMutation(api.otp.verifyVerificationCode, {
-      secret,
-      email,
-      scope: 'admin',
-      code,
-    })
-
-    const admin = await ctx.runMutation(api.admin.ensureAdminAccount, {
-      adminEmail: email,
-    })
-
-    return jsonResponse(
-      {
-        success: true,
-        user: {
-          email: admin.email,
-          firstName: admin.firstName,
-          lastName: admin.lastName,
-          role: 'admin' as const,
-        },
-      },
-      200,
-    )
+    return jsonResponse({
+      success: true,
+      user: { email: admin.email, firstName: admin.firstName, lastName: admin.lastName, role: 'admin' as const },
+    }, 200)
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 400)
   }
 })
 
+// --- RESCUERS ---
 const rescuerSendOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
 
-    if (!email.includes('@')) {
-      return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
-    }
+    if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
     const secret = getOtpSecret()
-
     const allowed = await ctx.runQuery(api.rescuers.isRescuer, { email })
-    if (!allowed) {
-      return jsonResponse({ error: 'This email is not authorized for rescuer access.' }, 400)
-    }
+    if (!allowed) return jsonResponse({ error: 'This email is not authorized for rescuer access.' }, 400)
 
     const profile = await ctx.runQuery(api.rescuers.getRescuerForLogin, { email })
-    if (!profile) {
-      return jsonResponse({ error: 'Rescuer account not found.' }, 400)
-    }
+    if (!profile) return jsonResponse({ error: 'Rescuer account not found.' }, 400)
 
     const code = generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
-      secret,
-      email,
-      scope: 'rescuer',
-      code,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      mode: 'sign-in',
-      expiresAt: Date.now() + OTP_TTL_MS,
+      secret, email, scope: 'rescuer', code,
+      firstName: profile.firstName, lastName: profile.lastName,
+      mode: 'sign-in', expiresAt: Date.now() + OTP_TTL_MS,
     })
 
     try {
-      await sendOtpEmail(ctx, {
-        email,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        subject: 'Your PWRCC Rescuer verification code',
-        code,
-      })
+      await sendOtpEmail(ctx, { email, firstName: profile.firstName, lastName: profile.lastName, subject: 'Your PWRCC Rescuer verification code', code })
     } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, {
-        secret,
-        email,
-        scope: 'rescuer',
-      })
+      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'rescuer' })
       return jsonResponse({ error: formatHandlerError(error) }, 500)
     }
 
@@ -396,62 +286,53 @@ const rescuerSendOtp = httpAction(async (ctx, request) => {
   }
 })
 
+const rescuerVerifyOtp = httpAction(async (ctx, request) => {
+  try {
+    const body = await readJsonBody(request)
+    const email = normalizeEmail(String(body.email ?? ''))
+    const code = normalizeOtpCode(String(body.code ?? ''))
+
+    if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
+
+    const secret = getOtpSecret()
+    await ctx.runMutation(api.otp.verifyVerificationCode, { secret, email, scope: 'rescuer', code })
+    const rescuer = await ctx.runMutation(api.rescuers.ensureRescuerAccount, { rescuerEmail: email })
+
+    return jsonResponse({
+      success: true,
+      user: { email: rescuer.email, firstName: rescuer.firstName, lastName: rescuer.lastName, role: 'rescuer' as const },
+    }, 200)
+  } catch (error) {
+    return jsonResponse({ error: formatHandlerError(error) }, 400)
+  }
+})
+
+// --- DOMESTIC APPROVERS ---
 const domesticSendOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
 
-    if (!email.includes('@')) {
-      return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
-    }
+    if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
     const secret = getOtpSecret()
-
     const allowed = await ctx.runQuery(api.domestic.isDomesticApprover, { email })
+    if (!allowed) return jsonResponse({ error: 'This email is not authorized for domestic approver access.' }, 400)
 
-    if (!allowed) {
-      return jsonResponse(
-        { error: 'This email is not authorized for domestic approver access.' },
-        400,
-      )
-    }
-
-    const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, {
-      email,
-    })
-
-    if (!profile) {
-      return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
-    }
+    const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, { email })
+    if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
 
     const code = generateOtp()
-
     await ctx.runMutation(api.otp.saveVerificationCode, {
-      secret,
-      email,
-      scope: 'admin',
-      code,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      mode: 'sign-in',
-      expiresAt: Date.now() + OTP_TTL_MS,
+      secret, email, scope: 'admin', code,
+      firstName: profile.firstName, lastName: profile.lastName,
+      mode: 'sign-in', expiresAt: Date.now() + OTP_TTL_MS,
     })
 
     try {
-      await sendOtpEmail(ctx, {
-        email,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        subject: 'Your Domestic Portal verification code',
-        code,
-      })
+      await sendOtpEmail(ctx, { email, firstName: profile.firstName, lastName: profile.lastName, subject: 'Your Domestic Portal verification code', code })
     } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, {
-        secret,
-        email,
-        scope: 'admin',
-      })
-
+      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'admin' })
       return jsonResponse({ error: formatHandlerError(error) }, 500)
     }
 
@@ -464,80 +345,19 @@ const domesticSendOtp = httpAction(async (ctx, request) => {
 const domesticVerifyOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
-
     const email = normalizeEmail(String(body.email ?? ''))
     const code = normalizeOtpCode(String(body.code ?? ''))
 
     const secret = getOtpSecret()
+    await ctx.runMutation(api.otp.verifyVerificationCode, { secret, email, scope: 'admin', code })
+    const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, { email })
 
-    await ctx.runMutation(api.otp.verifyVerificationCode, {
-      secret,
-      email,
-      scope: 'admin',
-      code,
-    })
+    if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
 
-    const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, {
-      email,
-    })
-
-    if (!profile) {
-      return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
-    }
-
-    return jsonResponse(
-      {
-        success: true,
-        user: {
-          email: profile.email,
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          role: 'domestic_approver',
-        },
-      },
-      200,
-    )
-  } catch (error) {
-    return jsonResponse({ error: formatHandlerError(error) }, 400)
-  }
-})
-
-const rescuerVerifyOtp = httpAction(async (ctx, request) => {
-  
-  try {
-    const body = await readJsonBody(request)
-    const email = normalizeEmail(String(body.email ?? ''))
-    const code = normalizeOtpCode(String(body.code ?? ''))
-
-    if (!email.includes('@')) {
-      return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
-    }
-
-    const secret = getOtpSecret()
-
-    await ctx.runMutation(api.otp.verifyVerificationCode, {
-      secret,
-      email,
-      scope: 'rescuer',
-      code,
-    })
-
-    const rescuer = await ctx.runMutation(api.rescuers.ensureRescuerAccount, {
-      rescuerEmail: email,
-    })
-
-    return jsonResponse(
-      {
-        success: true,
-        user: {
-          email: rescuer.email,
-          firstName: rescuer.firstName,
-          lastName: rescuer.lastName,
-          role: 'rescuer' as const,
-        },
-      },
-      200,
-    )
+    return jsonResponse({
+      success: true,
+      user: { email: profile.email, firstName: profile.firstName, lastName: profile.lastName, role: 'domestic_approver' },
+    }, 200)
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 400)
   }
