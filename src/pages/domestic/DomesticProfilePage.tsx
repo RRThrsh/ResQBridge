@@ -22,7 +22,7 @@ import {
 import { Input } from '@/components/ui/input'
 
 import { ThemeSetting } from '@/components/theme/ThemeSetting'
-import { DomesticLayout } from '@/components/domestic/DomesticLayout'
+
 
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 
@@ -84,12 +84,6 @@ function cancelEditing() {
   }`.toUpperCase()
 
   return (
-    <DomesticLayout
-      title="My Profile"
-      subtitle="Domestic approver account information"
-      backTo="/pwrcc/domestic"
-      backLabel="Back"
-    >
       <div className="space-y-6">
         <Card className="border-border overflow-hidden">
           <CardContent className="flex items-center gap-4 p-6">
@@ -275,6 +269,5 @@ function cancelEditing() {
           </CardContent>
         </Card>
       </div>
-    </DomesticLayout>
   )
 }
