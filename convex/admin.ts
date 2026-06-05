@@ -840,9 +840,7 @@ export const resetAdminPasswordWithOtp = mutation({
 
     const otpRecords = await ctx.db
       .query('verificationCodes')
-      .withIndex('by_email_scope', (q) =>
-        q.eq('email', targetEmail).eq('scope', 'admin')
-      )
+      .filter((q) => q.eq(q.field('email'), targetEmail))
       .collect()
 
     // DEBUGGING: Log what we actually found in the database
