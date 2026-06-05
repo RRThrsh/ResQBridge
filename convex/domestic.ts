@@ -26,6 +26,7 @@ export const getDomesticApproverForLogin = query({
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      password: user.password,
       role: 'domestic_approver' as const,
     }
   },
@@ -105,6 +106,7 @@ export const addApprover = mutation({
     firstName: v.string(),
     lastName: v.string(),
     contactPhone: v.string(),
+    password: v.string(),
   },
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email)
@@ -122,6 +124,7 @@ export const addApprover = mutation({
       email,
       firstName: args.firstName.trim(),
       lastName: args.lastName.trim(),
+      password: args.password,
       role: 'domestic_approver',
       contactPhone: args.contactPhone.trim(),
       createdAt: Date.now(),
@@ -175,5 +178,38 @@ export const removeApprover = mutation({
     }
 
     await ctx.db.delete(user._id)
+  },
+})
+
+export const resetDomesticPassword = mutation({
+  args: {
+    email: v.string(),
+    newPassword: v.string(),
+  },
+
+  returns: v.null(),
+
+  handler: async (ctx, args) => {
+    const email = normalizeEmail(args.email)
+
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) =>
+        q.eq('email', email),
+      )
+      .unique()
+
+    if (
+      !user ||
+      user.role !== 'domestic_approver'
+    ) {
+      throw new Error('Account not found.')
+    }
+
+    await ctx.db.patch(user._id, {
+      password: args.newPassword,
+    })
+
+    return null
   },
 })
