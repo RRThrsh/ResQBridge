@@ -296,12 +296,38 @@ const rescuerVerifyOtp = httpAction(async (ctx, request) => {
 
     const secret = getOtpSecret()
     await ctx.runMutation(api.otp.verifyVerificationCode, { secret, email, scope: 'rescuer', code })
-    const rescuer = await ctx.runMutation(api.rescuers.ensureRescuerAccount, { rescuerEmail: email })
 
-    return jsonResponse({
-      success: true,
-      user: { email: rescuer.email, firstName: rescuer.firstName, lastName: rescuer.lastName, role: 'rescuer' as const },
-    }, 200)
+    const rescuer =
+    await ctx.runQuery(
+    api.rescuers.getRescuerForLogin,
+    { email },
+  )
+
+if (!rescuer) {
+  return jsonResponse(
+    {
+      error:
+        'Rescuer account not found.',
+    },
+    400,
+  )
+}
+
+return jsonResponse(
+  {
+    success: true,
+    user: {
+      email: rescuer.email,
+      firstName:
+        rescuer.firstName,
+      lastName:
+        rescuer.lastName,
+      role: 'rescuer' as const,
+    },
+  },
+  200,
+)
+
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 400)
   }
