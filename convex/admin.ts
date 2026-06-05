@@ -825,23 +825,26 @@ export const resetAdminPasswordWithOtp = mutation({
     otpCode: v.string(),
     newPassword: v.string(),
   },
+
   returns: v.null(),
+
   handler: async (ctx, args) => {
-  const targetEmail = normalizeEmail(args.targetEmail)
+    const targetEmail = normalizeEmail(args.targetEmail)
 
-  const target = await getAdminByEmail(ctx, targetEmail)
+    const target = await getAdminByEmail(ctx, targetEmail)
 
-  if (!target) {
-    throw new Error('Admin not found.')
-  }
+    if (!target) {
+      throw new Error('Admin not found.')
+    }
 
-  if (args.newPassword.length < 8) {
-    throw new Error('Password must be at least 8 characters.')
-  }
+    if (args.newPassword.length < 8) {
+      throw new Error('Password must be at least 8 characters.')
+    }
 
-  await ctx.db.patch(target._id, {
-    password: args.newPassword,
-  })
+    await ctx.db.patch(target._id, {
+      password: args.newPassword,
+    })
 
-  return null
-}
+    return null
+  },
+})
