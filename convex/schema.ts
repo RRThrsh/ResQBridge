@@ -8,6 +8,8 @@ export default defineSchema({
     firstName: v.string(),
     lastName: v.string(),
     createdAt: v.number(),
+    // Added password field for admin login
+    password: v.optional(v.string()), 
   }).index('by_email', ['email']),
 
   rescuers: defineTable({
@@ -16,22 +18,26 @@ export default defineSchema({
     lastName: v.string(),
     contactPhone: v.optional(v.string()),
     createdAt: v.number(),
+    // Added password field for rescuer login
+    password: v.optional(v.string()), 
   }).index('by_email', ['email']),
 
   users: defineTable({
     email: v.string(),
     firstName: v.string(),
     lastName: v.string(),
-role: v.optional(
-  v.union(
-    v.literal('admin'),
-    v.literal('user'),
-    v.literal('rescuer'),
-    v.literal('domestic_approver'),
-  ),
-),
+    role: v.optional(
+      v.union(
+        v.literal('admin'),
+        v.literal('user'),
+        v.literal('rescuer'),
+        v.literal('domestic_approver'),
+      ),
+    ),
     contactPhone: v.optional(v.string()),
     createdAt: v.number(),
+    // Added password field for user and domestic_approver login
+    password: v.optional(v.string()), 
   }).index('by_email', ['email']),
 
   siteContent: defineTable({
@@ -72,7 +78,7 @@ role: v.optional(
     quantity: v.optional(v.number()),
     reportedSize: v.optional(v.string()),
     reporterFirstName: v.optional(v.string()),
-reporterLastName: v.optional(v.string()),
+    reporterLastName: v.optional(v.string()),
     reporterPhone: v.optional(v.string()),
     createdAt: v.number(),
   })
