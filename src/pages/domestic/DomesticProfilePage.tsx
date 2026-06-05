@@ -49,17 +49,21 @@ export function DomesticProfilePage() {
     )
   }
 
-  function startEditing() {
-    setFirstName(domesticApprover.firstName)
-    setLastName(domesticApprover.lastName)
-    setIsEditing(true)
-  }
+function startEditing() {
+  if (!domesticApprover) return
 
-  function cancelEditing() {
-    setFirstName(domesticApprover.firstName)
-    setLastName(domesticApprover.lastName)
-    setIsEditing(false)
-  }
+  setFirstName(domesticApprover.firstName)
+  setLastName(domesticApprover.lastName)
+  setIsEditing(true)
+}
+
+function cancelEditing() {
+  if (!domesticApprover) return
+
+  setFirstName(domesticApprover.firstName)
+  setLastName(domesticApprover.lastName)
+  setIsEditing(false)
+}
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
