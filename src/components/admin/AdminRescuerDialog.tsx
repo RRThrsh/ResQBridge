@@ -119,7 +119,7 @@ export function AdminRescuerDialog({
           ),
 
         targetEmail:
-          rescuerRow.email,
+          rescuerRow!.email,
 
         firstName:
           draft.firstName,
