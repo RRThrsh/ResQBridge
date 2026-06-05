@@ -59,8 +59,6 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       ? normalizedId.includes('@') 
       : normalizedId.replace(/\D/g, '').length >= 10
 
-  const signUpReady = firstName.trim() && lastName.trim() && identifierValid
-  const passwordValid = password.length >= 8
 
   const signUpReady =
     firstName.trim() &&
