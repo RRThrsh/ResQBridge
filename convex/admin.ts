@@ -143,12 +143,14 @@ export const updateProfile = mutation({
   },
 })
 
+// UPDATE: Added password argument to fix TS2353
 export const addAdmin = mutation({
   args: {
     adminEmail: v.string(),
     email: v.string(),
     firstName: v.string(),
     lastName: v.string(),
+    password: v.string(), 
   },
   returns: v.object({
     email: v.string(),
@@ -161,6 +163,7 @@ export const addAdmin = mutation({
     const email = normalizeEmail(args.email)
     const firstName = args.firstName.trim()
     const lastName = args.lastName.trim()
+    const password = args.password 
 
     if (!email.includes('@')) {
       throw new Error('Enter a valid email address.')
@@ -174,10 +177,12 @@ export const addAdmin = mutation({
       throw new Error('This email is already an admin.')
     }
 
+    // UPDATE: Inserting password field
     await ctx.db.insert('admins', {
       email,
       firstName,
       lastName,
+      password, 
       createdAt: Date.now(),
     })
 
@@ -399,8 +404,8 @@ export const getReportAnalytics = query({
           v.literal('en_route'),
           v.literal('rescue_success'),
           v.literal('rescue_failed'),
-          v.literal('published'), // <-- ADD THIS!
-          v.literal('rejected')   // <-- ADD THIS!
+          v.literal('published'), 
+          v.literal('rejected')   
         ),
         label: v.string(),
         count: v.number(),
