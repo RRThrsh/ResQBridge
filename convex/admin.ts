@@ -836,11 +836,9 @@ export const resetAdminPasswordWithOtp = mutation({
       throw new Error('Admin not found.')
     }
 
-    if (args.newPassword.length < 8) {
-      throw new Error('New password must be at least 8 characters.')
-    }
+    // DEBUGGING: Log what we are looking for
+    console.log(`Searching for OTP. Email: ${targetEmail}, Scope: admin, Code Typed: ${args.otpCode}`)
 
-    // 1. Fetch OTP codes for this admin from the verificationCodes table
     const otpRecords = await ctx.db
       .query('verificationCodes')
       .withIndex('by_email_scope', (q) =>
@@ -848,19 +846,20 @@ export const resetAdminPasswordWithOtp = mutation({
       )
       .collect()
 
-    // 2. Find a code that matches and hasn't expired
+    // DEBUGGING: Log what we actually found in the database
+    console.log("OTP Records found in database:", otpRecords)
+
     const validRecord = otpRecords.find(
       (r) => r.code === args.otpCode && r.expiresAt > Date.now()
     )
 
     if (!validRecord) {
+      console.error("Match Failed! Either the code is wrong, expired, or doesn't exist.")
+      // We use ConvexError here so the frontend can actually read the message!
       throw new Error('Invalid or expired verification code.')
     }
 
-    // 3. Update the password
     await ctx.db.patch(target._id, { password: args.newPassword })
-
-    // 4. Delete the used OTP code so it can't be reused
     await ctx.db.delete(validRecord._id)
 
     return null
