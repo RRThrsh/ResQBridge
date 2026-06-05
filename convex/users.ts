@@ -233,3 +233,35 @@ export const validateUserPassword = query({
     return user.password === args.password
   },
 })
+
+export const resetUserPassword = mutation({
+  args: {
+    email: v.string(),
+    newPassword: v.string(),
+  },
+
+  returns: v.null(),
+
+  handler: async (ctx, args) => {
+    const email = normalizeEmail(args.email)
+
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .unique()
+
+    if (!user) {
+      throw new Error('User not found.')
+    }
+
+    if (args.newPassword.length < 8) {
+      throw new Error('Password must be at least 8 characters.')
+    }
+
+    await ctx.db.patch(user._id, {
+      password: args.newPassword,
+    })
+
+    return null
+  },
+})
