@@ -177,6 +177,7 @@ const userVerifyOtp = httpAction(async (ctx, request) => {
     const identifier = String(body.identifier ?? '').trim()
     const code = normalizeOtpCode(String(body.code ?? ''))
     const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
+    const password = String(body.password ?? '')
 
     if (!identifier) {
       return jsonResponse({ error: 'Please enter a valid email or phone number.' }, 400)
@@ -208,6 +209,7 @@ const userVerifyOtp = httpAction(async (ctx, request) => {
         email: identifier,
         firstName: profile.firstName,
         lastName: profile.lastName,
+        password,
       })
     } else {
       const existing = await ctx.runQuery(api.users.getByEmail, { email: identifier })
