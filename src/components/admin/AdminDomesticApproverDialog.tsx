@@ -106,7 +106,7 @@ export function AdminDomesticApproverDialog({
           ),
 
         targetEmail:
-          approverRow.email,
+          approverRow!.email,
 
         firstName:
           draft.firstName,
