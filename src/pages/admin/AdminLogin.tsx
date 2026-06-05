@@ -5,7 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAdminAuth } from '@/context/AdminAuthContext'
-import { sendAdminOtp, verifyAdminOtp } from '@/lib/admin-auth-api'
+import {
+  sendAdminOtp,
+  verifyAdminOtp,
+} from '@/lib/admin-auth-api'
+
+import { useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { toast } from 'sonner'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { Helmet } from 'react-helmet-async'
@@ -21,6 +27,13 @@ export function AdminLogin() {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const resetPassword = useMutation(api.admin.resetAdminPasswordWithOtp)
+
+  const [forgotMode, setForgotMode] = useState(false)
+  const [forgotOtpSent, setForgotOtpSent] = useState(false)
+  const [forgotOtp, setForgotOtp] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const verifyingRef = useRef(false)
 
   useEffect(() => {
@@ -60,7 +73,36 @@ export function AdminLogin() {
       setLoading(false)
     }
   }
+  
+  async function handleForgotPassword() {
+  if (!email.trim()) {
+    toast.error('Enter your admin email first.')
+    return
+  }
 
+  setLoading(true)
+
+  try {
+    const normalizedEmail = email.trim().toLowerCase()
+
+    // send OTP WITHOUT password
+    await sendAdminOtp(normalizedEmail)
+
+    setForgotMode(true)
+    setForgotOtpSent(true)
+
+    toast.success(`Reset code sent to ${normalizedEmail}`)
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : 'Could not send reset code',
+    )
+  } finally {
+    setLoading(false)
+  }
+}
+  
   async function verifyCode(e: React.FormEvent) {
     e.preventDefault()
     if (code.length !== 6 || verifyingRef.current) return
@@ -90,6 +132,52 @@ export function AdminLogin() {
     }
   }
 
+  async function handleResetPassword(e: React.FormEvent) {
+  e.preventDefault()
+
+  if (forgotOtp.length !== 6) {
+    toast.error('Enter valid OTP code')
+    return
+  }
+
+  if (newPassword !== confirmPassword) {
+    toast.error('Passwords do not match')
+    return
+  }
+
+  if (newPassword.length < 8) {
+    toast.error('Password must be at least 8 characters')
+    return
+  }
+
+  setLoading(true)
+
+  try {
+    await resetPassword({
+      adminEmail: email.trim().toLowerCase(),
+      targetEmail: email.trim().toLowerCase(),
+      otpCode: forgotOtp,
+      newPassword,
+    })
+
+    toast.success('Password reset successful')
+
+    setForgotMode(false)
+    setForgotOtpSent(false)
+    setForgotOtp('')
+    setNewPassword('')
+    setConfirmPassword('')
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : 'Could not reset password',
+    )
+  } finally {
+    setLoading(false)
+  }
+}
+  
   return (
     <>
       <Helmet>
@@ -111,7 +199,7 @@ export function AdminLogin() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {step === 'credentials' ? (
+            {step === 'credentials' && !forgotMode ? (
               <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                 <div>
                   <label className="mb-1 block text-xs text-muted-foreground">
@@ -142,6 +230,17 @@ export function AdminLogin() {
                   />
                 </div>
 
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs text-primary hover:underline"
+                    disabled={loading}
+                >
+                    Forgot Password?
+                </button>
+                </div>
+                
                 <div className="flex justify-center">
                   <ReCAPTCHA
                     sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
@@ -152,7 +251,77 @@ export function AdminLogin() {
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign In & Send Code'}
                 </Button>
               </form>
-            ) : (
+            ) : forgotMode ? (
+
+  <form onSubmit={handleResetPassword} className="space-y-4">
+    <p className="text-sm text-muted-foreground">
+      Enter the reset code sent to{' '}
+      <span className="text-foreground">{email}</span>
+    </p>
+
+```
+<Input
+  inputMode="numeric"
+  maxLength={6}
+  value={forgotOtp}
+  onChange={(e) =>
+    setForgotOtp(
+      e.target.value.replace(/\D/g, '').slice(0, 6),
+    )
+  }
+  placeholder="000000"
+  required
+  className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary text-center text-lg tracking-[0.3em]"
+/>
+
+<Input
+  type="password"
+  placeholder="New Password"
+  value={newPassword}
+  onChange={(e) => setNewPassword(e.target.value)}
+  required
+  className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
+/>
+
+<Input
+  type="password"
+  placeholder="Confirm New Password"
+  value={confirmPassword}
+  onChange={(e) => setConfirmPassword(e.target.value)}
+  required
+  className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary"
+/>
+
+<Button
+  type="submit"
+  className="w-full"
+  disabled={loading}
+>
+  {loading ? (
+    <Loader2 className="h-4 w-4 animate-spin" />
+  ) : (
+    'Reset Password'
+  )}
+</Button>
+
+<Button
+  type="button"
+  variant="ghost"
+  className="w-full"
+  onClick={() => {
+    setForgotMode(false)
+    setForgotOtp('')
+    setNewPassword('')
+    setConfirmPassword('')
+  }}
+>
+  Back to Login
+</Button>
+```
+
+  </form>
+) : (
+
               <form onSubmit={verifyCode} className="space-y-4">
                 <p className="text-sm text-muted-foreground">
                   Enter the 6-digit code sent to <span className="text-foreground">{email}</span>
