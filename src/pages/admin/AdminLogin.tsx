@@ -276,16 +276,14 @@ async function handleVerifyResetOtp() {
 
 <form
   onSubmit={(e) => {
-    e.preventDefault()
+  e.preventDefault()
 
-    if (forgotStep === 'email') {
-      handleForgotPassword()
-    }
-
-    if (forgotStep === 'password') {
-      handleResetPassword(e)
-    }
-  }}
+  forgotStep === 'email'
+    ? handleForgotPassword()
+    : forgotStep === 'password'
+    ? handleResetPassword(e)
+    : null
+}}
   className="space-y-4"
 >
   {forgotStep === 'email' && (
