@@ -1,5 +1,5 @@
 import { httpRouter } from 'convex/server'
-import { httpAction, type PublicHttpAction } from './_generated/server'
+import { httpAction, type ActionCtx } from './_generated/server'
 import { api, internal } from './_generated/api'
 import { normalizeEmail } from './lib/admins'
 import { generateOtp } from './lib/generateOtp'
@@ -14,7 +14,10 @@ import { type AuthMode } from './lib/authParse'
 import { normalizeOtpCode } from './lib/otpCode'
 import { checkRateLimit, getClientIp } from './lib/rateLimit'
 
-function withRateLimit(handler: PublicHttpAction, prefix: string): PublicHttpAction {
+function withRateLimit(
+  handler: (ctx: ActionCtx, request: Request) => Promise<Response>,
+  prefix: string,
+) {
   return httpAction(async (ctx, request) => {
     const ip = getClientIp(request)
     const { allowed, retryAfter } = checkRateLimit(`${prefix}:${ip}`)
@@ -95,7 +98,7 @@ async function sendOtpSms(_phone: string, code: string) {
 }
 
 // --- USER SEND OTP ---
-const userSendOtp = httpAction(async (ctx, request) => {
+const userSendOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
     
@@ -164,10 +167,10 @@ const userSendOtp = httpAction(async (ctx, request) => {
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 500)
   }
-})
+}
 
 // --- USER VERIFY OTP ---
-const userVerifyOtp = httpAction(async (ctx, request) => {
+const userVerifyOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
     const identifier = String(body.identifier ?? '').trim()
@@ -206,10 +209,10 @@ const userVerifyOtp = httpAction(async (ctx, request) => {
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 400)
   }
-})
+}
 
 // --- ADMINS ---
-const adminSendOtp = httpAction(async (ctx, request) => {
+const adminSendOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
@@ -249,9 +252,9 @@ const adminSendOtp = httpAction(async (ctx, request) => {
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 500)
   }
-})
+}
 
-const adminVerifyOtp = httpAction(async (ctx, request) => {
+const adminVerifyOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
@@ -270,10 +273,10 @@ const adminVerifyOtp = httpAction(async (ctx, request) => {
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 400)
   }
-})
+}
 
 // --- RESCUERS ---
-const rescuerSendOtp = httpAction(async (ctx, request) => {
+const rescuerSendOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
@@ -311,9 +314,9 @@ const rescuerSendOtp = httpAction(async (ctx, request) => {
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 500)
   }
-})
+}
 
-const rescuerVerifyOtp = httpAction(async (ctx, request) => {
+const rescuerVerifyOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
@@ -339,10 +342,10 @@ const rescuerVerifyOtp = httpAction(async (ctx, request) => {
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 400)
   }
-})
+}
 
 // --- DOMESTIC APPROVERS ---
-const domesticSendOtp = httpAction(async (ctx, request) => {
+const domesticSendOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
@@ -383,9 +386,9 @@ const domesticSendOtp = httpAction(async (ctx, request) => {
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 500)
   }
-})
+}
 
-const domesticVerifyOtp = httpAction(async (ctx, request) => {
+const domesticVerifyOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
@@ -404,7 +407,7 @@ const domesticVerifyOtp = httpAction(async (ctx, request) => {
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 400)
   }
-})
+}
 
 const routes = [
   { path: '/api/auth/send-otp', handler: withRateLimit(userSendOtp, 'user-send-otp') },
