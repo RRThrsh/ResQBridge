@@ -8,7 +8,10 @@ import { normalizeEmail } from '@/lib/admin'
 import { rescuerReportToStored } from '@/lib/reports'
 import { cn } from '@/lib/utils'
 
-type Tab = 'active' | 'rescued'
+type Tab =
+  | 'active'
+  | 'rescued'
+  | 'rejected'
 
 function StatCard({
   label,
@@ -66,12 +69,18 @@ function EmptyState({ tab }: { tab: Tab }) {
         className="text-lg font-semibold text-foreground"
         style={{ fontFamily: 'var(--font-heading)' }}
       >
-        {tab === 'active' ? 'No active dispatches' : 'No rescued animals yet'}
+        {tab === 'active'
+  ? 'No active dispatches'
+  : tab === 'rescued'
+    ? 'No rescued animals yet'
+    : 'No rejected reports'}
       </h3>
       <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
         {tab === 'active'
-          ? 'When admin assigns you a report, it will appear here for response.'
-          : 'Completed rescues will show here once you mark a dispatch as successful or failed.'}
+  ? 'When admin assigns you a report, it will appear here for response.'
+  : tab === 'rescued'
+    ? 'Completed successful rescues will appear here.'
+    : 'Reports marked as unsuccessful will appear here.'}
       </p>
     </div>
   )
@@ -95,18 +104,45 @@ export function RescuerReportsPage() {
     () => (activeRows ? activeRows.map(rescuerReportToStored) : []),
     [activeRows],
   )
-  const rescued = useMemo(
-    () => (completedRows ? completedRows.map(rescuerReportToStored) : []),
-    [completedRows],
-  )
+const completed = useMemo(
+  () =>
+    completedRows
+      ? completedRows.map(
+          rescuerReportToStored,
+        )
+      : [],
+  [completedRows],
+)
 
-  const successCount = useMemo(
-    () => rescued.filter((r) => r.status === 'rescue_success').length,
-    [rescued],
-  )
+const rescued = useMemo(
+  () =>
+    completed.filter(
+      (r) =>
+        r.status ===
+        'rescue_success',
+    ),
+  [completed],
+)
+
+const rejected = useMemo(
+  () =>
+    completed.filter(
+      (r) =>
+        r.status ===
+        'rescue_failed',
+    ),
+  [completed],
+)
+
+
 
   const loading = activeRows === undefined || completedRows === undefined
-  const list = tab === 'active' ? active : rescued
+const list =
+  tab === 'active'
+    ? active
+    : tab === 'rescued'
+      ? rescued
+      : rejected
 
   return (
     <>
@@ -147,15 +183,25 @@ export function RescuerReportsPage() {
               active={tab === 'rescued'}
               onClick={() => setTab('rescued')}
             />
+            <StatCard
+  label="Rejected"
+  value={rejected.length}
+  icon={PawPrint}
+  active={tab === 'rejected'}
+  onClick={() =>
+    setTab('rejected')
+  }
+/>
           </div>
 
           <div className="mb-5 flex items-center justify-between gap-3">
             <div className="inline-flex rounded-xl border border-border bg-muted/40 p-1">
               {(
-                [
-                  ['active', 'Active'],
-                  ['rescued', 'Rescued'],
-                ] as const
+[
+  ['active', 'Active'],
+  ['rescued', 'Rescued'],
+  ['rejected', 'Rejected'],
+] as const
               ).map(([value, label]) => (
                 <button
                   key={value}
@@ -170,21 +216,30 @@ export function RescuerReportsPage() {
                 >
                   {label}
                   <span className="ml-1.5 tabular-nums text-muted-foreground">
-                    ({value === 'active' ? active.length : rescued.length})
+                    ({value === 'active'
+  ? active.length
+  : value === 'rescued'
+    ? rescued.length
+    : rejected.length})
                   </span>
                 </button>
               ))}
             </div>
           </div>
 
-          {tab === 'rescued' && rescued.length > 0 ? (
-            <p className="mb-4 text-xs text-muted-foreground">
-              {successCount} successful
-              {rescued.length - successCount > 0
-                ? ` · ${rescued.length - successCount} unsuccessful`
-                : ''}
-            </p>
-          ) : null}
+{tab === 'rescued' &&
+rescued.length > 0 ? (
+  <p className="mb-4 text-xs text-muted-foreground">
+    {rescued.length} successful rescues
+  </p>
+) : null}
+
+{tab === 'rejected' &&
+rejected.length > 0 ? (
+  <p className="mb-4 text-xs text-muted-foreground">
+    {rejected.length} rejected or unsuccessful rescues
+  </p>
+) : null}
 
           {list.length === 0 ? (
             <EmptyState tab={tab} />
