@@ -534,9 +534,23 @@ async function handleAdminSendOtp(
     .trim()
     .toLowerCase()
     
-  const password = String(body.password ?? '') // 1. Extract the password
+  const password = String(body.password ?? '') 
 
-  // ... (keep email check and bootstrapAdmins exactly as they are)
+  if (!email.includes('@')) {
+    sendJson(res, 400, { error: 'Please enter a valid email address.' })
+    return
+  }
+
+  // 👇 THIS IS THE MISSING LINE THAT FIXES THE ERROR 👇
+  const convex = getConvexClientForOtp(options.otpEnv) 
+  
+  await convex.mutation(api.admin.bootstrapAdmins, {})
+
+  const allowed = await convex.query(api.admin.isAdmin, { email })
+  if (!allowed) {
+    sendJson(res, 400, { error: 'This email is not authorized for admin access.' })
+    return
+  }
 
   const profile = await convex.query(api.admin.getAdminForLogin, { email })
   if (!profile) {
@@ -544,7 +558,6 @@ async function handleAdminSendOtp(
     return
   }
 
-  // 2. Add the password check!
   if (profile.password !== password) {
     sendJson(res, 401, { error: 'Incorrect password.' })
     return
@@ -593,9 +606,21 @@ async function handleRescuerSendOtp(
     .trim()
     .toLowerCase()
     
-  const password = String(body.password ?? '') // 1. Extract the password
+  const password = String(body.password ?? '') 
 
-  // ... (keep email checks and authorization checks exactly as they are)
+  if (!email.includes('@')) {
+    sendJson(res, 400, { error: 'Please enter a valid email address.' })
+    return
+  }
+
+  // 👇 THIS IS THE MISSING LINE THAT FIXES THE ERROR 👇
+  const convex = getConvexClientForOtp(options.otpEnv) 
+  
+  const allowed = await convex.query(api.rescuers.isRescuer, { email })
+  if (!allowed) {
+    sendJson(res, 400, { error: 'This email is not authorized for rescuer access.' })
+    return
+  }
 
   const profile = await convex.query(api.rescuers.getRescuerForLogin, { email })
   if (!profile) {
@@ -603,7 +628,6 @@ async function handleRescuerSendOtp(
     return
   }
 
-  // 2. Add the password check!
   if (profile.password !== password) {
     sendJson(res, 401, { error: 'Incorrect password.' })
     return
@@ -616,7 +640,6 @@ async function handleRescuerSendOtp(
     mode: 'sign-in',
   })
 }
-
 async function handleRescuerVerifyOtp(
   res: ServerResponse,
   options: ApiPluginOptions,
