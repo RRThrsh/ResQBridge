@@ -60,6 +60,8 @@ export function AdminLogin() {
   const [captchaToken, setCaptchaToken] =
     useState<string | null>(null)
 
+  const [error, setError] = useState<string | null>(null)
+
   const resetPassword = useMutation(
     api.admin.resetAdminPasswordWithOtp,
   )
@@ -146,11 +148,12 @@ export function AdminLogin() {
     e: React.FormEvent,
   ) {
     e.preventDefault()
+    setError(null)
 
     if (loading) return
 
     if (!captchaToken) {
-      toast.error(
+      setError(
         'Please complete the reCAPTCHA.',
       )
 
@@ -183,7 +186,7 @@ export function AdminLogin() {
         `Code sent to ${normalizedEmail}`,
       )
     } catch (error) {
-      toast.error(
+      setError(
         error instanceof Error
           ? error.message
           : 'Invalid credentials',
@@ -198,6 +201,7 @@ export function AdminLogin() {
 
     try {
       setLoading(true)
+      setError(null)
 
       await sendAdminOtp(email, password)
 
@@ -207,7 +211,7 @@ export function AdminLogin() {
 
       setResendCooldown(60)
     } catch (error) {
-      toast.error(
+      setError(
         error instanceof Error
           ? error.message
           : 'Could not resend OTP',
@@ -218,8 +222,10 @@ export function AdminLogin() {
   }
 
   async function handleForgotPassword() {
+    setError(null)
+
     if (!forgotEmail.trim()) {
-      toast.error('Enter your admin email.')
+      setError('Enter your admin email.')
 
       return
     }
@@ -237,7 +243,7 @@ export function AdminLogin() {
 
       toast.success('OTP sent successfully')
     } catch (error) {
-      toast.error(
+      setError(
         error instanceof Error
           ? error.message
           : 'Could not send OTP',
@@ -252,6 +258,7 @@ export function AdminLogin() {
 
     try {
       setLoading(true)
+      setError(null)
 
       await sendAdminOtp(
         forgotEmail.trim().toLowerCase(),
@@ -264,7 +271,7 @@ export function AdminLogin() {
 
       setForgotResendCooldown(60)
     } catch (error) {
-      toast.error(
+      setError(
         error instanceof Error
           ? error.message
           : 'Could not resend OTP',
@@ -275,8 +282,11 @@ export function AdminLogin() {
   }
 
   async function handleVerifyResetOtp() {
+    setError(null)
+
     if (forgotOtp.length !== 6) {
-      throw new Error('Enter valid OTP code')
+      setError('Enter valid OTP code')
+      return
     }
 
     setLoading(true)
@@ -291,7 +301,7 @@ export function AdminLogin() {
         'OTP verified successfully',
       )
     } catch (error) {
-      toast.error(
+      setError(
         error instanceof Error
           ? error.message
           : 'Invalid OTP code',
@@ -307,6 +317,7 @@ export function AdminLogin() {
     e: React.FormEvent,
   ) {
     e.preventDefault()
+    setError(null)
 
     if (
       code.length !== 6 ||
@@ -324,7 +335,7 @@ export function AdminLogin() {
       ''
 
     if (!otpEmail) {
-      toast.error(
+      setError(
         'Email session expired. Request a new code.',
       )
 
@@ -362,7 +373,7 @@ export function AdminLogin() {
 
       toast.success('Welcome back, admin.')
     } catch (error) {
-      toast.error(
+      setError(
         error instanceof Error
           ? error.message
           : 'Invalid code',
@@ -377,14 +388,15 @@ export function AdminLogin() {
     e: React.FormEvent,
   ) {
     e.preventDefault()
+    setError(null)
 
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match')
+      setError('Passwords do not match')
       return
     }
 
     if (newPassword.length < 8) {
-      toast.error(
+      setError(
         'Password must be at least 8 characters',
       )
 
@@ -419,7 +431,7 @@ export function AdminLogin() {
 
       setStep('credentials')
     } catch (error) {
-      toast.error(
+      setError(
         error instanceof Error
           ? error.message
           : 'Could not reset password',
@@ -536,11 +548,12 @@ export function AdminLogin() {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
                       setForgotStep(
                         'email',
                       )
-                    }
+                      setError(null)
+                    }}
                     className="text-xs text-primary hover:underline"
                     disabled={loading}
                   >
@@ -565,6 +578,10 @@ export function AdminLogin() {
                     }
                   />
                 </div>
+
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
 
                 <Button
                   type="submit"
@@ -620,6 +637,10 @@ export function AdminLogin() {
                       required
                     />
 
+                    {error && (
+                      <p className="text-sm text-destructive">{error}</p>
+                    )}
+
                     <Button
                       type="submit"
                       className="w-full"
@@ -659,6 +680,10 @@ export function AdminLogin() {
                       required
                       className="text-center text-lg tracking-[0.3em]"
                     />
+
+                    {error && (
+                      <p className="text-sm text-destructive">{error}</p>
+                    )}
 
                     <Button
                       type="button"
@@ -789,6 +814,10 @@ export function AdminLogin() {
                       </button>
                     </div>
 
+                    {error && (
+                      <p className="text-sm text-destructive">{error}</p>
+                    )}
+
                     <Button
                       type="submit"
                       className="w-full"
@@ -813,6 +842,7 @@ export function AdminLogin() {
                     setForgotOtp('')
                     setNewPassword('')
                     setConfirmPassword('')
+                    setError(null)
                   }}
                 >
                   Back to Login
@@ -865,6 +895,10 @@ export function AdminLogin() {
                     : 'Resend OTP'}
                 </Button>
 
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
+
                 <Button
                   type="submit"
                   className="w-full"
@@ -891,6 +925,7 @@ export function AdminLogin() {
 
                     setCode('')
                     setPassword('')
+                    setError(null)
 
                     sessionStorage.removeItem(
                       ADMIN_OTP_EMAIL_KEY,

@@ -15,12 +15,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-
 import { useUserAuth } from '@/context/UserAuthContext';
 
 import { toast } from 'sonner';
@@ -80,18 +74,16 @@ function AuthForm({
     'details' | 'otp'
   >('details');
 
-  const [loginMethod, setLoginMethod] =
-    useState<'email' | 'phone'>(
-      'email',
-    );
-
   const [firstName, setFirstName] =
     useState('');
 
   const [lastName, setLastName] =
     useState('');
 
-  const [identifier, setIdentifier] =
+  const [email, setEmail] =
+    useState('');
+
+  const [phone, setPhone] =
     useState('');
 
   const [password, setPassword] =
@@ -109,6 +101,7 @@ const [privacyOpen, setPrivacyOpen] =
   const [code, setCode] = useState('');
 const [acceptedTerms, setAcceptedTerms] =
   useState(false)
+const [error, setError] = useState<string | null>(null)
   // UI State
   const [loading, setLoading] =
     useState(false);
@@ -153,15 +146,15 @@ const [acceptedTerms, setAcceptedTerms] =
   ] = useState(false);
 
   // Validation
-  const normalizedId = identifier
+  const normalizedEmail = email
     .trim()
     .toLowerCase();
 
-  const idValid =
-    loginMethod === 'email'
-      ? normalizedId.includes('@')
-      : normalizedId.replace(/\D/g, '')
-          .length >= 10;
+  const emailValid =
+    normalizedEmail.includes('@');
+
+  const phoneValid =
+    phone.replace(/\D/g, '').length >= 10;
 
   const passValid =
     password.length >= 8;
@@ -169,7 +162,8 @@ const [acceptedTerms, setAcceptedTerms] =
 const signUpReady =
   firstName.trim() &&
   lastName.trim() &&
-  idValid &&
+  emailValid &&
+  phoneValid &&
   passValid &&
   password === confirmPassword &&
   acceptedTerms;
@@ -177,7 +171,7 @@ const signUpReady =
   const detailsReady =
     mode === 'sign-up'
       ? signUpReady
-      : idValid && passValid;
+      : emailValid && passValid;
 
   const otpReady = code.length === 6;
 
@@ -199,7 +193,9 @@ const signUpReady =
     setStep('details');
     setCode('');
     setCountdown(0);
-
+    setError(null);
+    setEmail('');
+    setPhone('');
     setPassword('');
     setConfirmPassword('');
   };
@@ -224,25 +220,26 @@ const signUpReady =
     e?: React.FormEvent,
   ) => {
     if (e) e.preventDefault();
+    setError(null);
 
     if (
       mode === 'sign-up' &&
       (!firstName.trim() ||
         !lastName.trim())
     ) {
-      return toast.error(
+      return setError(
         'Enter your full name',
       );
     }
 
-    if (!idValid) {
-      return toast.error(
-        `Enter a valid ${loginMethod}`,
+    if (!emailValid) {
+      return setError(
+        'Enter a valid email',
       );
     }
 
     if (!passValid) {
-      return toast.error(
+      return setError(
         'Password must be at least 8 characters',
       );
     }
@@ -251,7 +248,7 @@ const signUpReady =
       mode === 'sign-up' &&
       password !== confirmPassword
     ) {
-      return toast.error(
+      return setError(
         'Passwords do not match',
       );
     }
@@ -260,8 +257,8 @@ const signUpReady =
       try {
         await sendOtp({
           mode,
-          identifier: normalizedId,
-          type: loginMethod,
+          identifier: normalizedEmail,
+          type: 'email',
           password,
 
           ...(mode === 'sign-up'
@@ -271,22 +268,26 @@ const signUpReady =
 
                 lastName:
                   lastName.trim(),
+
+                phone:
+                  phone.trim(),
               }
             : {}),
         });
 
-        setIdentifier(normalizedId);
+        setEmail(normalizedEmail);
 
         setCode('');
         setStep('otp');
 
         setCountdown(60);
 
+        setError(null);
         toast.success(
-          `Code sent to ${normalizedId}`,
+          `Code sent to ${normalizedEmail}`,
         );
       } catch (error) {
-        toast.error(
+        setError(
           errMsg(
             error,
             'Could not send code',
@@ -302,12 +303,13 @@ const signUpReady =
     e.preventDefault();
 
     if (!otpReady) return;
+    setError(null);
 
     wrapLoad(async () => {
       try {
         login(
           await verifyOtp(
-            identifier,
+            email,
             code,
             mode,
             password,
@@ -322,7 +324,7 @@ const signUpReady =
             : 'Signed in',
         );
       } catch (error) {
-        toast.error(
+        setError(
           errMsg(error, 'Invalid code'),
         );
       }
@@ -337,12 +339,13 @@ const signUpReady =
     e: React.FormEvent,
   ) => {
     e.preventDefault();
+    setError(null);
 
     wrapLoad(async () => {
       try {
         if (action === 'send') {
           if (!forgotIdentifier.trim()) {
-            return toast.error(
+            return setError(
               'Enter your email or phone',
             );
           }
@@ -353,12 +356,7 @@ const signUpReady =
             identifier:
               forgotIdentifier,
 
-            type:
-              forgotIdentifier.includes(
-                '@',
-              )
-                ? 'email'
-                : 'phone',
+            type: 'email',
 
             password: 'reset-temp',
           });
@@ -367,6 +365,7 @@ const signUpReady =
 
           setCountdown(60);
 
+          setError(null);
           toast.success('OTP sent');
         } else if (
           action === 'verify'
@@ -379,6 +378,7 @@ const signUpReady =
           );
 
           setForgotStep('password');
+          setError(null);
 
           toast.success(
             'OTP verified',
@@ -389,7 +389,7 @@ const signUpReady =
           if (
             newPassword.length < 8
           ) {
-            return toast.error(
+            return setError(
               'Password must be at least 8 chars',
             );
           }
@@ -398,7 +398,7 @@ const signUpReady =
             newPassword !==
             confirmPassword
           ) {
-            return toast.error(
+            return setError(
               'Passwords do not match',
             );
           }
@@ -423,7 +423,7 @@ const signUpReady =
           setStep('details');
         }
       } catch (error) {
-        toast.error(
+        setError(
           errMsg(error, 'Action failed'),
         );
       }
@@ -453,7 +453,7 @@ const signUpReady =
           {forgotMode
             ? 'Reset your password using OTP verification.'
             : step === 'otp'
-              ? `6-digit code sent to ${identifier}`
+              ? `6-digit code sent to ${email}`
               : mode === 'sign-up'
                 ? 'Create an account to get started.'
                 : 'Sign in to your account.'}
@@ -492,6 +492,10 @@ const signUpReady =
                 required
               />
 
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+
               <SubmitButton
                 loading={loading}
                 disabled={
@@ -503,11 +507,12 @@ const signUpReady =
 
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   setForgotMode(
                     false,
                   )
-                }
+                  setError(null)
+                }}
                 className="w-full text-sm text-muted-foreground hover:text-foreground"
               >
                 Back to login
@@ -533,6 +538,10 @@ const signUpReady =
                 className="h-12 text-center text-xl font-mono tracking-[0.35em]"
               />
 
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+
               <SubmitButton
                 loading={loading}
                 disabled={
@@ -546,12 +555,13 @@ const signUpReady =
               <div className="flex flex-col items-center gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={(e) =>
+                  onClick={(e) => {
+                    setError(null)
                     handleForgotFlow(
                       'send',
                       e as unknown as React.FormEvent,
                     )
-                  }
+                  }}
                   disabled={
                     loading ||
                     countdown > 0
@@ -645,6 +655,10 @@ const signUpReady =
                 </button>
               </div>
 
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+
               <SubmitButton
                 loading={loading}
                 disabled={
@@ -687,69 +701,32 @@ const signUpReady =
             </div>
           )}
 
-          <Tabs
-            value={loginMethod}
-            onValueChange={(v) => {
-              setLoginMethod(
-                v as
-                  | 'email'
-                  | 'phone',
-              );
-
-              setIdentifier('');
-            }}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2 bg-muted h-9 p-1">
-              <TabsTrigger
-                value="email"
-                className="text-xs"
-              >
-                Email
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="phone"
-                className="text-xs"
-              >
-                Phone
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
           <Input
-            type={
-              loginMethod ===
-              'email'
-                ? 'email'
-                : 'tel'
-            }
-            placeholder={
-              loginMethod ===
-              'email'
-                ? 'Email address'
-                : 'Phone number'
-            }
-            value={identifier}
+            type="email"
+            placeholder="Email address"
+            value={email}
             onChange={(e) =>
-              setIdentifier(
-                loginMethod ===
-                  'phone'
-                  ? e.target.value.replace(
-                      /\D/g,
-                      '',
-                    )
-                  : e.target.value,
-              )
-            }
-            maxLength={
-              loginMethod ===
-              'phone'
-                ? 11
-                : undefined
+              setEmail(e.target.value)
             }
             required
           />
+
+          {mode === 'sign-up' && (
+            <Input
+              type="tel"
+              placeholder="Phone number"
+              value={phone}
+              onChange={(e) =>
+                setPhone(
+                  e.target.value.replace(
+                    /\D/g,
+                    '',
+                  ),
+                )
+              }
+              maxLength={11}
+            />
+          )}
 
           <div className="relative">
             <Input
@@ -884,6 +861,10 @@ const signUpReady =
               </button>
             </div>
           )}
+
+{error && (
+  <p className="text-sm text-destructive">{error}</p>
+)}
 
 <SubmitButton
   loading={loading}
@@ -1056,6 +1037,10 @@ const signUpReady =
             className="h-12 text-center text-xl font-mono tracking-[0.35em]"
           />
 
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
+
           <SubmitButton
             loading={loading}
             disabled={!otpReady}
@@ -1068,9 +1053,10 @@ const signUpReady =
           <div className="flex flex-col items-center gap-3 pt-2">
             <button
               type="button"
-              onClick={() =>
+              onClick={() => {
+                setError(null)
                 handleSendCode()
-              }
+              }}
               disabled={
                 loading ||
                 countdown > 0
@@ -1089,6 +1075,7 @@ const signUpReady =
 
                 setCode('');
                 setCountdown(0);
+                setError(null);
               }}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
