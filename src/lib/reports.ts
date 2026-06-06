@@ -4,6 +4,7 @@ import { getReportPhotos, primaryReportPhoto } from '@/lib/reportPhotos'
 export const REPORT_STATUSES = [
   'pending',
   'published',
+  'rejected',
   'accepted',
   'en_route',
   'rescue_success',
@@ -255,6 +256,8 @@ export function statusLabel(status: ReportStatus) {
       return 'Under Review'
     case 'published':
       return 'Published'
+    case 'rejected':
+      return 'Rejected'
     case 'accepted':
       return 'Accepted'
     case 'en_route':
@@ -274,6 +277,8 @@ export function statusBadgeLabel(status: ReportStatus) {
       return 'PENDING'
     case 'published':
       return 'PUBLISHED'
+    case 'rejected':           // 👈 ADD THIS CASE
+      return 'REJECTED'
     case 'accepted':
       return 'ACCEPTED'
     case 'en_route':
@@ -326,6 +331,11 @@ export function statusTone(status: ReportStatus) {
         dot: 'bg-emerald-500',
       }
     case 'rescue_failed':
+      return {
+        badge: 'bg-destructive/10 text-destructive border-destructive/20',
+        dot: 'bg-destructive',
+      }
+    case 'rejected': // 👈 ADD THIS ENTIRE BLOCK
       return {
         badge: 'bg-destructive/10 text-destructive border-destructive/20',
         dot: 'bg-destructive',
