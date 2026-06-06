@@ -27,6 +27,7 @@ export function RescuerLogin() {
   const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
+  const [countdown, setCountdown] = useState(0)
   const verifyingRef = useRef(false)
 
   // Forgot Password State
@@ -58,11 +59,40 @@ export function RescuerLogin() {
       setIdentifier(normalized)
       sessionStorage.setItem(RESCUER_OTP_EMAIL_KEY, normalized)
       setStep('otp')
+      setCountdown(60)
       toast.success(`Code sent to ${normalized}`)
     } catch (error) { toast.error(errMsg(error, 'Could not send code')) } 
     finally { setLoading(false) }
   }
 
+  useEffect(() => {
+  if (countdown <= 0) return
+
+  const timer = setInterval(() => {
+    setCountdown((prev) => Math.max(prev - 1, 0))
+  }, 1000)
+
+  return () => clearInterval(timer)
+}, [countdown])
+
+  async function resendLoginOtp() {
+  if (countdown > 0) return
+
+  try {
+    setLoading(true)
+
+    await sendRescuerOtp(identifier, password)
+
+    setCountdown(60)
+
+    toast.success('OTP resent')
+  } catch (error) {
+    toast.error(errMsg(error, 'Could not resend OTP'))
+  } finally {
+    setLoading(false)
+  }
+}
+  
   async function verifyCode(e: React.FormEvent) {
     e.preventDefault()
     if (code.length !== 6 || verifyingRef.current) return
@@ -86,6 +116,24 @@ export function RescuerLogin() {
     finally { verifyingRef.current = false; setLoading(false) }
   }
 
+  async function resendForgotOtp() {
+  if (countdown > 0) return
+
+  try {
+    setLoading(true)
+
+    await sendRescuerOtp(forgotIdentifier, 'reset-temp')
+
+    setCountdown(60)
+
+    toast.success('OTP resent')
+  } catch (error) {
+    toast.error(errMsg(error, 'Could not resend OTP'))
+  } finally {
+    setLoading(false)
+  }
+}
+  
   async function handleForgotFlow(action: 'send' | 'verify' | 'reset', e: React.FormEvent) {
     e.preventDefault()
     try {
@@ -93,7 +141,8 @@ export function RescuerLogin() {
         if (!forgotIdentifier.trim()) return toast.error('Enter your email or phone')
         await sendRescuerOtp(forgotIdentifier, 'reset-temp')
         setForgotStep('otp')
-        toast.success('OTP sent')
+setCountdown(60)
+toast.success('OTP sent')
       } else if (action === 'verify') {
         await verifyRescuerOtp(forgotIdentifier, forgotOtp)
         setForgotStep('password')
@@ -138,6 +187,16 @@ export function RescuerLogin() {
                   <>
                     <Input inputMode="numeric" maxLength={6} value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" className="text-center text-lg tracking-[0.3em]" required />
                     <Button type="submit" className="w-full">Verify OTP</Button>
+                    <button
+  type="button"
+  onClick={resendForgotOtp}
+  disabled={loading || countdown > 0}
+  className="text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+>
+  {countdown > 0
+    ? `Resend OTP in ${countdown}s`
+    : 'Resend OTP'}
+</button>
                   </>
                 )}
                 {forgotStep === 'password' && (
@@ -172,6 +231,16 @@ export function RescuerLogin() {
                 <Button type="submit" className="w-full" disabled={loading || code.length !== 6}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
                 </Button>
+                <button
+  type="button"
+  onClick={resendLoginOtp}
+  disabled={loading || countdown > 0}
+  className="text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+>
+  {countdown > 0
+    ? `Resend OTP in ${countdown}s`
+    : 'Resend OTP'}
+</button>
                 <Button type="button" variant="ghost" className="w-full" onClick={() => { setStep('login'); setCode(''); sessionStorage.removeItem(RESCUER_OTP_EMAIL_KEY); }}>
                   Use different account
                 </Button>
