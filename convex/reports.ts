@@ -118,16 +118,14 @@ export const create = mutation({
     speciesId: v.optional(v.string()),
     condition: v.optional(v.string()),
     behavior: v.optional(v.string()),
-    color: v.optional(v.string()), // Added explicit arg
-    reporterName: v.optional(v.string()), // Added explicit arg
-    phone: v.optional(v.string()), // Added explicit arg
-    reporterPhone: v.optional(v.string()), // Added explicit arg
+    color: v.optional(v.string()), // Added explicitly
+    phone: v.optional(v.string()), // Added explicitly
     photoStorageIds: v.optional(v.array(v.id('_storage'))),
     photoDataUrls: v.optional(v.array(v.string())),
     photoDataUrl: v.optional(v.string()),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
-    ...reportCreateOptionalFields,
+    ...reportCreateOptionalFields, // This brings in reporterName and reporterPhone automatically!
   },
   returns: v.id('reports'),
   handler: async (ctx, args) => {
@@ -150,9 +148,9 @@ export const create = mutation({
       speciesId: args.speciesId || undefined,
       condition: args.condition || undefined,
       behavior: args.behavior?.trim() || undefined,
-      color: args.color?.trim() || undefined, // Inserting color
-      reporterName: args.reporterName?.trim() || undefined, // Inserting name
-      phone: args.phone?.trim() || undefined, // Inserting backup phone
+      color: args.color?.trim() || undefined, 
+      reporterName: args.reporterName?.trim() || undefined, 
+      phone: args.phone?.trim() || undefined, 
       ...photoFieldsFromNormalized(photos),
       latitude: args.latitude,
       longitude: args.longitude,
@@ -194,12 +192,12 @@ export const update = mutation({
     status: reportStatusValidator,
     condition: v.optional(v.string()),
     behavior: v.optional(v.string()),
-    color: v.optional(v.string()), // Added explicitly
+    color: v.optional(v.string()), 
     seenAt: v.optional(v.number()),
     quantity: v.optional(v.number()),
     reportedSize: v.optional(v.string()),
     reporterPhone: v.optional(v.string()),
-    reporterName: v.optional(v.string()), // Added explicitly
+    reporterName: v.optional(v.string()), 
     photoStorageIds: v.optional(v.array(v.id('_storage'))),
     photoDataUrls: v.optional(v.array(v.string())),
     photoDataUrl: v.optional(v.string()),
@@ -232,12 +230,12 @@ export const update = mutation({
       status: args.status,
       condition: args.condition || undefined,
       behavior: args.behavior?.trim() || undefined,
-      color: args.color?.trim() || undefined, // Update color
+      color: args.color?.trim() || undefined, 
       seenAt: args.seenAt,
       quantity: args.quantity,
       reportedSize: args.reportedSize?.trim() || undefined,
       reporterPhone: args.reporterPhone?.trim() || undefined,
-      reporterName: args.reporterName?.trim() || undefined, // Update name
+      reporterName: args.reporterName?.trim() || undefined, 
       ...photoPatch,
     })
     return null
