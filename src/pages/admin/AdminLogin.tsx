@@ -103,8 +103,7 @@ export function AdminLogin() {
   
 async function handleVerifyResetOtp() {
   if (forgotOtp.length !== 6) {
-    toast.error('Enter valid OTP code')
-    return
+    throw new Error('Enter valid OTP code')
   }
 
   setLoading(true)
@@ -122,6 +121,8 @@ async function handleVerifyResetOtp() {
         ? error.message
         : 'Invalid OTP code',
     )
+
+    throw error
   } finally {
     setLoading(false)
   }
@@ -351,9 +352,13 @@ setStep('credentials')
         className="w-full"
         disabled={loading || forgotOtp.length !== 6}
         onClick={async () => {
-          await handleVerifyResetOtp()
-          setForgotStep('password')
-        }}
+  try {
+    await handleVerifyResetOtp()
+    setForgotStep('password')
+  } catch {
+    return
+  }
+}}
       >
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
