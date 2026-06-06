@@ -1,10 +1,13 @@
-import { MapPin, Clock, Phone, Info } from 'lucide-react'
+import { useState } from 'react'
+import { MapPin, Clock, Phone, Info, Navigation } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { VenueHoursStatusBadge } from '@/components/sections/VenueHoursStatusBadge'
 import { useVenueHoursStatus } from '@/hooks/useVenueHoursStatus'
 import { VENUE_HOURS_LABEL, VENUE_TIMEZONE } from '@/lib/venueHours'
 
 const PWRCC_ADDRESS = 'Irawan, Puerto Princesa City, Palawan 5300'
+const PWRCC_COORDS = { lat: 9.79938415802644, lng: 118.69127134046641 }
 
 /** Google Maps embed for Palawan Wildlife Rescue and Conservation Center */
 const MAP_EMBED_URL =
@@ -13,8 +16,55 @@ const MAP_EMBED_URL =
 const MAP_DIRECTIONS_URL =
   'https://www.google.com/maps/dir/?api=1&destination=Palawan+Wildlife+Rescue+and+Conservation+Center,+Puerto+Princesa+City'
 
+function haversineDistance(
+  lat1: number, lng1: number,
+  lat2: number, lng2: number,
+): { km: number; mi: number } {
+  const R = 6371
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) ** 2
+  const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return { km, mi: km * 0.621371 }
+}
+
 export function MapSection() {
   const hoursStatus = useVenueHoursStatus()
+  const [distance, setDistance] = useState<{ km: number; mi: number } | null>(null)
+  const [distanceLoading, setDistanceLoading] = useState(false)
+  const [distanceError, setDistanceError] = useState('')
+
+  const handleGetDistance = () => {
+    if (!navigator.geolocation) {
+      setDistanceError('Geolocation is not supported by your browser.')
+      return
+    }
+    setDistanceLoading(true)
+    setDistanceError('')
+    setDistance(null)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setDistance(haversineDistance(
+          pos.coords.latitude, pos.coords.longitude,
+          PWRCC_COORDS.lat, PWRCC_COORDS.lng,
+        ))
+        setDistanceLoading(false)
+      },
+      (err) => {
+        setDistanceError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Location permission denied. Allow location access and try again.'
+            : 'Could not retrieve your location. Try again.',
+        )
+        setDistanceLoading(false)
+      },
+    )
+  }
 
   const infoItems = [
     { Icon: MapPin, label: 'Address', value: PWRCC_ADDRESS },
@@ -79,6 +129,51 @@ export function MapSection() {
                 </CardContent>
               </Card>
             ))}
+
+            {/* Distance from you */}
+            <Card className="border-border bg-background">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/8 border border-primary/15">
+                    <Navigation className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-foreground">Distance from You</p>
+                    {distance ? (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-muted-foreground">
+                          You are <strong className="text-foreground">{distance.km.toFixed(1)} km</strong> ({distance.mi.toFixed(1)} mi) away from PWRCC.
+                        </p>
+                        <a
+                          href={MAP_DIRECTIONS_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Get directions
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="mt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleGetDistance}
+                          disabled={distanceLoading}
+                          className="text-xs h-8 px-3"
+                        >
+                          {distanceLoading ? 'Locating...' : 'Check distance'}
+                        </Button>
+                        {distanceError && (
+                          <p className="mt-1.5 text-xs text-destructive">{distanceError}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Map */}
