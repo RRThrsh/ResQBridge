@@ -25,11 +25,12 @@ export type AuthMode = 'sign-in' | 'sign-up'
 
 interface SendOtpInput {
   mode: AuthMode
-  identifier: string       // Swapped from email
-  type: 'email' | 'phone'  // Added the new type
+  identifier: string
+  type: 'email' | 'phone'
   password?: string
   firstName?: string
   lastName?: string
+  phone?: string
 }
 
 function isNetworkError(error: unknown): boolean {
@@ -91,6 +92,7 @@ export async function sendOtp(input: SendOtpInput): Promise<void> {
       ? {
           firstName: input.firstName?.trim() ?? '',
           lastName: input.lastName?.trim() ?? '',
+          phone: input.phone?.trim() ?? '',
         }
       : {}),
   })

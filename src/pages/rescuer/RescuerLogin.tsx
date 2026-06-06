@@ -78,6 +78,8 @@ export function RescuerLogin() {
     setShowConfirmPassword,
   ] = useState(false)
 
+  const [error, setError] = useState<string | null>(null)
+
   useEffect(() => {
     if (wasLoggedIn.current && !isLoggedIn) {
       setIdentifier('')
@@ -111,6 +113,7 @@ export function RescuerLogin() {
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault()
+    setError(null)
 
     if (loading) return
 
@@ -135,7 +138,7 @@ export function RescuerLogin() {
 
       toast.success(`Code sent to ${normalized}`)
     } catch (error) {
-      toast.error(
+      setError(
         errMsg(error, 'Could not send code'),
       )
     } finally {
@@ -148,6 +151,7 @@ export function RescuerLogin() {
 
     try {
       setLoading(true)
+      setError(null)
 
       await sendRescuerOtp(
         identifier.trim().toLowerCase(),
@@ -158,7 +162,7 @@ export function RescuerLogin() {
 
       toast.success('OTP resent')
     } catch (error) {
-      toast.error(
+      setError(
         errMsg(error, 'Could not resend OTP'),
       )
     } finally {
@@ -168,6 +172,7 @@ export function RescuerLogin() {
 
   async function verifyCode(e: React.FormEvent) {
     e.preventDefault()
+    setError(null)
 
     if (
       code.length !== 6 ||
@@ -185,7 +190,7 @@ export function RescuerLogin() {
       ''
 
     if (!otpEmail) {
-      toast.error(
+      setError(
         'Session expired. Request a new code.',
       )
 
@@ -206,7 +211,7 @@ export function RescuerLogin() {
 
       toast.success('Welcome back.')
     } catch (error) {
-      toast.error(errMsg(error, 'Invalid code'))
+      setError(errMsg(error, 'Invalid code'))
     } finally {
       verifyingRef.current = false
       setLoading(false)
@@ -218,6 +223,7 @@ export function RescuerLogin() {
 
     try {
       setLoading(true)
+      setError(null)
 
       await sendRescuerOtp(
         forgotIdentifier.trim().toLowerCase(),
@@ -228,7 +234,7 @@ export function RescuerLogin() {
 
       toast.success('OTP resent')
     } catch (error) {
-      toast.error(
+      setError(
         errMsg(error, 'Could not resend OTP'),
       )
     } finally {
@@ -241,11 +247,12 @@ export function RescuerLogin() {
     e: React.FormEvent,
   ) {
     e.preventDefault()
+    setError(null)
 
     try {
       if (action === 'send') {
         if (!forgotIdentifier.trim()) {
-          return toast.error(
+          return setError(
             'Enter your email or phone',
           )
         }
@@ -257,6 +264,7 @@ export function RescuerLogin() {
 
         setForgotStep('otp')
         setCountdown(60)
+        setError(null)
 
         toast.success('OTP sent')
       } else if (action === 'verify') {
@@ -266,17 +274,18 @@ export function RescuerLogin() {
         )
 
         setForgotStep('password')
+        setError(null)
 
         toast.success('OTP verified')
       } else if (action === 'reset') {
         if (newPassword.length < 8) {
-          return toast.error(
+          return setError(
             'Password must be at least 8 characters',
           )
         }
 
         if (newPassword !== confirmPassword) {
-          return toast.error(
+          return setError(
             'Passwords do not match',
           )
         }
@@ -302,7 +311,7 @@ export function RescuerLogin() {
         setConfirmPassword('')
       }
     } catch (error) {
-      toast.error(errMsg(error, 'Action failed'))
+      setError(errMsg(error, 'Action failed'))
     }
   }
 
@@ -367,6 +376,10 @@ export function RescuerLogin() {
                       required
                     />
 
+                    {error && (
+                      <p className="text-sm text-destructive">{error}</p>
+                    )}
+
                     <Button
                       type="submit"
                       className="w-full"
@@ -378,9 +391,10 @@ export function RescuerLogin() {
                       type="button"
                       variant="ghost"
                       className="w-full"
-                      onClick={() =>
+                      onClick={() => {
                         setForgotMode(false)
-                      }
+                        setError(null)
+                      }}
                     >
                       Back to login
                     </Button>
@@ -404,6 +418,10 @@ export function RescuerLogin() {
                       className="text-center text-lg tracking-[0.3em]"
                       required
                     />
+
+                    {error && (
+                      <p className="text-sm text-destructive">{error}</p>
+                    )}
 
                     <Button
                       type="submit"
@@ -501,6 +519,10 @@ export function RescuerLogin() {
                       </button>
                     </div>
 
+                    {error && (
+                      <p className="text-sm text-destructive">{error}</p>
+                    )}
+
                     <Button
                       type="submit"
                       className="w-full"
@@ -517,10 +539,11 @@ export function RescuerLogin() {
               >
                 <div>
                   <label className="mb-1 block text-xs text-muted-foreground">
-                    Email or Phone
+                    Email
                   </label>
 
                   <Input
+                    type="email"
                     value={identifier}
                     onChange={(e) =>
                       setIdentifier(e.target.value)
@@ -573,12 +596,17 @@ export function RescuerLogin() {
                     onClick={() => {
                       setForgotMode(true)
                       setForgotStep('identifier')
+                      setError(null)
                     }}
                     className="text-xs text-primary hover:underline"
                   >
                     Forgot password?
                   </button>
                 </div>
+
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
 
                 <Button
                   type="submit"
@@ -620,6 +648,10 @@ export function RescuerLogin() {
                   required
                 />
 
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
+
                 <Button
                   type="submit"
                   className="w-full"
@@ -656,6 +688,7 @@ export function RescuerLogin() {
                   onClick={() => {
                     setStep('login')
                     setCode('')
+                    setError(null)
 
                     sessionStorage.removeItem(
                       RESCUER_OTP_EMAIL_KEY,
