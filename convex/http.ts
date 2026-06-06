@@ -376,8 +376,39 @@ const domesticSendOtp = httpAction(async (ctx, request) => {
     const allowed = await ctx.runQuery(api.domestic.isDomesticApprover, { email })
     if (!allowed) return jsonResponse({ error: 'This email is not authorized for domestic approver access.' }, 400)
 
-    const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, { email })
-    if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
+    const profile =
+  await ctx.runQuery(
+    api.domestic
+      .getDomesticApproverForLogin,
+    { email },
+  )
+
+if (!profile) {
+  return jsonResponse(
+    {
+      error:
+        'Domestic approver account not found.',
+    },
+    400,
+  )
+}
+
+const password = String(
+  body.password ?? '',
+)
+
+if (
+  profile.password !==
+  password
+) {
+  return jsonResponse(
+    {
+      error:
+        'Incorrect password.',
+    },
+    401,
+  )
+}
 
     const code = generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
@@ -407,7 +438,39 @@ const domesticVerifyOtp = httpAction(async (ctx, request) => {
 
     const secret = getOtpSecret()
     await ctx.runMutation(api.otp.verifyVerificationCode, { secret, email, scope: 'admin', code })
-    const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, { email })
+    const profile =
+  await ctx.runQuery(
+    api.domestic
+      .getDomesticApproverForLogin,
+    { email },
+  )
+
+if (!profile) {
+  return jsonResponse(
+    {
+      error:
+        'Domestic approver account not found.',
+    },
+    400,
+  )
+}
+
+const password = String(
+  body.password ?? '',
+)
+
+if (
+  profile.password !==
+  password
+) {
+  return jsonResponse(
+    {
+      error:
+        'Incorrect password.',
+    },
+    401,
+  )
+}
 
     if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
 
