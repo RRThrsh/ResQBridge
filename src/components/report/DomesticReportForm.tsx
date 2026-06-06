@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-// --- IMPORTS FOR INTERACTIVE MAP ---
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -37,7 +36,7 @@ const customMarkerIcon = L.divIcon({
   className: 'custom-map-marker',
   html: `<div style="background-color: hsl(var(--primary)); width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
   iconSize: [18, 18],
-  iconAnchor: [9, 9], // Points to the exact center of the 18x18 div
+  iconAnchor: [9, 9],
 })
 
 async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
@@ -123,7 +122,6 @@ function ClickableMap({
 }) {
   const map = useMap()
 
-  // ONLY move the camera if the source is GPS. Do nothing to the camera on click.
   useEffect(() => {
     if (coords && coords.source === 'gps') {
       map.flyTo([coords.lat, coords.lng], 16, { animate: true })
@@ -152,40 +150,36 @@ export function DomesticReportForm() {
   const [reportType, setReportType] = useState('missing')
   const [photos, setPhotos] = useState<ReportPhotoItem[]>([])
   
-  // Track where the coordinates came from
   const [coords, setCoords] = useState<{ lat: number; lng: number; source?: 'gps' | 'click' } | null>(null)
 
-const [formData, setFormData] = useState({
-  species: '',
-  animalName: '',
-  color: '',
-  condition: '',
-  behavior: '',
-  location: '',
-  description: '',
-  reporterPhone: '',
-  quantity: '1',
-  reportedSize: '',
-  seenAt: '',
-})
+  const [formData, setFormData] = useState({
+    species: '',
+    animalName: '',
+    color: '',
+    condition: '',
+    behavior: '',
+    location: '',
+    description: '',
+    reporterPhone: '',
+    quantity: '1',
+    reportedSize: '',
+    seenAt: '',
+  })
 
-const userContactPhone = profile?.contactPhone;
-  const hasPrefilledPhone = useRef(false); // Track if it has been pre-filled
+  const userContactPhone = profile?.contactPhone;
+  const hasPrefilledPhone = useRef(false);
 
   useEffect(() => {
-    // Only pre-fill if we have a number AND we haven't done it yet
     if (userContactPhone && !hasPrefilledPhone.current) {
       setFormData((prev) => {
         let cleaned = userContactPhone.replace(/\D/g, '')
         if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
         return { ...prev, reporterPhone: cleaned }
       })
-      // Lock it so it never runs again, allowing the user to edit/delete freely
       hasPrefilledPhone.current = true;
     }
   }, [userContactPhone])
 
-  // --- VERCEL FIX: Wrapped in useCallback to satisfy ESLint ---
   const updateLocationData = useCallback(async (lat: number, lng: number, source: 'gps' | 'click' = 'click') => {
     setLocFetching(true)
     setCoords({ lat, lng, source })
@@ -204,7 +198,7 @@ const userContactPhone = profile?.contactPhone;
     } finally {
       setLocFetching(false)
     }
-  }, []) // Empty dependency array
+  }, [])
 
   const fetchCurrentLocation = useCallback(async () => {
     if (!('geolocation' in navigator)) {
@@ -215,7 +209,6 @@ const userContactPhone = profile?.contactPhone;
     setLocFetching(true)
     try {
       const { lat, lng, accuracyM } = await getRefinedPosition()
-      // Pass 'gps' so the map knows to fly here
       await updateLocationData(lat, lng, 'gps')
 
       const accNote = accuracyM < 9999 ? ` (~${Math.round(accuracyM)} m accuracy)` : ''
@@ -231,7 +224,7 @@ const userContactPhone = profile?.contactPhone;
         toast.error('Could not get an accurate location. Try again or enter it manually.')
       }
     }
-  }, [updateLocationData]) // --- VERCEL FIX: Added missing dependency here ---
+  }, [updateLocationData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -269,20 +262,6 @@ const userContactPhone = profile?.contactPhone;
 
     setLoading(true)
 
-const descriptionParts = [formData.description]
-
-if (formData.color) {
-  descriptionParts.unshift(`Color/markings: ${formData.color}`)
-}
-
-if (formData.condition) {
-  descriptionParts.unshift(`Condition: ${formData.condition}`)
-}
-
-if (formData.behavior) {
-  descriptionParts.unshift(`Behavior: ${formData.behavior}`)
-}
-
     try {
       const seenAt = formData.seenAt
         ? new Date(formData.seenAt).getTime()
@@ -296,9 +275,14 @@ if (formData.behavior) {
           formData.animalName ||
           (reportType === 'missing' ? 'Unknown Pet' : 'Stray/Found Animal'),
         location: formData.location,
-        description: descriptionParts.join('\n\n'),
+        description: formData.description,
         speciesId: formData.species.trim(),
         reporterPhone: cleanPhone,
+        phone: cleanPhone,
+        reporterName: profile?.firstName ? `${profile.firstName} ${profile.lastName}`.trim() : profile?.name || '',
+        color: formData.color || undefined,
+        condition: formData.condition || undefined,
+        behavior: formData.behavior || undefined,
         quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
@@ -358,255 +342,255 @@ if (formData.behavior) {
             />
           </div>
 
-{reportType !== 'stray' && reportType !== 'injured' && (
-  <div className="space-y-3">
-    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-      {reportType === 'missing' ? "Pet's Name *" : 'Name (if known)'}
-    </label>
+          {reportType !== 'stray' && reportType !== 'injured' && (
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                {reportType === 'missing' ? "Pet's Name *" : 'Name (if known)'}
+              </label>
 
-    <Input
-      value={formData.animalName}
-      onChange={(e) =>
-        setFormData({
-          ...formData,
-          animalName: e.target.value,
-        })
-      }
-      placeholder="e.g. Bella"
-      className="h-12 bg-background border-border rounded-xl"
-    />
-  </div>
-)}
-        </div>
-{reportType === 'injured' && (
-  <div className="space-y-6">
-
-    {/* Nature of Injury */}
-    <div className="space-y-3">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Nature of Injury (Check all that apply)
-      </label>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-        {[
-          'Open wound / bleeding',
-          'Broken bone / suspected fracture',
-          'Limping or difficulty walking',
-          'Hit by a vehicle',
-          'Burn injury',
-          'Animal trapped or entangled',
-          'Eye injury',
-          'Head injury',
-          'Bite wound from another animal',
-          'Skin injury or infection',
-          'Unconscious / unresponsive',
-          'Difficulty breathing',
-          'Weak or unable to stand',
-          'Signs of poisoning',
-        ].map((injury) => (
-          <label
-            key={injury}
-            className="flex items-center gap-2 rounded-xl border border-border bg-background p-3 text-sm"
-          >
-            <input
-              type="checkbox"
-              checked={formData.condition.includes(injury)}
-              onChange={(e) => {
-                const current =
-                  formData.condition
-                    ? formData.condition.split(', ')
-                    : []
-
-                if (e.target.checked) {
+              <Input
+                value={formData.animalName}
+                onChange={(e) =>
                   setFormData({
                     ...formData,
-                    condition: [...current, injury].join(', '),
-                  })
-                } else {
-                  setFormData({
-                    ...formData,
-                    condition: current
-                      .filter((i) => i !== injury)
-                      .join(', '),
+                    animalName: e.target.value,
                   })
                 }
-              }}
-            />
+                placeholder="e.g. Bella"
+                className="h-12 bg-background border-border rounded-xl"
+              />
+            </div>
+          )}
+        </div>
+        {reportType === 'injured' && (
+          <div className="space-y-6">
 
-            <span>{injury}</span>
-          </label>
-        ))}
-      </div>
-    </div>
+            {/* Nature of Injury */}
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Nature of Injury (Check all that apply)
+              </label>
 
-    {/* Severity of Injury */}
-    <div className="space-y-3">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Severity of Injury
-      </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-      <Select
-        value={formData.behavior}
-        onValueChange={(value) =>
-          setFormData({
-            ...formData,
-            behavior: value ?? '',
-          })
-        }
-      >
-        <SelectTrigger className="h-12 rounded-xl border-border bg-background">
-          <SelectValue placeholder="Select severity" />
-        </SelectTrigger>
+                {[
+                  'Open wound / bleeding',
+                  'Broken bone / suspected fracture',
+                  'Limping or difficulty walking',
+                  'Hit by a vehicle',
+                  'Burn injury',
+                  'Animal trapped or entangled',
+                  'Eye injury',
+                  'Head injury',
+                  'Bite wound from another animal',
+                  'Skin injury or infection',
+                  'Unconscious / unresponsive',
+                  'Difficulty breathing',
+                  'Weak or unable to stand',
+                  'Signs of poisoning',
+                ].map((injury) => (
+                  <label
+                    key={injury}
+                    className="flex items-center gap-2 rounded-xl border border-border bg-background p-3 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.condition.includes(injury)}
+                      onChange={(e) => {
+                        const current =
+                          formData.condition
+                            ? formData.condition.split(', ')
+                            : []
 
-        <SelectContent>
-          <SelectItem value="critical">
-            Critical — Severe bleeding, unconscious, difficulty breathing, or life-threatening injury
-          </SelectItem>
+                        if (e.target.checked) {
+                          setFormData({
+                            ...formData,
+                            condition: [...current, injury].join(', '),
+                          })
+                        } else {
+                          setFormData({
+                            ...formData,
+                            condition: current
+                              .filter((i) => i !== injury)
+                              .join(', '),
+                          })
+                        }
+                      }}
+                    />
 
-          <SelectItem value="urgent">
-            Urgent — Serious injury requiring immediate medical attention but animal is conscious
-          </SelectItem>
+                    <span>{injury}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
-          <SelectItem value="moderate">
-            Moderate — Visible injury but animal is stable and mobile
-          </SelectItem>
+            {/* Severity of Injury */}
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Severity of Injury
+              </label>
 
-          <SelectItem value="minor">
-            Minor — Small wounds or minor injuries
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+              <Select
+                value={formData.behavior}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    behavior: value ?? '',
+                  })
+                }
+              >
+                <SelectTrigger className="h-12 rounded-xl border-border bg-background">
+                  <SelectValue placeholder="Select severity" />
+                </SelectTrigger>
 
-    {/* Current Condition */}
-    <div className="space-y-3">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Animal's Current Condition
-      </label>
+                <SelectContent>
+                  <SelectItem value="critical">
+                    Critical — Severe bleeding, unconscious, difficulty breathing, or life-threatening injury
+                  </SelectItem>
 
-      <Select
-        value={formData.reportedSize}
-        onValueChange={(value) =>
-          setFormData({
-            ...formData,
-            reportedSize: value ?? '',
-          })
-        }
-      >
-        <SelectTrigger className="h-12 rounded-xl border-border bg-background">
-          <SelectValue placeholder="Select condition" />
-        </SelectTrigger>
+                  <SelectItem value="urgent">
+                    Urgent — Serious injury requiring immediate medical attention but animal is conscious
+                  </SelectItem>
 
-        <SelectContent>
-          <SelectItem value="alert">
-            Alert and responsive
-          </SelectItem>
+                  <SelectItem value="moderate">
+                    Moderate — Visible injury but animal is stable and mobile
+                  </SelectItem>
 
-          <SelectItem value="frightened">
-            Frightened but mobile
-          </SelectItem>
+                  <SelectItem value="minor">
+                    Minor — Small wounds or minor injuries
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <SelectItem value="weak">
-            Weak and lethargic
-          </SelectItem>
+            {/* Current Condition */}
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Animal's Current Condition
+              </label>
 
-          <SelectItem value="unable">
-            Unable to move
-          </SelectItem>
+              <Select
+                value={formData.reportedSize}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    reportedSize: value ?? '',
+                  })
+                }
+              >
+                <SelectTrigger className="h-12 rounded-xl border-border bg-background">
+                  <SelectValue placeholder="Select condition" />
+                </SelectTrigger>
 
-          <SelectItem value="unconscious">
-            Unconscious
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+                <SelectContent>
+                  <SelectItem value="alert">
+                    Alert and responsive
+                  </SelectItem>
 
-    {/* Additional Information */}
-    <div className="space-y-3">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Additional Information
-      </label>
+                  <SelectItem value="frightened">
+                    Frightened but mobile
+                  </SelectItem>
 
-      <Textarea
-        value={formData.description}
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            description: e.target.value,
-          })
-        }
-        placeholder="Describe the animal's injuries and condition..."
-        className="min-h-[100px] rounded-xl border-border bg-background resize-none"
-      />
+                  <SelectItem value="weak">
+                    Weak and lethargic
+                  </SelectItem>
 
-      <p className="text-xs text-muted-foreground">
-        Not required
-      </p>
-    </div>
+                  <SelectItem value="unable">
+                    Unable to move
+                  </SelectItem>
 
-    {/* Rescue Assistance Priority */}
-    <div className="space-y-3">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Rescue Assistance Priority Level
-      </label>
+                  <SelectItem value="unconscious">
+                    Unconscious
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-      <Select
-        value={formData.color}
-        onValueChange={(value) =>
-          setFormData({
-            ...formData,
-            color: value ?? '',
-          })
-        }
-      >
-        <SelectTrigger className="h-12 rounded-xl border-border bg-background">
-          <SelectValue placeholder="Select priority level" />
-        </SelectTrigger>
+            {/* Additional Information */}
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Additional Information
+              </label>
 
-        <SelectContent>
-          <SelectItem value="critical">
-            Critical — Immediate Response Required
-          </SelectItem>
+              <Textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    description: e.target.value,
+                  })
+                }
+                placeholder="Describe the animal's injuries and condition..."
+                className="min-h-[100px] rounded-xl border-border bg-background resize-none"
+              />
 
-          <SelectItem value="urgent">
-            Urgent — Response Needed within 24h
-          </SelectItem>
+              <p className="text-xs text-muted-foreground">
+                Not required
+              </p>
+            </div>
 
-          <SelectItem value="moderate">
-            Moderate — Needs Assessment or Assistance
-          </SelectItem>
+            {/* Rescue Assistance Priority */}
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Rescue Assistance Priority Level
+              </label>
 
-          <SelectItem value="low">
-            Low Priority — Observation / Information only
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+              <Select
+                value={formData.color}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    color: value ?? '',
+                  })
+                }
+              >
+                <SelectTrigger className="h-12 rounded-xl border-border bg-background">
+                  <SelectValue placeholder="Select priority level" />
+                </SelectTrigger>
 
-  </div>
-)}
-{reportType !== 'injured' && (
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-    <div className="space-y-3">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Color / Markings
-      </label>
+                <SelectContent>
+                  <SelectItem value="critical">
+                    Critical — Immediate Response Required
+                  </SelectItem>
 
-      <Input
-        value={formData.color}
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            color: e.target.value,
-          })
-        }
-        placeholder="e.g. Black with white paws"
-        className="h-12 bg-background border-border rounded-xl"
-      />
-    </div>
-  </div>
-)}
+                  <SelectItem value="urgent">
+                    Urgent — Response Needed within 24h
+                  </SelectItem>
+
+                  <SelectItem value="moderate">
+                    Moderate — Needs Assessment or Assistance
+                  </SelectItem>
+
+                  <SelectItem value="low">
+                    Low Priority — Observation / Information only
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+          </div>
+        )}
+        {reportType !== 'injured' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Color / Markings
+              </label>
+
+              <Input
+                value={formData.color}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    color: e.target.value,
+                  })
+                }
+                placeholder="e.g. Black with white paws"
+                className="h-12 bg-background border-border rounded-xl"
+              />
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -653,7 +637,7 @@ if (formData.behavior) {
               style={{ height: '100%', width: '100%', zIndex: 0 }}
             >
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+                attribution='© <a href="https://www.openstreetmap.org/copyright">OSM</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               <ClickableMap 
@@ -680,56 +664,56 @@ if (formData.behavior) {
           />
         </div>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
-  <div className="space-y-3">
-    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-      Reported Quantity
-    </label>
+          <div className="space-y-3">
+            <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Reported Quantity
+            </label>
 
-    <Input
-      type="number"
-      min={1}
-      value={formData.quantity}
-      onChange={(e) =>
-        setFormData({
-          ...formData,
-          quantity: e.target.value,
-        })
-      }
-      className="h-12 bg-background border-border rounded-xl"
-    />
-  </div>
+            <Input
+              type="number"
+              min={1}
+              value={formData.quantity}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  quantity: e.target.value,
+                })
+              }
+              className="h-12 bg-background border-border rounded-xl"
+            />
+          </div>
 
-  {reportType !== 'injured' && (
-    <div className="space-y-3">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Reported Size
-      </label>
+          {reportType !== 'injured' && (
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Reported Size
+              </label>
 
-      <Select
-        value={formData.reportedSize}
-        onValueChange={(value) =>
-          setFormData({
-            ...formData,
-            reportedSize: value ?? '',
-          })
-        }
-      >
-        <SelectTrigger className="h-12 bg-background border-border rounded-xl">
-          <SelectValue placeholder="Select size" />
-        </SelectTrigger>
+              <Select
+                value={formData.reportedSize}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    reportedSize: value ?? '',
+                  })
+                }
+              >
+                <SelectTrigger className="h-12 bg-background border-border rounded-xl">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
 
-        <SelectContent>
-          <SelectItem value="small">Small</SelectItem>
-          <SelectItem value="medium">Medium</SelectItem>
-          <SelectItem value="large">Large</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  )}
+                <SelectContent>
+                  <SelectItem value="small">Small</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="large">Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-</div>
+        </div>
 
         {user ? (
           <ReportContactField
@@ -745,26 +729,26 @@ if (formData.behavior) {
           />
         ) : null}
 
-{reportType !== 'injured' && (
-  <div className="space-y-3">
-    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-      Additional Details <span className="text-destructive">*</span>
-    </label>
+        {reportType !== 'injured' && (
+          <div className="space-y-3">
+            <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Additional Details <span className="text-destructive">*</span>
+            </label>
 
-    <Textarea
-      value={formData.description}
-      onChange={(e) =>
-        setFormData({
-          ...formData,
-          description: e.target.value,
-        })
-      }
-      placeholder="Provide any additional context about the animal..."
-      className="min-h-[100px] bg-background border-border rounded-xl resize-none"
-      required
-    />
-  </div>
-)}
+            <Textarea
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  description: e.target.value,
+                })
+              }
+              placeholder="Provide any additional context about the animal..."
+              className="min-h-[100px] bg-background border-border rounded-xl resize-none"
+              required
+            />
+          </div>
+        )}
 
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
