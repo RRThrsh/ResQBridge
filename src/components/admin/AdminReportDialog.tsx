@@ -27,7 +27,6 @@ import {
   DOMESTIC_REPORT_TYPES,
   WILDLIFE_BEHAVIORS,
   WILDLIFE_CONDITIONS,
-  behaviorLabel,
   canAdminAssignRescuer,
   formatReporterName,
   formatReportType,
@@ -170,7 +169,7 @@ if (!open && previewImage) {
                     </div>
                   </div>
                 )}
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg bg-background text-foreground dark:bg-zinc-950 dark:text-white dark:border-zinc-800">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl bg-background text-foreground dark:bg-zinc-950 dark:text-white dark:border-zinc-800">
         <DialogHeader>
           <DialogTitle>{isView ? 'View report' : 'Edit report'}</DialogTitle>
           <DialogDescription>
@@ -224,53 +223,134 @@ if (!open && previewImage) {
             </div>
           ) : null}
 
-          {isView ? (
-            <dl className="grid gap-3 text-sm">
-              <div>
-                <dt className="text-xs text-muted-foreground">Reporter</dt>
-                <dd className="font-medium">
-                  {formatReporterName(
-                    activeReport.reporterFirstName,
-                    activeReport.reporterLastName,
-                  )}
-                </dd>
-              </div>
-              {activeReport.reporterPhone ? (
-                <div>
-                  <dt className="text-xs text-muted-foreground">Contact</dt>
-                  <dd>{activeReport.reporterPhone}</dd>
-                </div>
-              ) : null}
-              <div>
-                <dt className="text-xs text-muted-foreground">Animal</dt>
-                <dd className="font-medium">{activeReport.animalName}</dd>
-              </div>
-              <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                <div>
-                  <dt className="text-xs text-muted-foreground">Location</dt>
-                  <dd>{activeReport.location}</dd>
-                </div>
-              </div>
-              {activeReport.description ? (
-                <div>
-                  <dt className="text-xs text-muted-foreground">Description</dt>
-                  <dd className="text-muted-foreground">{activeReport.description}</dd>
-                </div>
-              ) : null}
-              <div>
-                <dt className="text-xs text-muted-foreground">Behavior / condition</dt>
-                <dd className="capitalize">
-                  {behaviorLabel(activeReport.behavior)}
-                  {activeReport.condition ? ` · ${activeReport.condition.replace(/-/g, ' ')}` : ''}
-                </dd>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <dd>{formatDateTime(activeReport.seenAt ?? activeReport.createdAt)}</dd>
-              </div>
-            </dl>
-          ) : (
+{isView ? (
+  <dl className="grid gap-4 text-sm">
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Species
+        </dt>
+        <dd className="font-medium">
+          {activeReport.speciesId ?? 'N/A'}
+        </dd>
+      </div>
+
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Report Type
+        </dt>
+        <dd className="capitalize">
+          {activeReport.type}
+        </dd>
+      </div>
+
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Reporter
+        </dt>
+        <dd className="font-medium">
+          {formatReporterName(
+            activeReport.reporterFirstName,
+            activeReport.reporterLastName,
+          )}
+        </dd>
+      </div>
+
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Contact
+        </dt>
+        <dd>
+          {activeReport.reporterPhone ?? 'N/A'}
+        </dd>
+      </div>
+
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Quantity
+        </dt>
+        <dd>
+          {activeReport.quantity ?? 1}
+        </dd>
+      </div>
+
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Size / Condition
+        </dt>
+        <dd className="capitalize">
+          {activeReport.reportedSize ?? 'N/A'}
+        </dd>
+      </div>
+
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Color / Markings
+        </dt>
+        <dd>
+          {activeReport.color ?? 'N/A'}
+        </dd>
+      </div>
+
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Behavior / Severity
+        </dt>
+        <dd className="capitalize">
+          {activeReport.behavior ?? 'N/A'}
+        </dd>
+      </div>
+
+    </div>
+
+    <div className="flex items-start gap-2">
+      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Location
+        </dt>
+
+        <dd>{activeReport.location}</dd>
+      </div>
+    </div>
+
+    {activeReport.condition ? (
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Injuries / Condition
+        </dt>
+
+        <dd className="whitespace-pre-wrap">
+          {activeReport.condition}
+        </dd>
+      </div>
+    ) : null}
+
+    {activeReport.description ? (
+      <div>
+        <dt className="text-xs text-muted-foreground">
+          Description
+        </dt>
+
+        <dd className="whitespace-pre-wrap text-muted-foreground">
+          {activeReport.description}
+        </dd>
+      </div>
+    ) : null}
+
+    <div className="flex items-center gap-2 text-muted-foreground">
+      <Calendar className="h-4 w-4" />
+
+      <dd>
+        {formatDateTime(activeReport.seenAt ?? activeReport.createdAt)}
+      </dd>
+    </div>
+
+  </dl>
+) : (
             <div className="grid gap-3">
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">Animal name</label>

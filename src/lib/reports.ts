@@ -40,6 +40,9 @@ export interface StoredReport {
   reportedSize?: string
   reporterPhone?: string
   createdAt: number
+   color?: string
+  reporterName?: string
+  phone?: string
 }
 
 export interface AdminStoredReport extends StoredReport {
@@ -93,6 +96,9 @@ export function docToStored(doc: Doc<'reports'>): StoredReport {
     reportedSize: doc.reportedSize,
     reporterPhone: doc.reporterPhone,
     createdAt: doc.createdAt,
+    color: doc.color,
+reporterName: doc.reporterName,
+phone: doc.phone,
   }
 }
 
