@@ -27,14 +27,12 @@ export async function seedDefaultAdmin(ctx: MutationCtx) {
   const existing = await getAdminByEmail(ctx, email)
 
   if (existing) {
-    if (
-      existing.firstName !== DEFAULT_ADMIN.firstName ||
-      existing.lastName !== DEFAULT_ADMIN.lastName
-    ) {
-      await ctx.db.patch(existing._id, {
-        firstName: DEFAULT_ADMIN.firstName,
-        lastName: DEFAULT_ADMIN.lastName,
-      })
+    const patch: Record<string, unknown> = {}
+    if (existing.firstName !== DEFAULT_ADMIN.firstName) patch.firstName = DEFAULT_ADMIN.firstName
+    if (existing.lastName !== DEFAULT_ADMIN.lastName) patch.lastName = DEFAULT_ADMIN.lastName
+    if (!existing.password) patch.password = DEFAULT_ADMIN.password
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch(existing._id, patch)
     }
     return existing
   }
@@ -43,6 +41,7 @@ export async function seedDefaultAdmin(ctx: MutationCtx) {
     email,
     firstName: DEFAULT_ADMIN.firstName,
     lastName: DEFAULT_ADMIN.lastName,
+    password: DEFAULT_ADMIN.password,
     createdAt: Date.now(),
   })
 }
