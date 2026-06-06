@@ -3,42 +3,42 @@ import { v } from 'convex/values'
 import { reportStatusSchemaValidator } from './lib/reportStatus'
 
 export default defineSchema({
-admins: defineTable({
-  email: v.string(),
-  firstName: v.string(),
-  lastName: v.string(),
-  createdAt: v.number(),
-  password: v.optional(v.string()),
-  activeSessionId: v.optional(v.string()),
-}).index('by_email', ['email']),
+  admins: defineTable({
+    email: v.string(),
+    firstName: v.string(),
+    lastName: v.string(),
+    createdAt: v.number(),
+    password: v.optional(v.string()),
+    activeSessionId: v.optional(v.string()),
+  }).index('by_email', ['email']),
 
-rescuers: defineTable({
-  email: v.string(),
-  firstName: v.string(),
-  lastName: v.string(),
-  contactPhone: v.optional(v.string()),
-  createdAt: v.number(),
-  password: v.optional(v.string()),
-  activeSessionId: v.optional(v.string()),
-}).index('by_email', ['email']),
+  rescuers: defineTable({
+    email: v.string(),
+    firstName: v.string(),
+    lastName: v.string(),
+    contactPhone: v.optional(v.string()),
+    createdAt: v.number(),
+    password: v.optional(v.string()),
+    activeSessionId: v.optional(v.string()),
+  }).index('by_email', ['email']),
 
-users: defineTable({
-  email: v.string(),
-  firstName: v.string(),
-  lastName: v.string(),
-  role: v.optional(
-    v.union(
-      v.literal('admin'),
-      v.literal('user'),
-      v.literal('rescuer'),
-      v.literal('domestic_approver'),
+  users: defineTable({
+    email: v.string(),
+    firstName: v.string(),
+    lastName: v.string(),
+    role: v.optional(
+      v.union(
+        v.literal('admin'),
+        v.literal('user'),
+        v.literal('rescuer'),
+        v.literal('domestic_approver'),
+      ),
     ),
-  ),
-  contactPhone: v.optional(v.string()),
-  createdAt: v.number(),
-  password: v.optional(v.string()),
-  activeSessionId: v.optional(v.string()),
-}).index('by_email', ['email']),
+    contactPhone: v.optional(v.string()),
+    createdAt: v.number(),
+    password: v.optional(v.string()),
+    activeSessionId: v.optional(v.string()),
+  }).index('by_email', ['email']),
 
   siteContent: defineTable({
     key: v.union(v.literal('wildlife'), v.literal('news')),
@@ -66,6 +66,7 @@ users: defineTable({
     speciesId: v.optional(v.string()),
     condition: v.optional(v.string()),
     behavior: v.optional(v.string()),
+    color: v.optional(v.string()), // Added
     photoDataUrl: v.optional(v.string()),
     photoDataUrls: v.optional(v.array(v.string())),
     photoStorageIds: v.optional(v.array(v.id('_storage'))),
@@ -79,7 +80,9 @@ users: defineTable({
     reportedSize: v.optional(v.string()),
     reporterFirstName: v.optional(v.string()),
     reporterLastName: v.optional(v.string()),
+    reporterName: v.optional(v.string()), // Added
     reporterPhone: v.optional(v.string()),
+    phone: v.optional(v.string()), // Added
     createdAt: v.number(),
   })
     .index('by_user_email', ['userEmail'])
