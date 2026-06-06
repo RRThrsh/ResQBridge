@@ -138,13 +138,24 @@ export function AdminNewsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {!isCreate && displayItem?.image ? (
-          <img
-            src={displayItem.image}
-            alt={displayItem.title}
-            className="max-h-40 w-full rounded-lg border border-border object-cover"
-          />
-        ) : null}
+{!isCreate && displayItem?.image ? (
+  <button
+    type="button"
+    onClick={() =>
+      window.open(
+        displayItem.image,
+        '_blank',
+      )
+    }
+    className="w-full"
+  >
+    <img
+      src={displayItem.image}
+      alt={displayItem.title}
+      className="max-h-40 w-full rounded-lg border border-border object-cover transition-transform duration-200 hover:scale-[1.01]"
+    />
+  </button>
+) : null}
 
         {isView && displayItem ? (
           <dl className="grid gap-3 text-sm">

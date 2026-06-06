@@ -135,21 +135,11 @@ export function AdminNewsPage() {
               ) : (
                 pagination.paginatedRows.map((item) => (
                   <tr key={item.id} className="border-b border-border/60">
-                   <AdminTableCell
+<AdminTableCell
   className="font-medium"
   title={item.title}
 >
-  <div className="flex items-center gap-3">
-    <img
-      src={item.image}
-      alt={item.title}
-      className="h-12 w-16 rounded-md object-cover border border-border"
-    />
-
-    <span className="line-clamp-2">
-      {item.title}
-    </span>
-  </div>
+  {item.title}
 </AdminTableCell>
                     <AdminTableCell className="capitalize">{item.type}</AdminTableCell>
                     <AdminTableCell>
