@@ -32,12 +32,9 @@ async function sendOtpEmail(
 
 // --- SMS SENDER VIA PHILSMS ---
 async function sendOtpSms(_phone: string, code: string) {
-  // 1. HARDCODED NOTIFICATION NUMBER
-  // We are ignoring the 'phone' argument so all texts go to this exact number
   let cleanNumber = '09539814023'.replace(/\D/g, '')
   let formattedPhone = ''
   
-  // 2. FORMATTING FIX: Strictly using '63' (NO PLUS SIGN)
   if (cleanNumber.length === 11 && cleanNumber.startsWith('09')) {
     formattedPhone = '63' + cleanNumber.substring(1)
   } else if (cleanNumber.length === 10 && cleanNumber.startsWith('9')) {
@@ -48,14 +45,12 @@ async function sendOtpSms(_phone: string, code: string) {
     formattedPhone = cleanNumber
   }
 
-  // 3. Grab your token directly from the environment variables!
   const philsmsToken = process.env.PHILSMS_API_TOKEN
   
   if (!philsmsToken) {
     throw new Error('PhilSMS API token is missing in Convex environment variables.')
   }
 
-  // 4. Send the request
   const response = await fetch('https://dashboard.philsms.com/api/v3/sms/send', {
     method: 'POST',
     headers: {
@@ -64,14 +59,13 @@ async function sendOtpSms(_phone: string, code: string) {
       'Accept': 'application/json',
     },
     body: JSON.stringify({
-      recipient: formattedPhone, // Now sending the perfect 63 format
+      recipient: formattedPhone, 
       sender_id: 'PhilSMS', 
       type: 'plain',
       message: `Your verification code is: ${code}. Please do not share this with anyone.`,
     }),
   })
 
-  // Capture the actual error from PhilSMS
   if (!response.ok) {
     const errorText = await response.text()
     console.error('PhilSMS API Error:', errorText)
@@ -198,7 +192,7 @@ const adminSendOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
-    const password = String(body.password ?? '') // 1. ADDED: Extract password
+    const password = String(body.password ?? '')
 
     if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
@@ -211,8 +205,8 @@ const adminSendOtp = httpAction(async (ctx, request) => {
     const profile = await ctx.runQuery(api.admin.getAdminForLogin, { email })
     if (!profile) return jsonResponse({ error: 'Admin account not found.' }, 400)
 
-    // 2. ADDED: The crucial password check
-    if (profile.password !== password) {
+    // ✅ Reset flow bypass added here
+    if (password !== 'reset-temp' && profile.password !== password) {
       return jsonResponse({ error: 'Incorrect password.' }, 401)
     }
 
@@ -262,6 +256,7 @@ const rescuerSendOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
+    const password = String(body.password ?? '')
 
     if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
@@ -269,39 +264,13 @@ const rescuerSendOtp = httpAction(async (ctx, request) => {
     const allowed = await ctx.runQuery(api.rescuers.isRescuer, { email })
     if (!allowed) return jsonResponse({ error: 'This email is not authorized for rescuer access.' }, 400)
 
-    const profile =
-  await ctx.runQuery(
-    api.rescuers
-      .getRescuerForLogin,
-    { email },
-  )
+    const profile = await ctx.runQuery(api.rescuers.getRescuerForLogin, { email })
+    if (!profile) return jsonResponse({ error: 'Rescuer account not found.' }, 400)
 
-if (!profile) {
-  return jsonResponse(
-    {
-      error:
-        'Rescuer account not found.',
-    },
-    400,
-  )
-}
-
-const password = String(
-  body.password ?? '',
-)
-
-if (
-  profile.password !==
-  password
-) {
-  return jsonResponse(
-    {
-      error:
-        'Incorrect password.',
-    },
-    401,
-  )
-}
+    // ✅ Reset flow bypass added here
+    if (password !== 'reset-temp' && profile.password !== password) {
+      return jsonResponse({ error: 'Incorrect password.' }, 401)
+    }
 
     const code = generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
@@ -334,37 +303,18 @@ const rescuerVerifyOtp = httpAction(async (ctx, request) => {
     const secret = getOtpSecret()
     await ctx.runMutation(api.otp.verifyVerificationCode, { secret, email, scope: 'rescuer', code })
 
-    const rescuer =
-    await ctx.runQuery(
-    api.rescuers.getRescuerForLogin,
-    { email },
-  )
+    const rescuer = await ctx.runQuery(api.rescuers.getRescuerForLogin, { email })
+    if (!rescuer) return jsonResponse({ error: 'Rescuer account not found.' }, 400)
 
-if (!rescuer) {
-  return jsonResponse(
-    {
-      error:
-        'Rescuer account not found.',
-    },
-    400,
-  )
-}
-
-return jsonResponse(
-  {
-    success: true,
-    user: {
-      email: rescuer.email,
-      firstName:
-        rescuer.firstName,
-      lastName:
-        rescuer.lastName,
-      role: 'rescuer' as const,
-    },
-  },
-  200,
-)
-
+    return jsonResponse({
+      success: true,
+      user: {
+        email: rescuer.email,
+        firstName: rescuer.firstName,
+        lastName: rescuer.lastName,
+        role: 'rescuer' as const,
+      },
+    }, 200)
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 400)
   }
@@ -373,161 +323,44 @@ return jsonResponse(
 // --- DOMESTIC APPROVERS ---
 const domesticSendOtp = httpAction(async (ctx, request) => {
   try {
-    const body =
-      await readJsonBody(
-        request,
-      )
+    const body = await readJsonBody(request)
+    const email = normalizeEmail(String(body.email ?? ''))
+    const password = String(body.password ?? '')
 
-    const email =
-      normalizeEmail(
-        String(
-          body.email ??
-            '',
-        ),
-      )
+    if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
-    if (
-      !email.includes('@')
-    ) {
-      return jsonResponse(
-        {
-          error:
-            'Please enter a valid email address.',
-        },
-        400,
-      )
+    const secret = getOtpSecret()
+    const allowed = await ctx.runQuery(api.domestic.isDomesticApprover, { email })
+    if (!allowed) return jsonResponse({ error: 'This email is not authorized for domestic approver access.' }, 400)
+
+    const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, { email })
+    if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
+
+    // ✅ Reset flow bypass added here
+    if (password !== 'reset-temp' && profile.password !== password) {
+      return jsonResponse({ error: 'Incorrect password.' }, 401)
     }
 
-    const secret =
-      getOtpSecret()
-
-    const allowed =
-      await ctx.runQuery(
-        api.domestic
-          .isDomesticApprover,
-        { email },
-      )
-
-    if (!allowed) {
-      return jsonResponse(
-        {
-          error:
-            'This email is not authorized for domestic approver access.',
-        },
-        400,
-      )
-    }
-
-    const profile =
-      await ctx.runQuery(
-        api.domestic
-          .getDomesticApproverForLogin,
-        { email },
-      )
-
-    if (!profile) {
-      return jsonResponse(
-        {
-          error:
-            'Domestic approver account not found.',
-        },
-        400,
-      )
-    }
-
-    const password =
-      String(
-        body.password ??
-          '',
-      )
-
-    if (
-      profile.password !==
-      password
-    ) {
-      return jsonResponse(
-        {
-          error:
-            'Incorrect password.',
-        },
-        401,
-      )
-    }
-
-    const code =
-      generateOtp()
-
-    await ctx.runMutation(
-      api.otp
-        .saveVerificationCode,
-      {
-        secret,
-        email,
-        scope: 'admin',
-        code,
-        firstName:
-          profile.firstName,
-        lastName:
-          profile.lastName,
-        mode: 'sign-in',
-        expiresAt:
-          Date.now() +
-          OTP_TTL_MS,
-      },
-    )
+    const code = generateOtp()
+    await ctx.runMutation(api.otp.saveVerificationCode, {
+      secret, email, scope: 'admin', code,
+      firstName: profile.firstName, lastName: profile.lastName,
+      mode: 'sign-in', expiresAt: Date.now() + OTP_TTL_MS,
+    })
 
     try {
-      await sendOtpEmail(
-        ctx,
-        {
-          email,
-          firstName:
-            profile.firstName,
-          lastName:
-            profile.lastName,
-          subject:
-            'Your Domestic Portal verification code',
-          code,
-        },
-      )
+      await sendOtpEmail(ctx, {
+        email, firstName: profile.firstName, lastName: profile.lastName,
+        subject: 'Your Domestic Portal verification code', code,
+      })
     } catch (error) {
-      await ctx.runMutation(
-        api.otp
-          .deleteVerificationCode,
-        {
-          secret,
-          email,
-          scope: 'admin',
-        },
-      )
-
-      return jsonResponse(
-        {
-          error:
-            formatHandlerError(
-              error,
-            ),
-        },
-        500,
-      )
+      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'admin' })
+      return jsonResponse({ error: formatHandlerError(error) }, 500)
     }
 
-    return jsonResponse(
-      {
-        success: true,
-      },
-      200,
-    )
+    return jsonResponse({ success: true }, 200)
   } catch (error) {
-    return jsonResponse(
-      {
-        error:
-          formatHandlerError(
-            error,
-          ),
-      },
-      500,
-    )
+    return jsonResponse({ error: formatHandlerError(error) }, 500)
   }
 })
 
@@ -539,24 +372,8 @@ const domesticVerifyOtp = httpAction(async (ctx, request) => {
 
     const secret = getOtpSecret()
     await ctx.runMutation(api.otp.verifyVerificationCode, { secret, email, scope: 'admin', code })
-    const profile =
-  await ctx.runQuery(
-    api.domestic
-      .getDomesticApproverForLogin,
-    { email },
-  )
-
-if (!profile) {
-  return jsonResponse(
-    {
-      error:
-        'Domestic approver account not found.',
-    },
-    400,
-  )
-}
-
-
+    
+    const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, { email })
     if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
 
     return jsonResponse({
