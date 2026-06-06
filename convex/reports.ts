@@ -34,7 +34,6 @@ async function resolveReporterPhone(
     .withIndex('by_email', (q) => q.eq('email', userEmail))
     .unique()
 
-  // 🚨 THE GUARD: If the admin deleted them, throw an error instantly!
   if (!user) {
     throw new Error('Unauthorized: Your account has been deleted or does not exist.')
   }
@@ -117,15 +116,15 @@ export const create = mutation({
     description: v.optional(v.string()),
     speciesId: v.optional(v.string()),
     condition: v.optional(v.string()),
-    behavior: v.optional(v.string()),
-    color: v.optional(v.string()), // Added explicitly
-    phone: v.optional(v.string()), // Added explicitly
+    color: v.optional(v.string()), 
+    phone: v.optional(v.string()), 
+    reporterName: v.optional(v.string()), // Restored this explicitly
     photoStorageIds: v.optional(v.array(v.id('_storage'))),
     photoDataUrls: v.optional(v.array(v.string())),
     photoDataUrl: v.optional(v.string()),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
-    ...reportCreateOptionalFields, // This brings in reporterName and reporterPhone automatically!
+    ...reportCreateOptionalFields, // This brings in behavior and reporterPhone automatically
   },
   returns: v.id('reports'),
   handler: async (ctx, args) => {
@@ -266,7 +265,6 @@ export const getReportById = query({
     const row = await ctx.db.get(args.reportId)
     if (!row) return null
     
-    // THIS UNLOCKS THE IMAGE URL BEFORE SENDING IT TO THE FRONTEND
     return await withResolvedReportPhotos(ctx, row)
   },
 })
