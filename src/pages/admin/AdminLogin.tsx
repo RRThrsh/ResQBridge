@@ -59,7 +59,7 @@ export function AdminLogin() {
   if (resendCooldown <= 0) return
 
   const timer = setInterval(() => {
-    setResendCooldown((prev) => prev - 1)
+    setResendCooldown((prev) => Math.max(prev - 1, 0))
   }, 1000)
 
   return () => clearInterval(timer)
@@ -69,7 +69,7 @@ useEffect(() => {
   if (forgotResendCooldown <= 0) return
 
   const timer = setInterval(() => {
-    setForgotResendCooldown((prev) => prev - 1)
+    setForgotResendCooldown((prev) => Math.max(prev - 1, 0))
   }, 1000)
 
   return () => clearInterval(timer)
