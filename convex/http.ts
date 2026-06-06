@@ -102,24 +102,23 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
     
-    const identifier = String(body.identifier ?? '').trim()
-    const type = body.type === 'phone' ? 'phone' : 'email'
+    const email = String(body.email ?? '').trim().toLowerCase()
     const mode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
     const firstName = String(body.firstName ?? '').trim()
     const lastName = String(body.lastName ?? '').trim()
     const phone = String(body.phone ?? '').trim()
 
-    if (!identifier) return jsonResponse({ error: 'An email or phone number is required.' }, 400)
+    if (!email) return jsonResponse({ error: 'An email is required.' }, 400)
 
     const secret = getOtpSecret()
 
-    const isAdmin = await ctx.runQuery(api.admin.isAdmin, { email: identifier })
-    if (isAdmin) return jsonResponse({ error: 'This contact is for admin access only.' }, 400)
+    const isAdmin = await ctx.runQuery(api.admin.isAdmin, { email })
+    if (isAdmin) return jsonResponse({ error: 'This email is for admin access only.' }, 400)
 
-    const isRescuer = await ctx.runQuery(api.rescuers.isRescuer, { email: identifier })
-    if (isRescuer) return jsonResponse({ error: 'This contact is for rescuer access only.' }, 400)
+    const isRescuer = await ctx.runQuery(api.rescuers.isRescuer, { email })
+    if (isRescuer) return jsonResponse({ error: 'This email is for rescuer access only.' }, 400)
 
-    const existing = await ctx.runQuery(api.users.getByEmail, { email: identifier })
+    const existing = await ctx.runQuery(api.users.getByEmail, { email })
     const password = String(body.password ?? '')
     let finalFirstName = firstName
     let finalLastName = lastName
@@ -138,7 +137,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
     const code = generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
       secret,
-      email: identifier,
+      email,
       scope: 'user',
       code,
       firstName: finalFirstName,
@@ -149,19 +148,15 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
     })
 
     try {
-      if (type === 'phone') {
-        await sendOtpSms(identifier, code)
-      } else {
-        await sendOtpEmail(ctx, {
-          email: identifier,
-          firstName: finalFirstName,
-          lastName: finalLastName,
-          subject: 'Your verification code',
-          code,
-        })
-      }
+      await sendOtpEmail(ctx, {
+        email,
+        firstName: finalFirstName,
+        lastName: finalLastName,
+        subject: 'Your verification code',
+        code,
+      })
     } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email: identifier, scope: 'user' })
+      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'user' })
       return jsonResponse({ error: formatHandlerError(error) }, 500)
     }
 
