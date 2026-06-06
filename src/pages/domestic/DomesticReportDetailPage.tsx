@@ -190,59 +190,126 @@ export function DomesticReportDetailPage() {
             </p>
           </div>
 
-          <dl className="space-y-3">
-            <DetailRow
-              label="Date & time seen"
-              value={formatDateTime(report.seenAt ?? report._creationTime)}
-            />
-            
-            <DetailRow
-              label="Report Type"
-              value={report.type || report.animalType || 'Not specified'}
-            />
+<dl className="space-y-3">
 
-            <DetailRow
-              label="Species"
-              value={report.speciesId || 'Not specified'}
-            />
+  <DetailRow
+    label="Date & time seen"
+    value={formatDateTime(report.seenAt ?? report._creationTime)}
+  />
 
-            {report.color ? (
-              <DetailRow
-                label="Color / Markings"
-                value={report.color}
-              />
-            ) : null}
+  <DetailRow
+    label="Report Type"
+    value={report.type || report.animalType || 'Not specified'}
+  />
 
-            <DetailRow
-              label="Quantity"
-              value={String(report.quantity ?? 1)}
-            />
+  <DetailRow
+    label="Species"
+    value={report.speciesId || 'Not specified'}
+  />
 
-            <DetailRow
-              label="Reported Size"
-              value={report.reportedSize || 'Not provided'}
-            />
+  {(report.type === 'missing' || report.type === 'found') && (
+    <DetailRow
+      label="Animal Name"
+      value={report.animalName || 'Not specified'}
+    />
+  )}
 
-            <DetailRow
-              label="Condition / behavior"
-              value={
-                behaviorLabel(report.behavior) !== 'Not provided'
-                  ? behaviorLabel(report.behavior)
-                  : report.condition
-                    ? report.condition.replace(/-/g, ' ')
-                    : 'Not provided'
-              }
-              highlight
-            />
+  {/* ========================= */}
+  {/* INJURED REPORT */}
+  {/* ========================= */}
+  {report.type === 'injured' ? (
+    <>
 
-            {report.description ? (
-              <DetailRow
-                label="Description & Details"
-                value={report.description}
-              />
-            ) : null}
+      {report.condition ? (
+        <DetailRow
+          label="Nature of Injury"
+          value={report.condition}
+          highlight
+        />
+      ) : null}
 
-          </dl>
+      {report.behavior ? (
+        <DetailRow
+          label="Severity of Injury"
+          value={report.behavior}
+          highlight
+        />
+      ) : null}
+
+      {report.reportedSize ? (
+        <DetailRow
+          label="Animal Current Condition"
+          value={report.reportedSize}
+        />
+      ) : null}
+
+      {report.color ? (
+        <DetailRow
+          label="Rescue Assistance Priority"
+          value={report.color}
+        />
+      ) : null}
+
+      {report.description ? (
+        <DetailRow
+          label="Additional Information"
+          value={report.description}
+        />
+      ) : null}
+
+    </>
+  ) : (
+    <>
+      {/* ========================= */}
+      {/* MISSING / FOUND / STRAY */}
+      {/* ========================= */}
+
+      {report.color ? (
+        <DetailRow
+          label="Color / Markings"
+          value={report.color}
+        />
+      ) : null}
+
+      <DetailRow
+        label="Quantity"
+        value={String(report.quantity ?? 1)}
+      />
+
+      {report.reportedSize ? (
+        <DetailRow
+          label="Reported Size"
+          value={report.reportedSize}
+        />
+      ) : null}
+
+      {report.description ? (
+        <DetailRow
+          label="Description & Details"
+          value={report.description}
+        />
+      ) : null}
+    </>
+  )}
+
+  {/* ========================= */}
+  {/* LOCATION */}
+  {/* ========================= */}
+
+  <DetailRow
+    label="Location"
+    value={report.location || 'Not provided'}
+  />
+
+  {report.latitude && report.longitude ? (
+    <DetailRow
+      label="GPS Coordinates"
+      value={`${report.latitude}, ${report.longitude}`}
+    />
+  ) : null}
+
+</dl>
+
         </RescuerDetailSection>
 
         <RescuerDetailSection title="Location" icon={MapPin}>
