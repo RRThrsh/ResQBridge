@@ -40,23 +40,18 @@ export async function sendRescuerOtp(
   email: string,
   password?: string,
 ): Promise<void> {
-
   const normalizedEmail = normalizeEmail(email)
 
-const response = await rescuerAuthFetch(
-  '/api/rescuer/auth/send-otp',
-  {
-    email: normalizedEmail,
-    password,
-  },
-)
-console.log("Backend Response Status:", response.status);
+  const response = await rescuerAuthFetch(
+    '/api/rescuer/auth/send-otp',
+    {
+      email: normalizedEmail,
+      password,
+    },
+  )
 
-  if (!response.ok) {
-    throw new Error(await parseAuthError(response))
-  }
-}
-
+  // Spying on the backend response
+  console.log("Backend Response Status:", response.status);
 
   if (!response.ok) {
     throw new Error(await parseAuthError(response))
