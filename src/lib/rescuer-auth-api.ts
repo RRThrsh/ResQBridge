@@ -36,6 +36,20 @@ async function rescuerAuthFetch(
   }
 }
 
+async function handleAuthResponse(response: Response): Promise<void> {
+  if (!response.ok) {
+    if (response.status === 429) {
+      window.location.href = '/too-many-request'
+      await new Promise(() => {})
+    }
+    if (response.status === 401) {
+      window.location.href = '/error/401'
+      await new Promise(() => {})
+    }
+    throw new Error(await parseAuthError(response))
+  }
+}
+
 export async function sendRescuerOtp(
   email: string,
   password?: string,
@@ -50,11 +64,7 @@ export async function sendRescuerOtp(
     },
   )
 
-  console.log("Backend Response Status:", response.status);
-
-  if (!response.ok) {
-    throw new Error(await parseAuthError(response))
-  }
+  await handleAuthResponse(response)
 }
 
 export async function verifyRescuerOtp(email: string, code: string): Promise<RescuerUser> {
@@ -65,9 +75,7 @@ export async function verifyRescuerOtp(email: string, code: string): Promise<Res
     code: code.trim(),
   })
 
-  if (!response.ok) {
-    throw new Error(await parseAuthError(response))
-  }
+  await handleAuthResponse(response)
 
   const data = (await response.json()) as {
     user: { email: string; firstName: string; lastName: string; role: 'rescuer' }

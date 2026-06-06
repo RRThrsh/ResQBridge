@@ -43,6 +43,20 @@ async function domesticAuthFetch(
   }
 }
 
+async function handleAuthResponse(response: Response): Promise<void> {
+  if (!response.ok) {
+    if (response.status === 429) {
+      window.location.href = '/too-many-request'
+      await new Promise(() => {})
+    }
+    if (response.status === 401) {
+      window.location.href = '/error/401'
+      await new Promise(() => {})
+    }
+    throw new Error(await parseAuthError(response))
+  }
+}
+
 export async function sendDomesticOtp(
   identifier: string,
   password?: string,
@@ -59,11 +73,7 @@ export async function sendDomesticOtp(
       },
     )
 
-  if (!response.ok) {
-    throw new Error(
-      await parseAuthError(response),
-    )
-  }
+  await handleAuthResponse(response)
 }
 
 export async function verifyDomesticOtp(email: string, code: string): Promise<DomesticUser> {
@@ -74,9 +84,7 @@ export async function verifyDomesticOtp(email: string, code: string): Promise<Do
     code: code.trim(),
   })
 
-  if (!response.ok) {
-    throw new Error(await parseAuthError(response))
-  }
+  await handleAuthResponse(response)
 
   const data = (await response.json()) as {
     user: { email: string; firstName: string; lastName: string; role: 'admin' | 'domestic_approver' }

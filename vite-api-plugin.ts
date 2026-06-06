@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { ConvexHttpClient } from 'convex/browser'
 import nodemailer from 'nodemailer'
+import rateLimit from 'express-rate-limit'
 import { api } from './convex/_generated/api'
 import type { ServerEmailEnv } from './src/lib/server-email-env'
 import type { OtpStoreConfig } from './vite-otp-store'
@@ -20,6 +21,10 @@ import {
 export interface ApiPluginOptions {
   emailEnv: ServerEmailEnv
   otpEnv: OtpStoreConfig
+  rateLimit?: {
+    windowMs: number
+    max: number
+  }
 }
 
 interface SmtpConfig {
@@ -772,6 +777,35 @@ function attachApiMiddleware(
   middlewares: { use: (fn: (req: IncomingMessage, res: ServerResponse, next: () => void) => void) => void },
   options: ApiPluginOptions,
 ) {
+  const authLimiter = options.rateLimit
+    ? rateLimit({
+        windowMs: options.rateLimit.windowMs,
+        max: options.rateLimit.max,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { error: 'Too many requests. Please wait a moment before trying again.' },
+        keyGenerator: (req) => {
+          const forwarded = (req.headers['x-forwarded-for'] as string | undefined)
+          return forwarded?.split(',')[0]?.trim() ?? req.socket?.remoteAddress ?? 'unknown'
+        },
+        handler: (_req, res) => {
+          res.setHeader('Content-Type', 'application/json')
+          res.statusCode = 429
+          res.end(JSON.stringify({ error: 'Too many requests. Please wait a moment before trying again.' }))
+        },
+      })
+    : null
+
+  if (authLimiter) {
+    middlewares.use((req, res, next) => {
+      if (req.url?.startsWith('/api/')) {
+        authLimiter(req, res, next)
+      } else {
+        next()
+      }
+    })
+  }
+
   middlewares.use((req, res, next) => {
     void handleApi(req, res, options).then((handled) => {
       if (!handled) next()

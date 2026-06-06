@@ -37,17 +37,29 @@ async function adminAuthFetch(
 }
 
 // UPDATE: Added password parameter to fix the TS2554 error
+async function handleAuthResponse(response: Response): Promise<void> {
+  if (!response.ok) {
+    if (response.status === 429) {
+      window.location.href = '/too-many-request'
+      await new Promise(() => {})
+    }
+    if (response.status === 401) {
+      window.location.href = '/error/401'
+      await new Promise(() => {})
+    }
+    throw new Error(await parseAuthError(response))
+  }
+}
+
 export async function sendAdminOtp(email: string, password?: string): Promise<void> {
   const normalizedEmail = normalizeEmail(email)
 
   const response = await adminAuthFetch('/api/admin/auth/send-otp', {
     email: normalizedEmail,
-    password, // Pass the password to your custom auth endpoint
+    password,
   })
 
-  if (!response.ok) {
-    throw new Error(await parseAuthError(response))
-  }
+  await handleAuthResponse(response)
 }
 
 export async function verifyAdminOtp(email: string, code: string): Promise<AdminUser> {
@@ -58,9 +70,7 @@ export async function verifyAdminOtp(email: string, code: string): Promise<Admin
     code: code.trim(),
   })
 
-  if (!response.ok) {
-    throw new Error(await parseAuthError(response))
-  }
+  await handleAuthResponse(response)
 
   const data = (await response.json()) as {
     user: { email: string; firstName: string; lastName: string; role: 'admin' }
