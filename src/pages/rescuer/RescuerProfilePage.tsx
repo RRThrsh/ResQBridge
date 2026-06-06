@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { Loader2, Mail, Pencil, Phone, Shield, User } from 'lucide-react'
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Mail,
+  Pencil,
+  Phone,
+  Shield,
+  User,
+} from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { ThemeSetting } from '@/components/theme/ThemeSetting'
 import { Button } from '@/components/ui/button'
@@ -14,6 +23,9 @@ import { toast } from 'sonner'
 export function RescuerProfilePage() {
   const { rescuer, updateRescuer } = useRescuerAuth()
   const updateProfile = useMutation(api.rescuers.updateProfile)
+const changePassword = useMutation(
+  api.rescuers.resetRescuerPassword,
+)
   const profile = useQuery(
     api.rescuers.getProfile,
     rescuer ? { rescuerEmail: normalizeEmail(rescuer.email) } : 'skip',
@@ -23,7 +35,23 @@ export function RescuerProfilePage() {
   const [lastName, setLastName] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [saving, setSaving] = useState(false)
+const [currentPassword, setCurrentPassword] =
+  useState('')
 
+const [newPassword, setNewPassword] =
+  useState('')
+
+const [confirmPassword, setConfirmPassword] =
+  useState('')
+
+const [showCurrentPassword, setShowCurrentPassword] =
+  useState(false)
+
+const [showNewPassword, setShowNewPassword] =
+  useState(false)
+
+const [showConfirmPassword, setShowConfirmPassword] =
+  useState(false)
   function startEditing() {
     if (!profile) return
     setFirstName(profile.firstName)
@@ -64,7 +92,59 @@ export function RescuerProfilePage() {
       setSaving(false)
     }
   }
+  async function handlePasswordChange(
+  e: React.FormEvent,
+) {
+  e.preventDefault()
 
+  if (!rescuer) return
+
+  if (
+    newPassword !== confirmPassword
+  ) {
+    toast.error(
+      'Passwords do not match',
+    )
+    return
+  }
+
+  if (
+    newPassword.length < 8 ||
+    newPassword.length > 16
+  ) {
+    toast.error(
+      'Password must be 8 to 16 characters',
+    )
+    return
+  }
+
+  setSaving(true)
+
+  try {
+await changePassword({
+  email: normalizeEmail(
+    rescuer.email,
+  ),
+  newPassword,
+})
+
+    toast.success(
+      'Password changed successfully',
+    )
+
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : 'Could not change password',
+    )
+  } finally {
+    setSaving(false)
+  }
+}
   if (!rescuer || profile === undefined) {
     return (
       <div className="flex justify-center py-20">
@@ -227,7 +307,166 @@ export function RescuerProfilePage() {
             </dl>
           )}
         </CardContent>
+              {isEditing ? (
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle
+              className="text-base"
+              style={{
+                fontFamily:
+                  'var(--font-heading)',
+              }}
+            >
+              Change Password
+            </CardTitle>
+
+            <CardDescription>
+              Update your rescuer password
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form
+              onSubmit={
+                handlePasswordChange
+              }
+              className="space-y-4"
+            >
+              <div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    Current Password
+  </label>
+
+  <div className="relative">
+    <Input
+      type={
+        showCurrentPassword
+          ? 'text'
+          : 'password'
+      }
+      value={currentPassword}
+      onChange={(e) =>
+        setCurrentPassword(
+          e.target.value,
+        )
+      }
+      required
+    />
+
+    <button
+      type="button"
+      onClick={() =>
+        setShowCurrentPassword(
+          !showCurrentPassword,
+        )
+      }
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+    >
+      {showCurrentPassword ? (
+        <EyeOff className="h-4 w-4" />
+      ) : (
+        <Eye className="h-4 w-4" />
+      )}
+    </button>
+  </div>
+</div>
+
+<div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    New Password
+  </label>
+
+  <div className="relative">
+    <Input
+      type={
+        showNewPassword
+          ? 'text'
+          : 'password'
+      }
+      value={newPassword}
+      onChange={(e) =>
+        setNewPassword(
+          e.target.value,
+        )
+      }
+      required
+    />
+
+    <button
+      type="button"
+      onClick={() =>
+        setShowNewPassword(
+          !showNewPassword,
+        )
+      }
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+    >
+      {showNewPassword ? (
+        <EyeOff className="h-4 w-4" />
+      ) : (
+        <Eye className="h-4 w-4" />
+      )}
+    </button>
+  </div>
+</div>
+
+<div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    Confirm Password
+  </label>
+
+  <div className="relative">
+    <Input
+      type={
+        showConfirmPassword
+          ? 'text'
+          : 'password'
+      }
+      value={confirmPassword}
+      onChange={(e) =>
+        setConfirmPassword(
+          e.target.value,
+        )
+      }
+      required
+    />
+
+    <button
+      type="button"
+      onClick={() =>
+        setShowConfirmPassword(
+          !showConfirmPassword,
+        )
+      }
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+    >
+      {showConfirmPassword ? (
+        <EyeOff className="h-4 w-4" />
+      ) : (
+        <Eye className="h-4 w-4" />
+      )}
+    </button>
+  </div>
+</div>
+
+<div className="flex gap-2 pt-2">
+  <Button
+    type="submit"
+    disabled={saving}
+  >
+    {saving ? (
+      <Loader2 className="h-4 w-4 animate-spin" />
+    ) : (
+      'Change Password'
+    )}
+  </Button>
+</div>
+            </form>
+          </CardContent>
+        </Card>
+      ) : null}
       </Card>
+      
     </div>
   )
 }
