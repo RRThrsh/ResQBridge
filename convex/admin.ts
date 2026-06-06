@@ -283,7 +283,7 @@ export const listReports = query({
 export const updateReport = mutation({
   args: {
     adminEmail: v.string(), reportId: v.id('reports'), animalName: v.string(), location: v.string(),
-    description: v.optional(v.string()), type: v.string(), condition: v.optional(v.string()),
+    description: v.optional(v.string()), type: v.string(), condition: v.optional(v.string()),color: v.optional(v.string()),
     behavior: v.optional(v.string()), seenAt: v.optional(v.number()), quantity: v.optional(v.number()),
     reportedSize: v.optional(v.string()), reporterPhone: v.optional(v.string()),
   },

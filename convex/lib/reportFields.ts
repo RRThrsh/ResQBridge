@@ -10,6 +10,7 @@ export const reportFieldsValidator = {
   description: v.optional(v.string()),
   speciesId: v.optional(v.string()),
   condition: v.optional(v.string()),
+  color: v.optional(v.string()),
   behavior: v.optional(v.string()),
   photoDataUrl: v.optional(v.string()),
   photoDataUrls: v.optional(v.array(v.string())),
