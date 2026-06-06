@@ -972,8 +972,7 @@ const signUpReady =
     </div>
   </DialogContent>
 </Dialog>
-
-<Dialog
+  <Dialog
   open={privacyOpen}
   onOpenChange={setPrivacyOpen}
 >

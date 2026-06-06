@@ -135,9 +135,12 @@ export function AdminNewsPage() {
               ) : (
                 pagination.paginatedRows.map((item) => (
                   <tr key={item.id} className="border-b border-border/60">
-                    <AdminTableCell className="font-medium" title={item.title}>
-                      {item.title}
-                    </AdminTableCell>
+<AdminTableCell
+  className="font-medium"
+  title={item.title}
+>
+  {item.title}
+</AdminTableCell>
                     <AdminTableCell className="capitalize">{item.type}</AdminTableCell>
                     <AdminTableCell>
                       <Badge variant="outline" className="max-w-full truncate">

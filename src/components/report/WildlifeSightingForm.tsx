@@ -333,9 +333,43 @@ useEffect(() => {
         <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           Wildlife Sighting Report
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Report a protected or endemic species sighting. Please keep your distance and do not disturb the animal.
-        </p>
+<div className="space-y-4">
+  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+    <p className="text-sm leading-relaxed text-foreground">
+      <span className="font-bold text-emerald-700 dark:text-emerald-400">
+        Reminder:
+      </span>{' '}
+
+      This reporting form is intended only for{' '}
+
+      <span className="font-bold text-emerald-700 dark:text-emerald-400">
+        wildlife animals that require rescue, assistance,
+        medical attention, or immediate care due to injury,
+        illness, distress, displacement, or other threatening
+        conditions.
+      </span>{' '}
+
+      Wildlife animals that appear{' '}
+
+      <span className="font-bold text-emerald-700 dark:text-emerald-400">
+        healthy, unharmed, and are exhibiting normal behavior
+        in their natural habitat
+      </span>{' '}
+
+      should not be reported and should be left undisturbed.
+
+      <span className="block mt-3 text-muted-foreground font-normal">
+        Responsible reporting helps ensure that rescue efforts
+        are directed to wildlife that genuinely need assistance.
+      </span>
+    </p>
+  </div>
+
+  <p className="text-muted-foreground">
+    Report a protected or endemic species sighting.
+    Please keep your distance and do not disturb the animal.
+  </p>
+</div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
