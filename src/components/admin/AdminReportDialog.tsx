@@ -170,20 +170,20 @@ if (!open && previewImage) {
                   </div>
                 )}
       <DialogContent
-  className="
-    w-[95vw]
-    max-w-5xl
-    max-h-[92vh]
-    overflow-y-auto
-    rounded-2xl
-    bg-background
-    text-foreground
-    dark:bg-zinc-950
-    dark:text-white
-    dark:border-zinc-800
-    p-4
-    sm:p-6
-  "
+className="
+  w-full
+  h-64
+  sm:h-80
+  md:h-[420px]
+  rounded-xl
+  border
+  border-border
+  object-cover
+  bg-muted
+  cursor-pointer
+  transition
+  hover:opacity-80
+"
 >
         <DialogHeader>
           <DialogTitle>{isView ? 'View report' : 'Edit report'}</DialogTitle>
