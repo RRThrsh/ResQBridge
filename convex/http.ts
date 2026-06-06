@@ -263,8 +263,39 @@ const rescuerSendOtp = httpAction(async (ctx, request) => {
     const allowed = await ctx.runQuery(api.rescuers.isRescuer, { email })
     if (!allowed) return jsonResponse({ error: 'This email is not authorized for rescuer access.' }, 400)
 
-    const profile = await ctx.runQuery(api.rescuers.getRescuerForLogin, { email })
-    if (!profile) return jsonResponse({ error: 'Rescuer account not found.' }, 400)
+    const profile =
+  await ctx.runQuery(
+    api.rescuers
+      .getRescuerForLogin,
+    { email },
+  )
+
+if (!profile) {
+  return jsonResponse(
+    {
+      error:
+        'Rescuer account not found.',
+    },
+    400,
+  )
+}
+
+const password = String(
+  body.password ?? '',
+)
+
+if (
+  profile.password !==
+  password
+) {
+  return jsonResponse(
+    {
+      error:
+        'Incorrect password.',
+    },
+    401,
+  )
+}
 
     const code = generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
