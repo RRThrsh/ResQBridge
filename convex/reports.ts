@@ -85,9 +85,11 @@ export const listPublicDomestic = query({
 
 export const listByUserEmail = query({
   args: { userEmail: v.string() },
-  returns: v.array(
+returns: v.array(
   v.object({
     ...reportDocValidator.fields,
+
+    color: v.optional(v.string()),
 
     reporterFirstName: v.optional(v.string()),
     reporterLastName: v.optional(v.string()),
