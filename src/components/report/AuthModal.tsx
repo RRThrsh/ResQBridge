@@ -205,7 +205,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             </div>
           )}
 
-          <SubmitButton loading={loading} disabled={!detailsReady}>Send code</SubmitButton>
+          <SubmitButton loading={loading} disabled={!detailsReady}>Login</SubmitButton>
         </form>
       ) : (
         <form onSubmit={handleVerifyCode} className="space-y-4">
