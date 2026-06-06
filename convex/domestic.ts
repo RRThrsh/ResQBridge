@@ -80,6 +80,23 @@ return await Promise.all(
   },
 })
 
+export const listRejectedReports = query({
+  args: {},
+  handler: async (ctx) => {
+    // Return pure, raw data so the photos don't get deleted
+    const rows = await ctx.db
+      .query('reports')
+      .filter((q) => q.eq(q.field('category'), 'domestic'))
+      .filter((q) => q.eq(q.field('status'), 'rejected'))
+      .order('desc')
+      .collect()
+
+    return await Promise.all(
+      rows.map((row) => withResolvedReportPhotos(ctx, row))
+    )
+  },
+})
+
 export const listApprovers = query({
   args: { adminEmail: v.string() },
   handler: async (ctx) => {
