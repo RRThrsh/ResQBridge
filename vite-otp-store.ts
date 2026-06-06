@@ -11,6 +11,7 @@ export interface OtpRecord {
   code: string
   expiresAt: number
   mode: 'sign-in' | 'sign-up'
+  phone?: string
 }
 
 export interface OtpStoreConfig {
@@ -85,7 +86,7 @@ function validateMemoryRecord(
   scope: OtpScope,
   normalizedEmail: string,
   mode?: OtpRecord['mode'],
-): Pick<OtpRecord, 'email' | 'firstName' | 'lastName'> {
+): Pick<OtpRecord, 'email' | 'firstName' | 'lastName' | 'phone'> {
   if (!record) {
     throw new Error('No verification code found. Please request a new one.')
   }
@@ -105,6 +106,7 @@ function validateMemoryRecord(
     email: record.email,
     firstName: record.firstName,
     lastName: record.lastName,
+    phone: record.phone,
   }
 }
 
@@ -130,6 +132,7 @@ export async function saveOtpRecord(
       lastName: normalizedRecord.lastName,
       mode: normalizedRecord.mode,
       expiresAt: normalizedRecord.expiresAt,
+      phone: normalizedRecord.phone,
     })
     return
   }
@@ -163,7 +166,7 @@ export async function validateOtpRecord(
   email: string,
   code: string,
   mode?: OtpRecord['mode'],
-): Promise<Pick<OtpRecord, 'email' | 'firstName' | 'lastName'>> {
+): Promise<Pick<OtpRecord, 'email' | 'firstName' | 'lastName' | 'phone'>> {
   const normalizedEmail = email.trim().toLowerCase()
   const normalizedCode = normalizeOtpCode(code)
 
@@ -212,7 +215,7 @@ export async function verifyOtpRecord(
   email: string,
   code: string,
   mode?: OtpRecord['mode'],
-): Promise<Pick<OtpRecord, 'email' | 'firstName' | 'lastName'>> {
+): Promise<Pick<OtpRecord, 'email' | 'firstName' | 'lastName' | 'phone'>> {
   const normalizedEmail = email.trim().toLowerCase()
   const normalizedCode = normalizeOtpCode(code)
 

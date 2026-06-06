@@ -346,6 +346,7 @@ interface SendOtpParams {
   firstName: string
   lastName: string
   mode: AuthMode
+  phone?: string
 }
 
 function parseSendOtpParams(
@@ -358,6 +359,7 @@ function parseSendOtpParams(
     .toLowerCase()
   const firstName = String(body.firstName ?? '').trim()
   const lastName = String(body.lastName ?? '').trim()
+  const phone = String(body.phone ?? '').trim()
 
   if (!email.includes('@')) {
     return { error: 'Please enter a valid email address.' }
@@ -367,7 +369,7 @@ function parseSendOtpParams(
     return { error: 'First name and last name are required.' }
   }
 
-  return { email, firstName, lastName, mode }
+  return { email, firstName, lastName, mode, phone: phone || undefined }
 }
 
 async function executeSendOtp(
@@ -378,7 +380,7 @@ async function executeSendOtp(
   params: SendOtpParams,
 ) {
   const env = options.emailEnv
-  const { email, firstName, lastName, mode } = params
+  const { email, firstName, lastName, mode, phone } = params
 
   const code = generateOtp()
   const expiresAt = Date.now() + 5 * 60 * 1000
@@ -389,6 +391,7 @@ async function executeSendOtp(
     code,
     expiresAt,
     mode,
+    phone,
   }
 
   try {
@@ -507,6 +510,7 @@ async function handleUserVerifyOtp(
         firstName: profile.firstName,
         lastName: profile.lastName,
         password,
+        phone: profile.phone,
       })
     } else {
       const existing = await convex.query(api.users.getByEmail, { email })

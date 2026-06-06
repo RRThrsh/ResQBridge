@@ -27,6 +27,7 @@ export const saveVerificationCode = mutation({
     lastName: v.string(),
     mode: modeValidator,
     expiresAt: v.number(),
+    phone: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -55,6 +56,7 @@ export const saveVerificationCode = mutation({
       lastName: args.lastName.trim(),
       mode: args.mode,
       expiresAt: args.expiresAt,
+      phone: args.phone?.trim() || undefined,
     })
 
     return null
@@ -105,6 +107,7 @@ export const validateVerificationCode = mutation({
     email: v.string(),
     firstName: v.string(),
     lastName: v.string(),
+    phone: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
     assertOtpInternalSecret(args.secret)
@@ -137,6 +140,7 @@ export const validateVerificationCode = mutation({
       email: record.email,
       firstName: record.firstName,
       lastName: record.lastName,
+      phone: record.phone,
     }
   },
 })
@@ -171,6 +175,7 @@ export const verifyVerificationCode = mutation({
     email: v.string(),
     firstName: v.string(),
     lastName: v.string(),
+    phone: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
     assertOtpInternalSecret(args.secret)
@@ -205,6 +210,7 @@ export const verifyVerificationCode = mutation({
       email: record.email,
       firstName: record.firstName,
       lastName: record.lastName,
+      phone: record.phone,
     }
   },
 })
