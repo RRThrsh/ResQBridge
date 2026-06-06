@@ -107,6 +107,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
     const mode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
     const firstName = String(body.firstName ?? '').trim()
     const lastName = String(body.lastName ?? '').trim()
+    const phone = String(body.phone ?? '').trim()
 
     if (!identifier) return jsonResponse({ error: 'An email or phone number is required.' }, 400)
 
@@ -144,6 +145,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
       lastName: finalLastName,
       mode,
       expiresAt: Date.now() + OTP_TTL_MS,
+      phone: mode === 'sign-up' ? phone : undefined,
     })
 
     try {
@@ -196,6 +198,7 @@ const userVerifyOtp = async (ctx: ActionCtx, request: Request) => {
     if (mode === 'sign-up') {
       user = await ctx.runMutation(api.users.createUser, {
         email: identifier, firstName: profile.firstName, lastName: profile.lastName, password,
+        phone: profile.phone,
       })
     } else {
       const existing = await ctx.runQuery(api.users.getByEmail, { email: identifier })

@@ -238,6 +238,15 @@ const signUpReady =
       );
     }
 
+    if (
+      mode === 'sign-up' &&
+      !phoneValid
+    ) {
+      return setError(
+        'Enter a valid phone number',
+      );
+    }
+
     if (!passValid) {
       return setError(
         'Password must be at least 8 characters',
@@ -346,7 +355,7 @@ const signUpReady =
         if (action === 'send') {
           if (!forgotIdentifier.trim()) {
             return setError(
-              'Enter your email or phone',
+              'Enter your email',
             );
           }
 
@@ -480,7 +489,7 @@ const signUpReady =
             'identifier' && (
             <>
               <Input
-                placeholder="Email or phone number"
+                placeholder="Email"
                 value={
                   forgotIdentifier
                 }
@@ -1079,8 +1088,7 @@ const signUpReady =
               }}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              Use a different email or
-              phone
+              Use a different email
             </button>
           </div>
         </form>

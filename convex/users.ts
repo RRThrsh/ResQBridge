@@ -57,6 +57,7 @@ export const createUser = mutation({
     firstName: v.string(),
     lastName: v.string(),
     password: v.string(),
+    phone: v.optional(v.string()),
   },
   returns: userProfileValidator,
   handler: async (ctx, args) => {
@@ -96,6 +97,7 @@ export const createUser = mutation({
       firstName,
       lastName,
       password: args.password,
+      phone: args.phone?.trim() || undefined,
       role: 'user',
       createdAt: Date.now(),
     })

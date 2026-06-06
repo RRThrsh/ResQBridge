@@ -54,6 +54,7 @@ export default defineSchema({
     lastName: v.string(),
     mode: v.union(v.literal('sign-in'), v.literal('sign-up')),
     expiresAt: v.number(),
+    phone: v.optional(v.string()),
   }).index('by_email_scope', ['email', 'scope']),
 
   reports: defineTable({
