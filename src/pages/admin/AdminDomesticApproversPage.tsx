@@ -149,7 +149,12 @@ export function AdminDomesticApproversPage() {
                         {formatDate(row.createdAt)}
                       </AdminTableCell>
                       <AdminTableActionsCell>
-                        <AdminTableActions onAction={(action) => handleAction(row, action)} />
+                        <AdminTableActions
+  onAction={(action) =>
+    handleAction(row, action)
+  }
+  disableEdit
+/>
                       </AdminTableActionsCell>
                     </tr>
                   )

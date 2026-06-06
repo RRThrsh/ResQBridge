@@ -83,14 +83,15 @@ export function AdminTableActions({
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-  className="cursor-pointer"
-  disabled={disableEdit}
-  onClick={() => onAction('edit')}
->
-  <Pencil className="h-4 w-4" />
-  Edit
-</DropdownMenuItem>
+{!disableEdit && (
+  <DropdownMenuItem
+    className="cursor-pointer"
+    onClick={() => onAction('edit')}
+  >
+    <Pencil className="h-4 w-4" />
+    Edit
+  </DropdownMenuItem>
+)}
         <DropdownMenuItem
           variant="destructive"
           className="cursor-pointer"
