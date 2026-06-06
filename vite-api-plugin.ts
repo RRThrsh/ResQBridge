@@ -553,10 +553,7 @@ async function handleAdminSendOtp(
     return
   }
 
-  const isForgotPassword = !password
-
 if (
-  !isForgotPassword &&
   password !== 'reset-temp' &&
   profile.password !== password
 ) {
