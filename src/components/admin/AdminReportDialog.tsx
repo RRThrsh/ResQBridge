@@ -223,7 +223,7 @@ if (!open && previewImage) {
 
           {activeReport.photoDataUrls.length > 0 ? (
             <div className="space-y-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-4 place-items-center">
                 {activeReport.photoDataUrls.map((photo, index) => (
 <div className="flex justify-center">
   <img
@@ -231,21 +231,19 @@ if (!open && previewImage) {
     src={photo}
     alt={`${activeReport.animalName} ${index + 1}`}
     onClick={() => setPreviewImage(photo)}
-    className="
-      w-full
- max-w-[340px]
-sm:max-w-lg
-max-h-[320px]
-sm:max-h-[500px]
-      rounded-xl
-      border
-      border-border
-      object-cover
-      bg-muted
-      cursor-pointer
-      transition
-      hover:opacity-80
-    "
+className="
+  w-full
+  max-w-2xl
+  max-h-[520px]
+  rounded-xl
+  border
+  border-border
+  object-cover
+  bg-muted
+  cursor-pointer
+  transition
+  hover:opacity-80
+"
   />
 </div>
                 ))}
