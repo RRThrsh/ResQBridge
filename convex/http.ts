@@ -54,49 +54,6 @@ async function sendOtpEmail(
   })
 }
 
-// --- SMS SENDER VIA PHILSMS ---
-async function sendOtpSms(_phone: string, code: string) {
-  let cleanNumber = '09539814023'.replace(/\D/g, '')
-  let formattedPhone = ''
-  
-  if (cleanNumber.length === 11 && cleanNumber.startsWith('09')) {
-    formattedPhone = '63' + cleanNumber.substring(1)
-  } else if (cleanNumber.length === 10 && cleanNumber.startsWith('9')) {
-    formattedPhone = '63' + cleanNumber
-  } else if (cleanNumber.length === 12 && cleanNumber.startsWith('63')) {
-    formattedPhone = cleanNumber
-  } else {
-    formattedPhone = cleanNumber
-  }
-
-  const philsmsToken = process.env.PHILSMS_API_TOKEN
-  
-  if (!philsmsToken) {
-    throw new Error('PhilSMS API token is missing in Convex environment variables.')
-  }
-
-  const response = await fetch('https://dashboard.philsms.com/api/v3/sms/send', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${philsmsToken}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: JSON.stringify({
-      recipient: formattedPhone, 
-      sender_id: 'PhilSMS', 
-      type: 'plain',
-      message: `Your verification code is: ${code}. Please do not share this with anyone.`,
-    }),
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error('PhilSMS API Error:', errorText)
-    throw new Error(`PhilSMS rejected the request: ${errorText}`)
-  }
-}
-
 // --- USER SEND OTP ---
 const userSendOtp = async (ctx: ActionCtx, request: Request) => {
   try {
