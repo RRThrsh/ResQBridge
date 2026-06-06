@@ -617,7 +617,7 @@ function AuthForm({
                       ) => !prev,
                     )
                   }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground opacity-80 hover:opacity-100 transition-colors z-10"
                 >
                   {showNewPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -656,7 +656,7 @@ function AuthForm({
                       ) => !prev,
                     )
                   }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground opacity-80 hover:opacity-100 transition-colors z-10"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -868,12 +868,29 @@ function AuthForm({
             </div>
           )}
 
-          <SubmitButton
-            loading={loading}
-            disabled={!detailsReady}
-          >
-            Send Code
-          </SubmitButton>
+<SubmitButton
+  loading={loading}
+  disabled={!detailsReady}
+>
+  Send Code
+</SubmitButton>
+
+<p className="text-center text-xs text-muted-foreground">
+  By continuing, you agree to our{' '}
+  <button
+    type="button"
+    className="text-primary hover:underline"
+  >
+    Terms of Service
+  </button>{' '}
+  and{' '}
+  <button
+    type="button"
+    className="text-primary hover:underline"
+  >
+    Privacy Policy
+  </button>.
+</p>
         </form>
       ) : (
         <form
