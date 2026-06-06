@@ -359,7 +359,7 @@ if (!open && previewImage) {
     {activeReport.description ? (
       <div>
         <dt className="text-xs text-muted-foreground">
-          Additional Details
+          Description
         </dt>
 
         <dd className="whitespace-pre-wrap text-muted-foreground">
@@ -395,7 +395,7 @@ if (!open && previewImage) {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Additional details</label>
+                <label className="mb-1 block text-xs text-muted-foreground">Description</label>
                 <Textarea
   className="border-border bg-background text-foreground placeholder:text-muted-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
                   value={draft.description}
@@ -410,35 +410,6 @@ if (!open && previewImage) {
                   value={draft.reporterPhone}
                   onChange={(e) => setDraft((d) => ({ ...d, reporterPhone: e.target.value }))}
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">Quantity</label>
-                  <Input
-                    type="number"
-                    min="1"
-                    className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700 placeholder:text-zinc-400"
-                    value={draft.quantity}
-                    onChange={(e) => setDraft((d) => ({ ...d, quantity: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">Reported size</label>
-                  <Select
-                    value={draft.reportedSize || ''}
-                    onValueChange={(value) => value && setDraft((d) => ({ ...d, reportedSize: value }))}
-                  >
-                    <SelectTrigger className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700">
-                      <SelectValue placeholder="Select size" />
-                    </SelectTrigger>
-                    <SelectContent className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700">
-                      <SelectItem value="small">Small - Less than 1 meter</SelectItem>
-                      <SelectItem value="medium">Medium - 2 to 3 meters long</SelectItem>
-                      <SelectItem value="large">Large - 4 to 5 meters</SelectItem>
-                      <SelectItem value="very-large">More than 5 meters</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
               {activeReport.category === 'domestic' ? (
                 <div>
