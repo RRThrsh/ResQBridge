@@ -163,12 +163,23 @@ export function DomesticReportDetailPage() {
   ) : undefined
 
   return (
-    <DomesticLayout
-      title={report.animalName || 'Domestic Report'}
-      subtitle={report.reportNumber ?? undefined}
-      backTo="/pwrcc/domestic"
-      footer={actionFooter}
-    >
+
+  <DomesticLayout
+  title={
+    report.type === 'missing'
+      ? 'Missing Pet'
+      : report.type === 'found'
+      ? 'Found Animal'
+      : report.type === 'stray'
+      ? 'Stray Animal'
+      : report.type === 'injured'
+      ? 'Injured Animal'
+      : 'Domestic Report'
+  }
+  subtitle={report.reportNumber ?? undefined}
+  backTo="/pwrcc/domestic"
+  footer={actionFooter}
+>
       <div className="space-y-6 pb-2">
 
         <div className="text-center">
