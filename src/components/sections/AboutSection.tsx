@@ -123,7 +123,7 @@ const features = [
               <Separator className="my-6" />
 
               <p className="text-muted-foreground text-xs text-center leading-relaxed relative z-10">
-                Bring donations directly to PWRCC Irawan, Puerto Princesa City<br />
+                Your donations can be delivered to either of our partner rescue organizations
                 Monday – Sunday, 8:00 AM – 5:00 PM
               </p>
             </Card>
