@@ -518,7 +518,7 @@ setStep('credentials')
   type="button"
   variant="outline"
   className="w-full"
-  disabled={loading || resendCooldown > 0}
+  disabled={loading || verifyingRef.current || resendCooldown > 0}
   onClick={handleResendOtp}
 >
   {resendCooldown > 0
