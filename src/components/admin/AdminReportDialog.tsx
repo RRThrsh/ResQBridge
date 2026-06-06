@@ -233,10 +233,10 @@ if (!open && previewImage) {
     onClick={() => setPreviewImage(photo)}
     className="
       w-full
-      max-w-[280px]
-      sm:max-w-md
-      max-h-[260px]
-      sm:max-h-[420px]
+ max-w-[340px]
+sm:max-w-lg
+max-h-[320px]
+sm:max-h-[500px]
       rounded-xl
       border
       border-border
