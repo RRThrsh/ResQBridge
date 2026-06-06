@@ -895,13 +895,36 @@ const signUpReady =
   className="mt-1 h-4 w-4 rounded border-border"
 />
 
-  <label
-    htmlFor="terms"
-    className="text-xs text-muted-foreground leading-relaxed"
+<label
+  htmlFor="terms"
+  className="text-xs text-muted-foreground leading-relaxed"
+>
+  By continuing, you agree to our{' '}
+
+  <button
+    type="button"
+    onClick={() =>
+      setTermsOpen(true)
+    }
+    className="font-medium text-primary hover:underline"
   >
-    By continuing, you agree to our{' '}
-    
-    <Dialog
+    Terms of Service
+  </button>
+
+  {' '}and{' '}
+
+  <button
+    type="button"
+    onClick={() =>
+      setPrivacyOpen(true)
+    }
+    className="font-medium text-primary hover:underline"
+  >
+    Privacy Policy
+  </button>.
+</label>
+
+<Dialog
   open={termsOpen}
   onOpenChange={setTermsOpen}
 >
@@ -950,7 +973,7 @@ const signUpReady =
         </h3>
 
         <p>
-          The platform is provided “as is” without
+          The platform is provided "as is" without
           warranties.
         </p>
       </div>
@@ -967,8 +990,7 @@ const signUpReady =
     </div>
   </DialogContent>
 </Dialog>
-
-<Dialog
+  <Dialog
   open={privacyOpen}
   onOpenChange={setPrivacyOpen}
 >
@@ -1034,7 +1056,6 @@ const signUpReady =
     </div>
   </DialogContent>
 </Dialog>
-  </label>
 </div>
         </form>
       ) : (
