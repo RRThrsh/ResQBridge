@@ -423,9 +423,7 @@ async function handleUserSendOtp(
 
   const convex = getConvexClientForOtp(options.otpEnv)
   const { email, mode } = params
-  const password = String(body.password ?? '') // 1. Extract the password here
-
-  // ... (keep the isAdmin and isRescuer checks exactly as they are)
+  const password = String(body.password ?? '') 
 
   const existing = await convex.query(api.users.getByEmail, { email })
 
@@ -437,7 +435,6 @@ async function handleUserSendOtp(
       return
     }
     
-    // 2. Add this password check!
     if (password !== 'reset-temp' && existing.password !== password) {
       sendJson(res, 401, { error: 'Incorrect password.' })
       return
@@ -451,7 +448,6 @@ async function handleUserSendOtp(
     })
     return
   }
-
 
   if (existing) {
     sendJson(res, 400, {
@@ -502,11 +498,11 @@ async function handleUserVerifyOtp(
     let user: { email: string; firstName: string; lastName: string; role: 'user' }
     if (mode === 'sign-up') {
       user = await convex.mutation(api.users.createUser, {
-  email,
-  firstName: profile.firstName,
-  lastName: profile.lastName,
-  password,
-})
+        email,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        password,
+      })
     } else {
       const existing = await convex.query(api.users.getByEmail, { email })
       if (!existing) {
@@ -541,7 +537,6 @@ async function handleAdminSendOtp(
     return
   }
 
-  // 👇 THIS IS THE MISSING LINE THAT FIXES THE ERROR 👇
   const convex = getConvexClientForOtp(options.otpEnv) 
   
   await convex.mutation(api.admin.bootstrapAdmins, {})
@@ -558,7 +553,8 @@ async function handleAdminSendOtp(
     return
   }
 
-  if (profile.password !== password) {
+  // ✅ ADDED RESET-TEMP BYPASS HERE
+  if (password !== 'reset-temp' && profile.password !== password) {
     sendJson(res, 401, { error: 'Incorrect password.' })
     return
   }
@@ -613,7 +609,6 @@ async function handleRescuerSendOtp(
     return
   }
 
-  // 👇 THIS IS THE MISSING LINE THAT FIXES THE ERROR 👇
   const convex = getConvexClientForOtp(options.otpEnv) 
   
   const allowed = await convex.query(api.rescuers.isRescuer, { email })
@@ -628,7 +623,8 @@ async function handleRescuerSendOtp(
     return
   }
 
-  if (profile.password !== password) {
+  // ✅ ADDED RESET-TEMP BYPASS HERE
+  if (password !== 'reset-temp' && profile.password !== password) {
     sendJson(res, 401, { error: 'Incorrect password.' })
     return
   }
@@ -640,6 +636,7 @@ async function handleRescuerSendOtp(
     mode: 'sign-in',
   })
 }
+
 async function handleRescuerVerifyOtp(
   res: ServerResponse,
   options: ApiPluginOptions,
@@ -696,14 +693,7 @@ async function handleApi(
       const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
       const password = String(body.password ?? '')
 
-await handleUserVerifyOtp(
-  res,
-  options,
-  email,
-  code,
-  mode,
-  password,
-)
+      await handleUserVerifyOtp(res, options, email, code, mode, password)
       return true
     } catch (error) {
       console.error('user verify-otp error:', error)
