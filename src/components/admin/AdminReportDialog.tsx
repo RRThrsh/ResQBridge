@@ -225,25 +225,29 @@ if (!open && previewImage) {
             <div className="space-y-2">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {activeReport.photoDataUrls.map((photo, index) => (
-                  <img
-                    key={`${index}-${photo.slice(0, 16)}`}
-                    src={photo}
-                    alt={`${activeReport.animalName} ${index + 1}`}
-                    onClick={() => setPreviewImage(photo)}
-className="
-  w-full
-  max-h-[320px]
-  sm:max-h-[420px]
-  rounded-xl
-  border
-  border-border
-  object-contain
-  bg-muted
-  cursor-pointer
-  transition
-  hover:opacity-80
-"
-                  />
+<div className="flex justify-center">
+  <img
+    key={`${index}-${photo.slice(0, 16)}`}
+    src={photo}
+    alt={`${activeReport.animalName} ${index + 1}`}
+    onClick={() => setPreviewImage(photo)}
+    className="
+      w-full
+      max-w-[280px]
+      sm:max-w-md
+      max-h-[260px]
+      sm:max-h-[420px]
+      rounded-xl
+      border
+      border-border
+      object-cover
+      bg-muted
+      cursor-pointer
+      transition
+      hover:opacity-80
+    "
+  />
+</div>
                 ))}
               </div>
 
