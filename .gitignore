@@ -14,7 +14,7 @@ build/
 .turbo/
 
 # Environment & secrets (keep .env.example for the team)
-# .env
+.env
 .env.*
 !.env.example
 *.local
