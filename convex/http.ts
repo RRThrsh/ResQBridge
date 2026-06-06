@@ -365,7 +365,8 @@ return jsonResponse(
 })
 
 // --- DOMESTIC APPROVERS ---
-const domesticSendOtp = httpAction(async (ctx, request) => {
+const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, { email })
+if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
