@@ -232,13 +232,12 @@ if (!open && previewImage) {
                     onClick={() => setPreviewImage(photo)}
 className="
   w-full
-  h-64
-  sm:h-80
-  md:h-[420px]
+  max-h-[320px]
+  sm:max-h-[420px]
   rounded-xl
   border
   border-border
-  object-cover
+  object-contain
   bg-muted
   cursor-pointer
   transition
