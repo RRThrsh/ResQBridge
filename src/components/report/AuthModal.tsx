@@ -454,39 +454,11 @@ const signUpReady =
             ? 'Reset your password using OTP verification.'
             : step === 'otp'
               ? `6-digit code sent to ${identifier}`
-              : 'Sign in or sign up below.'}
+              : mode === 'sign-up'
+                ? 'Create an account to get started.'
+                : 'Sign in to your account.'}
         </DialogDescription>
       </div>
-
-      {!forgotMode &&
-        step === 'details' && (
-          <Tabs
-            onValueChange={(v) => {
-              setAcceptedTerms(false)
-
-              switchMode(
-                v as AuthMode,
-              )
-            }}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2 bg-background border border-border h-10 p-1">
-              <TabsTrigger
-                value="sign-in"
-                className="h-full rounded-md text-xs"
-              >
-                Sign In
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="sign-up"
-                className="h-full rounded-md text-xs"
-              >
-                Sign Up
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
 
       {forgotMode ? (
         <form
@@ -919,6 +891,25 @@ const signUpReady =
 >
   Send Code
 </SubmitButton>
+
+{!forgotMode && step === 'details' && (
+  <div className="text-center">
+    <button
+      type="button"
+      onClick={() => {
+        switchMode(mode === 'sign-up' ? 'sign-in' : 'sign-up')
+        setAcceptedTerms(false)
+      }}
+      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+    >
+      {mode === 'sign-up' ? (
+        <>Already have an account? <span className="text-primary font-medium hover:underline">Sign in</span></>
+      ) : (
+        <>Create Account? <span className="text-primary font-medium hover:underline">Sign up</span></>
+      )}
+    </button>
+  </div>
+)}
 
 <Dialog
   open={termsOpen}
