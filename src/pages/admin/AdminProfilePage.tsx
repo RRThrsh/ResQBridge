@@ -144,15 +144,28 @@ const changePassword = useMutation(
 
     if (!admin) return
 
-    if (
-      newPassword !==
-      confirmPassword
-    ) {
-      toast.error(
-        'Passwords do not match',
-      )
-      return
-    }
+if (
+  newPassword.length < 8 ||
+  newPassword.length > 16
+) {
+  toast.error(
+    'Password must be 8 to 16 characters long',
+  )
+
+  return
+}
+
+if (
+  newPassword !==
+  confirmPassword
+) {
+  toast.error(
+    'Passwords do not match',
+  )
+
+  return
+}
+
 
     setSaving(true)
 
@@ -387,104 +400,95 @@ await changePassword({
         </CardContent>
       </Card>
 
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle
-            style={{
-              fontFamily:
-                'var(--font-heading)',
-            }}
-          >
-            Change Password
-          </CardTitle>
-
-          <CardDescription>
-            Update your admin
-            password
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <form
-            onSubmit={
-              handlePasswordChange
-            }
-            className="space-y-4"
-          >
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">
-                Current Password
-              </label>
-
-              <Input
-                type="password"
-                value={
-                  currentPassword
-                }
-                onChange={(e) =>
-                  setCurrentPassword(
-                    e.target
-                      .value,
-                  )
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">
-                New Password
-              </label>
-
-              <Input
-                type="password"
-                value={
-                  newPassword
-                }
-                onChange={(e) =>
-                  setNewPassword(
-                    e.target
-                      .value,
-                  )
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">
-                Confirm Password
-              </label>
-
-              <Input
-                type="password"
-                value={
-                  confirmPassword
-                }
-                onChange={(e) =>
-                  setConfirmPassword(
-                    e.target
-                      .value,
-                  )
-                }
-                required
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={saving}
+      {isEditing ? (
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle
+              style={{
+                fontFamily:
+                  'var(--font-heading)',
+              }}
             >
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                'Change Password'
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              Change Password
+            </CardTitle>
+
+            <CardDescription>
+              Update your admin password
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form
+              onSubmit={
+                handlePasswordChange
+              }
+              className="space-y-4"
+            >
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  Current Password
+                </label>
+
+                <Input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) =>
+                    setCurrentPassword(
+                      e.target.value,
+                    )
+                  }
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  New Password
+                </label>
+
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) =>
+                    setNewPassword(
+                      e.target.value,
+                    )
+                  }
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  Confirm Password
+                </label>
+
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) =>
+                    setConfirmPassword(
+                      e.target.value,
+                    )
+                  }
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={saving}
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Change Password'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   )
 }
-
