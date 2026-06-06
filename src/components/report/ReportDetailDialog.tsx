@@ -174,7 +174,7 @@ export function ReportDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[min(90vh,720px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto p-0 sm:max-w-lg">
         {(editing ? photos : getReportPhotos(report)).length > 0 ? (
           <div className="relative shrink-0 bg-muted">
             {editing ? (
@@ -196,7 +196,7 @@ export function ReportDetailDialog({
           </div>
         ) : null}
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-6">
+        <div className="flex flex-col p-6">
           <DialogHeader className="space-y-2 text-left">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline" className="uppercase text-[10px] tracking-wider border-primary/20 text-primary">
