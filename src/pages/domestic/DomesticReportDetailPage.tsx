@@ -51,16 +51,16 @@ export function DomesticReportDetailPage() {
   // ---------------------------------------------------------
   // 1. ALL-PHOTOS GALLERY BUILDER
   // ---------------------------------------------------------
-  // FIX: Safely remove trailing slashes to prevent broken //api/storage URLs
-let allPhotos: string[] = []
+  let allPhotos: string[] = []
 
-if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
-  allPhotos = rawData.photoDataUrls
-} else if (rawData.photos && Array.isArray(rawData.photos)) {
-  allPhotos = rawData.photos
-} else if (rawData.photoUrl) {
-  allPhotos = [rawData.photoUrl]
-}
+  if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
+    allPhotos = rawData.photoDataUrls
+  } else if (rawData.photos && Array.isArray(rawData.photos)) {
+    allPhotos = rawData.photos
+  } else if (rawData.photoUrl) {
+    allPhotos = [rawData.photoUrl]
+  }
+
   // ---------------------------------------------------------
   // 2. NAME & CONDITION FIX 
   // ---------------------------------------------------------
@@ -70,18 +70,18 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
   if (lName === 'undefined') lName = ''
   
   let reporterName = `${fName} ${lName}`.trim()
-if (
-  !reporterName ||
-  reporterName === 'undefined' ||
-  reporterName === 'undefined undefined'
-) {
-  reporterName =
-    rawData.reporterName ||
-    rawData.userName ||
-    rawData.name ||
-    rawData.userEmail?.split('@')[0] ||
-    'Unknown Reporter'
-}
+  if (
+    !reporterName ||
+    reporterName === 'undefined' ||
+    reporterName === 'undefined undefined'
+  ) {
+    reporterName =
+      rawData.reporterName ||
+      rawData.userName ||
+      rawData.name ||
+      rawData.userEmail?.split('@')[0] ||
+      'Unknown Reporter'
+  }
 
   let condition = rawData.animalCondition || rawData.condition || rawData.healthCondition || 'Not provided'
   if (condition === 'undefined' || condition === 'null') condition = 'Not provided'
@@ -99,7 +99,7 @@ if (
     mapQuery = encodeURIComponent(`${rawData.latitude},${rawData.longitude}`)
   }
   
-  const mapLink = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`
+  const mapLink = `https://www.google.com/maps/search/?api=1&query=$${mapQuery}`
   const canAct = rawData.status === 'pending'
 
   async function handleStatusChange(newStatus: 'published' | 'rejected') {
@@ -143,7 +143,6 @@ if (
           <p className="text-xs font-mono text-muted-foreground">{rawData.reportNumber ?? rawData._id}</p>
         </div>
 
-        {/* NEW PHOTO GALLERY GRID */}
         {allPhotos.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {allPhotos.map((url, i) => (
@@ -162,9 +161,31 @@ if (
         <RescuerDetailSection title="Domestic Report Details" icon={CheckCircle2}>
           <dl className="space-y-3">
             <DetailRow label="Date & time seen" value={formatDateTime(rawData.seenAt ?? rawData._creationTime)} />
-            <DetailRow label="Animal Type" value={rawData.type || rawData.animalType || 'Not specified'} />
-            <DetailRow label="Condition" value={condition.replace(/-/g, ' ')} highlight />
-            {rawData.description ? <DetailRow label="Description" value={rawData.description} /> : null}
+            <DetailRow label="Report Type" value={rawData.type || rawData.animalType || 'Not specified'} />
+            
+            {/* NEW: Explicitly rendering Species, Quantity, and Size */}
+            <DetailRow label="Species" value={rawData.speciesId || 'Not specified'} />
+            
+            {rawData.quantity ? (
+              <DetailRow label="Quantity" value={rawData.quantity.toString()} />
+            ) : null}
+            
+            {rawData.reportedSize ? (
+              <DetailRow label="Size" value={rawData.reportedSize} />
+            ) : null}
+
+            {condition !== 'Not provided' ? (
+              <DetailRow label="Condition" value={condition.replace(/-/g, ' ')} highlight />
+            ) : null}
+            
+            {/* FIX: Disable capitalize for descriptions and allow line breaks */}
+            {rawData.description ? (
+              <DetailRow 
+                label="Description & Details" 
+                value={rawData.description} 
+                capitalize={false} 
+              />
+            ) : null}
           </dl>
         </RescuerDetailSection>
 
@@ -172,7 +193,7 @@ if (
           <div className="space-y-3">
             <p className="font-medium leading-relaxed text-sm">{locationString}</p>
             <div className="w-full overflow-hidden rounded-xl border border-border/50 bg-muted/30">
-              <iframe src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`} width="100%" height="200" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+              <iframe src={`https://maps.google.com/maps?q=$${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`} width="100%" height="200" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
             </div>
             <a href={mapLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline pt-1">
               <ExternalLink className="h-3.5 w-3.5" /> Open in full Google Maps
@@ -215,6 +236,28 @@ if (
   )
 }
 
-function DetailRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className={`mt-0.5 font-medium ${highlight ? 'text-primary' : 'text-foreground'} capitalize`}>{value}</dd></div>
+// FIX: Added `capitalize` toggle and `whitespace-pre-wrap` so the mashed-up description renders its line breaks properly
+function DetailRow({ 
+  label, 
+  value, 
+  highlight, 
+  capitalize = true 
+}: { 
+  label: string; 
+  value: string; 
+  highlight?: boolean; 
+  capitalize?: boolean 
+}) {
+  return (
+    <div>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd 
+        className={`mt-0.5 font-medium whitespace-pre-wrap ${
+          highlight ? 'text-primary' : 'text-foreground'
+        } ${capitalize ? 'capitalize' : ''}`}
+      >
+        {value}
+      </dd>
+    </div>
+  )
 }
