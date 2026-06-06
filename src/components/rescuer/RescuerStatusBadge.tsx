@@ -8,7 +8,14 @@ type Props = {
 }
 
 export function RescuerStatusBadge({ status, className, compact }: Props) {
-  const tone = statusTone(status)
+  // 🚨 THE FIX: Add a fallback so 'tone' is NEVER undefined!
+  const tone = statusTone(status) || {
+    badge: 'bg-muted text-muted-foreground border-border',
+    dot: 'bg-muted-foreground',
+  }
+
+  // Fallback for the label too, just in case it's missing!
+  const label = statusBadgeLabel(status) || String(status).toUpperCase() || 'UNKNOWN'
 
   return (
     <span
@@ -20,7 +27,7 @@ export function RescuerStatusBadge({ status, className, compact }: Props) {
       )}
     >
       <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', tone.dot)} />
-      {statusBadgeLabel(status)}
+      {label}
     </span>
   )
 }
