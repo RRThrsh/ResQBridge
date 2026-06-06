@@ -25,7 +25,7 @@ const userDocValidator = v.object({
 })
 
 const adminReportDocValidator = v.object({
-  ...reportDocValidator.fields, reporterFirstName: v.string(),
+  ...reportDocValidator.fields, color: v.optional(v.string()), reporterFirstName: v.string(),
   reporterLastName: v.string(), assignedRescuerName: v.optional(v.string()),
 })
 
@@ -294,7 +294,7 @@ export const updateReport = mutation({
     if (!doc) throw new Error('Report not found.')
 
     await ctx.db.patch(args.reportId, {
-      animalName: args.animalName.trim(), location: args.location.trim(), description: args.description?.trim() || undefined,
+      animalName: args.animalName.trim(),color: args.color?.trim() || undefined, location: args.location.trim(), description: args.description?.trim() || undefined,
       type: args.type, condition: args.condition || undefined, behavior: args.behavior || undefined,
       seenAt: args.seenAt, quantity: args.quantity, reportedSize: args.reportedSize?.trim() || undefined, reporterPhone: args.reporterPhone?.trim() || undefined,
     })
