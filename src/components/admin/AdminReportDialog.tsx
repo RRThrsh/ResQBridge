@@ -169,21 +169,21 @@ if (!open && previewImage) {
                     </div>
                   </div>
                 )}
-      <DialogContent
-className="
-  w-full
-  h-64
-  sm:h-80
-  md:h-[420px]
-  rounded-xl
-  border
-  border-border
-  object-cover
-  bg-muted
-  cursor-pointer
-  transition
-  hover:opacity-80
-"
+<DialogContent
+  className="
+    w-[95vw]
+    max-w-5xl
+    max-h-[92vh]
+    overflow-y-auto
+    rounded-2xl
+    bg-background
+    text-foreground
+    dark:bg-zinc-950
+    dark:text-white
+    dark:border-zinc-800
+    p-4
+    sm:p-6
+  "
 >
         <DialogHeader>
           <DialogTitle>{isView ? 'View report' : 'Edit report'}</DialogTitle>
@@ -230,18 +230,19 @@ className="
                     src={photo}
                     alt={`${activeReport.animalName} ${index + 1}`}
                     onClick={() => setPreviewImage(photo)}
- className="
+className="
   w-full
-  max-h-[320px]
+  h-64
+  sm:h-80
+  md:h-[420px]
   rounded-xl
   border
   border-border
-  object-contain
+  object-cover
   bg-muted
   cursor-pointer
   transition
   hover:opacity-80
-  sm:max-h-[420px]
 "
                   />
                 ))}
