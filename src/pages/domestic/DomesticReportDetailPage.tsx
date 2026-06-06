@@ -42,6 +42,14 @@ export function DomesticReportDetailPage() {
     reportId ? { reportId: reportId as Id<'reports'> } : 'skip'
   )
 
+  const rawData = row as any
+  const reporterEmail = rawData?.userEmail || rawData?.email
+
+  const reporterProfile = useQuery(
+    (api as any).users.getProfile,
+    reporterEmail ? { email: reporterEmail } : 'skip'
+  )
+
   if (!domesticApprover || row === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -60,8 +68,6 @@ export function DomesticReportDetailPage() {
     )
   }
 
-  const rawData = row as any
-
   // ---------------------------------------------------------
   // ALL PHOTOS
   // ---------------------------------------------------------
@@ -77,11 +83,11 @@ export function DomesticReportDetailPage() {
   }
 
   // ---------------------------------------------------------
-  // REPORTER NAME FIX
+  // REPORTER NAME & PHONE FIX
   // ---------------------------------------------------------
 
-  let fName = rawData.reporterFirstName || rawData.firstName || ''
-  let lName = rawData.reporterLastName || rawData.lastName || ''
+  let fName = rawData.reporterFirstName || rawData.firstName || reporterProfile?.firstName || ''
+  let lName = rawData.reporterLastName || rawData.lastName || reporterProfile?.lastName || ''
 
   if (fName === 'undefined') fName = ''
   if (lName === 'undefined') lName = ''
@@ -95,11 +101,14 @@ export function DomesticReportDetailPage() {
   ) {
     reporterName =
       rawData.reporterName ||
+      reporterProfile?.name ||
       rawData.userName ||
       rawData.name ||
-      rawData.userEmail?.split('@')[0] ||
+      reporterEmail?.split('@')[0] ||
       'Unknown Reporter'
   }
+
+  const finalPhone = rawData.reporterPhone || rawData.phone || reporterProfile?.contactPhone || reporterProfile?.phone
 
   // ---------------------------------------------------------
   // LOCATION
@@ -379,16 +388,12 @@ export function DomesticReportDetailPage() {
               </dt>
 
               <dd className="mt-1 font-medium">
-                {rawData.reporterPhone || rawData.phone ? (
+                {finalPhone ? (
                   <a
-                    href={`tel:${(
-                      rawData.reporterPhone ||
-                      rawData.phone
-                    ).replace(/\s/g, '')}`}
+                    href={`tel:${finalPhone.replace(/\s/g, '')}`}
                     className="inline-flex items-center gap-2 text-primary hover:opacity-80"
                   >
-                    {rawData.reporterPhone || rawData.phone}
-
+                    {finalPhone}
                     <Phone className="h-4 w-4" />
                   </a>
                 ) : (
