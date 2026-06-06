@@ -44,12 +44,11 @@ const DEFAULT_MAP_LAT = 9.7393
 const DEFAULT_MAP_LNG = 118.7361
 
 // --- FIX 1: ACCURATE PIN PLACEMENT ---
-// Added iconSize and iconAnchor so Leaflet knows exactly where the center of the dot is.
 const customMarkerIcon = L.divIcon({
   className: 'custom-map-marker',
   html: `<div style="background-color: hsl(var(--primary)); width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
   iconSize: [18, 18],
-  iconAnchor: [9, 9], // Points to the exact center of the 18x18 div
+  iconAnchor: [9, 9], 
 })
 
 async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
@@ -171,7 +170,6 @@ export function WildlifeSightingForm() {
     species: '',
     location: '',
     description: '',
-    condition: '',
     behavior: '',
     behaviorOther: '',
     reporterPhone: '',
@@ -181,22 +179,22 @@ export function WildlifeSightingForm() {
   })
 
   // --- VERCEL FIX: EXTRACT OUTSIDE USEEFFECT ---
-const userContactPhone = profile?.contactPhone;// Add this flag
+  const userContactPhone = profile?.contactPhone;
 
-useEffect(() => {
-  if (userContactPhone && !formData.reporterPhone) {
-    let cleaned = userContactPhone.replace(/\D/g, '')
+  useEffect(() => {
+    if (userContactPhone && !formData.reporterPhone) {
+      let cleaned = userContactPhone.replace(/\D/g, '')
 
-    if (cleaned.length > 11) {
-      cleaned = cleaned.slice(0, 11)
+      if (cleaned.length > 11) {
+        cleaned = cleaned.slice(0, 11)
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        reporterPhone: cleaned,
+      }))
     }
-
-    setFormData((prev) => ({
-      ...prev,
-      reporterPhone: cleaned,
-    }))
-  }
-}, [userContactPhone, formData.reporterPhone])
+  }, [userContactPhone, formData.reporterPhone])
 
   const updateLocationData = async (lat: number, lng: number, source: 'gps' | 'click' = 'click') => {
     setLocFetching(true)
@@ -309,7 +307,6 @@ useEffect(() => {
         animalName: formData.species.trim(),
         location: formData.location,
         description: formData.description,
-        condition: formData.condition.trim() || undefined,
         behavior: behavior || undefined,
         reporterPhone: cleanPhone,
         quantity: Math.max(1, Number(formData.quantity) || 1),
@@ -333,43 +330,37 @@ useEffect(() => {
         <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           Wildlife Sighting Report
         </h2>
-<div className="space-y-4">
-  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-    <p className="text-sm leading-relaxed text-foreground">
-      <span className="font-bold text-emerald-700 dark:text-emerald-400">
-        Reminder:
-      </span>{' '}
+        <div className="space-y-4">
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+            <p className="text-sm leading-relaxed text-foreground">
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                Reminder:
+              </span>{' '}
+              This reporting form is intended only for{' '}
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                wildlife animals that require rescue, assistance,
+                medical attention, or immediate care due to injury,
+                illness, distress, displacement, or other threatening
+                conditions.
+              </span>{' '}
+              Wildlife animals that appear{' '}
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                healthy, unharmed, and are exhibiting normal behavior
+                in their natural habitat
+              </span>{' '}
+              should not be reported and should be left undisturbed.
+              <span className="block mt-3 text-muted-foreground font-normal">
+                Responsible reporting helps ensure that rescue efforts
+                are directed to wildlife that genuinely need assistance.
+              </span>
+            </p>
+          </div>
 
-      This reporting form is intended only for{' '}
-
-      <span className="font-bold text-emerald-700 dark:text-emerald-400">
-        wildlife animals that require rescue, assistance,
-        medical attention, or immediate care due to injury,
-        illness, distress, displacement, or other threatening
-        conditions.
-      </span>{' '}
-
-      Wildlife animals that appear{' '}
-
-      <span className="font-bold text-emerald-700 dark:text-emerald-400">
-        healthy, unharmed, and are exhibiting normal behavior
-        in their natural habitat
-      </span>{' '}
-
-      should not be reported and should be left undisturbed.
-
-      <span className="block mt-3 text-muted-foreground font-normal">
-        Responsible reporting helps ensure that rescue efforts
-        are directed to wildlife that genuinely need assistance.
-      </span>
-    </p>
-  </div>
-
-  <p className="text-muted-foreground">
-    Report a protected or endemic species sighting.
-    Please keep your distance and do not disturb the animal.
-  </p>
-</div>
+          <p className="text-muted-foreground">
+            Report a protected or endemic species sighting.
+            Please keep your distance and do not disturb the animal.
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -381,12 +372,12 @@ useEffect(() => {
           </label>
           <Input
             value={formData.species}
-onChange={(e) =>
-  setFormData({
-    ...formData,
-    species: e.target.value,
-  })
-}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                species: e.target.value,
+              })
+            }
             placeholder="e.g. Palawan Bearcat, Philippine Cockatoo"
             className="h-12 bg-background border-border rounded-xl"
             required
@@ -485,37 +476,33 @@ onChange={(e) =>
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Reported Size
             </label>
-<Select
-  value={formData.reportedSize}
-  onValueChange={(value) =>
-    setFormData({
-      ...formData,
-      reportedSize: value || '',
-    })
-  }
->
-  <SelectTrigger className="h-12 bg-background border-border rounded-xl">
-    <SelectValue placeholder="Select size" />
-  </SelectTrigger>
-
-<SelectContent>
-  <SelectItem value="small">
-    Small - Less than 1 meter
-  </SelectItem>
-
-  <SelectItem value="medium">
-    Medium - 2 to 3 meters long
-  </SelectItem>
-
-  <SelectItem value="large">
-    Large - 4 to 5 meters
-  </SelectItem>
-
-  <SelectItem value="very-large">
-    More than 5 meters
-  </SelectItem>
-</SelectContent>
-</Select>
+            <Select
+              value={formData.reportedSize}
+              onValueChange={(value) =>
+                setFormData({
+                  ...formData,
+                  reportedSize: value || '',
+                })
+              }
+            >
+              <SelectTrigger className="h-12 bg-background border-border rounded-xl">
+                <SelectValue placeholder="Select size" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="small">
+                  Small - Less than 1 meter
+                </SelectItem>
+                <SelectItem value="medium">
+                  Medium - 2 to 3 meters long
+                </SelectItem>
+                <SelectItem value="large">
+                  Large - 4 to 5 meters
+                </SelectItem>
+                <SelectItem value="very-large">
+                  More than 5 meters
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -577,21 +564,6 @@ onChange={(e) =>
             }}
           />
         ) : null}
-
-        {/* Condition */}
-        <div className="space-y-3">
-          <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Animal Condition (optional)
-          </label>
-          <Input
-            value={formData.condition}
-            onChange={(e) =>
-              setFormData({ ...formData, condition: e.target.value })
-            }
-            placeholder="e.g. Appears healthy, injured, trapped"
-            className="h-12 bg-background border-border rounded-xl"
-          />
-        </div>
 
         {/* Description */}
         <div className="space-y-3">
