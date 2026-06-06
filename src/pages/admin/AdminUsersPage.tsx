@@ -15,7 +15,7 @@ import { normalizeEmail } from '@/lib/admin'
 import { formatDate } from '@/lib/dates'
 import { toast } from 'sonner'
 
-type DialogMode = 'view' | 'edit'
+
 type AdminUserRow = Doc<'users'>
 
 export function AdminUsersPage() {
@@ -23,7 +23,6 @@ export function AdminUsersPage() {
   const deleteUser = useMutation(api.admin.deleteUser)
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<AdminUserRow | null>(null)
-  const [dialogMode, setDialogMode] = useState<DialogMode>('view')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -53,11 +52,10 @@ const users = useMemo(() => {
 
   const pagination = usePaginatedRows(users, { resetKey: search })
 
-  function openDialog(row: AdminUserRow, mode: DialogMode) {
-    setSelected(row)
-    setDialogMode(mode)
-    setDialogOpen(true)
-  }
+function openDialog(row: AdminUserRow) {
+  setSelected(row)
+  setDialogOpen(true)
+}
 
   function handleAction(row: AdminUserRow, action: AdminRowAction) {
     if (action === 'delete') {
@@ -65,7 +63,7 @@ const users = useMemo(() => {
       setDeleteOpen(true)
       return
     }
-    openDialog(row, action)
+    openDialog(row)
   }
 
   async function confirmDelete() {
@@ -161,7 +159,6 @@ const users = useMemo(() => {
       <AdminUserDialog
         userRow={selected}
         adminEmail={normalizeEmail(admin.email)}
-        mode={dialogMode}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
