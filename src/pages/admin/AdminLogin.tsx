@@ -85,7 +85,10 @@ export function AdminLogin() {
   setLoading(true)
 
   try {
-    await sendAdminOtp(forgotEmail.trim().toLowerCase())
+    await sendAdminOtp(
+  forgotEmail.trim().toLowerCase(),
+  'reset-temp',
+)
 
     setForgotStep('otp')
 
