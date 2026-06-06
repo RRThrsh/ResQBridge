@@ -466,7 +466,7 @@ export function AdminLogin() {
                 fontFamily: 'var(--font-heading)',
               }}
             >
-              PWRRC Admin
+              PWRCC Admin
             </CardTitle>
 
             <CardDescription>
