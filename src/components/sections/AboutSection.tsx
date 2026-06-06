@@ -1,6 +1,5 @@
-import { Shield, Globe, HeartHandshake, Gift } from 'lucide-react'
-import { Separator } from '@/components/ui/separator'
-import { Card } from '@/components/ui/card'
+import { Shield, Globe, HeartHandshake } from 'lucide-react'
+
 
 export function AboutSection() {
 const features = [
@@ -73,61 +72,6 @@ const features = [
             </div>
           </div>
 
-          {/* Right content — Donation card */}
-          <div>
-            <Card className="rounded-3xl p-8 border-primary/20 bg-card card-shimmer relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-              
-              <div className="flex items-center gap-3 mb-6 relative z-10">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                  <Gift className="w-6 h-6 text-amber-500" />
-                </div>
-                <div>
-                  <h3
-                    className="text-foreground font-bold text-xl"
-                    style={{ fontFamily: 'var(--font-heading)' }}
-                  >
-                    Support the Animals
-                  </h3>
-                  <p className="text-muted-foreground text-xs">Help us care for the animals</p>
-                </div>
-              </div>
-
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 relative z-10">
-                <p className="text-amber-500 text-xs leading-relaxed font-medium">
-                  <strong>Note:</strong> Our partner rescue organizations do not accept cash donations. In-kind donations are greatly appreciated for the care of rescued animals.
-
-                </p>
-              </div>
-
-              <p className="text-muted-foreground text-xs font-semibold uppercase tracking-widest mb-4 relative z-10">We accept:</p>
-              <div className="grid grid-cols-2 gap-3 relative z-10">
-                {[
-                  { emoji: '🍎', label: 'Fresh Fruits' },
-                  { emoji: '🥬', label: 'Vegetables' },
-                  { emoji: '💊', label: 'Vet Supplies' },
-                  { emoji: '🐾', label: 'Necessities' },
-                  { emoji: '🧴', label: 'Cleaning' },
-                  { emoji: '📦', label: 'Containers' },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex items-center gap-2.5 p-3 rounded-xl bg-background border border-border"
-                  >
-                    <span className="text-lg">{item.emoji}</span>
-                    <span className="text-foreground text-xs font-medium">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Separator className="my-6" />
-
-              <p className="text-muted-foreground text-xs text-center leading-relaxed relative z-10">
-                Your donations can be delivered to either of our partner rescue organizations
-                Monday – Sunday, 8:00 AM – 5:00 PM
-              </p>
-            </Card>
-          </div>
         </div>
       </div>
     </section>
