@@ -36,6 +36,8 @@ export function AdminLogin() {
   const [forgotOtp, setForgotOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [forgotResendCooldown, setForgotResendCooldown] = useState(0)
   const verifyingRef = useRef(false)
 
   useEffect(() => {
@@ -53,6 +55,27 @@ export function AdminLogin() {
     return <Navigate to="/pwrcc/admin" replace />
   }
 
+  useEffect(() => {
+  if (resendCooldown <= 0) return
+
+  const timer = setInterval(() => {
+    setResendCooldown((prev) => prev - 1)
+  }, 1000)
+
+  return () => clearInterval(timer)
+}, [resendCooldown])
+
+useEffect(() => {
+  if (forgotResendCooldown <= 0) return
+
+  const timer = setInterval(() => {
+    setForgotResendCooldown((prev) => prev - 1)
+  }, 1000)
+
+  return () => clearInterval(timer)
+}, [forgotResendCooldown])
+  
+
   async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (loading) return
@@ -68,6 +91,7 @@ export function AdminLogin() {
       setEmail(normalizedEmail)
       sessionStorage.setItem(ADMIN_OTP_EMAIL_KEY, normalizedEmail)
       setStep('otp')
+      setResendCooldown(60)
       toast.success(`Code sent to ${normalizedEmail}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Invalid credentials')
@@ -91,6 +115,7 @@ export function AdminLogin() {
 )
 
     setForgotStep('otp')
+    setForgotResendCooldown(60)
 
     toast.success('OTP sent successfully')
   } catch (error) {
@@ -130,6 +155,52 @@ async function handleVerifyResetOtp() {
     setLoading(false)
   }
 }
+
+  async function handleResendOtp() {
+  if (resendCooldown > 0) return
+
+  try {
+    setLoading(true)
+
+    await sendAdminOtp(email, password)
+
+    toast.success('OTP resent successfully')
+
+    setResendCooldown(60)
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : 'Could not resend OTP',
+    )
+  } finally {
+    setLoading(false)
+  }
+}
+  async function handleForgotResendOtp() {
+  if (forgotResendCooldown > 0) return
+
+  try {
+    setLoading(true)
+
+    await sendAdminOtp(
+      forgotEmail.trim().toLowerCase(),
+      'reset-temp',
+    )
+
+    toast.success('OTP resent successfully')
+
+    setForgotResendCooldown(60)
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : 'Could not resend OTP',
+    )
+  } finally {
+    setLoading(false)
+  }
+}
   
   async function verifyCode(e: React.FormEvent) {
     e.preventDefault()
@@ -153,6 +224,7 @@ async function handleVerifyResetOtp() {
   otpEmail,
   code,
 )
+
 
 const activeSessionId = crypto.randomUUID()
 
@@ -369,6 +441,17 @@ setStep('credentials')
           'Verify OTP'
         )}
       </Button>
+      <Button
+  type="button"
+  variant="outline"
+  className="w-full"
+  disabled={loading || forgotResendCooldown > 0}
+  onClick={handleForgotResendOtp}
+>
+  {forgotResendCooldown > 0
+    ? `Resend OTP in ${forgotResendCooldown}s`
+    : 'Resend OTP'}
+</Button>
     </>
   )}
 
@@ -431,6 +514,18 @@ setStep('credentials')
                   className="bg-card text-foreground border-border placeholder:text-muted-foreground focus-visible:ring-primary text-center text-lg tracking-[0.3em]"
                 />
 
+                <Button
+  type="button"
+  variant="outline"
+  className="w-full"
+  disabled={loading || resendCooldown > 0}
+  onClick={handleResendOtp}
+>
+  {resendCooldown > 0
+    ? `Resend OTP in ${resendCooldown}s`
+    : 'Resend OTP'}
+</Button>
+                
                 <Button type="submit" className="w-full" disabled={loading || code.length !== 6}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify OTP'}
                 </Button>
