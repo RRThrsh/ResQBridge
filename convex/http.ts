@@ -127,38 +127,38 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
 const userVerifyOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
-    const identifier = String(body.identifier ?? '').trim()
+    const email = String(body.email ?? '').trim().toLowerCase()
     const code = normalizeOtpCode(String(body.code ?? ''))
     const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
     const password = String(body.password ?? '')
 
-    if (!identifier) return jsonResponse({ error: 'Please enter a valid email or phone number.' }, 400)
+    if (!email) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
     const secret = getOtpSecret()
 
-    const isAdmin = await ctx.runQuery(api.admin.isAdmin, { email: identifier })
-    if (isAdmin) return jsonResponse({ error: 'This contact is for admin access only.' }, 400)
+    const isAdmin = await ctx.runQuery(api.admin.isAdmin, { email })
+    if (isAdmin) return jsonResponse({ error: 'This email is for admin access only.' }, 400)
 
-    const isRescuer = await ctx.runQuery(api.rescuers.isRescuer, { email: identifier })
-    if (isRescuer) return jsonResponse({ error: 'This contact is for rescuer access only.' }, 400)
+    const isRescuer = await ctx.runQuery(api.rescuers.isRescuer, { email })
+    if (isRescuer) return jsonResponse({ error: 'This email is for rescuer access only.' }, 400)
 
     const profile = await ctx.runMutation(api.otp.validateVerificationCode, {
-      secret, email: identifier, scope: 'user', code, mode,
+      secret, email, scope: 'user', code, mode,
     })
 
     let user
     if (mode === 'sign-up') {
       user = await ctx.runMutation(api.users.createUser, {
-        email: identifier, firstName: profile.firstName, lastName: profile.lastName, password,
+        email, firstName: profile.firstName, lastName: profile.lastName, password,
         phone: profile.phone,
       })
     } else {
-      const existing = await ctx.runQuery(api.users.getByEmail, { email: identifier })
+      const existing = await ctx.runQuery(api.users.getByEmail, { email })
       if (!existing) return jsonResponse({ error: 'No account found. Please sign up first.' }, 400)
       user = existing
     }
 
-    await ctx.runMutation(api.otp.consumeVerificationCode, { secret, email: identifier, scope: 'user' })
+    await ctx.runMutation(api.otp.consumeVerificationCode, { secret, email, scope: 'user' })
 
     return jsonResponse({ success: true, user }, 200)
   } catch (error) {
