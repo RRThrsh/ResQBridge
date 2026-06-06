@@ -305,14 +305,23 @@ className="
         </dd>
       </div>
 
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Size / Condition
-        </dt>
-        <dd className="capitalize">
-          {activeReport.reportedSize ?? 'N/A'}
-        </dd>
-      </div>
+<div>
+  <dt className="text-xs text-muted-foreground">
+    Size
+  </dt>
+  <dd className="capitalize">
+    {activeReport.reportedSize ?? 'N/A'}
+  </dd>
+</div>
+
+<div>
+  <dt className="text-xs text-muted-foreground">
+    Condition
+  </dt>
+  <dd className="capitalize">
+    {activeReport.condition ?? 'N/A'}
+  </dd>
+</div>
 
       <div>
         <dt className="text-xs text-muted-foreground">
