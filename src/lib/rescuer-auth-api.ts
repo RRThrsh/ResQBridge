@@ -50,6 +50,13 @@ const response = await rescuerAuthFetch(
     password,
   },
 )
+console.log("Backend Response Status:", response.status);
+
+  if (!response.ok) {
+    throw new Error(await parseAuthError(response))
+  }
+}
+
 
   if (!response.ok) {
     throw new Error(await parseAuthError(response))
