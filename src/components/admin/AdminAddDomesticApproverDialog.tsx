@@ -28,12 +28,14 @@ export function AdminAddDomesticApproverDialog({ adminEmail, open, onOpenChange 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [contactPhone, setContactPhone] = useState('')
+  const [password, setPassword] = useState('')
   const [saving, setSaving] = useState(false)
 
   function resetForm() {
     setEmail('')
     setFirstName('')
     setLastName('')
+    setPassword('')
     setContactPhone('')
   }
 
@@ -46,6 +48,7 @@ export function AdminAddDomesticApproverDialog({ adminEmail, open, onOpenChange 
         email: normalizeEmail(email),
         firstName,
         lastName,
+        password,
         contactPhone,
       })
       toast.success('Approver added. They can sign in at /pwrcc/domestic/login.')
@@ -98,7 +101,21 @@ export function AdminAddDomesticApproverDialog({ adminEmail, open, onOpenChange 
               required
             />
           </div>
+          <div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    Password
+  </label>
 
+  <Input
+    type="password"
+    value={password}
+    onChange={(e) =>
+      setPassword(e.target.value)
+    }
+    placeholder="Enter password"
+    required
+  />
+</div>
           <DialogFooter className="pt-2 sm:justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
