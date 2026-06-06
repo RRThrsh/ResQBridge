@@ -44,7 +44,7 @@ export function formatPhotoSizeMb(bytes: number): string {
 }
 
 export function formatPhotoSizeLimitMessage(): string {
-  return 'Photos must be 50 MB or smaller in total'
+  return 'Photos must be 5 MB or smaller in total'
 }
 
 export function getReportPhotos(report: ReportPhotoSource): string[] {

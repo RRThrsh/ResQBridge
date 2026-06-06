@@ -1,3 +1,4 @@
+
 import type { Doc } from '../../../convex/_generated/dataModel'
 
 import {
@@ -13,12 +14,10 @@ import { Button } from '@/components/ui/button'
 
 import { formatDateTime } from '@/lib/dates'
 
-
 type AdminUser = Doc<'users'>
 
 type Props = {
   userRow: AdminUser | null
-  adminEmail: string
   open: boolean
   onOpenChange: (
     open: boolean,
@@ -29,7 +28,7 @@ export function AdminUserDialog({
   userRow,
   open,
   onOpenChange,
-}: Props){
+}: Props) {
   if (!userRow) return null
 
   return (
@@ -42,18 +41,18 @@ export function AdminUserDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            View user
+            View User
           </DialogTitle>
 
           <DialogDescription>
-            {userRow.email}
+            User account details
           </DialogDescription>
         </DialogHeader>
 
-        <dl className="grid gap-3 text-sm">
+        <dl className="grid gap-4 text-sm">
           <div>
             <dt className="text-xs text-muted-foreground">
-              Name
+              Full name
             </dt>
 
             <dd className="font-medium">
@@ -85,6 +84,16 @@ export function AdminUserDialog({
 
           <div>
             <dt className="text-xs text-muted-foreground">
+              Role
+            </dt>
+
+            <dd className="capitalize">
+              {userRow.role || 'user'}
+            </dd>
+          </div>
+
+          <div>
+            <dt className="text-xs text-muted-foreground">
               Joined
             </dt>
 
@@ -101,9 +110,7 @@ export function AdminUserDialog({
             type="button"
             variant="outline"
             onClick={() =>
-              onOpenChange(
-                false,
-              )
+              onOpenChange(false)
             }
           >
             Close

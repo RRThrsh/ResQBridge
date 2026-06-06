@@ -91,7 +91,6 @@ export function AdminAdminsPage() {
   }
 
   const selfEmail = normalizeEmail(admin.email)
-  const onlyOneAdmin = admins.length <= 1
 
   return (
     <div className="space-y-4">
@@ -155,10 +154,13 @@ export function AdminAdminsPage() {
                         {formatDate(row.createdAt)}
                       </AdminTableCell>
                       <AdminTableActionsCell>
-                        <AdminTableActions
-                          onAction={(action) => handleAction(row, action)}
-                          disableDelete={isSelf || onlyOneAdmin}
-                        />
+<AdminTableActions
+  onAction={(action) =>
+    handleAction(row, action)
+  }
+  disableDelete={isSelf}
+  disableEdit
+/>
                       </AdminTableActionsCell>
                     </tr>
                   )

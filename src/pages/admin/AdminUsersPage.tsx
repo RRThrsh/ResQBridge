@@ -140,11 +140,13 @@ function openDialog(row: AdminUserRow) {
                         {formatDate(row.createdAt)}
                       </AdminTableCell>
                       <AdminTableActionsCell>
-                        <AdminTableActions
-                          onAction={(action) => handleAction(row, action)}
-                          disableDelete={isSelf}
-                          disableEdit={isSelf}
-                        />
+<AdminTableActions
+  onAction={(action) =>
+    handleAction(row, action)
+  }
+  disableDelete={isSelf}
+  disableEdit
+/>
                       </AdminTableActionsCell>
                     </tr>
                   )
@@ -158,7 +160,7 @@ function openDialog(row: AdminUserRow) {
 
       <AdminUserDialog
         userRow={selected}
-        adminEmail={normalizeEmail(admin.email)}
+
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />

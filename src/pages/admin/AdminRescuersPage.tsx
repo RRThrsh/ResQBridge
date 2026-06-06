@@ -141,7 +141,13 @@ export function AdminRescuersPage() {
                         {formatDate(row.createdAt)}
                       </AdminTableCell>
                       <AdminTableActionsCell>
-                        <AdminTableActions onAction={(action) => handleAction(row, action)} />
+                       <AdminTableActions
+  onAction={(action) =>
+    handleAction(row, action)
+  }
+  disableDelete={false}
+  disableEdit
+/>
                       </AdminTableActionsCell>
                     </tr>
                   )

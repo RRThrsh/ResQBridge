@@ -1,4 +1,10 @@
-import { Eye, MoreHorizontal, Trash2, UserPlus } from 'lucide-react'
+import {
+  Eye,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  UserPlus,
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,7 +14,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
-export type AdminRowAction = 'view' | 'delete'
+export type AdminRowAction =
+  | 'view'
+  | 'edit'
+  | 'delete'
 
 type Props = {
   onAction: (action: AdminRowAction) => void
@@ -24,6 +33,7 @@ export function AdminTableActions({
   onAction,
   onAssign,
   disableDelete = false,
+  disableEdit = false,
   showAssign = false,
   viewOnly = false,
   className,
@@ -73,6 +83,14 @@ export function AdminTableActions({
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuSeparator />
+        <DropdownMenuItem
+  className="cursor-pointer"
+  disabled={disableEdit}
+  onClick={() => onAction('edit')}
+>
+  <Pencil className="h-4 w-4" />
+  Edit
+</DropdownMenuItem>
         <DropdownMenuItem
           variant="destructive"
           className="cursor-pointer"
