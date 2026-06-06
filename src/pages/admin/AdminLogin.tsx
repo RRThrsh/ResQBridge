@@ -51,10 +51,6 @@ export function AdminLogin() {
     wasLoggedIn.current = isLoggedIn
   }, [isLoggedIn])
 
-  if (isLoggedIn) {
-    return <Navigate to="/pwrcc/admin" replace />
-  }
-
   useEffect(() => {
   if (resendCooldown <= 0) return
 
@@ -67,6 +63,11 @@ export function AdminLogin() {
 
 useEffect(() => {
   if (forgotResendCooldown <= 0) return
+
+
+if (isLoggedIn) {
+    return <Navigate to="/pwrcc/admin" replace />
+  }
 
   const timer = setInterval(() => {
     setForgotResendCooldown((prev) => Math.max(prev - 1, 0))
