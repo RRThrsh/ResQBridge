@@ -30,10 +30,10 @@ const features = [
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="flex justify-center">
           
           {/* Left content */}
-          <div>
+          <div className="max-w-3xl text-center">
             <p className="text-primary text-xs font-semibold tracking-widest uppercase mb-3">
               About the System
             </p>
@@ -57,7 +57,7 @@ const features = [
             </p>
 
             {/* Features */}
-            <div className="space-y-6">
+            <div className="space-y-6 text-left">
               {features.map((feat) => (
                 <div key={feat.title} className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">

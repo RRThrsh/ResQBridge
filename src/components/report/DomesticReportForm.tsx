@@ -336,7 +336,7 @@ export function DomesticReportForm() {
             <Input
               value={formData.species}
               onChange={(e) => setFormData({ ...formData, species: e.target.value })}
-              placeholder="e.g. Dog, Cat, Bird"
+              placeholder="e.g. Dog, Cat"
               className="h-12 bg-background border-border rounded-xl"
               required
             />
