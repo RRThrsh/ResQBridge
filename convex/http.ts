@@ -1,5 +1,5 @@
 import { httpRouter } from 'convex/server'
-import { httpAction, type ActionCtx } from './_generated/server'
+import { httpAction, type PublicHttpAction } from './_generated/server'
 import { api, internal } from './_generated/api'
 import { normalizeEmail } from './lib/admins'
 import { generateOtp } from './lib/generateOtp'
@@ -14,10 +14,7 @@ import { type AuthMode } from './lib/authParse'
 import { normalizeOtpCode } from './lib/otpCode'
 import { checkRateLimit, getClientIp } from './lib/rateLimit'
 
-function withRateLimit(
-  handler: (ctx: ActionCtx, request: Request) => Promise<Response>,
-  prefix: string,
-) {
+function withRateLimit(handler: PublicHttpAction, prefix: string): PublicHttpAction {
   return httpAction(async (ctx, request) => {
     const ip = getClientIp(request)
     const { allowed, retryAfter } = checkRateLimit(`${prefix}:${ip}`)

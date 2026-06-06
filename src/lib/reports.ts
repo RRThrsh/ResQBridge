@@ -195,12 +195,16 @@ export const WILDLIFE_BEHAVIORS = [
     label: 'Victim of hunting, trapping, or trade',
   },
   {
+    value: 'roaming',
+    label: 'Just passing through / Roaming',
+  },
+  {
     value: 'sighting',
     label: 'Wildlife sighting (not injured)',
   },
   {
     value: WILDLIFE_BEHAVIOR_OTHER,
-    label: 'Other',
+    label: 'Other / Not sure',
   },
 ] as const
 
