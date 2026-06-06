@@ -247,7 +247,9 @@ export const resetUserPassword = mutation({
 
     const user = await ctx.db
       .query('users')
-      .withIndex('by_email', (q) => q.eq('email', email))
+      .withIndex('by_email', (q) =>
+        q.eq('email', email),
+      )
       .unique()
 
     if (!user) {
@@ -255,7 +257,9 @@ export const resetUserPassword = mutation({
     }
 
     if (args.newPassword.length < 8) {
-      throw new Error('Password must be at least 8 characters.')
+      throw new Error(
+        'Password must be at least 8 characters.',
+      )
     }
 
     await ctx.db.patch(user._id, {

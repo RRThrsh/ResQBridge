@@ -11,11 +11,16 @@ import { normalizeEmail } from '@/lib/admin'
 import { formatDate } from '@/lib/dates'
 import { toast } from 'sonner'
 import { ThemeSetting } from '@/components/theme/ThemeSetting'
-
+import {
+  Eye,
+  EyeOff,
+} from 'lucide-react'
 export function AccountPage() {
   const { isLoggedIn, user, updateUser } = useUserAuth()
   const updateProfile = useMutation(api.users.updateProfile)
-  
+  const changePassword = useMutation(
+  api.users.resetUserPassword,
+)
   // Safely pass the email only if the user object exists
   const profile = useQuery(
     api.users.getProfile,
@@ -24,7 +29,35 @@ export function AccountPage() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+const [
+  currentPassword,
+  setCurrentPassword,
+] = useState('')
 
+const [
+  newPassword,
+  setNewPassword,
+] = useState('')
+
+const [
+  confirmPassword,
+  setConfirmPassword,
+] = useState('')
+
+const [
+  showCurrentPassword,
+  setShowCurrentPassword,
+] = useState(false)
+
+const [
+  showNewPassword,
+  setShowNewPassword,
+] = useState(false)
+
+const [
+  showConfirmPassword,
+  setShowConfirmPassword,
+] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
 
@@ -74,7 +107,60 @@ export function AccountPage() {
       setSaving(false)
     }
   }
+async function handlePasswordChange(
+  e: React.FormEvent,
+) {
+  e.preventDefault()
 
+  if (!user) return
+
+  if (
+    newPassword !==
+    confirmPassword
+  ) {
+    toast.error(
+      'Passwords do not match',
+    )
+    return
+  }
+
+  if (
+    newPassword.length < 8 ||
+    newPassword.length > 16
+  ) {
+    toast.error(
+      'Password must be 8 to 16 characters',
+    )
+    return
+  }
+
+  setSaving(true)
+
+  try {
+    await changePassword({
+      email: normalizeEmail(
+        user.email,
+      ),
+      newPassword,
+    })
+
+    toast.success(
+      'Password changed successfully',
+    )
+
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : 'Could not change password',
+    )
+  } finally {
+    setSaving(false)
+  }
+}
   return (
     <div className="min-h-screen pt-28 pb-20">
       <div className="mx-auto max-w-lg px-4 sm:px-6">
@@ -209,7 +295,167 @@ export function AccountPage() {
               )}
             </CardContent>
           </Card>
-          </>
+          
+          {isEditing ? (
+  <Card className="mt-6 border-border">
+    <CardHeader>
+      <CardTitle
+        style={{
+          fontFamily:
+            'var(--font-heading)',
+        }}
+      >
+        Change Password
+      </CardTitle>
+
+      <CardDescription>
+        Update your account password
+      </CardDescription>
+    </CardHeader>
+
+    <CardContent>
+      <form
+        onSubmit={
+          handlePasswordChange
+        }
+        className="space-y-4"
+      >
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">
+            Current Password
+          </label>
+
+          <div className="relative">
+            <Input
+              type={
+                showCurrentPassword
+                  ? 'text'
+                  : 'password'
+              }
+              value={
+                currentPassword
+              }
+              onChange={(e) =>
+                setCurrentPassword(
+                  e.target.value,
+                )
+              }
+              required
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowCurrentPassword(
+                  !showCurrentPassword,
+                )
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              {showCurrentPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">
+            New Password
+          </label>
+
+          <div className="relative">
+            <Input
+              type={
+                showNewPassword
+                  ? 'text'
+                  : 'password'
+              }
+              value={newPassword}
+              onChange={(e) =>
+                setNewPassword(
+                  e.target.value,
+                )
+              }
+              required
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowNewPassword(
+                  !showNewPassword,
+                )
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              {showNewPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">
+            Confirm Password
+          </label>
+
+          <div className="relative">
+            <Input
+              type={
+                showConfirmPassword
+                  ? 'text'
+                  : 'password'
+              }
+              value={
+                confirmPassword
+              }
+              onChange={(e) =>
+                setConfirmPassword(
+                  e.target.value,
+                )
+              }
+              required
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowConfirmPassword(
+                  !showConfirmPassword,
+                )
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          disabled={saving}
+        >
+          {saving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            'Change Password'
+          )}
+        </Button>
+      </form>
+    </CardContent>
+  </Card>
+) : null}
+</>
         )}
       </div>
     </div>
