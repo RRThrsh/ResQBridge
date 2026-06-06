@@ -50,7 +50,6 @@ export async function sendRescuerOtp(
     },
   )
 
-  // Spying on the backend response
   console.log("Backend Response Status:", response.status);
 
   if (!response.ok) {
