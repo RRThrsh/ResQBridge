@@ -12,6 +12,30 @@ import {
 } from './lib/httpResponses'
 import { type AuthMode } from './lib/authParse'
 import { normalizeOtpCode } from './lib/otpCode'
+import { checkRateLimit, getClientIp } from './lib/rateLimit'
+
+function withRateLimit(
+  handler: (ctx: ActionCtx, request: Request) => Promise<Response>,
+  prefix: string,
+) {
+  return httpAction(async (ctx, request) => {
+    const ip = getClientIp(request)
+    const { allowed, retryAfter } = checkRateLimit(`${prefix}:${ip}`)
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfter),
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
+      })
+    }
+    return handler(ctx, request)
+  })
+}
 
 const http = httpRouter()
 
@@ -386,14 +410,14 @@ const domesticVerifyOtp = httpAction(async (ctx, request) => {
 })
 
 const routes = [
-  { path: '/api/auth/send-otp', handler: userSendOtp },
-  { path: '/api/auth/verify-otp', handler: userVerifyOtp },
-  { path: '/api/admin/auth/send-otp', handler: adminSendOtp },
-  { path: '/api/admin/auth/verify-otp', handler: adminVerifyOtp },
-  { path: '/api/rescuer/auth/send-otp', handler: rescuerSendOtp },
-  { path: '/api/rescuer/auth/verify-otp', handler: rescuerVerifyOtp },
-  { path: '/api/domestic/auth/send-otp', handler: domesticSendOtp },
-  { path: '/api/domestic/auth/verify-otp', handler: domesticVerifyOtp },
+  { path: '/api/auth/send-otp', handler: withRateLimit(userSendOtp, 'user-send-otp') },
+  { path: '/api/auth/verify-otp', handler: withRateLimit(userVerifyOtp, 'user-verify-otp') },
+  { path: '/api/admin/auth/send-otp', handler: withRateLimit(adminSendOtp, 'admin-send-otp') },
+  { path: '/api/admin/auth/verify-otp', handler: withRateLimit(adminVerifyOtp, 'admin-verify-otp') },
+  { path: '/api/rescuer/auth/send-otp', handler: withRateLimit(rescuerSendOtp, 'rescuer-send-otp') },
+  { path: '/api/rescuer/auth/verify-otp', handler: withRateLimit(rescuerVerifyOtp, 'rescuer-verify-otp') },
+  { path: '/api/domestic/auth/send-otp', handler: withRateLimit(domesticSendOtp, 'domestic-send-otp') },
+  { path: '/api/domestic/auth/verify-otp', handler: withRateLimit(domesticVerifyOtp, 'domestic-verify-otp') },
 ] as const
 
 for (const route of routes) {
