@@ -1,7 +1,12 @@
 
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { Loader2, Pencil } from 'lucide-react'
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Pencil,
+} from 'lucide-react'
 
 import { api } from '../../../convex/_generated/api'
 
@@ -61,20 +66,35 @@ const changePassword = useMutation(
   const [saving, setSaving] =
     useState(false)
 
-  const [
-    currentPassword,
-    setCurrentPassword,
-  ] = useState('')
+    const [
+      currentPassword,
+      setCurrentPassword,
+    ] = useState('')
 
-  const [
-    newPassword,
-    setNewPassword,
-  ] = useState('')
+    const [
+      newPassword,
+      setNewPassword,
+    ] = useState('')
 
-  const [
-    confirmPassword,
-    setConfirmPassword,
-  ] = useState('')
+    const [
+      confirmPassword,
+      setConfirmPassword,
+    ] = useState('')
+
+    const [
+      showCurrentPassword,
+      setShowCurrentPassword,
+    ] = useState(false)
+
+    const [
+      showNewPassword,
+      setShowNewPassword,
+    ] = useState(false)
+
+    const [
+      showConfirmPassword,
+      setShowConfirmPassword,
+    ] = useState(false)
 
   function startEditing() {
     if (!profile) return
@@ -247,7 +267,7 @@ await changePassword({
 
             <CardDescription>
               Profile information
-              for the PWRRC admin
+              for the PWRCC admin
               panel
             </CardDescription>
           </div>
@@ -409,56 +429,122 @@ await changePassword({
               }
               className="space-y-4"
             >
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">
-                  Current Password
-                </label>
+<div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    Current Password
+  </label>
 
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) =>
-                    setCurrentPassword(
-                      e.target.value,
-                    )
-                  }
-                  required
-                />
-              </div>
+  <div className="relative">
+    <Input
+      type={
+        showCurrentPassword
+          ? 'text'
+          : 'password'
+      }
+      value={currentPassword}
+      onChange={(e) =>
+        setCurrentPassword(
+          e.target.value,
+        )
+      }
+      required
+    />
 
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">
-                  New Password
-                </label>
+    <button
+      type="button"
+      onClick={() =>
+        setShowCurrentPassword(
+          !showCurrentPassword,
+        )
+      }
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+    >
+      {showCurrentPassword ? (
+        <EyeOff className="h-4 w-4" />
+      ) : (
+        <Eye className="h-4 w-4" />
+      )}
+    </button>
+  </div>
+</div>
 
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) =>
-                    setNewPassword(
-                      e.target.value,
-                    )
-                  }
-                  required
-                />
-              </div>
+<div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    New Password
+  </label>
 
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">
-                  Confirm Password
-                </label>
+  <div className="relative">
+    <Input
+      type={
+        showNewPassword
+          ? 'text'
+          : 'password'
+      }
+      value={newPassword}
+      onChange={(e) =>
+        setNewPassword(
+          e.target.value,
+        )
+      }
+      required
+    />
 
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) =>
-                    setConfirmPassword(
-                      e.target.value,
-                    )
-                  }
-                  required
-                />
-              </div>
+    <button
+      type="button"
+      onClick={() =>
+        setShowNewPassword(
+          !showNewPassword,
+        )
+      }
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+    >
+      {showNewPassword ? (
+        <EyeOff className="h-4 w-4" />
+      ) : (
+        <Eye className="h-4 w-4" />
+      )}
+    </button>
+  </div>
+</div>
+
+<div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    Confirm Password
+  </label>
+
+  <div className="relative">
+    <Input
+      type={
+        showConfirmPassword
+          ? 'text'
+          : 'password'
+      }
+      value={confirmPassword}
+      onChange={(e) =>
+        setConfirmPassword(
+          e.target.value,
+        )
+      }
+      required
+    />
+
+    <button
+      type="button"
+      onClick={() =>
+        setShowConfirmPassword(
+          !showConfirmPassword,
+        )
+      }
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+    >
+      {showConfirmPassword ? (
+        <EyeOff className="h-4 w-4" />
+      ) : (
+        <Eye className="h-4 w-4" />
+      )}
+    </button>
+  </div>
+</div>
 
 <div className="flex gap-2 pt-2">
   <Button
