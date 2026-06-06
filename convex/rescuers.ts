@@ -25,6 +25,9 @@ const rescuerProfileValidator = v.object({
 
 const rescuerReportValidator = v.object({
   ...reportDocValidator.fields,
+
+  color: v.optional(v.string()),
+
   reporterFirstName: v.string(),
   reporterLastName: v.string(),
   assignedRescuerName: v.optional(v.string()),
