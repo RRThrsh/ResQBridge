@@ -60,6 +60,7 @@ export function AdminNewsDialog({
   const updateItem = useMutation(api.content.updateNewsItem)
   const createItem = useMutation(api.content.createNewsItem)
   const [saving, setSaving] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const [draft, setDraft] = useState<NewsEvent | null>(null)
 
   const isView = mode === 'view'
@@ -139,22 +140,32 @@ export function AdminNewsDialog({
         </DialogHeader>
 
 {!isCreate && displayItem?.image ? (
-  <button
-    type="button"
-    onClick={() =>
-      window.open(
-        displayItem.image,
-        '_blank',
-      )
-    }
-    className="w-full"
-  >
-    <img
-      src={displayItem.image}
-      alt={displayItem.title}
-      className="max-h-40 w-full rounded-lg border border-border object-cover transition-transform duration-200 hover:scale-[1.01]"
-    />
-  </button>
+  <>
+    <button
+      type="button"
+      onClick={() => setPreviewOpen(true)}
+      className="w-full"
+    >
+      <img
+        src={displayItem.image}
+        alt={displayItem.title}
+        className="max-h-40 w-full rounded-lg border border-border object-cover transition-transform duration-200 hover:scale-[1.01]"
+      />
+    </button>
+
+    <Dialog
+      open={previewOpen}
+      onOpenChange={setPreviewOpen}
+    >
+      <DialogContent className="max-w-4xl border-0 bg-transparent shadow-none">
+        <img
+          src={displayItem.image}
+          alt={displayItem.title}
+          className="max-h-[85vh] w-full rounded-xl object-contain"
+        />
+      </DialogContent>
+    </Dialog>
+  </>
 ) : null}
 
         {isView && displayItem ? (
