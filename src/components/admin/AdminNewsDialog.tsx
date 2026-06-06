@@ -153,18 +153,23 @@ export function AdminNewsDialog({
       />
     </button>
 
-    <Dialog
-      open={previewOpen}
-      onOpenChange={setPreviewOpen}
-    >
-      <DialogContent className="max-w-4xl border-0 bg-transparent shadow-none">
-        <img
-          src={displayItem.image}
-          alt={displayItem.title}
-          className="max-h-[85vh] w-full rounded-xl object-contain"
-        />
-      </DialogContent>
-    </Dialog>
+{previewOpen && (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+    onClick={() =>
+      setPreviewOpen(false)
+    }
+  >
+    <img
+      src={displayItem.image}
+      alt={displayItem.title}
+      className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
+      onClick={(e) =>
+        e.stopPropagation()
+      }
+    />
+  </div>
+)}
   </>
 ) : null}
 
