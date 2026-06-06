@@ -41,10 +41,10 @@ export function DomesticLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,var(--color-primary)/0.12,transparent)]" />
 
-      <header className="z-20 border-b border-border/80 bg-background/80 backdrop-blur-md">
+      <header className="z-20 shrink-0 border-b border-border/80 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             {backTo ? (
@@ -81,28 +81,28 @@ export function DomesticLayout({
             </div>
           </div>
 
-<div className="flex shrink-0 items-center gap-1">
-  {!onProfilePage && (
-    <Link
-      to="/pwrcc/domestic/profile"
-      className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      aria-label="My account"
-    >
-      <UserCircle className="h-4 w-4" />
-    </Link>
-  )}
+          <div className="flex shrink-0 items-center gap-1">
+            {!backTo && !onProfilePage ? (
+              <Link
+                to="/pwrcc/domestic/profile"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="My account"
+              >
+                <UserCircle className="h-4 w-4" />
+              </Link>
+            ) : null}
 
-  <ThemeToggle size="sm" />
+            <ThemeToggle size="sm" />
 
-  <button
-    type="button"
-    onClick={() => setSignOutOpen(true)}
-    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-    aria-label="Sign out"
-  >
-    <LogOut className="h-4 w-4" />
-  </button>
-</div>
+            <button
+              type="button"
+              onClick={() => setSignOutOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {subtitle ? (
@@ -114,7 +114,7 @@ export function DomesticLayout({
 
       <main
         className={cn(
-          'mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8',
+          'mx-auto min-h-0 w-full max-w-2xl flex-1 overflow-y-auto overscroll-y-contain px-4 py-6 sm:px-6 sm:py-8',
           className,
         )}
       >
@@ -122,7 +122,7 @@ export function DomesticLayout({
       </main>
 
       {footer ? (
-        <footer className="z-30 border-t border-border/80 bg-background/90 backdrop-blur-md">
+        <footer className="z-30 shrink-0 border-t border-border/80 bg-background/90 backdrop-blur-md">
           {footer}
         </footer>
       ) : null}
