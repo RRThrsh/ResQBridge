@@ -365,69 +365,163 @@ return jsonResponse(
 })
 
 // --- DOMESTIC APPROVERS ---
-const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, { email })
-if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
+const domesticSendOtp = httpAction(async (ctx, request) => {
   try {
-    const body = await readJsonBody(request)
-    const email = normalizeEmail(String(body.email ?? ''))
+    const body =
+      await readJsonBody(
+        request,
+      )
 
-    if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
+    const email =
+      normalizeEmail(
+        String(
+          body.email ??
+            '',
+        ),
+      )
 
-    const secret = getOtpSecret()
-    const allowed = await ctx.runQuery(api.domestic.isDomesticApprover, { email })
-    if (!allowed) return jsonResponse({ error: 'This email is not authorized for domestic approver access.' }, 400)
-
-    const profile =
-  await ctx.runQuery(
-    api.domestic
-      .getDomesticApproverForLogin,
-    { email },
-  )
-
-if (!profile) {
-  return jsonResponse(
-    {
-      error:
-        'Domestic approver account not found.',
-    },
-    400,
-  )
-}
-
-const password = String(
-  body.password ?? '',
-)
-
-if (
-  profile.password !==
-  password
-) {
-  return jsonResponse(
-    {
-      error:
-        'Incorrect password.',
-    },
-    401,
-  )
-}
-
-    const code = generateOtp()
-    await ctx.runMutation(api.otp.saveVerificationCode, {
-      secret, email, scope: 'admin', code,
-      firstName: profile.firstName, lastName: profile.lastName,
-      mode: 'sign-in', expiresAt: Date.now() + OTP_TTL_MS,
-    })
-
-    try {
-      await sendOtpEmail(ctx, { email, firstName: profile.firstName, lastName: profile.lastName, subject: 'Your Domestic Portal verification code', code })
-    } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'admin' })
-      return jsonResponse({ error: formatHandlerError(error) }, 500)
+    if (
+      !email.includes('@')
+    ) {
+      return jsonResponse(
+        {
+          error:
+            'Please enter a valid email address.',
+        },
+        400,
+      )
     }
 
-    return jsonResponse({ success: true }, 200)
+    const secret =
+      getOtpSecret()
+
+    const allowed =
+      await ctx.runQuery(
+        api.domestic
+          .isDomesticApprover,
+        { email },
+      )
+
+    if (!allowed) {
+      return jsonResponse(
+        {
+          error:
+            'This email is not authorized for domestic approver access.',
+        },
+        400,
+      )
+    }
+
+    const profile =
+      await ctx.runQuery(
+        api.domestic
+          .getDomesticApproverForLogin,
+        { email },
+      )
+
+    if (!profile) {
+      return jsonResponse(
+        {
+          error:
+            'Domestic approver account not found.',
+        },
+        400,
+      )
+    }
+
+    const password =
+      String(
+        body.password ??
+          '',
+      )
+
+    if (
+      profile.password !==
+      password
+    ) {
+      return jsonResponse(
+        {
+          error:
+            'Incorrect password.',
+        },
+        401,
+      )
+    }
+
+    const code =
+      generateOtp()
+
+    await ctx.runMutation(
+      api.otp
+        .saveVerificationCode,
+      {
+        secret,
+        email,
+        scope: 'admin',
+        code,
+        firstName:
+          profile.firstName,
+        lastName:
+          profile.lastName,
+        mode: 'sign-in',
+        expiresAt:
+          Date.now() +
+          OTP_TTL_MS,
+      },
+    )
+
+    try {
+      await sendOtpEmail(
+        ctx,
+        {
+          email,
+          firstName:
+            profile.firstName,
+          lastName:
+            profile.lastName,
+          subject:
+            'Your Domestic Portal verification code',
+          code,
+        },
+      )
+    } catch (error) {
+      await ctx.runMutation(
+        api.otp
+          .deleteVerificationCode,
+        {
+          secret,
+          email,
+          scope: 'admin',
+        },
+      )
+
+      return jsonResponse(
+        {
+          error:
+            formatHandlerError(
+              error,
+            ),
+        },
+        500,
+      )
+    }
+
+    return jsonResponse(
+      {
+        success: true,
+      },
+      200,
+    )
   } catch (error) {
-    return jsonResponse({ error: formatHandlerError(error) }, 500)
+    return jsonResponse(
+      {
+        error:
+          formatHandlerError(
+            error,
+          ),
+      },
+      500,
+    )
   }
 })
 
@@ -456,22 +550,6 @@ if (!profile) {
   )
 }
 
-const password = String(
-  body.password ?? '',
-)
-
-if (
-  profile.password !==
-  password
-) {
-  return jsonResponse(
-    {
-      error:
-        'Incorrect password.',
-    },
-    401,
-  )
-}
 
     if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
 
