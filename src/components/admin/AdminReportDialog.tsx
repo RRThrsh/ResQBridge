@@ -169,7 +169,22 @@ if (!open && previewImage) {
                     </div>
                   </div>
                 )}
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl bg-background text-foreground dark:bg-zinc-950 dark:text-white dark:border-zinc-800">
+      <DialogContent
+  className="
+    w-[95vw]
+    max-w-5xl
+    max-h-[92vh]
+    overflow-y-auto
+    rounded-2xl
+    bg-background
+    text-foreground
+    dark:bg-zinc-950
+    dark:text-white
+    dark:border-zinc-800
+    p-4
+    sm:p-6
+  "
+>
         <DialogHeader>
           <DialogTitle>{isView ? 'View report' : 'Edit report'}</DialogTitle>
           <DialogDescription>
@@ -208,14 +223,25 @@ if (!open && previewImage) {
 
           {activeReport.photoDataUrls.length > 0 ? (
             <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {activeReport.photoDataUrls.map((photo, index) => (
                   <img
                     key={`${index}-${photo.slice(0, 16)}`}
                     src={photo}
                     alt={`${activeReport.animalName} ${index + 1}`}
                     onClick={() => setPreviewImage(photo)}
-                    className="aspect-square w-full rounded-lg border border-border object-cover cursor-pointer hover:opacity-80 transition"
+                    className="
+  h-64
+  w-full
+  rounded-xl
+  border
+  border-border
+  object-cover
+  cursor-pointer
+  transition
+  hover:opacity-80
+  sm:h-72
+"
                   />
                 ))}
               </div>
@@ -226,7 +252,7 @@ if (!open && previewImage) {
 {isView ? (
   <dl className="grid gap-4 text-sm">
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
       <div>
         <dt className="text-xs text-muted-foreground">
