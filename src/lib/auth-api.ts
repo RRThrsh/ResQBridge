@@ -71,8 +71,7 @@ export async function sendOtp(input: SendOtpInput): Promise<void> {
 
   const response = await authFetch('/api/auth/send-otp', {
     mode: input.mode,
-    identifier: normalizedId,
-    type: input.type,
+    email: normalizedId,
     password: input.password,
     ...(input.mode === 'sign-up'
       ? {
@@ -98,7 +97,7 @@ export async function verifyOtp(
   const normalizedId = isEmail ? normalizeEmail(identifier) : identifier.trim()
 
   const response = await authFetch('/api/auth/verify-otp', {
-    identifier: normalizedId,
+    email: normalizedId,
     code: code.trim(),
     mode,
     password,
