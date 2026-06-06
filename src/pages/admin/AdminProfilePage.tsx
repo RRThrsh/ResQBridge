@@ -327,33 +327,18 @@ await changePassword({
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={
-                    cancelEditing
-                  }
-                  disabled={
-                    saving
-                  }
-                >
-                  Cancel
-                </Button>
-
-                <Button
-                  type="submit"
-                  disabled={
-                    saving
-                  }
-                >
-                  {saving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    'Save changes'
-                  )}
-                </Button>
-              </div>
+<div className="pt-2">
+  <Button
+    type="submit"
+    disabled={saving}
+  >
+    {saving ? (
+      <Loader2 className="h-4 w-4 animate-spin" />
+    ) : (
+      'Save changes'
+    )}
+  </Button>
+</div>
             </form>
           ) : (
             <dl className="grid gap-3 text-sm">
@@ -475,16 +460,27 @@ await changePassword({
                 />
               </div>
 
-              <Button
-                type="submit"
-                disabled={saving}
-              >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  'Change Password'
-                )}
-              </Button>
+<div className="flex gap-2 pt-2">
+  <Button
+    type="button"
+    variant="outline"
+    onClick={cancelEditing}
+    disabled={saving}
+  >
+    Cancel
+  </Button>
+
+  <Button
+    type="submit"
+    disabled={saving}
+  >
+    {saving ? (
+      <Loader2 className="h-4 w-4 animate-spin" />
+    ) : (
+      'Change Password'
+    )}
+  </Button>
+</div>
             </form>
           </CardContent>
         </Card>
