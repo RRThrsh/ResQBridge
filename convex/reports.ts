@@ -19,6 +19,7 @@ import {
   reportStatusValidator,
 } from './lib/reportStatus'
 import { internal } from './_generated/api'
+
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
@@ -48,7 +49,6 @@ async function resolveReporterPhone(
     throw new Error('Contact number is required to submit a report.')
   }
 
-  // We no longer need `if (user)` because our guard above guarantees the user exists!
   await ctx.db.patch(user._id, { contactPhone: fromInput })
 
   return fromInput
@@ -92,6 +92,7 @@ export const listByUserEmail = query({
 
     reporterFirstName: v.optional(v.string()),
     reporterLastName: v.optional(v.string()),
+    reporterName: v.optional(v.string()),
   }),
 ),
   handler: async (ctx, args) => {
@@ -116,6 +117,11 @@ export const create = mutation({
     description: v.optional(v.string()),
     speciesId: v.optional(v.string()),
     condition: v.optional(v.string()),
+    behavior: v.optional(v.string()),
+    color: v.optional(v.string()), // Added explicit arg
+    reporterName: v.optional(v.string()), // Added explicit arg
+    phone: v.optional(v.string()), // Added explicit arg
+    reporterPhone: v.optional(v.string()), // Added explicit arg
     photoStorageIds: v.optional(v.array(v.id('_storage'))),
     photoDataUrls: v.optional(v.array(v.string())),
     photoDataUrl: v.optional(v.string()),
@@ -132,7 +138,7 @@ export const create = mutation({
       photoDataUrl: args.photoDataUrl,
     })
 
-    const reporterPhone = await resolveReporterPhone(ctx, userEmail, args.reporterPhone)
+    const resolvedPhone = await resolveReporterPhone(ctx, userEmail, args.reporterPhone || args.phone)
 
     const reportId = await ctx.db.insert('reports', {
       userEmail,
@@ -144,13 +150,16 @@ export const create = mutation({
       speciesId: args.speciesId || undefined,
       condition: args.condition || undefined,
       behavior: args.behavior?.trim() || undefined,
+      color: args.color?.trim() || undefined, // Inserting color
+      reporterName: args.reporterName?.trim() || undefined, // Inserting name
+      phone: args.phone?.trim() || undefined, // Inserting backup phone
       ...photoFieldsFromNormalized(photos),
       latitude: args.latitude,
       longitude: args.longitude,
       seenAt: args.seenAt,
       quantity: args.quantity,
       reportedSize: args.reportedSize?.trim() || undefined,
-      reporterPhone,
+      reporterPhone: resolvedPhone,
       status: 'pending',
       createdAt: Date.now(),
     })
@@ -158,17 +167,18 @@ export const create = mutation({
     await ctx.db.patch(reportId, {
       reportNumber: generateReportNumber(reportId),
     })
-if (args.category === 'wildlife') {
-  await ctx.scheduler.runAfter(
-    0,
-    internal.notifications.alertAdmin,
-    {
-      reportId,
-      species: args.animalName,
-      location: args.location,
+    
+    if (args.category === 'wildlife') {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.notifications.alertAdmin,
+        {
+          reportId,
+          species: args.animalName,
+          location: args.location,
+        }
+      )
     }
-  )
-}
     return reportId
   },
 })
@@ -184,10 +194,12 @@ export const update = mutation({
     status: reportStatusValidator,
     condition: v.optional(v.string()),
     behavior: v.optional(v.string()),
+    color: v.optional(v.string()), // Added explicitly
     seenAt: v.optional(v.number()),
     quantity: v.optional(v.number()),
     reportedSize: v.optional(v.string()),
     reporterPhone: v.optional(v.string()),
+    reporterName: v.optional(v.string()), // Added explicitly
     photoStorageIds: v.optional(v.array(v.id('_storage'))),
     photoDataUrls: v.optional(v.array(v.string())),
     photoDataUrl: v.optional(v.string()),
@@ -220,10 +232,12 @@ export const update = mutation({
       status: args.status,
       condition: args.condition || undefined,
       behavior: args.behavior?.trim() || undefined,
+      color: args.color?.trim() || undefined, // Update color
       seenAt: args.seenAt,
       quantity: args.quantity,
       reportedSize: args.reportedSize?.trim() || undefined,
       reporterPhone: args.reporterPhone?.trim() || undefined,
+      reporterName: args.reporterName?.trim() || undefined, // Update name
       ...photoPatch,
     })
     return null
@@ -246,7 +260,6 @@ export const remove = mutation({
   },
 })
 
-// Add this to the bottom of convex/reports.ts
 export const getReportById = query({
   args: {
     reportId: v.id('reports'),
