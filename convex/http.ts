@@ -198,6 +198,7 @@ const adminSendOtp = httpAction(async (ctx, request) => {
   try {
     const body = await readJsonBody(request)
     const email = normalizeEmail(String(body.email ?? ''))
+    const password = String(body.password ?? '') // 1. ADDED: Extract password
 
     if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
@@ -209,6 +210,11 @@ const adminSendOtp = httpAction(async (ctx, request) => {
 
     const profile = await ctx.runQuery(api.admin.getAdminForLogin, { email })
     if (!profile) return jsonResponse({ error: 'Admin account not found.' }, 400)
+
+    // 2. ADDED: The crucial password check
+    if (profile.password !== password) {
+      return jsonResponse({ error: 'Incorrect password.' }, 401)
+    }
 
     const code = generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
