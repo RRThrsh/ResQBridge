@@ -77,15 +77,23 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
           ) : null}
         </div>
 
-        <h3
-          className={cn(
-            'truncate font-semibold text-foreground',
-            isCompact ? 'text-sm' : 'text-base sm:text-lg',
-          )}
-          style={{ fontFamily: 'var(--font-heading)' }}
-        >
-          {rawData.animalName || 'Unknown Animal'}
-        </h3>
+<h3
+  className={cn(
+    'truncate font-semibold text-foreground',
+    isCompact ? 'text-sm' : 'text-base sm:text-lg',
+  )}
+  style={{ fontFamily: 'var(--font-heading)' }}
+>
+  {rawData.type === 'missing'
+    ? 'Missing Pet'
+    : rawData.type === 'found'
+    ? 'Found Animal'
+    : rawData.type === 'stray'
+    ? 'Stray Animal'
+    : rawData.type === 'injured'
+    ? 'Injured Animal'
+    : 'Domestic Report'}
+</h3>
 
         <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="h-3 w-3 shrink-0" />
