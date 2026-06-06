@@ -97,7 +97,7 @@ export const createUser = mutation({
       firstName,
       lastName,
       password: args.password,
-      phone: args.phone?.trim() || undefined,
+      contactPhone: args.phone?.trim() || undefined,
       role: 'user',
       createdAt: Date.now(),
     })
