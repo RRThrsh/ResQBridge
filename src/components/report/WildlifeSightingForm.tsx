@@ -464,11 +464,23 @@ onChange={(e) =>
     <SelectValue placeholder="Select size" />
   </SelectTrigger>
 
-  <SelectContent>
-    <SelectItem value="small">Small</SelectItem>
-    <SelectItem value="medium">Medium</SelectItem>
-    <SelectItem value="large">Large</SelectItem>
-  </SelectContent>
+<SelectContent>
+  <SelectItem value="small">
+    Small - Less than 1 meter
+  </SelectItem>
+
+  <SelectItem value="medium">
+    Medium - 2 to 3 meters long
+  </SelectItem>
+
+  <SelectItem value="large">
+    Large - 4 to 5 meters
+  </SelectItem>
+
+  <SelectItem value="very-large">
+    More than 5 meters
+  </SelectItem>
+</SelectContent>
 </Select>
           </div>
         </div>

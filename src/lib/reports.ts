@@ -137,11 +137,70 @@ export const WILDLIFE_CONDITIONS = [
 export const WILDLIFE_BEHAVIOR_OTHER = 'other' as const
 
 export const WILDLIFE_BEHAVIORS = [
-  { value: 'roaming', label: 'Just passing through / Roaming' },
-  { value: 'feeding', label: 'Feeding or foraging' },
-  { value: 'nesting', label: 'Nesting or with young' },
-  { value: 'distressed', label: 'Distressed or agitated' },
-  { value: WILDLIFE_BEHAVIOR_OTHER, label: 'Other / Not sure' },
+  {
+    value: 'injured',
+    label: 'Injured or wounded',
+  },
+  {
+    value: 'sick',
+    label: 'Sick or weak-looking',
+  },
+  {
+    value: 'unable-fly',
+    label: 'Unable to fly (birds)',
+  },
+  {
+    value: 'unable-walk',
+    label: 'Unable to walk or move properly',
+  },
+  {
+    value: 'trapped',
+    label: 'Trapped or entangled',
+  },
+  {
+    value: 'orphaned',
+    label: 'Orphaned juvenile (separated from parent)',
+  },
+  {
+    value: 'vehicle-hit',
+    label: 'Hit by a vehicle',
+  },
+  {
+    value: 'inside-house',
+    label: 'Found inside a house or building',
+  },
+  {
+    value: 'unsafe-location',
+    label: 'Found in an unsafe or unusual location',
+  },
+  {
+    value: 'abnormal-behavior',
+    label: 'Showing abnormal behavior',
+  },
+  {
+    value: 'poisoning',
+    label: 'Suspected poisoning',
+  },
+  {
+    value: 'dead',
+    label: 'Dead wildlife (for documentation or investigation)',
+  },
+  {
+    value: 'illegal-captivity',
+    label: 'Confiscated or rescued from illegal captivity',
+  },
+  {
+    value: 'hunting-trade',
+    label: 'Victim of hunting, trapping, or trade',
+  },
+  {
+    value: 'sighting',
+    label: 'Wildlife sighting (not injured)',
+  },
+  {
+    value: WILDLIFE_BEHAVIOR_OTHER,
+    label: 'Other',
+  },
 ] as const
 
 export function isKnownWildlifeBehavior(value: string) {
