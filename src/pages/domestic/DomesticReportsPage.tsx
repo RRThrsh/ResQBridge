@@ -29,36 +29,26 @@ function StatCard({ label, value, icon: Icon, active, onClick }: { label: string
 }
 
 function EmptyState({ tab }: { tab: Tab }) {
-  const config = {
-    pending: {
-      icon: <Clock className="h-6 w-6 text-primary" />,
-      title: 'No pending reports',
-      description: 'When a user submits a domestic report, it will appear here for your review.'
-    },
-    published: {
-      icon: <CheckCircle2 className="h-6 w-6 text-primary" />,
-      title: 'No published reports',
-      description: 'Approved domestic reports will show up here and on the public feed.'
-    },
-    rejected: {
-      icon: <XCircle className="h-6 w-6 text-destructive" />,
-      title: 'No rejected reports',
-      description: 'Reports that have been rejected will appear here.'
-    }
-  }
-
-  const { icon, title, description } = config[tab]
-
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/40 px-6 py-16 text-center">
       <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
-        {icon}
+        {tab === 'pending' ? (
+          <Clock className="h-6 w-6 text-primary" />
+        ) : tab === 'published' ? (
+          <CheckCircle2 className="h-6 w-6 text-primary" />
+        ) : (
+          <XCircle className="h-6 w-6 text-destructive" />
+        )}
       </div>
       <h3 className="text-lg font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-        {title}
+        {tab === 'pending' ? 'No pending reports' : tab === 'published' ? 'No published reports' : 'No rejected reports'}
       </h3>
       <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
-        {description}
+        {tab === 'pending'
+          ? 'When a user submits a domestic report, it will appear here for your review.'
+          : tab === 'published'
+          ? 'Approved domestic reports will show up here and on the public feed.'
+          : 'Reports that have been rejected will appear here.'}
       </p>
     </div>
   )
@@ -75,10 +65,9 @@ export function DomesticReportsPage() {
   // @ts-ignore
   const rejectedRows = useQuery((api as any).domestic.listRejectedReports)
 
-  // 🚨 THE FIX: Pass the raw rows directly! No filters!
-  const pending = useMemo(() => (pendingRows ? pendingRows : []), [pendingRows])
-  const published = useMemo(() => (publishedRows ? publishedRows : []), [publishedRows])
-  const rejected = useMemo(() => (rejectedRows ? rejectedRows : []), [rejectedRows])
+  const pending = useMemo(() => pendingRows ?? [], [pendingRows])
+  const published = useMemo(() => publishedRows ?? [], [publishedRows])
+  const rejected = useMemo(() => rejectedRows ?? [], [rejectedRows])
 
   const loading = pendingRows === undefined || publishedRows === undefined || rejectedRows === undefined
   const list = tab === 'pending' ? pending : tab === 'published' ? published : rejected
@@ -99,11 +88,13 @@ export function DomesticReportsPage() {
       </section>
 
       {loading ? (
-        <div className="flex justify-center py-24"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       ) : (
         <>
           <div className="mb-8 flex gap-3">
-            <StatCard label="Needs Approval" value={pending.length} icon={Clock} active={tab === 'pending'} onClick={() => setTab('pending')} />
+            <StatCard label="Needs Review" value={pending.length} icon={Clock} active={tab === 'pending'} onClick={() => setTab('pending')} />
             <StatCard label="Published" value={published.length} icon={CheckCircle2} active={tab === 'published'} onClick={() => setTab('published')} />
             <StatCard label="Rejected" value={rejected.length} icon={XCircle} active={tab === 'rejected'} onClick={() => setTab('rejected')} />
           </div>
@@ -111,25 +102,43 @@ export function DomesticReportsPage() {
           <div className="mb-5 flex items-center justify-between gap-3">
             <div className="inline-flex rounded-xl border border-border bg-muted/40 p-1">
               {(
-                [['pending', 'Needs Review'], ['published', 'Published'], ['rejected', 'Rejected']] as const
-              ).map(([value, label]) => {
-                const count = value === 'pending' ? pending.length : value === 'published' ? published.length : rejected.length
-                
-                return (
-                  <button
-                    key={value} type="button" onClick={() => setTab(value as Tab)}
-                    className={cn(
-                      'rounded-lg px-4 py-2 text-xs font-medium transition-all',
-                      tab === value ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    {label}
-                    <span className="ml-1.5 tabular-nums text-muted-foreground">({count})</span>
-                  </button>
-                )
-              })}
+                [
+                  ['pending', 'Needs Review'],
+                  ['published', 'Published'],
+                  ['rejected', 'Rejected'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTab(value)}
+                  className={cn(
+                    'rounded-lg px-4 py-2 text-xs font-medium transition-all',
+                    tab === value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {label}
+                  <span className="ml-1.5 tabular-nums text-muted-foreground">
+                    ({value === 'pending' ? pending.length : value === 'published' ? published.length : rejected.length})
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
+
+          {tab === 'published' && published.length > 0 ? (
+            <p className="mb-4 text-xs text-muted-foreground">
+              {published.length} published reports
+            </p>
+          ) : null}
+
+          {tab === 'rejected' && rejected.length > 0 ? (
+            <p className="mb-4 text-xs text-muted-foreground">
+              {rejected.length} rejected reports
+            </p>
+          ) : null}
 
           {list.length === 0 ? (
             <EmptyState tab={tab} />
