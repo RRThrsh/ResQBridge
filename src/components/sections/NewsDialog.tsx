@@ -17,7 +17,7 @@ export function NewsDialog({ item, onClose }: NewsDialogProps) {
 
   return (
     <Dialog open={!!item} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-background border-border">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-background border-border">
         
         <div className="relative h-64 sm:h-80 w-full overflow-hidden">
           <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
