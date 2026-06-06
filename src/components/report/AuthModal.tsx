@@ -119,7 +119,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           if (!forgotIdentifier.trim()) return toast.error('Enter your email or phone');
           await sendOtp({ mode: 'sign-in', identifier: forgotIdentifier, type: forgotIdentifier.includes('@') ? 'email' : 'phone', password: 'reset-temp' });
           setForgotStep('otp');
-          toast.success('OTP sent');
+setCountdown(60);
+toast.success('OTP sent');
         } else if (action === 'verify') {
           await verifyOtp(forgotIdentifier, forgotOtp, 'sign-in', 'reset-temp');
           setForgotStep('password');
@@ -168,6 +169,20 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             <>
               <Input inputMode="numeric" placeholder="000000" maxLength={6} value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ''))} className="h-12 text-center text-xl font-mono tracking-[0.35em]" />
               <SubmitButton loading={loading} disabled={forgotOtp.length !== 6}>Verify OTP</SubmitButton>
+<div className="flex flex-col items-center gap-3 pt-2">
+  <button
+    type="button"
+    onClick={(e) =>
+      handleForgotFlow('send', e as unknown as React.FormEvent)
+    }
+    disabled={loading || countdown > 0}
+    className="text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+  >
+    {countdown > 0
+      ? `Resend code in ${countdown}s`
+      : 'Resend code'}
+  </button>
+</div>
             </>
           )}
           {forgotStep === 'password' && (
