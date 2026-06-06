@@ -65,7 +65,7 @@ export function DomesticReports() {
               Taking longer than expected. Please check your connection and try refreshing the page.
             </p>
           </div>
-        ) : reports.length === 0 ? (
+        ) : reports!.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
             <PawPrint className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
             <p className="text-sm font-medium text-foreground">No domestic reports yet</p>
@@ -75,7 +75,7 @@ export function DomesticReports() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {reports.map((r, i) => {
+            {reports!.map((r, i) => {
               const photos = getReportPhotos({ photoDataUrls: r.images, photoDataUrl: r.image })
               const cover = photos[0]
 
