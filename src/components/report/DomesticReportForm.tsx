@@ -279,7 +279,7 @@ export function DomesticReportForm() {
         speciesId: formData.species.trim(),
         reporterPhone: cleanPhone,
         phone: cleanPhone,
-        reporterName: profile?.firstName ? `${profile.firstName} ${profile.lastName}`.trim() : profile?.name || '',
+        reporterName: profile?.firstName ? `${profile.firstName} ${profile.lastName}`.trim() : '',
         color: formData.color || undefined,
         condition: formData.condition || undefined,
         behavior: formData.behavior || undefined,
