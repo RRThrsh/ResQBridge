@@ -553,11 +553,18 @@ async function handleAdminSendOtp(
     return
   }
 
-  // ✅ ADDED RESET-TEMP BYPASS HERE
-  if (password !== 'reset-temp' && profile.password !== password) {
-    sendJson(res, 401, { error: 'Incorrect password.' })
-    return
-  }
+  const isForgotPassword = !password
+
+if (
+  !isForgotPassword &&
+  password !== 'reset-temp' &&
+  profile.password !== password
+) {
+  sendJson(res, 401, {
+    error: 'Incorrect password.',
+  })
+  return
+}
 
   await executeSendOtp(res, options, 'admin', 'Your PWRRC Admin verification code', {
     email,
