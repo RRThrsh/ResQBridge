@@ -230,17 +230,18 @@ if (!open && previewImage) {
                     src={photo}
                     alt={`${activeReport.animalName} ${index + 1}`}
                     onClick={() => setPreviewImage(photo)}
-                    className="
-  h-64
+ className="
   w-full
+  max-h-[320px]
   rounded-xl
   border
   border-border
-  object-cover
+  object-contain
+  bg-muted
   cursor-pointer
   transition
   hover:opacity-80
-  sm:h-72
+  sm:max-h-[420px]
 "
                   />
                 ))}
