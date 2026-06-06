@@ -226,7 +226,7 @@ export function RescuerReportDetailPage() {
               highlight
             />
             {report.description ? (
-              <DetailRow label="Description" value={report.description} />
+              <DetailRow label="Additional Details" value={report.description} />
             ) : null}
           </dl>
         </RescuerDetailSection>
