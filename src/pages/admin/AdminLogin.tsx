@@ -64,11 +64,6 @@ export function AdminLogin() {
 useEffect(() => {
   if (forgotResendCooldown <= 0) return
 
-
-if (isLoggedIn) {
-    return <Navigate to="/pwrcc/admin" replace />
-  }
-
   const timer = setInterval(() => {
     setForgotResendCooldown((prev) => Math.max(prev - 1, 0))
   }, 1000)
@@ -76,6 +71,9 @@ if (isLoggedIn) {
   return () => clearInterval(timer)
 }, [forgotResendCooldown])
   
+  if (isLoggedIn) {
+    return <Navigate to="/pwrcc/admin" replace />
+  }
 
   async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault()
