@@ -532,6 +532,9 @@ async function handleAdminSendOtp(
     
   const password = String(body.password ?? '') 
 
+  console.log('BODY:', body)
+  console.log('PASSWORD:', password)
+
   if (!email.includes('@')) {
     sendJson(res, 400, { error: 'Please enter a valid email address.' })
     return
