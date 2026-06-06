@@ -46,7 +46,6 @@ export function DomesticReportDetailPage() {
   const report = row as any
   const reporterEmail = report?.userEmail || report?.email
 
-  // Fallback to fetch from user profile if data isn't in the report doc
   const reporterProfile = useQuery(
     (api as any).users.getProfile,
     reporterEmail ? { email: reporterEmail } : 'skip'
@@ -70,12 +69,11 @@ export function DomesticReportDetailPage() {
     )
   }
 
-  // --- NAME RESOLUTION ---
   let reporterName = formatReporterName(
-    report.reporterFirstName || reporterProfile?.firstName, 
+    report.reporterFirstName || reporterProfile?.firstName,
     report.reporterLastName || reporterProfile?.lastName
   )
-  
+
   if (!reporterName || reporterName.trim() === '' || reporterName === 'Unknown') {
     reporterName =
       report.reporterName ||
@@ -86,23 +84,24 @@ export function DomesticReportDetailPage() {
       'Unknown Reporter'
   }
 
-  // --- PHONE RESOLUTION ---
-  const finalPhone = 
-    report.reporterPhone || 
-    report.phone || 
-    reporterProfile?.contactPhone || 
+  const finalPhone =
+    report.reporterPhone ||
+    report.phone ||
+    reporterProfile?.contactPhone ||
     reporterProfile?.phone
 
-  // --- MAP RESOLUTION ---
-  const mapQuery = report.latitude && report.longitude 
-    ? `${report.latitude},${report.longitude}` 
-    : encodeURIComponent(report.location || 'Unknown location')
+  const mapQuery =
+    report.latitude && report.longitude
+      ? `${report.latitude},${report.longitude}`
+      : encodeURIComponent(report.location || 'Unknown location')
 
   const canAct = report.status === 'pending'
 
   async function handleStatusChange(newStatus: 'published' | 'rejected') {
     if (!domesticApprover || !report) return
+
     setLoading(true)
+
     try {
       await updateStatus({
         reportId: report._id as Id<'reports'>,
@@ -112,11 +111,21 @@ export function DomesticReportDetailPage() {
         type: report.type || report.animalType,
         status: newStatus as any,
       })
-      toast.success(newStatus === 'published' ? 'Report published to public feed.' : 'Report rejected.')
+
+      toast.success(
+        newStatus === 'published'
+          ? 'Report published to public feed.'
+          : 'Report rejected.'
+      )
+
       setConfirmApprove(false)
       setConfirmReject(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not update report status')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Could not update report status'
+      )
     } finally {
       setLoading(false)
     }
@@ -134,6 +143,7 @@ export function DomesticReportDetailPage() {
         <X className="mr-2 h-5 w-5" />
         Reject
       </Button>
+
       <Button
         type="button"
         className="h-12 flex-1 rounded-xl bg-emerald-600 text-base font-semibold hover:bg-emerald-700 text-white"
@@ -166,6 +176,7 @@ export function DomesticReportDetailPage() {
             status={report.status as any}
             className="mb-4"
           />
+
           <p className="text-xs font-mono text-muted-foreground">
             {report.reportNumber ?? report._id}
           </p>
@@ -183,138 +194,126 @@ export function DomesticReportDetailPage() {
           title="Domestic Report Details"
           icon={CheckCircle2}
         >
-          <div className="space-y-1 mb-3">
-            <span className="text-xs text-muted-foreground font-medium">Reported Animal</span>
-            <p className="text-base font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-              {report.animalName || 'Unknown Animal'}
-            </p>
-          </div>
 
-<dl className="space-y-3">
+          <dl className="space-y-3">
 
-  <DetailRow
-    label="Date & time seen"
-    value={formatDateTime(report.seenAt ?? report._creationTime)}
-  />
+            <DetailRow
+              label="Date & time seen"
+              value={formatDateTime(report.seenAt ?? report._creationTime)}
+            />
 
-  <DetailRow
-    label="Report Type"
-    value={report.type || report.animalType || 'Not specified'}
-  />
+            <DetailRow
+              label="Report Type"
+              value={report.type || report.animalType || 'Not specified'}
+            />
 
-  <DetailRow
-    label="Species"
-    value={report.speciesId || 'Not specified'}
-  />
+            <DetailRow
+              label="Species"
+              value={report.speciesId || 'Not specified'}
+            />
 
-  {(report.type === 'missing' || report.type === 'found') && (
-    <DetailRow
-      label="Animal Name"
-      value={report.animalName || 'Not specified'}
-    />
-  )}
+            <DetailRow
+              label="Quantity"
+              value={String(report.quantity ?? 1)}
+            />
 
-  {/* ========================= */}
-  {/* INJURED REPORT */}
-  {/* ========================= */}
-  {report.type === 'injured' ? (
-    <>
+            {(report.type === 'missing' || report.type === 'found') && (
+              <DetailRow
+                label="Animal Name"
+                value={report.animalName || 'Not specified'}
+              />
+            )}
 
-      {report.condition ? (
-        <DetailRow
-          label="Nature of Injury"
-          value={report.condition}
-          highlight
-        />
-      ) : null}
+            {report.type === 'injured' ? (
+              <>
 
-      {report.behavior ? (
-        <DetailRow
-          label="Severity of Injury"
-          value={report.behavior}
-          highlight
-        />
-      ) : null}
+                {report.condition ? (
+                  <DetailRow
+                    label="Nature of Injury"
+                    value={report.condition}
+                    highlight
+                  />
+                ) : null}
 
-      {report.reportedSize ? (
-        <DetailRow
-          label="Animal Current Condition"
-          value={report.reportedSize}
-        />
-      ) : null}
+                {report.behavior ? (
+                  <DetailRow
+                    label="Severity of Injury"
+                    value={report.behavior}
+                    highlight
+                  />
+                ) : null}
 
-      {report.color ? (
-        <DetailRow
-          label="Rescue Assistance Priority"
-          value={report.color}
-        />
-      ) : null}
+                {report.reportedSize ? (
+                  <DetailRow
+                    label="Animal Current Condition"
+                    value={report.reportedSize}
+                  />
+                ) : null}
 
-      {report.description ? (
-        <DetailRow
-          label="Additional Information"
-          value={report.description}
-        />
-      ) : null}
+                {report.color ? (
+                  <DetailRow
+                    label="Rescue Assistance Priority"
+                    value={report.color}
+                  />
+                ) : null}
 
-    </>
-  ) : (
-    <>
-      {/* ========================= */}
-      {/* MISSING / FOUND / STRAY */}
-      {/* ========================= */}
+                {report.description ? (
+                  <DetailRow
+                    label="Additional Information"
+                    value={report.description}
+                  />
+                ) : null}
 
-      {report.color ? (
-        <DetailRow
-          label="Color / Markings"
-          value={report.color}
-        />
-      ) : null}
+              </>
+            ) : (
+              <>
 
-      <DetailRow
-        label="Quantity"
-        value={String(report.quantity ?? 1)}
-      />
+                {report.color ? (
+                  <DetailRow
+                    label="Color / Markings"
+                    value={report.color}
+                  />
+                ) : null}
 
-      {report.reportedSize ? (
-        <DetailRow
-          label="Reported Size"
-          value={report.reportedSize}
-        />
-      ) : null}
+                {report.reportedSize ? (
+                  <DetailRow
+                    label="Reported Size"
+                    value={report.reportedSize}
+                  />
+                ) : null}
 
-      {report.description ? (
-        <DetailRow
-          label="Description & Details"
-          value={report.description}
-        />
-      ) : null}
-    </>
-  )}
+                {report.description ? (
+                  <DetailRow
+                    label="Description & Details"
+                    value={report.description}
+                  />
+                ) : null}
 
-  {/* ========================= */}
-  {/* LOCATION */}
-  {/* ========================= */}
+              </>
+            )}
 
-  <DetailRow
-    label="Location"
-    value={report.location || 'Not provided'}
-  />
+            <DetailRow
+              label="Location"
+              value={report.location || 'Not provided'}
+            />
 
-  {report.latitude && report.longitude ? (
-    <DetailRow
-      label="GPS Coordinates"
-      value={`${report.latitude}, ${report.longitude}`}
-    />
-  ) : null}
+            {report.latitude && report.longitude ? (
+              <DetailRow
+                label="GPS Coordinates"
+                value={`${report.latitude}, ${report.longitude}`}
+              />
+            ) : null}
 
-</dl>
+          </dl>
 
         </RescuerDetailSection>
 
         <RescuerDetailSection title="Location" icon={MapPin}>
           <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-medium">Address / Landmark</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              Address / Landmark
+            </span>
+
             <p className="font-medium leading-relaxed text-sm">
               {report.location || 'Unknown location'}
             </p>
@@ -348,6 +347,7 @@ export function DomesticReportDetailPage() {
 
         <RescuerDetailSection title="Reporter" icon={User}>
           <dl className="space-y-3">
+
             <DetailRow
               label="Name"
               value={reporterName}
@@ -357,6 +357,7 @@ export function DomesticReportDetailPage() {
               <dt className="text-xs text-muted-foreground">
                 Contact
               </dt>
+
               <dd className="mt-1 font-medium">
                 {finalPhone ? (
                   <a
@@ -371,6 +372,7 @@ export function DomesticReportDetailPage() {
                 )}
               </dd>
             </div>
+
           </dl>
         </RescuerDetailSection>
 
@@ -412,8 +414,15 @@ function DetailRow({
 }) {
   return (
     <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={`mt-0.5 font-medium whitespace-pre-wrap ${highlight ? 'text-primary' : ''}`}>
+      <dt className="text-xs text-muted-foreground">
+        {label}
+      </dt>
+
+      <dd
+        className={`mt-0.5 font-medium whitespace-pre-wrap ${
+          highlight ? 'text-primary' : ''
+        }`}
+      >
         {value}
       </dd>
     </div>
