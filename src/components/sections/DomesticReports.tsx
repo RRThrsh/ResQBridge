@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { ArrowRight, MapPin, Clock, Loader2, PawPrint } from 'lucide-react'
+import { ArrowRight, MapPin, Clock, Loader2, PawPrint, AlertCircle } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatMonthDay } from '@/lib/dates'
@@ -18,6 +18,19 @@ import { DomesticReportDetailDialog } from '@/components/report/DomesticReportDe
 export function DomesticReports() {
   const reports = useQuery(api.reports.listPublicDomestic)
   const [selectedReport, setSelectedReport] = useState<PublicDomesticReport | null>(null)
+  const [timedOut, setTimedOut] = useState(false)
+  const timedOutRef = useRef(false)
+
+  useEffect(() => {
+    if (reports !== undefined) return
+    const timer = setTimeout(() => {
+      if (!timedOutRef.current) {
+        timedOutRef.current = true
+        setTimedOut(true)
+      }
+    }, 15_000)
+    return () => clearTimeout(timer)
+  }, [reports])
 
   return (
     <section id="domestic" className="py-24">
@@ -40,9 +53,17 @@ export function DomesticReports() {
           </Link>
         </div>
 
-        {reports === undefined ? (
+        {reports === undefined && !timedOut ? (
           <div className="flex justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : timedOut ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
+            <AlertCircle className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
+            <p className="text-sm font-medium text-foreground">Could not load reports</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Taking longer than expected. Please check your connection and try refreshing the page.
+            </p>
           </div>
         ) : reports.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
@@ -90,11 +111,11 @@ export function DomesticReports() {
                       <span className="absolute top-3 right-3 z-10 rounded-full border border-white/20 bg-black/75 px-2 py-0.5 text-[10px] font-semibold text-white shadow-md backdrop-blur-sm">
                         +{photos.length - 1}
                       </span>
-                    ) : (
+                    ) : r.species ? (
                       <div className="absolute top-3 right-3 text-lg leading-none">
                         {speciesEmoji(r.species)}
                       </div>
-                    )}
+                    ) : null}
                     <p
                       className="absolute bottom-3 left-3 text-sm font-bold text-white"
                       style={{ fontFamily: 'var(--font-heading)' }}

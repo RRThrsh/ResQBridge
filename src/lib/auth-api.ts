@@ -63,6 +63,20 @@ async function authFetch(path: string, body: Record<string, unknown>): Promise<R
   }
 }
 
+async function handleAuthResponse(response: Response): Promise<void> {
+  if (!response.ok) {
+    if (response.status === 429) {
+      window.location.href = '/too-many-request'
+      await new Promise(() => {}) // halt
+    }
+    if (response.status === 401) {
+      window.location.href = '/error/401'
+      await new Promise(() => {}) // halt
+    }
+    throw new Error(await parseAuthError(response))
+  }
+}
+
 export async function sendOtp(input: SendOtpInput): Promise<void> {
   // Only normalize if it's an email, otherwise just trim the phone number
   const normalizedId = input.type === 'email' 
@@ -71,8 +85,7 @@ export async function sendOtp(input: SendOtpInput): Promise<void> {
 
   const response = await authFetch('/api/auth/send-otp', {
     mode: input.mode,
-    identifier: normalizedId,
-    type: input.type,
+    email: normalizedId,
     password: input.password,
     ...(input.mode === 'sign-up'
       ? {
@@ -82,9 +95,7 @@ export async function sendOtp(input: SendOtpInput): Promise<void> {
       : {}),
   })
 
-  if (!response.ok) {
-    throw new Error(await parseAuthError(response))
-  }
+  await handleAuthResponse(response)
 }
 
 export async function verifyOtp(
@@ -98,15 +109,13 @@ export async function verifyOtp(
   const normalizedId = isEmail ? normalizeEmail(identifier) : identifier.trim()
 
   const response = await authFetch('/api/auth/verify-otp', {
-    identifier: normalizedId,
+    email: normalizedId,
     code: code.trim(),
     mode,
     password,
   })
 
-  if (!response.ok) {
-    throw new Error(await parseAuthError(response))
-  }
+  await handleAuthResponse(response)
 
   const data = (await response.json()) as { user: AuthUser }
   return {

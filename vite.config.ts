@@ -19,9 +19,12 @@ export default defineConfig(({ mode }) => {
   const emailEnv = pickServerEmailEnv(serverEnv)
   const otpEnv = pickServerOtpEnv(serverEnv)
 
+  const rateLimitWindowMs = parseInt(serverEnv.RATE_LIMIT_WINDOW_MS ?? '60000', 10)
+  const rateLimitMax = parseInt(serverEnv.RATE_LIMIT_MAX ?? '10', 10)
+
   return {
     envPrefix: 'VITE_',
-    plugins: [react(), tailwindcss(), apiPlugin({ emailEnv, otpEnv })],
+    plugins: [react(), tailwindcss(), apiPlugin({ emailEnv, otpEnv, rateLimit: { windowMs: rateLimitWindowMs, max: rateLimitMax } })],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

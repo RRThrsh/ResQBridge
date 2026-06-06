@@ -454,39 +454,11 @@ const signUpReady =
             ? 'Reset your password using OTP verification.'
             : step === 'otp'
               ? `6-digit code sent to ${identifier}`
-              : 'Sign in or sign up below.'}
+              : mode === 'sign-up'
+                ? 'Create an account to get started.'
+                : 'Sign in to your account.'}
         </DialogDescription>
       </div>
-
-      {!forgotMode &&
-        step === 'details' && (
-          <Tabs
-            onValueChange={(v) => {
-              setAcceptedTerms(false)
-
-              switchMode(
-                v as AuthMode,
-              )
-            }}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2 bg-background border border-border h-10 p-1">
-              <TabsTrigger
-                value="sign-in"
-                className="h-full rounded-md text-xs"
-              >
-                Sign In
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="sign-up"
-                className="h-full rounded-md text-xs"
-              >
-                Sign Up
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
 
       {forgotMode ? (
         <form
@@ -855,6 +827,44 @@ const signUpReady =
             </div>
           )}
 
+          {mode === 'sign-up' && (
+            <div className="flex items-start gap-2 rounded-md border border-border p-3">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={acceptedTerms}
+                onChange={(e) =>
+                  setAcceptedTerms(
+                    e.target.checked,
+                  )
+                }
+                className="mt-1 h-4 w-4 rounded border-border"
+              />
+
+              <label
+                htmlFor="terms"
+                className="text-xs text-muted-foreground leading-relaxed"
+              >
+                By continuing, you agree to our{' '}
+                <button
+                  type="button"
+                  onClick={() => setTermsOpen(true)}
+                  className="text-primary hover:underline inline font-semibold"
+                >
+                  Terms of Service
+                </button>{' '}
+                and{' '}
+                <button
+                  type="button"
+                  onClick={() => setPrivacyOpen(true)}
+                  className="text-primary hover:underline inline font-semibold"
+                >
+                  Privacy Policy
+                </button>
+              </label>
+            </div>
+          )}
+
           {mode === 'sign-in' && (
             <div className="flex justify-end">
               <button
@@ -882,47 +892,24 @@ const signUpReady =
   Send Code
 </SubmitButton>
 
-<div className="flex items-start gap-2 rounded-md border border-border p-3">
-<input
-  type="checkbox"
-  id="terms"
-  checked={acceptedTerms}
-  onChange={(e) =>
-    setAcceptedTerms(
-      e.target.checked,
-    )
-  }
-  className="mt-1 h-4 w-4 rounded border-border"
-/>
-
-<label
-  htmlFor="terms"
-  className="text-xs text-muted-foreground leading-relaxed"
->
-  By continuing, you agree to our{' '}
-
-  <button
-    type="button"
-    onClick={() =>
-      setTermsOpen(true)
-    }
-    className="font-medium text-primary hover:underline"
-  >
-    Terms of Service
-  </button>
-
-  {' '}and{' '}
-
-  <button
-    type="button"
-    onClick={() =>
-      setPrivacyOpen(true)
-    }
-    className="font-medium text-primary hover:underline"
-  >
-    Privacy Policy
-  </button>.
-</label>
+{!forgotMode && step === 'details' && (
+  <div className="text-center">
+    <button
+      type="button"
+      onClick={() => {
+        switchMode(mode === 'sign-up' ? 'sign-in' : 'sign-up')
+        setAcceptedTerms(false)
+      }}
+      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+    >
+      {mode === 'sign-up' ? (
+        <>Already have an account? <span className="text-primary font-medium hover:underline">Sign in</span></>
+      ) : (
+        <>Create Account? <span className="text-primary font-medium hover:underline">Sign up</span></>
+      )}
+    </button>
+  </div>
+)}
 
 <Dialog
   open={termsOpen}
@@ -938,7 +925,6 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           1. Acceptance of Terms
         </h3>
-
         <p>
           By creating an account and using ResQBridge,
           you agree to these Terms of Service.
@@ -949,7 +935,6 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           2. Account Registration
         </h3>
-
         <p>
           Users must provide accurate information and
           keep login credentials secure.
@@ -960,7 +945,6 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           3. Acceptable Use
         </h3>
-
         <p>
           The system is intended for wildlife and
           domestic rescue reporting only.
@@ -971,9 +955,8 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           4. Limitation of Liability
         </h3>
-
         <p>
-          The platform is provided "as is" without
+          The platform is provided &ldquo;as is&rdquo; without
           warranties.
         </p>
       </div>
@@ -982,7 +965,6 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           5. Changes to Terms
         </h3>
-
         <p>
           Terms may be updated periodically.
         </p>
@@ -1004,7 +986,6 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           1. Information We Collect
         </h3>
-
         <p>
           We collect account information and report
           details submitted through the platform.
@@ -1015,7 +996,6 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           2. How We Use Data
         </h3>
-
         <p>
           Data is used for rescue coordination,
           verification, and reporting workflows.
@@ -1026,7 +1006,6 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           3. Security
         </h3>
-
         <p>
           We implement security measures to protect
           user data.
@@ -1037,7 +1016,6 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           4. Your Rights
         </h3>
-
         <p>
           Users may request correction or deletion of
           account data.
@@ -1048,7 +1026,6 @@ const signUpReady =
         <h3 className="font-semibold text-foreground">
           5. Changes
         </h3>
-
         <p>
           This policy may be updated over time.
         </p>
@@ -1056,7 +1033,6 @@ const signUpReady =
     </div>
   </DialogContent>
 </Dialog>
-</div>
         </form>
       ) : (
         <form

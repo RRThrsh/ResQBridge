@@ -4,6 +4,7 @@ import { DomesticReports } from '@/components/sections/DomesticReports'
 import { MapSection } from '@/components/sections/MapSection'
 import { EventsSection } from '@/components/sections/EventsSection'
 import { AboutSection } from '@/components/sections/AboutSection'
+import { FaqSection } from '@/components/sections/FaqSection'
 import { useUserAuth } from '@/context/UserAuthContext'
 
 interface DashboardProps {
@@ -33,6 +34,8 @@ export function Dashboard({ onLoginRequest }: DashboardProps) {
       <EventsSection />
       <div className="section-divider" />
       <AboutSection />
+      <div className="section-divider" />
+      <FaqSection />
     </>
   )
 }
