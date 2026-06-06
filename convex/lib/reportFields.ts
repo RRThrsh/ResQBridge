@@ -7,22 +7,35 @@ export const reportFieldsValidator = {
   type: v.string(),
   animalName: v.string(),
   location: v.string(),
+
   description: v.optional(v.string()),
   speciesId: v.optional(v.string()),
   condition: v.optional(v.string()),
+
   color: v.optional(v.string()),
+  phone: v.optional(v.string()),
+
+  reporterName: v.optional(v.string()),
+  reporterFirstName: v.optional(v.string()),
+  reporterLastName: v.optional(v.string()),
+
   behavior: v.optional(v.string()),
+
   photoDataUrl: v.optional(v.string()),
   photoDataUrls: v.optional(v.array(v.string())),
   photoStorageIds: v.optional(v.array(v.id('_storage'))),
+
   latitude: v.optional(v.number()),
   longitude: v.optional(v.number()),
+
   status: reportStatusSchemaValidator,
   reportNumber: v.optional(v.string()),
   assignedRescuerEmail: v.optional(v.string()),
+
   seenAt: v.optional(v.number()),
   quantity: v.optional(v.number()),
   reportedSize: v.optional(v.string()),
+
   reporterPhone: v.optional(v.string()),
   createdAt: v.number(),
 }
