@@ -7,8 +7,10 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { NewsDialog } from './NewsDialog'
 import { Card, CardContent } from '@/components/ui/card'
+import { useLanguage } from '@/context/LanguageContext'
 
 export function EventsSection() {
+  const { t } = useLanguage()
   const newsEvents = useNewsContent()
   const events = newsEvents.filter(e => e.type === 'event')
   const news = newsEvents.filter(e => e.type === 'news')
@@ -19,16 +21,16 @@ export function EventsSection() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="text-center mb-10">
           <p className="text-primary text-xs font-semibold tracking-widest uppercase mb-2">
-            Stay Informed
+            {t('events.eyebrow')}
           </p>
           <h2
             className="text-3xl sm:text-4xl font-bold text-foreground"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
-            News & Events
+            {t('events.title')}
           </h2>
           <p className="text-muted-foreground mt-2 text-sm max-w-md mx-auto">
-            Upcoming conservation events and the latest news from PWRCC and Palawan wildlife.
+            {t('events.desc')}
           </p>
         </div>
 
@@ -39,14 +41,14 @@ export function EventsSection() {
               className="aria-selected:bg-primary aria-selected:text-primary-foreground text-muted-foreground rounded-lg px-6 py-2 text-xs font-medium transition-all"
             >
               <Calendar className="w-4 h-4 mr-2" />
-              Upcoming Events
+              {t('events.tabEvents')}
             </TabsTrigger>
             <TabsTrigger
               value="news"
               className="aria-selected:bg-primary aria-selected:text-primary-foreground text-muted-foreground rounded-lg px-6 py-2 text-xs font-medium transition-all"
             >
               <Newspaper className="w-4 h-4 mr-2" />
-              Latest News
+              {t('events.tabNews')}
             </TabsTrigger>
           </TabsList>
 
@@ -74,6 +76,7 @@ export function EventsSection() {
 }
 
 function EventCard({ item, index, onClick }: { item: NewsEvent; index: number; onClick: (item: NewsEvent) => void }) {
+  const { t } = useLanguage()
   const isEvent = item.type === 'event'
   const formattedDate = formatDateWithWeekday(item.date, 'short')
 
@@ -113,7 +116,7 @@ function EventCard({ item, index, onClick }: { item: NewsEvent; index: number; o
           {item.excerpt}
         </p>
         <div className="mt-4 flex items-center text-primary text-[11px] font-medium gap-1 group/link">
-          <span>Read more</span>
+          <span>{t('events.readMore')}</span>
           <ArrowRight className="w-3.5 h-3.5 group-hover/link:translate-x-1 transition-transform" />
         </div>
       </CardContent>

@@ -6,6 +6,7 @@ import { api } from '../../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { useLanguage } from '@/context/LanguageContext'
 import { useUserAuth } from '@/context/UserAuthContext'
 import { normalizeEmail } from '@/lib/admin'
 import { formatDate } from '@/lib/dates'
@@ -16,6 +17,7 @@ import {
   EyeOff,
 } from 'lucide-react'
 export function AccountPage() {
+  const { t } = useLanguage()
   const { isLoggedIn, user, updateUser } = useUserAuth()
   const updateProfile = useMutation(api.users.updateProfile)
   const changePassword = useMutation(
@@ -80,7 +82,7 @@ const [
     e.preventDefault()
     
     if (!user?.email) {
-      toast.error('Could not verify your account details.')
+      toast.error(t('account.toastVerifyError'))
       return
     }
 
@@ -99,10 +101,10 @@ const [
         lastName: updated.lastName,
       })
 
-      toast.success('Profile updated successfully')
+      toast.success(t('account.toastProfileUpdated'))
       setIsEditing(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not update profile')
+      toast.error(error instanceof Error ? error.message : t('account.toastUpdateError'))
     } finally {
       setSaving(false)
     }
@@ -119,7 +121,7 @@ async function handlePasswordChange(
     confirmPassword
   ) {
     toast.error(
-      'Passwords do not match',
+      t('account.toastPasswordMismatch'),
     )
     return
   }
@@ -129,7 +131,7 @@ async function handlePasswordChange(
     newPassword.length > 16
   ) {
     toast.error(
-      'Password must be 8 to 16 characters',
+      t('account.toastPasswordLength'),
     )
     return
   }
@@ -145,7 +147,7 @@ async function handlePasswordChange(
     })
 
     toast.success(
-      'Password changed successfully',
+      t('account.toastPasswordChanged'),
     )
 
     setCurrentPassword('')
@@ -155,7 +157,7 @@ async function handlePasswordChange(
     toast.error(
       error instanceof Error
         ? error.message
-        : 'Could not change password',
+        : t('account.toastPasswordError'),
     )
   } finally {
     setSaving(false)
@@ -167,21 +169,19 @@ async function handlePasswordChange(
         <div className="mb-10">
           <div className="mb-6 flex items-center gap-2 text-xs text-muted-foreground">
             <Link to="/" className="transition-colors hover:text-foreground">
-              Home
+              {t('account.breadcrumbHome')}
             </Link>
             <span>/</span>
-            <span className="text-foreground">Account</span>
+            <span className="text-foreground">{t('account.breadcrumbCurrent')}</span>
           </div>
           <h1
             className="mb-2 text-3xl font-bold text-foreground sm:text-4xl"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
-            My Account
+            {t('account.title')}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {isEditing
-              ? 'Update your name below. Your contact info is used for sign-in and cannot be changed here.'
-              : 'Your profile details. Your contact info is used for sign-in.'}
+            {isEditing ? t('account.editDesc') : t('account.viewDesc')}
           </p>
         </div>
 
@@ -191,14 +191,14 @@ async function handlePasswordChange(
           </div>
         ) : !profile ? (
           <p className="text-sm text-muted-foreground">
-            Your account could not be loaded. Try signing out and back in.
+            {t('account.errorLoad')}
           </p>
         ) : (
           <>
           <Card className="mb-6 border-border">
             <CardHeader>
-              <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>Appearance</CardTitle>
-              <CardDescription>Choose how ResQBridge looks on this device</CardDescription>
+              <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>{t('account.appearanceTitle')}</CardTitle>
+              <CardDescription>{t('account.appearanceDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <ThemeSetting />
@@ -208,8 +208,8 @@ async function handlePasswordChange(
           <Card className="border-border">
             <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
               <div className="space-y-1.5">
-                <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>Profile</CardTitle>
-                <CardDescription>Personal details for your ResQBridge account</CardDescription>
+                <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>{t('account.profileTitle')}</CardTitle>
+                <CardDescription>{t('account.profileDesc')}</CardDescription>
               </div>
               {!isEditing ? (
                 <Button
@@ -217,7 +217,7 @@ async function handlePasswordChange(
                   variant="ghost"
                   size="icon"
                   onClick={startEditing}
-                  aria-label="Edit profile"
+                  aria-label={t('account.editProfileLabel')}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -229,7 +229,7 @@ async function handlePasswordChange(
               {!isEditing ? (
                 <dl className="grid gap-3 text-sm">
                   <div>
-                    <dt className="text-xs text-muted-foreground">Name</dt>
+                    <dt className="text-xs text-muted-foreground">{t('account.nameLabel')}</dt>
                     <dd className="font-medium">
                       {profile.firstName} {profile.lastName}
                     </dd>
@@ -237,12 +237,12 @@ async function handlePasswordChange(
 
                   {/* Unified Contact Label */}
                   <div>
-                    <dt className="text-xs text-muted-foreground">Email / Phone Number</dt>
+                    <dt className="text-xs text-muted-foreground">{t('account.contactLabel')}</dt>
                     <dd className="font-medium">{profile.email}</dd>
                   </div>
 
                   <div>
-                    <dt className="text-xs text-muted-foreground">Member since</dt>
+                    <dt className="text-xs text-muted-foreground">{t('account.memberSince')}</dt>
                     <dd>{formatDate(profile.createdAt)}</dd>
                   </div>
                 </dl>
@@ -250,7 +250,7 @@ async function handlePasswordChange(
                 /* --- EDIT MODE --- */
                 <form onSubmit={handleSave} className="space-y-4">
                   <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">First name</label>
+                    <label className="mb-1 block text-xs text-muted-foreground">{t('account.firstNameLabel')}</label>
                     <Input
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
@@ -259,7 +259,7 @@ async function handlePasswordChange(
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">Last name</label>
+                    <label className="mb-1 block text-xs text-muted-foreground">{t('account.lastNameLabel')}</label>
                     <Input
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
@@ -269,7 +269,7 @@ async function handlePasswordChange(
                   
                   {/* Unified Read-Only Contact Field */}
                   <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">Email / Phone Number</label>
+                    <label className="mb-1 block text-xs text-muted-foreground">{t('account.contactLabel')}</label>
                     <Input
                       value={profile.email}
                       disabled
@@ -285,10 +285,10 @@ async function handlePasswordChange(
                       disabled={saving}
                       className="rounded-xl"
                     >
-                      Cancel
+                      {t('account.cancel')}
                     </Button>
                     <Button type="submit" disabled={saving} className="rounded-xl">
-                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save changes'}
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t('account.saveChanges')}
                     </Button>
                   </div>
                 </form>
@@ -305,11 +305,11 @@ async function handlePasswordChange(
             'var(--font-heading)',
         }}
       >
-        Change Password
+        {t('account.passwordTitle')}
       </CardTitle>
 
       <CardDescription>
-        Update your account password
+        {t('account.passwordDesc')}
       </CardDescription>
     </CardHeader>
 
@@ -322,7 +322,7 @@ async function handlePasswordChange(
       >
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">
-            Current Password
+            {t('account.currentPassword')}
           </label>
 
           <div className="relative">
@@ -363,7 +363,7 @@ async function handlePasswordChange(
 
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">
-            New Password
+            {t('account.newPassword')}
           </label>
 
           <div className="relative">
@@ -402,7 +402,7 @@ async function handlePasswordChange(
 
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">
-            Confirm Password
+            {t('account.confirmPassword')}
           </label>
 
           <div className="relative">
@@ -448,7 +448,7 @@ async function handlePasswordChange(
           {saving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            'Change Password'
+            t('account.changePassword')
           )}
         </Button>
       </form>

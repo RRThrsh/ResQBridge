@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, X, LogIn, FileText, User, LogOut, UserCircle } from 'lucide-react'
+import { Menu, X, LogIn, FileText, User, LogOut, UserCircle, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useUserAuth } from '@/context/UserAuthContext'
+import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 import { NAV_LINKS, useNavbarActive } from '@/hooks/useNavbarActive'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
@@ -17,6 +18,7 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
   const navigate = useNavigate()
   const { isLoggedIn, user, logout } = useUserAuth()
   const { isNavLinkActive, isPathActive } = useNavbarActive()
+  const { t, lang, setLang } = useLanguage()
 
   const userInitials = user
     ? `${user.firstName[0] ?? ''}${user.lastName[0] ?? ''}`.toUpperCase()
@@ -38,6 +40,15 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
     setLogoutOpen(false)
   }
 
+  const toggleLang = () => {
+    setLang(lang === 'en' ? 'fil' : 'en')
+  }
+
+  const navLabel = (l: typeof NAV_LINKS[number]) => {
+    const key = 'nav.' + l.label.toLowerCase()
+    return t(key, l.label)
+  }
+
   return (
     <header className={cn(
       'fixed inset-x-0 top-0 z-50 transition-all duration-300',
@@ -49,22 +60,21 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
         <div className="flex h-14 items-center justify-between gap-6">
 
           {/* Logo */}
-<Link to="/" className="flex items-center gap-2 group">
-  <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden bg-primary/10 transition-colors group-hover:bg-primary/20">
-    <img
-      src="/resq.png"
-      alt="ResQBridge Logo"
-      className="h-full w-full object-cover"
-    />
-  </div>
-
-  <span
-    className="text-sm font-bold tracking-tight text-foreground"
-    style={{ fontFamily: 'var(--font-heading)' }}
-  >
-    ResQBridge
-  </span>
-</Link>
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden bg-primary/10 transition-colors group-hover:bg-primary/20">
+              <img
+                src="/resq.png"
+                alt="ResQBridge Logo"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <span
+              className="text-sm font-bold tracking-tight text-foreground"
+              style={{ fontFamily: 'var(--font-heading)' }}
+            >
+              ResQBridge
+            </span>
+          </Link>
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-1">
@@ -80,7 +90,7 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent',
                 )}
               >
-                {l.label}
+                {navLabel(l)}
               </Link>
             ))}
           </nav>
@@ -88,16 +98,24 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
           {/* Desktop CTA & Auth */}
           <div className="hidden lg:flex items-center gap-2">
             <ThemeToggle />
+            <button
+              onClick={toggleLang}
+              className="p-1.5 text-muted-foreground hover:text-foreground rounded-md transition-colors"
+              aria-label={lang === 'en' ? 'Switch to Filipino' : 'Lumipat sa English'}
+            >
+              <Globe className="h-4 w-4" />
+              <span className="text-[10px] font-semibold ml-0.5">{lang === 'en' ? 'EN' : 'FIL'}</span>
+            </button>
             {!isLoggedIn ? (
               <>
                 <Button variant="ghost" size="sm" onClick={onLoginClick}
                   className="text-xs text-muted-foreground h-8 px-3">
                   <LogIn className="h-3.5 w-3.5 mr-1.5" />
-                  Login
+                  {t('nav.login')}
                 </Button>
                 <Link to="/report">
                   <Button size="sm" className="h-8 px-4 text-xs rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-none font-semibold">
-                    Report Animal
+                    {t('nav.report')}
                   </Button>
                 </Link>
               </>
@@ -105,10 +123,10 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
               <div className="flex items-center gap-3">
                 <Link to="/report">
                   <Button size="sm" className="h-8 px-4 text-xs rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-none font-semibold">
-                    New Report
+                    {t('nav.newReport')}
                   </Button>
                 </Link>
-                
+
                 <DropdownMenu>
                   <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-full ml-1 border border-border bg-card hover:bg-accent outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <Avatar className="h-8 w-8">
@@ -134,19 +152,19 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                       onClick={() => navigate('/account')}
                     >
                       <UserCircle className="mr-2 h-4 w-4" />
-                      <span>My Account</span>
+                      <span>{t('nav.myAccount')}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="cursor-pointer focus:bg-accent focus:text-foreground"
                       onClick={() => navigate('/my-reports')}
                     >
                       <FileText className="mr-2 h-4 w-4" />
-                      <span>My Reports</span>
+                      <span>{t('nav.myReports')}</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-border" />
                     <DropdownMenuItem onClick={requestLogout} className="cursor-pointer focus:bg-destructive/10 text-destructive focus:text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
+                      <span>{t('nav.logout')}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -156,6 +174,13 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
 
           <div className="flex items-center gap-1 lg:hidden">
             <ThemeToggle />
+            <button
+              onClick={toggleLang}
+              className="p-1.5 text-muted-foreground hover:text-foreground rounded-md transition-colors"
+              aria-label={lang === 'en' ? 'Switch to Filipino' : 'Lumipat sa English'}
+            >
+              <Globe className="h-4 w-4" />
+            </button>
             <button onClick={() => setOpen(!open)}
             className="lg:hidden p-1.5 text-muted-foreground hover:text-foreground rounded-md transition-colors"
             aria-label="Toggle menu">
@@ -182,10 +207,10 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent',
                 )}
               >
-                {l.label}
+                {navLabel(l)}
               </Link>
             ))}
-            
+
             {isLoggedIn && (
               <>
                 <Link
@@ -199,7 +224,7 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                   )}
                 >
                   <UserCircle className="mr-2 h-4 w-4" />
-                  My Account
+                  {t('nav.myAccount')}
                 </Link>
                 <Link
                   to="/my-reports"
@@ -212,7 +237,7 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                   )}
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  My Reports
+                  {t('nav.myReports')}
                 </Link>
               </>
             )}
@@ -221,10 +246,10 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
               {!isLoggedIn ? (
                 <>
                   <Button variant="outline" size="sm" onClick={() => { setOpen(false); onLoginClick() }}
-                    className="w-full text-xs h-9 justify-center">Login</Button>
+                    className="w-full text-xs h-9 justify-center">{t('nav.login')}</Button>
                   <Link to="/report" onClick={() => setOpen(false)}>
                     <Button size="sm" className="w-full text-xs h-9 bg-primary text-primary-foreground justify-center">
-                      Report Animal
+                      {t('nav.report')}
                     </Button>
                   </Link>
                 </>
@@ -232,13 +257,13 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                 <>
                   <Link to="/report" onClick={() => setOpen(false)}>
                     <Button size="sm" className="w-full text-xs h-9 bg-primary text-primary-foreground justify-center">
-                      New Report
+                      {t('nav.newReport')}
                     </Button>
                   </Link>
                   <Button variant="ghost" size="sm" onClick={requestLogout}
                     className="w-full text-xs h-9 justify-center text-destructive hover:bg-destructive/10 hover:text-destructive">
                     <LogOut className="h-3.5 w-3.5 mr-2" />
-                    Log out
+                    {t('nav.logout')}
                   </Button>
                 </>
               )}
@@ -250,9 +275,9 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
       <ConfirmDialog
         open={logoutOpen}
         onOpenChange={setLogoutOpen}
-        title="Log out?"
-        description="You will need to sign in again to submit reports or view your account."
-        confirmLabel="Log out"
+        title={t('logout.title')}
+        description={t('logout.description')}
+        confirmLabel={t('nav.logout')}
         onConfirm={confirmLogout}
       />
     </header>

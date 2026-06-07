@@ -1,41 +1,37 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-
-const faqs = [
-  {
-    question: 'How do I report an animal in need?',
-    answer:
-      'Click the "Report an Animal" button on the homepage. Fill out the form with details about the animal\'s location, condition, and type. A rescuer will be notified and respond to the situation.',
-  },
-  {
-    question: 'What types of animals can be reported?',
-    answer:
-      'Both domestic (stray cats, dogs) and wildlife animals (birds, reptiles, mammals) can be reported. The system covers all animal welfare concerns including injured, abandoned, abused, or distressed animals across Palawan.',
-  },
-  {
-    question: 'How long does it take for a rescuer to respond?',
-    answer:
-      'Response times vary depending on the severity of the case and rescuer availability. Emergency cases are prioritized. You can track the status of your report in real time through the platform.',
-  },
-  {
-    question: 'Can I report an animal anonymously?',
-    answer:
-      'Yes. You can submit reports without creating an account. However, creating an account allows you to track your reports, receive updates, and communicate directly with rescuers.',
-  },
-  {
-    question: 'What should I do if I find an injured wildlife animal?',
-    answer:
-      'Do not attempt to handle or move the animal unless it is in immediate danger. Note the location, take a photo if safe, and submit a report through our system. Trained rescuers will handle the situation properly.',
-  },
-  {
-    question: 'How do I contact the rescue team?',
-    answer:
-      'Once you submit a report, you can communicate with the assigned rescuer through the platform. For emergencies, contact PWRRC directly through the contact information provided on the dashboard.',
-  },
-]
+import { useLanguage } from '@/context/LanguageContext'
 
 export function FaqSection() {
+  const { t } = useLanguage()
+  const faqs = [
+    {
+      question: t('faq.q1'),
+      answer: t('faq.a1'),
+    },
+    {
+      question: t('faq.q2'),
+      answer: t('faq.a2'),
+    },
+    {
+      question: t('faq.q3'),
+      answer: t('faq.a3'),
+    },
+    {
+      question: t('faq.q4'),
+      answer: t('faq.a4'),
+    },
+    {
+      question: t('faq.q5'),
+      answer: t('faq.a5'),
+    },
+    {
+      question: t('faq.q6'),
+      answer: t('faq.a6'),
+    },
+  ]
+
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   const toggle = (index: number) => {
@@ -50,16 +46,16 @@ export function FaqSection() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-12">
           <p className="text-primary text-xs font-semibold tracking-widest uppercase mb-2">
-            Have Questions?
+            {t('faq.eyebrow')}
           </p>
           <h2
             className="text-3xl sm:text-4xl font-bold text-foreground"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
-            Frequently Asked Questions
+            {t('faq.title')}
           </h2>
           <p className="text-muted-foreground mt-2 text-sm max-w-md mx-auto">
-            Find answers to common questions about reporting and rescue operations.
+            {t('faq.desc')}
           </p>
         </div>
 

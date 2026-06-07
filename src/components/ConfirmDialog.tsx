@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/context/LanguageContext'
 
 export type ConfirmDialogProps = {
   open: boolean
@@ -26,12 +27,15 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   confirmVariant = 'destructive',
   loading = false,
   onConfirm,
 }: ConfirmDialogProps) {
+  const { t } = useLanguage()
+  confirmLabel = confirmLabel ?? t('confirm.confirm')
+  cancelLabel = cancelLabel ?? t('confirm.cancel')
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" showCloseButton={false}>

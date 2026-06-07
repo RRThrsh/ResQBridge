@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useLanguage } from '@/context/LanguageContext'
 
 export function HeroSection({ onReportClick }: { onReportClick: () => void }) {
+  const { t } = useLanguage()
   return (
     <section id="home" className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-4 sm:px-6">
 
@@ -23,7 +25,7 @@ export function HeroSection({ onReportClick }: { onReportClick: () => void }) {
   alt="PWRRC Logo"
   className="h-4 w-4 object-contain"
 />
-            Palawan Wildlife Rescue & Conservation Center
+            {t('hero.eyebrow')}
           </Badge>
         </div>
 
@@ -32,14 +34,13 @@ export function HeroSection({ onReportClick }: { onReportClick: () => void }) {
           className="animate-fade-up delay-100 text-5xl sm:text-6xl lg:text-7xl font-black text-foreground"
           style={{ fontFamily: 'var(--font-heading)' }}
         >
-          Helping Animals,{' '}
-          <span className="text-gradient">Protecting Nature</span>
+          {t('hero.heading1')}{' '}
+          <span className="text-gradient">{t('hero.heading2')}</span>
         </h1>
 
         {/* Sub */}
         <p className="animate-fade-up delay-200 mx-auto mt-6 max-w-xl text-base text-muted-foreground leading-relaxed">
-          Submit reports for wildlife sightings, stray animals, rescue emergencies,
-          and animal welfare concerns across Palawan communities.
+          {t('hero.sub')}
         </p>
 
         {/* CTAs */}
@@ -49,14 +50,14 @@ export function HeroSection({ onReportClick }: { onReportClick: () => void }) {
             size="lg"
             className="group h-11 px-7 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-none font-semibold"
           >
-            Report an Animal
+            {t('hero.ctaReport')}
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
           <Link to="/wildlife">
             <Button variant="outline" size="lg"
               className="h-11 px-7 rounded-xl border-border text-foreground hover:bg-accent font-semibold shadow-none">
               <BookOpen className="mr-2 h-4 w-4" />
-              Wildlife Guide
+              {t('hero.ctaGuide')}
             </Button>
           </Link>
         </div>

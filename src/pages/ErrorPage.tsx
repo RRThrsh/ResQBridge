@@ -1,23 +1,14 @@
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, ShieldAlert, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-const errors: Record<string, { title: string; message: string; icon: typeof ShieldAlert }> = {
-  '401': {
-    title: 'Unauthorized',
-    message: 'Your session has expired or you do not have permission to access this page. Please sign in again.',
-    icon: ShieldAlert,
-  },
-  '429': {
-    title: 'Too Many Requests',
-    message: 'You have sent too many requests in a short period. Please wait a moment before trying again.',
-    icon: Clock,
-  },
-}
+import { useLanguage } from '@/context/LanguageContext'
 
 export function ErrorPage() {
+  const { t } = useLanguage()
   const { code = '401' } = useParams<{ code: string }>()
-  const info = errors[code] ?? errors['401']
+  const info = code === '429'
+    ? { title: t('errorPage.title429'), message: t('errorPage.message429'), icon: Clock }
+    : { title: t('errorPage.title401'), message: t('errorPage.message401'), icon: ShieldAlert }
   const Icon = info.icon
 
   return (
@@ -41,7 +32,7 @@ export function ErrorPage() {
         <Link to="/">
           <Button className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-none">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Return Home
+            {t('errorPage.returnHome')}
           </Button>
         </Link>
       </div>

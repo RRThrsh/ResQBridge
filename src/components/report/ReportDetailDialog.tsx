@@ -41,6 +41,7 @@ import {
   validateReportPhotosForSubmit,
   type ReportPhotoItem,
 } from '@/lib/reportPhotos'
+import { useLanguage } from '@/context/LanguageContext'
 import { toast } from 'sonner'
 
 type Props = {
@@ -56,6 +57,7 @@ export function ReportDetailDialog({
   open,
   onOpenChange,
 }: Props) {
+  const { t } = useLanguage()
   const updateReport = useMutation(api.reports.update)
   const removeReport = useMutation(api.reports.remove)
 
@@ -105,11 +107,11 @@ export function ReportDetailDialog({
     e.preventDefault()
     if (!report) return
     if (rescueComplete) {
-      toast.error('This report can no longer be edited after rescue is complete.')
+      toast.error(t('reportDetail.errorRescueComplete'))
       return
     }
     if (!draft.animalName.trim() || !draft.location.trim()) {
-      toast.error('Animal name and location are required')
+      toast.error(t('reportDetail.errorRequiredFields'))
       return
     }
     const photoError = validateReportPhotosForSubmit(photos)
@@ -121,7 +123,7 @@ export function ReportDetailDialog({
     const storageIds = photoStorageIdsForSubmit(photos)
     const legacyUrls = legacyPhotoDataUrlsForSubmit(photos)
     if (storageIds.length > 0 && legacyUrls.length > 0) {
-      toast.error('Please re-upload existing photos before adding new ones.')
+      toast.error(t('reportDetail.errorReupload'))
       return
     }
 
@@ -140,11 +142,11 @@ export function ReportDetailDialog({
           ? { photoStorageIds: storageIds }
           : { photoDataUrls: legacyUrls }),
       })
-      toast.success('Report updated')
+      toast.success(t('reportDetail.successUpdated'))
       setEditing(false)
       onOpenChange(false)
     } catch {
-      toast.error('Could not save changes')
+      toast.error(t('reportDetail.errorUpdate'))
     } finally {
       setSaving(false)
     }
@@ -153,7 +155,7 @@ export function ReportDetailDialog({
   async function handleDelete() {
     if (!report) return
     if (rescueComplete) {
-      toast.error('This report can no longer be deleted after rescue is complete.')
+      toast.error(t('reportDetail.errorDeleteComplete'))
       return
     }
     setSaving(true)
@@ -162,10 +164,10 @@ export function ReportDetailDialog({
         reportId: report.id as Id<'reports'>,
         userEmail,
       })
-      toast.success('Report deleted')
+      toast.success(t('reportDetail.successDeleted'))
       onOpenChange(false)
     } catch {
-      toast.error('Could not delete report')
+      toast.error(t('reportDetail.errorDelete'))
     } finally {
       setSaving(false)
       setConfirmDelete(false)
@@ -213,18 +215,16 @@ export function ReportDetailDialog({
               className="text-xl"
               style={{ fontFamily: 'var(--font-heading)' }}
             >
-              {editing ? 'Edit report' : report.animalName}
+              {editing ? t('reportDetail.editTitle') : report.animalName}
             </DialogTitle>
             <DialogDescription className="text-left">
-              {editing
-                ? 'Update your submission details and save to the database.'
-                : 'View the details of your submitted report.'}
+              {editing ? t('reportDetail.editDesc') : t('reportDetail.viewDesc')}
             </DialogDescription>
           </DialogHeader>
 
           {editing ? (
             <form onSubmit={handleSave} className="mt-6 space-y-4">
-              <Field label="Animal name">
+              <Field label={t('reportDetail.fieldAnimalName')}>
                 <Input
                   value={draft.animalName}
                   onChange={(e) =>
@@ -236,7 +236,7 @@ export function ReportDetailDialog({
               </Field>
 
               {report.category === 'domestic' && (
-                <Field label="Report type">
+                <Field label={t('reportDetail.fieldType')}>
                   <Select
                     value={draft.type}
                     onValueChange={(val) =>
@@ -258,7 +258,7 @@ export function ReportDetailDialog({
               )}
 
               {report.category === 'wildlife' && (
-                <Field label="Animal condition">
+                <Field label={t('reportDetail.fieldCondition')}>
                   <Select
                     value={draft.condition || undefined}
                     onValueChange={(val) =>
@@ -266,7 +266,7 @@ export function ReportDetailDialog({
                     }
                   >
                     <SelectTrigger className="h-11 rounded-xl bg-background">
-                      <SelectValue placeholder="Select condition" />
+                      <SelectValue placeholder={t('reportDetail.conditionPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {WILDLIFE_CONDITIONS.map((c) => (
@@ -279,7 +279,7 @@ export function ReportDetailDialog({
                 </Field>
               )}
 
-              <Field label="Location">
+              <Field label={t('reportDetail.fieldLocation')}>
                 <Input
                   value={draft.location}
                   onChange={(e) =>
@@ -290,7 +290,7 @@ export function ReportDetailDialog({
                 />
               </Field>
 
-              <Field label="Details">
+              <Field label={t('reportDetail.fieldDetails')}>
                 <Textarea
                   value={draft.description}
                   onChange={(e) =>
@@ -300,7 +300,7 @@ export function ReportDetailDialog({
                 />
               </Field>
 
-              <Field label="Photos">
+              <Field label={t('reportDetail.fieldPhotos')}>
                 <ReportPhotoField
                   value={photos}
                   onChange={setPhotos}
@@ -319,7 +319,7 @@ export function ReportDetailDialog({
                   }}
                   disabled={saving}
                 >
-                  Cancel
+                  {t('reportDetail.cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -329,7 +329,7 @@ export function ReportDetailDialog({
                   {saving ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    'Save changes'
+                    t('reportDetail.saveChanges')
                   )}
                 </Button>
               </div>
@@ -346,7 +346,8 @@ export function ReportDetailDialog({
               {report.description && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">
-                    Details
+                    {t('reportDetail.viewDetails')}
+                   
                   </p>
                   <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {report.description}
@@ -357,7 +358,7 @@ export function ReportDetailDialog({
               <div className="flex items-start gap-3">
                 <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold text-foreground">Location</p>
+                  <p className="text-xs font-semibold text-foreground">{t('reportDetail.viewLocation')}</p>
                   <p className="text-sm text-muted-foreground mt-0.5">
                     {report.location}
                   </p>
@@ -385,8 +386,7 @@ export function ReportDetailDialog({
 
               {rescueComplete ? (
                 <p className="border-t border-border pt-5 text-sm text-muted-foreground">
-                  This report is closed. It can no longer be edited or deleted after rescue is
-                  complete.
+                  {t('reportDetail.closedMessage')}
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2 border-t border-border pt-5">
@@ -397,7 +397,8 @@ export function ReportDetailDialog({
                     onClick={() => setEditing(true)}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
-                    Edit
+                    {t('reportDetail.edit')}
+                   
                   </Button>
                   <Button
                     type="button"
@@ -406,7 +407,8 @@ export function ReportDetailDialog({
                     onClick={() => setConfirmDelete(true)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
+                    {t('reportDetail.delete')}
+                   
                   </Button>
                 </div>
               )}
@@ -418,9 +420,9 @@ export function ReportDetailDialog({
       <ConfirmDialog
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
-        title="Delete report?"
-        description="This will permanently delete your report. This action cannot be undone."
-        confirmLabel="Delete"
+        title={t('reportDetail.confirmTitle')}
+        description={t('reportDetail.confirmDesc')}
+        confirmLabel={t('reportDetail.confirmLabel')}
         loading={saving}
         onConfirm={handleDelete}
       />

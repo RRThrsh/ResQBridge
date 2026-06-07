@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 import { useUserAuth } from '@/context/UserAuthContext'
+import { useLanguage } from '@/context/LanguageContext'
 import { toast } from 'sonner'
 
 import {
@@ -44,6 +45,7 @@ function errMsg(err: unknown, fallback: string) {
 
 function AuthForm({ onClose }: { onClose: () => void }) {
   const { login } = useUserAuth()
+  const { t } = useLanguage()
 
   const [mode, setMode] = useState<AuthMode>('sign-in')
   const [step, setStep] = useState<'form' | 'otp'>('form')
@@ -252,12 +254,10 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="p-6">
       <DialogTitle className="text-xl font-semibold mb-1">
-        {mode === 'sign-in' ? 'Sign In' : 'Create Account'}
+        {mode === 'sign-in' ? t('auth.signIn') : t('auth.createAccount')}
       </DialogTitle>
       <DialogDescription className="text-sm text-muted-foreground mb-6">
-        {mode === 'sign-in'
-          ? 'Sign in to submit wildlife reports and track your rescues.'
-          : 'Create an account to help protect Palawan wildlife.'}
+        {mode === 'sign-in' ? t('auth.signInDesc') : t('auth.signUpDesc')}
       </DialogDescription>
 
       {error && (
@@ -271,9 +271,9 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           {mode === 'sign-up' && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium mb-1.5">First Name</label>
+                <label className="block text-sm font-medium mb-1.5">{t('auth.firstName')}</label>
                 <Input
-                  placeholder="Juan"
+                  placeholder={t('auth.firstNamePlaceholder')}
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   disabled={loading}
@@ -281,9 +281,9 @@ function AuthForm({ onClose }: { onClose: () => void }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5">Last Name</label>
+                <label className="block text-sm font-medium mb-1.5">{t('auth.lastName')}</label>
                 <Input
-                  placeholder="Dela Cruz"
+                  placeholder={t('auth.lastNamePlaceholder')}
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   disabled={loading}
@@ -294,9 +294,9 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">Email or Phone</label>
+            <label className="block text-sm font-medium mb-1.5">{t('auth.emailOrPhone')}</label>
             <Input
-              placeholder="e.g. email@example.com or 09123456789"
+              placeholder={t('auth.emailOrPhonePlaceholder')}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               disabled={loading}
@@ -306,10 +306,10 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">Password</label>
+            <label className="block text-sm font-medium mb-1.5">{t('auth.password')}</label>
             <div className="relative">
               <Input
-                placeholder="Enter your password"
+                placeholder={t('auth.passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -331,9 +331,9 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           {mode === 'sign-up' && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-1.5">Confirm Password</label>
+                <label className="block text-sm font-medium mb-1.5">{t('auth.confirmPassword')}</label>
                 <Input
-                  placeholder="Re-enter your password"
+                  placeholder={t('auth.confirmPasswordPlaceholder')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={loading}
@@ -352,23 +352,15 @@ function AuthForm({ onClose }: { onClose: () => void }) {
                   className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                 />
                 <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
-                  I agree to the{' '}
+                  {t('auth.termsAgree')}{' '}
                   <button
                     type="button"
                     onClick={(e) => { e.preventDefault(); setTermsOpen(true) }}
                     className="text-primary hover:underline inline font-semibold"
                   >
-                    Terms and Conditions
+                    {t('auth.termsLink')}
                   </button>{' '}
-                  and{' '}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); setPrivacyOpen(true) }}
-                    className="text-primary hover:underline inline font-semibold"
-                  >
-                    Privacy Policy
-                  </button>
-                  .
+                  {t('auth.privacyLink')}.
                 </label>
               </div>
             </>
@@ -378,33 +370,33 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             {loading ? (
               <Loader2 className="size-4 animate-spin" />
             ) : mode === 'sign-in' ? (
-              'Sign In'
+              t('auth.signIn')
             ) : (
-              'Sign Up'
+              t('auth.signUp')
             )}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
             {mode === 'sign-in' ? (
               <>
-                Don&apos;t have any account yet?{' '}
+                {t('auth.noAccount')}{' '}
                 <button
                   type="button"
                   onClick={switchMode}
                   className="text-primary font-medium hover:underline underline-offset-2"
                 >
-                  Signup
+                  {t('auth.signupLink')}
                 </button>
               </>
             ) : (
               <>
-                Already have an account?{' '}
+                {t('auth.hasAccount')}{' '}
                 <button
                   type="button"
                   onClick={switchMode}
                   className="text-primary font-medium hover:underline underline-offset-2"
                 >
-                  Login
+                  {t('auth.loginLink')}
                 </button>
               </>
             )}
@@ -421,10 +413,10 @@ function AuthForm({ onClose }: { onClose: () => void }) {
               )}
             </div>
             <p className="text-sm font-medium text-foreground mb-1">
-              {isEmailIdent ? 'Check your email' : 'Check your phone'}
+              {isEmailIdent ? t('auth.checkEmail') : t('auth.checkPhone')}
             </p>
             <p className="text-sm text-muted-foreground">
-              {isEmailIdent ? 'Enter the OTP sent to' : 'Enter the SMS code sent to'}{' '}
+              {isEmailIdent ? t('auth.enterOtp') : t('auth.enterSms')}{' '}
               <span className="font-medium text-foreground">{identifierMasked}</span>
             </p>
           </div>
@@ -451,7 +443,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           <div className="flex justify-center">
             {countdown > 0 ? (
               <span className="text-xs text-muted-foreground">
-                Resend code in {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
+                {t('auth.resendIn')} {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
               </span>
             ) : (
               <button
@@ -460,7 +452,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
                 disabled={loading}
                 className="text-xs text-primary font-medium hover:underline underline-offset-2 disabled:opacity-50"
               >
-                Resend verification code
+                {t('auth.resendCode')}
               </button>
             )}
           </div>
@@ -469,7 +461,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             {loading ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
-              'Verify'
+              t('auth.verify')
             )}
           </Button>
 
@@ -483,7 +475,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
               }}
               className="hover:underline underline-offset-2"
             >
-              Use a different email or phone
+              {t('auth.useDifferent')}
             </button>
           </p>
         </div>

@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { FileText, ArrowRight, Clock, CheckCircle2, Loader2 } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
+import { useLanguage } from '@/context/LanguageContext'
 import { useUserAuth } from '@/context/UserAuthContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +19,7 @@ import { ReportDetailDialog } from '@/components/report/ReportDetailDialog'
 import { cn } from '@/lib/utils'
 
 export function MyReports() {
+  const { t } = useLanguage()
   const { isLoggedIn, user } = useUserAuth()
   const [selectedReport, setSelectedReport] = useState<StoredReport | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -52,15 +54,15 @@ export function MyReports() {
 
         <div className="mb-10">
           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
-            <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
+            <Link to="/" className="hover:text-foreground transition-colors">{t('myReports.breadcrumbHome')}</Link>
             <span>/</span>
-            <span className="text-foreground">My Reports</span>
+            <span className="text-foreground">{t('myReports.breadcrumbCurrent')}</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
-            My Reports
+            {t('myReports.title')}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Track the status of the wildlife and domestic animal reports you have submitted.
+            {t('myReports.desc')}
           </p>
         </div>
 
@@ -74,13 +76,13 @@ export function MyReports() {
               <FileText className="w-6 h-6 text-primary" />
             </div>
             <h3 className="text-lg font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
-              No reports yet
+              {t('myReports.emptyTitle')}
             </h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-              You haven't submitted any reports. If you spot an animal in need, you can report it here.
+              {t('myReports.emptyDesc')}
             </p>
             <Link to="/report" className="inline-flex items-center text-sm font-medium text-primary hover:opacity-80 transition-opacity">
-              Submit a report <ArrowRight className="ml-1 w-4 h-4" />
+              {t('myReports.submitLink')} <ArrowRight className="ml-1 w-4 h-4" />
             </Link>
           </div>
         ) : (

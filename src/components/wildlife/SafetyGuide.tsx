@@ -1,15 +1,17 @@
 import { EyeOff, PawPrint, Volume2, Camera, Phone, Link } from 'lucide-react'
-
-const tips = [
-  { Icon: EyeOff, title: 'Do not approach', description: 'Keep your distance. Wild animals are unpredictable and may feel threatened.' },
-  { Icon: PawPrint, title: 'Do not feed', description: 'Human food can be harmful and makes wildlife dependent on people.' },
-  { Icon: Volume2, title: 'Stay quiet', description: 'Loud noises stress animals and can cause them to abandon nests or young.' },
-  { Icon: Camera, title: 'Take photos', description: 'Document the sighting from a safe distance. Photos help PWRCC identify species.' },
-  { Icon: Phone, title: 'Report it', description: 'Submit a wildlife sighting report through DWARRMS or call PWRCC directly.' },
-  { Icon: Link, title: 'Keep pets away', description: 'Restrain pets to prevent dangerous encounters with wildlife.' },
-]
+import { useLanguage } from '@/context/LanguageContext'
 
 export function SafetyGuide() {
+  const { t } = useLanguage()
+  const tips = [
+    { Icon: EyeOff, title: t('safetyGuide.tip1Title'), description: t('safetyGuide.tip1Desc') },
+    { Icon: PawPrint, title: t('safetyGuide.tip2Title'), description: t('safetyGuide.tip2Desc') },
+    { Icon: Volume2, title: t('safetyGuide.tip3Title'), description: t('safetyGuide.tip3Desc') },
+    { Icon: Camera, title: t('safetyGuide.tip4Title'), description: t('safetyGuide.tip4Desc') },
+    { Icon: Phone, title: t('safetyGuide.tip5Title'), description: t('safetyGuide.tip5Desc') },
+    { Icon: Link, title: t('safetyGuide.tip6Title'), description: t('safetyGuide.tip6Desc') },
+  ]
+
   return (
     <div className="glass-card rounded-3xl p-8 border-primary/20">
       <div className="flex items-center gap-3 mb-6">
@@ -21,9 +23,9 @@ export function SafetyGuide() {
             className="text-foreground font-bold text-xl"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
-            What To Do
+            {t('safetyGuide.title')}
           </h3>
-          <p className="text-muted-foreground text-xs">If you encounter wildlife</p>
+          <p className="text-muted-foreground text-xs">{t('safetyGuide.subtitle')}</p>
         </div>
       </div>
 

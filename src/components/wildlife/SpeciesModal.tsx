@@ -4,12 +4,7 @@ import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { type WildlifeSpecies, statusColors, statusLabels } from '@/data/wildlife'
-
-const activeTimeIcons = {
-  nocturnal: { Icon: Moon, label: 'Nocturnal', color: 'text-indigo-500' },
-  diurnal: { Icon: Sun, label: 'Diurnal', color: 'text-amber-500' },
-  crepuscular: { Icon: Sunset, label: 'Crepuscular', color: 'text-orange-500' },
-}
+import { useLanguage } from '@/context/LanguageContext'
 
 const categoryEmojis: Record<string, string> = {
   mammal: '🦁',
@@ -25,36 +20,44 @@ interface SpeciesModalProps {
 }
 
 export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
-  if (!species) return null
+  const { t } = useLanguage()
   const [selectedImage, setSelectedImage] = useState(0)
-  const { Icon: ActiveIcon, label: activeLabel, color: activeColor } = activeTimeIcons[species.activeTime]
   const touchStartX = useRef(0)
   const touchEndX = useRef(0)
-function handleTouchStart(e: React.TouchEvent) {
-  touchStartX.current = e.changedTouches[0].screenX
-}
 
-function handleTouchEnd(e: React.TouchEvent) {
-  touchEndX.current = e.changedTouches[0].screenX
-
-  const diff = touchStartX.current - touchEndX.current
-
-  // Swipe left
-  if (diff > 50) {
-    setSelectedImage((prev) =>
-      (prev + 1) % (species?.images?.length || 1)
-    )
+  const activeTimeIcons = {
+    nocturnal: { Icon: Moon, label: t('speciesModal.nocturnal'), color: 'text-indigo-500' },
+    diurnal: { Icon: Sun, label: t('speciesModal.diurnal'), color: 'text-amber-500' },
+    crepuscular: { Icon: Sunset, label: t('speciesModal.crepuscular'), color: 'text-orange-500' },
   }
 
-  // Swipe right
-  if (diff < -50) {
-    setSelectedImage((prev) =>
-      prev === 0
-        ? (species?.images?.length || 1) - 1
-        : prev - 1
-    )
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.changedTouches[0].screenX
   }
-}
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    touchEndX.current = e.changedTouches[0].screenX
+
+    const diff = touchStartX.current - touchEndX.current
+
+    if (diff > 50) {
+      setSelectedImage((prev) =>
+        (prev + 1) % (species?.images?.length || 1)
+      )
+    }
+
+    if (diff < -50) {
+      setSelectedImage((prev) =>
+        prev === 0
+          ? (species?.images?.length || 1) - 1
+          : prev - 1
+      )
+    }
+  }
+
+  if (!species) return null
+
+  const { Icon: ActiveIcon, label: activeLabel, color: activeColor } = activeTimeIcons[species.activeTime]
 const hideScrollbarStyles = `
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -167,7 +170,7 @@ return (
           <div>
             <h4 className="text-foreground font-semibold text-sm mb-2 flex items-center gap-2">
               <Globe className="w-4 h-4 text-primary" />
-              General Description
+              {t('speciesModal.generalDesc')}
             </h4>
             <p className="text-muted-foreground text-sm leading-relaxed">{species.description}</p>
           </div>
@@ -179,14 +182,14 @@ return (
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <MapPin className="w-3.5 h-3.5 text-primary" />
-                <span className="text-foreground text-xs font-semibold uppercase tracking-widest">Habitat</span>
+                <span className="text-foreground text-xs font-semibold uppercase tracking-widest">{t('speciesModal.habitat')}</span>
               </div>
               <p className="text-muted-foreground text-xs leading-relaxed">{species.habitat}</p>
             </div>
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Utensils className="w-3.5 h-3.5 text-primary" />
-                <span className="text-foreground text-xs font-semibold uppercase tracking-widest">Diet</span>
+                <span className="text-foreground text-xs font-semibold uppercase tracking-widest">{t('speciesModal.diet')}</span>
               </div>
               <p className="text-muted-foreground text-xs leading-relaxed">{species.diet}</p>
             </div>
@@ -198,7 +201,7 @@ return (
           <div>
             <h4 className="text-foreground font-semibold text-sm mb-3 flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-amber-500" />
-              Safety & Encounter Tips
+              {t('speciesModal.safetyTips')}
             </h4>
             <div className="space-y-2">
               {species.safetyTips.map((tip, i) => (
@@ -218,7 +221,7 @@ return (
           <div>
             <h4 className="text-foreground font-semibold text-sm mb-2 flex items-center gap-2">
               <Leaf className="w-4 h-4 text-primary" />
-              Ecological Importance
+              {t('speciesModal.ecologicalImportance')}
             </h4>
             <p className="text-muted-foreground text-sm leading-relaxed">{species.ecologicalImportance}</p>
           </div>

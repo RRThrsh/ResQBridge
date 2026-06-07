@@ -8,11 +8,14 @@ import { SafetyGuide } from '@/components/wildlife/SafetyGuide'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/context/LanguageContext'
 
 export function WildlifeGuide() {
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<Category>('All')
   const [selectedSpecies, setSelectedSpecies] = useState<WildlifeSpecies | null>(null)
+
+  const { t } = useLanguage()
 
   const rawWildlife = useWildlifeContent()
 
@@ -44,24 +47,23 @@ export function WildlifeGuide() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
-            <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <Link to="/" className="hover:text-primary transition-colors">{t('wildlife.breadcrumbHome')}</Link>
             <span>/</span>
-            <span className="text-foreground">Wildlife Guide</span>
+            <span className="text-foreground">{t('wildlife.breadcrumbCurrent')}</span>
           </div>
 
           <div className="max-w-2xl">
             <p className="text-primary text-xs font-semibold tracking-widest uppercase mb-3">
-              Palawan Wildlife Encyclopedia
+              {t('wildlife.eyebrow')}
             </p>
             <h1
               className="text-4xl sm:text-5xl font-black text-foreground leading-tight mb-4"
               style={{ fontFamily: 'var(--font-heading)' }}
             >
-              Wildlife Guide
+              {t('wildlife.title')}
             </h1>
             <p className="text-muted-foreground text-base leading-relaxed">
-              Learn about the unique wildlife in Palawan. Discover which animals are protected, 
-              understand their ecological roles, and know how to safely navigate encounters.
+              {t('wildlife.description')}
             </p>
           </div>
         </div>
@@ -81,7 +83,7 @@ export function WildlifeGuide() {
         {/* Results count */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-muted-foreground text-sm">
-            Showing <span className="text-primary font-medium">{filtered.length}</span> of {wildlifeSpecies.length} species
+            {t('wildlife.showing')} <span className="text-primary font-medium">{filtered.length}</span> {t('wildlife.of')} {wildlifeSpecies.length} {t('wildlife.species')}
           </p>
         </div>
 
@@ -101,16 +103,16 @@ export function WildlifeGuide() {
           <div className="text-center py-24">
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-foreground font-bold text-xl mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
-              No species found
+              {t('wildlife.noResults')}
             </h3>
             <p className="text-muted-foreground text-sm mb-6">
-              Try searching for a different name or removing some filters.
+              {t('wildlife.noResultsDesc')}
             </p>
             <Button
               onClick={() => { setSearch(''); setActiveCategory('All') }}
               variant="outline"
             >
-              Clear filters
+              {t('wildlife.clearFilters')}
             </Button>
           </div>
         )}
@@ -121,20 +123,20 @@ export function WildlifeGuide() {
         {/* Report CTA */}
         <div className="mt-10 glass-card rounded-3xl p-8 text-center border-primary/20">
           <p className="text-primary text-xs font-semibold tracking-widest uppercase mb-3">
-            Spotted something?
+            {t('wildlife.ctaEyebrow')}
           </p>
           <h3
             className="text-foreground text-2xl font-bold mb-3"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
-            Report a Wildlife Sighting
+            {t('wildlife.ctaTitle')}
           </h3>
           <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
-            Help protect Palawan wildlife by reporting sightings and supporting conservation programs.
+            {t('wildlife.ctaDesc')}
           </p>
           <Link to="/report">
             <Button className="font-bold px-8 h-11 rounded-xl shadow-lg shadow-primary/20">
-              Submit a Report
+              {t('wildlife.ctaButton')}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
