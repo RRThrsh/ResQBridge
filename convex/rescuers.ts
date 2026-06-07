@@ -343,9 +343,9 @@ export const removeRescuer = mutation({
       .withIndex('by_email', (q) => q.eq('email', targetEmail))
       .unique()
 
-    if (userRow && userRow.role === 'rescuer') {
-      await ctx.db.patch(userRow._id, { role: 'user' })
-    }
+if (userRow) {
+  await ctx.db.delete(userRow._id)
+}
 
     return null
   },

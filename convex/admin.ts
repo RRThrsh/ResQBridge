@@ -136,7 +136,9 @@ export const removeAdmin = mutation({
 
     await ctx.db.delete(target._id)
     const userRow = await ctx.db.query('users').withIndex('by_email', (q) => q.eq('email', targetEmail)).unique()
-    if (userRow && userRow.role === 'admin') await ctx.db.patch(userRow._id, { role: 'user' })
+    if (userRow) {
+  await ctx.db.delete(userRow._id)
+}
 
     return null
   },
