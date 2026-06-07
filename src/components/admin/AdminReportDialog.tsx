@@ -153,7 +153,7 @@ export function AdminReportDialog({
       {/* FULLSCREEN IMAGE PREVIEW */}
       {previewImage && (
         <div
-          className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/95 backdrop-blur-sm"
+          className="fixed inset-0 z-[999999] flex items-center justify-center bg-background/95 backdrop-blur-sm"
           onClick={() => setPreviewImage(null)}
         >
           <div
@@ -163,7 +163,7 @@ export function AdminReportDialog({
             <button
               type="button"
               onClick={() => setPreviewImage(null)}
-              className="absolute -right-2 -top-12 z-[999999] flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-2xl font-bold text-white shadow-lg transition hover:bg-zinc-700 sm:-right-12 sm:-top-4"
+              className="absolute -right-2 -top-12 z-[999999] flex h-10 w-10 items-center justify-center rounded-full bg-background/80 text-2xl font-bold text-foreground shadow-lg border border-border/20 transition hover:bg-background sm:-right-12 sm:-top-4"
             >
               ×
             </button>
@@ -179,11 +179,11 @@ export function AdminReportDialog({
       <DialogContent
         className="
           flex w-[95vw] max-w-2xl max-h-[92vh] flex-col overflow-hidden
-          rounded-2xl border border-border/20 bg-[#0a0a0a] p-0 text-foreground
+          rounded-2xl border border-border/20 bg-background p-0 text-foreground
           shadow-2xl sm:w-full
         "
       >
-        <DialogHeader className="shrink-0 border-b border-border/10 bg-[#0a0a0a]/80 px-6 py-5 backdrop-blur-md">
+        <DialogHeader className="shrink-0 border-b border-border/10 bg-background/80 px-6 py-5 backdrop-blur-md">
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
             PWRCC Report
           </p>
@@ -236,7 +236,7 @@ export function AdminReportDialog({
               />
             </div>
           ) : activeReport.assignedRescuerName ? (
-            <div className="mb-8 rounded-xl border border-border/10 bg-zinc-900/40 p-4 text-sm">
+            <div className="mb-8 rounded-xl border border-border/10 bg-muted/40 p-4 text-sm">
               <span className="text-muted-foreground">Assigned to: </span>
               <span className="font-medium text-foreground">{activeReport.assignedRescuerName}</span>
             </div>
@@ -246,7 +246,7 @@ export function AdminReportDialog({
           {activeReport.photoDataUrls.length > 0 ? (
             <div className="mb-10 flex flex-col items-center">
               <div 
-                className="relative flex w-full max-w-lg cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-zinc-950/80 aspect-[4/3] group"
+                className="relative flex w-full max-w-lg cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-muted/40 aspect-[4/3] group"
                 onClick={() => setPreviewImage(activeReport.photoDataUrls[mainPhotoIdx])}
               >
                 <span className="absolute right-3 top-3 z-10 rounded-full bg-black/80 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">
@@ -268,7 +268,7 @@ export function AdminReportDialog({
                       className={cn(
                         "relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200",
                         mainPhotoIdx === index 
-                          ? "border-primary opacity-100 ring-2 ring-primary/20 ring-offset-2 ring-offset-[#0a0a0a]" 
+                          ? "border-primary opacity-100 ring-2 ring-primary/20 ring-offset-2 ring-offset-background" 
                           : "border-transparent opacity-40 hover:opacity-100"
                       )}
                     >
@@ -294,7 +294,7 @@ export function AdminReportDialog({
                   <CategoryIcon className="h-3.5 w-3.5" />
                   <span>{activeReport.category === 'domestic' ? 'Domestic Details' : 'Wildlife Details'}</span>
                 </div>
-                <div className="rounded-2xl border border-border/10 bg-zinc-900/30 p-5 space-y-5">
+                <div className="rounded-2xl border border-border/10 bg-muted/30 p-5 space-y-5">
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div>
                       <div className="mb-1 text-xs text-muted-foreground">Reported Animal</div>
@@ -341,7 +341,7 @@ export function AdminReportDialog({
                   <MapPin className="h-3.5 w-3.5" />
                   <span>Location</span>
                 </div>
-                <div className="rounded-2xl border border-border/10 bg-zinc-900/30 p-5">
+                <div className="rounded-2xl border border-border/10 bg-muted/30 p-5">
                   <div className="mb-2 text-xs text-muted-foreground">Address / Landmark</div>
                   <div className="text-sm font-medium leading-relaxed text-foreground">
                     {activeReport.location}
@@ -355,7 +355,7 @@ export function AdminReportDialog({
                   <User className="h-3.5 w-3.5" />
                   <span>Reporter</span>
                 </div>
-                <div className="rounded-2xl border border-border/10 bg-zinc-900/30 p-5">
+                <div className="rounded-2xl border border-border/10 bg-muted/30 p-5">
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div>
                       <div className="mb-1 text-xs text-muted-foreground">Name</div>
@@ -377,7 +377,7 @@ export function AdminReportDialog({
             </div>
           ) : (
             // EDIT FORM
-            <div className="grid gap-5 rounded-2xl border border-border/10 bg-zinc-900/30 p-5">
+            <div className="grid gap-5 rounded-2xl border border-border/10 bg-muted/30 p-5">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Animal name</label>
                 <Input
@@ -475,12 +475,12 @@ export function AdminReportDialog({
           )}
         </div>
 
-        <DialogFooter className="shrink-0 border-t border-border/10 bg-[#0a0a0a]/90 px-6 py-4 backdrop-blur-md sm:justify-end">
+        <DialogFooter className="shrink-0 border-t border-border/10 bg-background/90 px-6 py-4 backdrop-blur-md sm:justify-end">
           <div className="flex w-full items-center justify-end gap-3 sm:w-auto">
             <Button 
               type="button" 
               variant="outline" 
-              className="border-border/20 hover:bg-zinc-800"
+              className="border-border/20 hover:bg-muted"
               onClick={() => onOpenChange(false)}
             >
               {isView ? 'Close' : 'Cancel'}
