@@ -38,6 +38,8 @@ export default defineSchema({
     createdAt: v.number(),
     password: v.optional(v.string()),
     activeSessionId: v.optional(v.string()),
+    failedLoginAttempts: v.optional(v.number()),
+    lockedUntil: v.optional(v.number()),
   }).index('by_email', ['email']),
 
   siteContent: defineTable({

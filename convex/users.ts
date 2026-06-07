@@ -223,6 +223,61 @@ export const updateProfile = mutation({
   },
 })
 
+export const validateLoginAttempt = mutation({
+  args: {
+    email: v.string(),
+    password: v.string(),
+    resetPassword: v.optional(v.boolean()),
+  },
+  returns: v.object({
+    allowed: v.boolean(),
+    remainingAttempts: v.number(),
+    locked: v.boolean(),
+    lockoutMinutes: v.optional(v.number()),
+  }),
+  handler: async (ctx, args) => {
+    const email = normalizeEmail(args.email)
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .unique()
+
+    if (!user) return { allowed: false, remainingAttempts: 0, locked: false }
+
+    if (args.resetPassword) {
+      if (user.failedLoginAttempts && user.failedLoginAttempts > 0) {
+        await ctx.db.patch(user._id, { failedLoginAttempts: 0, lockedUntil: undefined })
+      }
+      return { allowed: true, remainingAttempts: 5, locked: false }
+    }
+
+    const lockedUntil = user.lockedUntil ?? 0
+    if (lockedUntil > Date.now()) {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 60000)
+      return { allowed: false, remainingAttempts: 0, locked: true, lockoutMinutes: remaining }
+    }
+
+    if (user.password === args.password) {
+      if (user.failedLoginAttempts && user.failedLoginAttempts > 0) {
+        await ctx.db.patch(user._id, { failedLoginAttempts: 0, lockedUntil: undefined })
+      }
+      return { allowed: true, remainingAttempts: 5, locked: false }
+    }
+
+    const attempts = (user.failedLoginAttempts ?? 0) + 1
+    if (attempts >= 5) {
+      await ctx.db.patch(user._id, {
+        failedLoginAttempts: attempts,
+        lockedUntil: Date.now() + 15 * 60 * 1000,
+      })
+      return { allowed: false, remainingAttempts: 0, locked: true, lockoutMinutes: 15 }
+    }
+
+    await ctx.db.patch(user._id, { failedLoginAttempts: attempts })
+    return { allowed: false, remainingAttempts: 5 - attempts, locked: false }
+  },
+})
+
 export const validateUserPassword = query({
   args: {
     email: v.string(),
