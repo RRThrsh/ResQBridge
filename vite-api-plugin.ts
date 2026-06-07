@@ -465,9 +465,26 @@ async function handleUserSendOtp(
         sendJson(res, 400, { error: 'No account found. Please sign up first.' })
         return
       }
-      if (password !== 'reset-temp' && existing.password !== password) {
-        sendJson(res, 401, { error: 'Incorrect password.' })
-        return
+      if (password !== 'reset-temp') {
+        const loginCheck = await convex.mutation(api.users.validateLoginAttempt, {
+          email, password, resetPassword: false,
+        })
+        if (loginCheck.locked) {
+          sendJson(res, 429, {
+            error: `Account locked due to too many failed attempts. Try again in ${loginCheck.lockoutMinutes} minutes.`,
+          })
+          return
+        }
+        if (!loginCheck.allowed) {
+          sendJson(res, 401, {
+            error: `Invalid password. ${loginCheck.remainingAttempts} attempt(s) remaining.`,
+          })
+          return
+        }
+      } else {
+        await convex.mutation(api.users.validateLoginAttempt, {
+          email, password: 'reset-temp', resetPassword: true,
+        })
       }
       await executeSendOtp(res, options, 'user', 'Your PWRRC verification code', {
         email,
@@ -508,9 +525,26 @@ async function handleUserSendOtp(
       sendJson(res, 400, { error: 'No account found. Please sign up first.' })
       return
     }
-    if (password !== 'reset-temp' && existing.password !== password) {
-      sendJson(res, 401, { error: 'Incorrect password.' })
-      return
+    if (password !== 'reset-temp') {
+      const loginCheck = await convex.mutation(api.users.validateLoginAttempt, {
+        email: phone, password, resetPassword: false,
+      })
+      if (loginCheck.locked) {
+        sendJson(res, 429, {
+          error: `Account locked due to too many failed attempts. Try again in ${loginCheck.lockoutMinutes} minutes.`,
+        })
+        return
+      }
+      if (!loginCheck.allowed) {
+        sendJson(res, 401, {
+          error: `Invalid password. ${loginCheck.remainingAttempts} attempt(s) remaining.`,
+        })
+        return
+      }
+    } else {
+      await convex.mutation(api.users.validateLoginAttempt, {
+        email: phone, password: 'reset-temp', resetPassword: true,
+      })
     }
   } else if (existing) {
     sendJson(res, 400, { error: 'An account already exists. Please sign in.' })

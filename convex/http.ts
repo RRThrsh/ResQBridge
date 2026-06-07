@@ -124,9 +124,27 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
 
       if (mode === 'sign-in') {
         if (!existing) return jsonResponse({ error: 'No account found. Please sign up first.' }, 400)
-        if (password !== 'reset-temp' && existing.password !== password) {
-          return jsonResponse({ error: 'Invalid password.' }, 401)
+
+        if (password !== 'reset-temp') {
+          const loginCheck = await ctx.runMutation(api.users.validateLoginAttempt, {
+            email, password, resetPassword: false,
+          })
+          if (loginCheck.locked) {
+            return jsonResponse({
+              error: `Account locked due to too many failed attempts. Try again in ${loginCheck.lockoutMinutes} minutes.`,
+            }, 429)
+          }
+          if (!loginCheck.allowed) {
+            return jsonResponse({
+              error: `Invalid password. ${loginCheck.remainingAttempts} attempt(s) remaining.`,
+            }, 401)
+          }
+        } else {
+          await ctx.runMutation(api.users.validateLoginAttempt, {
+            email, password: 'reset-temp', resetPassword: true,
+          })
         }
+
         finalFirstName = existing.firstName
         finalLastName = existing.lastName
       } else if (existing) {
@@ -171,9 +189,27 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
 
     if (mode === 'sign-in') {
       if (!existing) return jsonResponse({ error: 'No account found. Please sign up first.' }, 400)
-      if (password !== 'reset-temp' && existing.password !== password) {
-        return jsonResponse({ error: 'Invalid password.' }, 401)
+
+      if (password !== 'reset-temp') {
+        const loginCheck = await ctx.runMutation(api.users.validateLoginAttempt, {
+          email: phone, password, resetPassword: false,
+        })
+        if (loginCheck.locked) {
+          return jsonResponse({
+            error: `Account locked due to too many failed attempts. Try again in ${loginCheck.lockoutMinutes} minutes.`,
+          }, 429)
+        }
+        if (!loginCheck.allowed) {
+          return jsonResponse({
+            error: `Invalid password. ${loginCheck.remainingAttempts} attempt(s) remaining.`,
+          }, 401)
+        }
+      } else {
+        await ctx.runMutation(api.users.validateLoginAttempt, {
+          email: phone, password: 'reset-temp', resetPassword: true,
+        })
       }
+
       finalFirstName = existing.firstName
       finalLastName = existing.lastName
     } else if (existing) {
