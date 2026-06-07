@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Clock, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function TooManyRequest() {
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/'
   const [countdown, setCountdown] = useState(60)
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export function TooManyRequest() {
           <p className="text-sm text-primary font-medium mb-8">You can now try again.</p>
         )}
 
-        <Link to="/">
+        <Link to={redirectTo}>
           <Button className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-none">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Return Home
