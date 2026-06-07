@@ -9,6 +9,7 @@ import { withResolvedReportPhotos } from './lib/reportPhotos'
 import { generateReportNumber, isTerminalStatus, normalizeReportStatus } from './lib/reportStatus'
 import { buildReportAnalytics } from './lib/reportAnalytics'
 import { getRescuerByEmail } from './lib/rescuerAccess'
+import { writeAuditLog } from './lib/auditLog'
 
 const userRoleValidator = v.optional(v.union(v.literal('admin'), v.literal('user'), v.literal('rescuer'), v.literal('domestic_approver')))
 
@@ -87,6 +88,13 @@ export const updateProfile = mutation({
     const userRow = await ctx.db.query('users').withIndex('by_email', (q) => q.eq('email', email)).unique()
     if (userRow) await ctx.db.patch(userRow._id, { firstName, lastName, role: 'admin' })
 
+    await writeAuditLog(ctx, {
+      action: 'admin.update_profile',
+      actorEmail: args.adminEmail,
+      actorName: `${firstName} ${lastName}`.trim(),
+      actorRole: 'admin',
+    })
+
     return { email, firstName, lastName }
   },
 })
@@ -114,6 +122,15 @@ export const addAdmin = mutation({
     const userRow = await ctx.db.query('users').withIndex('by_email', (q) => q.eq('email', email)).unique()
     if (userRow) await ctx.db.patch(userRow._id, { role: 'admin', firstName, lastName })
 
+    await writeAuditLog(ctx, {
+      action: 'admin.add',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'admin',
+      targetId: email,
+      details: JSON.stringify({ addedEmail: email, addedName: `${firstName} ${lastName}`.trim() }),
+    })
+
     return { email, firstName, lastName }
   },
 })
@@ -140,6 +157,15 @@ export const removeAdmin = mutation({
   await ctx.db.delete(userRow._id)
 }
 
+    await writeAuditLog(ctx, {
+      action: 'admin.remove',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'admin',
+      targetId: targetEmail,
+      details: JSON.stringify({ removedEmail: targetEmail, removedName: `${target.firstName} ${target.lastName}`.trim() }),
+    })
+
     return null
   },
 })
@@ -160,6 +186,15 @@ export const updateAdmin = mutation({
     await ctx.db.patch(target._id, { firstName, lastName })
     const userRow = await ctx.db.query('users').withIndex('by_email', (q) => q.eq('email', targetEmail)).unique()
     if (userRow) await ctx.db.patch(userRow._id, { firstName, lastName, role: 'admin' })
+
+    await writeAuditLog(ctx, {
+      action: 'admin.update',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'admin',
+      targetId: targetEmail,
+      details: JSON.stringify({ updatedEmail: targetEmail, updatedName: `${firstName} ${lastName}`.trim() }),
+    })
 
     return { email: targetEmail, firstName, lastName }
   },
@@ -313,11 +348,21 @@ export const updateReport = mutation({
       type: args.type, condition: args.condition || undefined, behavior: args.behavior || undefined,
       seenAt: args.seenAt, quantity: args.quantity, reportedSize: args.reportedSize?.trim() || undefined, reporterPhone: args.reporterPhone?.trim() || undefined,
     })
+
+    await writeAuditLog(ctx, {
+      action: 'admin.report.update',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ animalName: args.animalName, location: args.location, type: args.type }),
+    })
+
     return null
   },
 })
 
-async function assignRescuerToReportHandler(ctx: MutationCtx, args: { reportId: Id<'reports'>; rescuerEmail: string }) {
+async function assignRescuerToReportHandler(ctx: MutationCtx, args: { reportId: Id<'reports'>; rescuerEmail: string; adminEmail?: string }) {
   const doc = await ctx.db.get('reports', args.reportId)
   if (!doc) throw new Error('Report not found.')
 
@@ -336,6 +381,17 @@ async function assignRescuerToReportHandler(ctx: MutationCtx, args: { reportId: 
     rescuerEmail: rescuer.email, rescuerPhone: rescuer.contactPhone ?? '',
     animalName: doc.animalName, location: doc.location, reportNumber: doc.reportNumber ?? '',
   })
+
+  if (args.adminEmail) {
+    await writeAuditLog(ctx, {
+      action: 'admin.report.assign_rescuer',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ assignedRescuer: rescuerEmail, rescuerName: `${rescuer.firstName} ${rescuer.lastName}`.trim(), reportAnimal: doc.animalName }),
+    })
+  }
 }
 
 export const assignRescuerToReport = mutation({
@@ -343,7 +399,7 @@ export const assignRescuerToReport = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    await assignRescuerToReportHandler(ctx, { reportId: args.reportId, rescuerEmail: args.rescuerEmail })
+    await assignRescuerToReportHandler(ctx, { reportId: args.reportId, rescuerEmail: args.rescuerEmail, adminEmail: args.adminEmail })
     return null
   },
 })
@@ -353,7 +409,7 @@ export const acceptAndAssignReport = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    await assignRescuerToReportHandler(ctx, { reportId: args.reportId, rescuerEmail: args.rescuerEmail })
+    await assignRescuerToReportHandler(ctx, { reportId: args.reportId, rescuerEmail: args.rescuerEmail, adminEmail: args.adminEmail })
     return null
   },
 })
@@ -363,7 +419,7 @@ export const reassignReport = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    await assignRescuerToReportHandler(ctx, { reportId: args.reportId, rescuerEmail: args.rescuerEmail })
+    await assignRescuerToReportHandler(ctx, { reportId: args.reportId, rescuerEmail: args.rescuerEmail, adminEmail: args.adminEmail })
     return null
   },
 })
@@ -376,6 +432,16 @@ export const deleteReport = mutation({
     const doc = await ctx.db.get('reports', args.reportId)
     if (!doc) throw new Error('Report not found.')
     await ctx.db.delete(args.reportId)
+
+    await writeAuditLog(ctx, {
+      action: 'admin.report.delete',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ category: doc.category, animalName: doc.animalName }),
+    })
+
     return null
   },
 })
@@ -451,6 +517,16 @@ export const changeAdminPassword = mutation({
 
     // Update the password
     await ctx.db.patch(target._id, { password: args.newPassword })
+
+    await writeAuditLog(ctx, {
+      action: 'admin.change_password',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'admin',
+      targetId: targetEmail,
+      details: JSON.stringify({ isSelf: args.adminEmail === args.targetEmail }),
+    })
+
     return null
   },
 })
