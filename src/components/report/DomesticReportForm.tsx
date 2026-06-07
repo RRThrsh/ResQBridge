@@ -163,7 +163,6 @@ export function DomesticReportForm() {
     location: '',
     description: '',
     reporterPhone: '',
-    quantity: '1',
     reportedSize: '',
     seenAt: '',
   })
@@ -292,7 +291,6 @@ export function DomesticReportForm() {
         color: formData.color || undefined,
         condition: formData.condition || undefined,
         behavior: formData.behavior || undefined,
-        quantity: Math.max(1, Number(formData.quantity) || 1),
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
         photoStorageIds: photoStorageIdsForSubmit(photos),
@@ -673,24 +671,6 @@ export function DomesticReportForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
-          <div className="space-y-3">
-            <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {t('reportFormDomestic.quantityLabel')}
-            </label>
-
-            <Input
-              type="number"
-              min={1}
-              value={formData.quantity}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  quantity: e.target.value,
-                })
-              }
-              className="h-12 bg-background border-border rounded-xl"
-            />
-          </div>
 
           {reportType !== 'injured' && (
             <div className="space-y-3">
