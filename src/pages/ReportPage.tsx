@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, HelpCircle, Shield, PawPrint, ArrowRight } from 'lucide-react'
+import { ArrowLeft, Shield, PawPrint, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { WildlifeSightingForm } from '@/components/report/WildlifeSightingForm'
