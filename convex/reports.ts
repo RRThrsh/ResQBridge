@@ -19,6 +19,7 @@ import {
   reportStatusValidator,
 } from './lib/reportStatus'
 import { internal } from './_generated/api'
+import { writeAuditLog } from './lib/auditLog'
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
@@ -166,7 +167,22 @@ export const create = mutation({
     await ctx.db.patch(reportId, {
       reportNumber: generateReportNumber(reportId),
     })
-    
+
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', userEmail))
+      .unique()
+
+    await writeAuditLog(ctx, {
+      action: 'user.report.submit',
+      actorEmail: userEmail,
+      actorName: user ? `${user.firstName} ${user.lastName}`.trim() : undefined,
+      actorRole: 'user',
+      targetType: 'report',
+      targetId: reportId,
+      details: JSON.stringify({ category: args.category, type: args.type, animalName: args.animalName.trim(), location: args.location.trim() }),
+    })
+
     if (args.category === 'wildlife') {
       await ctx.scheduler.runAfter(
         0,
@@ -239,6 +255,16 @@ export const update = mutation({
       reporterName: args.reporterName?.trim() || undefined, 
       ...photoPatch,
     })
+
+    await writeAuditLog(ctx, {
+      action: 'user.report.update',
+      actorEmail: args.userEmail,
+      actorRole: 'user',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ status: args.status, type: args.type }),
+    })
+
     return null
   },
 })
@@ -255,6 +281,16 @@ export const remove = mutation({
       throw new Error('Completed reports cannot be deleted.')
     }
     await ctx.db.delete(args.reportId)
+
+    await writeAuditLog(ctx, {
+      action: 'user.report.delete',
+      actorEmail: args.userEmail,
+      actorRole: 'user',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ category: existing.category, animalName: existing.animalName }),
+    })
+
     return null
   },
 })

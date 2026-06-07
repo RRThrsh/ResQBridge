@@ -14,6 +14,7 @@ import {
 import { assertRescuer, getRescuerByEmail, isRescuerEmail } from './lib/rescuerAccess'
 import { normalizeEmail } from './lib/admins'
 import { normalizeContactPhone } from './lib/contactPhone'
+import { writeAuditLog } from './lib/auditLog'
 
 const rescuerProfileValidator = v.object({
   email: v.string(),
@@ -251,6 +252,15 @@ export const addRescuer = mutation({
       })
     }
 
+    await writeAuditLog(ctx, {
+      action: 'admin.rescuer.add',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'rescuer',
+      targetId: email,
+      details: JSON.stringify({ addedEmail: email, addedName: `${firstName} ${lastName}`.trim() }),
+    })
+
     return {
       email,
       firstName,
@@ -311,6 +321,15 @@ export const updateRescuer = mutation({
       await ctx.db.patch(userRow._id, { ...patchData, role: 'rescuer' })
     }
 
+    await writeAuditLog(ctx, {
+      action: 'admin.rescuer.update',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'rescuer',
+      targetId: targetEmail,
+      details: JSON.stringify({ updatedEmail: targetEmail, updatedName: `${firstName} ${lastName}`.trim() }),
+    })
+
     return { 
       email: targetEmail, 
       firstName, 
@@ -346,6 +365,15 @@ export const removeRescuer = mutation({
 if (userRow) {
   await ctx.db.delete(userRow._id)
 }
+
+    await writeAuditLog(ctx, {
+      action: 'admin.rescuer.remove',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'rescuer',
+      targetId: targetEmail,
+      details: JSON.stringify({ removedEmail: targetEmail, removedName: `${target.firstName} ${target.lastName}`.trim() }),
+    })
 
     return null
   },
@@ -468,6 +496,16 @@ export const markEnRoute = mutation({
     }
 
     await ctx.db.patch(args.reportId, { status: 'en_route' satisfies ReportStatus })
+
+    await writeAuditLog(ctx, {
+      action: 'rescuer.mark_en_route',
+      actorEmail: args.rescuerEmail,
+      actorRole: 'rescuer',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ animalName: doc.animalName, location: doc.location }),
+    })
+
     return null
   },
 })
@@ -489,6 +527,16 @@ export const completeRescue = mutation({
     }
 
     await ctx.db.patch(args.reportId, { status: args.outcome })
+
+    await writeAuditLog(ctx, {
+      action: 'rescuer.complete_rescue',
+      actorEmail: args.rescuerEmail,
+      actorRole: 'rescuer',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ outcome: args.outcome, animalName: doc.animalName, location: doc.location }),
+    })
+
     return null
   },
 })

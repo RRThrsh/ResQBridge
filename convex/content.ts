@@ -3,6 +3,7 @@ import type { MutationCtx, QueryCtx } from './_generated/server'
 import { v } from 'convex/values'
 import { assertAdmin } from './lib/adminAccess'
 import { defaultNews, defaultWildlife } from './lib/defaultContent'
+import { writeAuditLog } from './lib/auditLog'
 
 // Root validator that handles both singular and plural images
 const wildlifeItemValidator = v.object({
@@ -284,6 +285,16 @@ finalImages = [args.item.image]
     }
 
     await saveItems(ctx, 'wildlife', [...items, nextItem])
+
+    await writeAuditLog(ctx, {
+      action: 'admin.wildlife.create',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'wildlife',
+      targetId: id,
+      details: JSON.stringify({ commonName: args.item.commonName, category: args.item.category }),
+    })
+
     return id
   },
 })
@@ -309,6 +320,16 @@ export const createNewsItem = mutation({
     const id = `${prefix}-${Date.now()}`
     const nextItem: NewsItem = { ...args.item, id }
     await saveItems(ctx, 'news', [...items, nextItem])
+
+    await writeAuditLog(ctx, {
+      action: 'admin.news.create',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'news',
+      targetId: id,
+      details: JSON.stringify({ title: args.item.title, type: args.item.type }),
+    })
+
     return id
   },
 })
@@ -365,6 +386,16 @@ finalImages = [(args.item as any).image]
       throw new Error('Species not found.')
     }
     await saveItems(ctx, 'wildlife', next)
+
+    await writeAuditLog(ctx, {
+      action: 'admin.wildlife.update',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'wildlife',
+      targetId: args.item.id,
+      details: JSON.stringify({ commonName: args.item.commonName }),
+    })
+
     return null
   },
 })
@@ -381,6 +412,15 @@ export const deleteWildlifeItem = mutation({
       throw new Error('Species not found.')
     }
     await saveItems(ctx, 'wildlife', next)
+
+    await writeAuditLog(ctx, {
+      action: 'admin.wildlife.delete',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'wildlife',
+      targetId: args.itemId,
+    })
+
     return null
   },
 })
@@ -399,6 +439,16 @@ export const updateNewsItem = mutation({
       throw new Error('Item not found.')
     }
     await saveItems(ctx, 'news', next)
+
+    await writeAuditLog(ctx, {
+      action: 'admin.news.update',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'news',
+      targetId: args.item.id,
+      details: JSON.stringify({ title: args.item.title, type: args.item.type }),
+    })
+
     return null
   },
 })
@@ -414,6 +464,15 @@ export const deleteNewsItem = mutation({
       throw new Error('Item not found.')
     }
     await saveItems(ctx, 'news', next)
+
+    await writeAuditLog(ctx, {
+      action: 'admin.news.delete',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'news',
+      targetId: args.itemId,
+    })
+
     return null
   },
 })

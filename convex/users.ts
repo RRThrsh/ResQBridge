@@ -4,6 +4,7 @@ import { getAdminByEmail } from './lib/adminAccess'
 import { normalizeEmail } from './lib/admins'
 import { normalizeContactPhone } from './lib/contactPhone'
 import { getRescuerByEmail } from './lib/rescuerAccess'
+import { writeAuditLog } from './lib/auditLog'
 
 const userProfileValidator = v.object({
   email: v.string(),
@@ -209,6 +210,14 @@ export const updateProfile = mutation({
       contactPhone 
     })
 
+    await writeAuditLog(ctx, {
+      action: 'user.update_profile',
+      actorEmail: email,
+      actorName: `${firstName} ${lastName}`.trim(),
+      actorRole: 'user',
+      details: JSON.stringify({ newEmail: finalEmailToSave !== email ? finalEmailToSave : undefined }),
+    })
+
     // Return the updated data so the frontend syncs up perfectly
     return { email: finalEmailToSave, firstName, lastName, role: 'user' as const }
   },
@@ -266,6 +275,13 @@ export const resetUserPassword = mutation({
 
     await ctx.db.patch(user._id, {
       password: args.newPassword,
+    })
+
+    await writeAuditLog(ctx, {
+      action: 'user.password_reset',
+      actorEmail: email,
+      actorRole: 'user',
+      details: JSON.stringify({ method: 'self_reset' }),
     })
 
     return null

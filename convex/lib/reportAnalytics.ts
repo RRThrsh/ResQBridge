@@ -2,7 +2,6 @@ import type { Doc } from '../_generated/dataModel'
 import { normalizeEmail } from './admins'
 import {
   isActiveDispatchStatus,
-  isTerminalStatus,
   normalizeReportStatus,
   type ReportStatus,
 } from './reportStatus'
@@ -149,7 +148,7 @@ function buildSummary(
       if (!r.assignedRescuerEmail) unassignedPending++
     }
     if (isActiveDispatchStatus(status)) activeDispatchReports++
-    if (isTerminalStatus(status)) completedReports++
+    if (status === 'rescue_success' || status === 'rescue_failed') completedReports++
     if (r.category === 'wildlife') wildlifeReports++
     if (r.category === 'domestic') domesticReports++
     if (reportHasPhotos(r)) reportsWithPhotos++

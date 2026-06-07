@@ -147,11 +147,13 @@ const userVerifyOtp = async (ctx: ActionCtx, request: Request) => {
     })
 
     let user
+    let isSignup = false
     if (mode === 'sign-up') {
       user = await ctx.runMutation(api.users.createUser, {
         email, firstName: profile.firstName, lastName: profile.lastName, password,
         phone: profile.phone,
       })
+      isSignup = true
     } else {
       const existing = await ctx.runQuery(api.users.getByEmail, { email })
       if (!existing) return jsonResponse({ error: 'No account found. Please sign up first.' }, 400)
@@ -159,6 +161,16 @@ const userVerifyOtp = async (ctx: ActionCtx, request: Request) => {
     }
 
     await ctx.runMutation(api.otp.consumeVerificationCode, { secret, email, scope: 'user' })
+
+    await ctx.runMutation(api.auditLogs.fromAction, {
+      action: isSignup ? 'user.signup' : 'user.login',
+      actorEmail: email,
+      actorName: `${profile.firstName} ${profile.lastName}`.trim(),
+      actorRole: 'user',
+      details: isSignup
+        ? JSON.stringify({ mode: 'sign-up', phone: profile.phone ?? '' })
+        : JSON.stringify({ mode: 'sign-in' }),
+    })
 
     return jsonResponse({ success: true, user }, 200)
   } catch (error) {
@@ -220,6 +232,13 @@ const adminVerifyOtp = async (ctx: ActionCtx, request: Request) => {
     const secret = getOtpSecret()
     await ctx.runMutation(api.otp.verifyVerificationCode, { secret, email, scope: 'admin', code })
     const admin = await ctx.runMutation(api.admin.ensureAdminAccount, { adminEmail: email })
+
+    await ctx.runMutation(api.auditLogs.fromAction, {
+      action: 'admin.login',
+      actorEmail: email,
+      actorName: `${admin.firstName} ${admin.lastName}`.trim(),
+      actorRole: 'admin',
+    })
 
     return jsonResponse({
       success: true,
@@ -284,6 +303,13 @@ const rescuerVerifyOtp = async (ctx: ActionCtx, request: Request) => {
 
     const rescuer = await ctx.runQuery(api.rescuers.getRescuerForLogin, { email })
     if (!rescuer) return jsonResponse({ error: 'Rescuer account not found.' }, 400)
+
+    await ctx.runMutation(api.auditLogs.fromAction, {
+      action: 'rescuer.login',
+      actorEmail: email,
+      actorName: `${rescuer.firstName} ${rescuer.lastName}`.trim(),
+      actorRole: 'rescuer',
+    })
 
     return jsonResponse({
       success: true,
@@ -354,6 +380,13 @@ const domesticVerifyOtp = async (ctx: ActionCtx, request: Request) => {
     
     const profile = await ctx.runQuery(api.domestic.getDomesticApproverForLogin, { email })
     if (!profile) return jsonResponse({ error: 'Domestic approver account not found.' }, 400)
+
+    await ctx.runMutation(api.auditLogs.fromAction, {
+      action: 'domestic_approver.login',
+      actorEmail: email,
+      actorName: `${profile.firstName} ${profile.lastName}`.trim(),
+      actorRole: 'domestic_approver',
+    })
 
     return jsonResponse({
       success: true,

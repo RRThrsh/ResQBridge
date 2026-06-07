@@ -57,6 +57,18 @@ export default defineSchema({
     phone: v.optional(v.string()),
   }).index('by_email_scope', ['email', 'scope']),
 
+  auditLogs: defineTable({
+    action: v.string(),
+    actorEmail: v.string(),
+    actorName: v.optional(v.string()),
+    actorRole: v.optional(v.union(v.literal('user'), v.literal('admin'), v.literal('rescuer'), v.literal('domestic_approver'))),
+    targetType: v.optional(v.string()),
+    targetId: v.optional(v.string()),
+    details: v.optional(v.string()),
+    metadata: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index('by_created_at', ['createdAt']),
+
   reports: defineTable({
     userEmail: v.string(),
     category: v.union(v.literal('wildlife'), v.literal('domestic')),
