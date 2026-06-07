@@ -60,7 +60,7 @@ export const alertAdmin = internalAction({
         from: `"${config.fromName}" <${config.fromAddress}>`,
         to: adminEmails,
 
-        subject: 'PWRRC Wildlife Report Alert',
+        subject: 'PWRCC Wildlife Report Alert',
 
         text: `
 New Wildlife Report Submitted
@@ -69,6 +69,7 @@ Animal: ${args.species}
 Location: ${args.location}
 
 Please check now.
+https://res-q-bridge-omega.vercel.app/
 `,
 
         html: `
