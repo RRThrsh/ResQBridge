@@ -52,7 +52,7 @@ export const alertAdmin = internalAction({
       // HARDCODED ADMIN EMAIL
       // Replace this string with the actual admin email you want to use.
       // You can add more emails to the array if needed: ['admin1@email.com', 'admin2@email.com']
-      const adminEmails = ['admin@example.com'] 
+      const adminEmails = ['dwarms.official@gmail.com'] 
 
       console.log('ADMIN EMAILS:', adminEmails)
 
