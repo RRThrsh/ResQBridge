@@ -131,7 +131,7 @@ export const addApprover = mutation({
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email)
 
-    console.log('ADD APPROVER ARGS:', args)
+    console.log('ADD APPROVER:', args)
 
     const existing = await ctx.db
       .query('users')
