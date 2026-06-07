@@ -67,11 +67,7 @@ export function AdminDashboard() {
         { label: 'Wildlife reports', value: summary.wildlifeReports, icon: Leaf },
         { label: 'Domestic reports', value: summary.domesticReports, icon: PawPrint },
         { label: 'Rescuers', value: summary.totalRescuers, icon: Truck },
-        { label: 'With photos', value: summary.reportsWithPhotos, icon: FileText },
-        { label: 'With GPS', value: summary.reportsWithGps, icon: MapPin },
-        { label: 'Wildlife species', value: wildlife.length, icon: Leaf },
-        { label: 'News articles', value: newsCount, icon: Newspaper },
-        { label: 'Events', value: eventCount, icon: Newspaper },
+
       ]
     : []
 
