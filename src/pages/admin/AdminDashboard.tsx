@@ -6,8 +6,6 @@ import {
   FileText,
   Leaf,
   Loader2,
-  MapPin,
-  Newspaper,
   PawPrint,
   Shield,
   Truck,
@@ -52,8 +50,7 @@ export function AdminDashboard() {
     )
   }
 
-  const eventCount = news.filter((item) => item.type === 'event').length
-  const newsCount = news.filter((item) => item.type === 'news').length
+
   const summary = analytics?.summary
 
   const cards = summary
