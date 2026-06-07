@@ -70,7 +70,7 @@ export function ReportPage({ onLoginRequest }: { onLoginRequest: () => void }) {
             >
               <CardContent className="p-10 flex flex-col items-center text-center h-full">
                 <div className="w-20 h-20 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
-                  <PawPrint className="w-10 h-10 text-primary" />
+                  <Shield className="w-10 h-10 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
                   {t('reportPage.wildlifeCardTitle')}
@@ -93,7 +93,7 @@ export function ReportPage({ onLoginRequest }: { onLoginRequest: () => void }) {
             >
               <CardContent className="p-10 flex flex-col items-center text-center h-full">
                 <div className="w-20 h-20 rounded-3xl bg-muted border border-border flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
-                  <HelpCircle className="w-10 h-10 text-foreground" />
+                  <PawPrint className="w-10 h-10 text-foreground" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
                   {t('reportPage.domesticCardTitle')}
