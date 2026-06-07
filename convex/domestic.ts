@@ -145,7 +145,6 @@ await ctx.db.insert('users', {
   role: 'domestic_approver',
   contactPhone: args.contactPhone.trim(),
   createdAt: Date.now(),
-  activeSessionId: undefined,
 })
   },
 })
