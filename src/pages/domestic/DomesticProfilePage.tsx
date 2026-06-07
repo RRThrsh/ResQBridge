@@ -1,3 +1,5 @@
+import { useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import React, { useState } from 'react'
 
 import {
@@ -27,7 +29,10 @@ import { ThemeSetting } from '@/components/theme/ThemeSetting'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 
 export function DomesticProfilePage() {
-  const { domesticApprover } = useDomesticAuth()
+  const {
+  domesticApprover,
+  updateApprover,
+} = useDomesticAuth()
 
   const [isEditing, setIsEditing] = useState(false)
 
@@ -46,6 +51,13 @@ const [password, setPassword] = useState('')
 
 const [confirmPassword, setConfirmPassword] = useState('')
   const [saving, setSaving] = useState(false)
+  const updateApproverMutation = useMutation(
+  api.domestic.updateApprover,
+)
+
+const resetDomesticPassword = useMutation(
+  api.domestic.resetDomesticPassword,
+)
 
   if (!domesticApprover) {
     return (
@@ -81,22 +93,52 @@ async function handleSave(e: React.FormEvent) {
   e.preventDefault()
 
   const isValidPhone =
-  /^09\d{9}$/.test(contactPhone)
+    /^09\d{9}$/.test(contactPhone)
 
-if (!isValidPhone) {
-  return
-}
+  if (!isValidPhone) {
+    return
+  }
 
-{password && password.length < 8 ? (
-  <p className="mt-1 text-xs text-red-500">
-    Password must be at least 8 characters.
-  </p>
-) : null}
+  if (
+    password &&
+    password !== confirmPassword
+  ) {
+    return
+  }
+
+  if (
+    password &&
+    password.length < 8
+  ) {
+    return
+  }
 
   setSaving(true)
 
   try {
-    // backend update later
+    await updateApproverMutation({
+      adminEmail: domesticApprover!.email,
+targetEmail: domesticApprover!.email,
+      firstName,
+      lastName,
+      contactPhone,
+    })
+
+    if (password) {
+      await resetDomesticPassword({
+        email: domesticApprover!.email,
+        newPassword: password,
+      })
+    }
+
+    updateApprover({
+      firstName,
+      lastName,
+      contactPhone,
+    })
+
+    setPassword('')
+    setConfirmPassword('')  
 
     setIsEditing(false)
   } finally {
