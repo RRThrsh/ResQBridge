@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useMutation } from 'convex/react'
-import { Calendar, Loader2, MapPin, Search, User, Phone, Bird, PawPrint } from 'lucide-react'
+import { Loader2, MapPin, Search, User, Phone, Bird, PawPrint } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { AdminAssignRescuerPanel } from '@/components/admin/AdminAssignRescuerPanel'
