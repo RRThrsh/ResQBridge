@@ -543,7 +543,7 @@ export const en: Dict = {
 
 export const fil: Dict = {
   // Navbar
-  'nav.home': 'Bahay',
+  'nav.home': 'Home',
   'nav.domestic': 'Domestic',
   'nav.map': 'Mapa',
   'nav.news': 'Balita',
@@ -624,7 +624,7 @@ export const fil: Dict = {
   'section.faq': 'Mga Madalas Itanong',
 
   // Wildlife Guide
-  'wildlife.breadcrumbHome': 'Bahay',
+  'wildlife.breadcrumbHome': 'Home',
   'wildlife.breadcrumbCurrent': 'Gabay sa Wildlife',
   'wildlife.eyebrow': 'Ensayklopedya ng Wildlife sa Palawan',
   'wildlife.title': 'Gabay sa Wildlife',
@@ -677,7 +677,7 @@ export const fil: Dict = {
   'safetyGuide.tip6Desc': 'Ihigpit ang mga alagang hayop upang maiwasan ang mapanganib na engkwentro sa wildlife.',
 
   // Report Page
-  'reportPage.breadcrumbHome': 'Bahay',
+  'reportPage.breadcrumbHome': 'Home',
   'reportPage.breadcrumbCurrent': 'Ulat',
   'reportPage.eyebrow': 'Mga Emergency at Sighting Report',
   'reportPage.title': 'Ano ang iyong irereport?',
@@ -895,10 +895,10 @@ export const fil: Dict = {
   'reportSuccess.status': 'Katayuan',
   'reportSuccess.underReview': 'Sinusuri',
   'reportSuccess.viewReports': 'Tingnan ang Aking mga Ulat',
-  'reportSuccess.returnHome': 'Bumalik sa Bahay',
+  'reportSuccess.returnHome': 'Bumalik sa Home',
 
   // My Reports
-  'myReports.breadcrumbHome': 'Bahay',
+  'myReports.breadcrumbHome': 'Home',
   'myReports.breadcrumbCurrent': 'Aking mga Ulat',
   'myReports.title': 'Aking mga Ulat',
   'myReports.desc': 'Subaybayan ang katayuan ng wildlife at domestic animal reports na iyong isinumite.',
@@ -907,7 +907,7 @@ export const fil: Dict = {
   'myReports.submitLink': 'Magsumite ng ulat',
 
   // Account Page
-  'account.breadcrumbHome': 'Bahay',
+  'account.breadcrumbHome': 'Home',
   'account.breadcrumbCurrent': 'Account',
   'account.title': 'Aking Account',
   'account.editDesc': 'I-update ang iyong pangalan sa ibaba. Ang iyong contact info ay ginagamit para sa sign-in at hindi maaaring baguhin dito.',
@@ -942,21 +942,21 @@ export const fil: Dict = {
   // NotFound
   'notFound.title': 'Hindi Natagpuan ang Pahina',
   'notFound.desc': 'Ang pahinang iyong hinahanap ay maaaring natanggal, nagbago ang pangalan, o pansamantalang hindi available.',
-  'notFound.returnHome': 'Bumalik sa Bahay',
+  'notFound.returnHome': 'Bumalik sa Home',
 
   // ErrorPage
   'errorPage.title401': 'Hindi Awtorisado',
   'errorPage.message401': 'Ang iyong session ay nag-expire o wala kang pahintulot upang ma-access ang pahinang ito. Mangyaring mag-sign in muli.',
   'errorPage.title429': 'Masyadong Maraming Request',
   'errorPage.message429': 'Nagpadala ka ng masyadong maraming request sa maikling panahon. Mangyaring maghintay bago subukan muli.',
-  'errorPage.returnHome': 'Bumalik sa Bahay',
+  'errorPage.returnHome': 'Bumalik sa Home',
 
   // TooManyRequest
   'tooMany.title': 'Masyadong Maraming Request',
   'tooMany.desc': 'Nagpadala ka ng masyadong maraming request sa maikling panahon. Mangyaring maghintay bago subukan muli.',
   'tooMany.retryLabel': 'Subukan muli sa',
   'tooMany.ready': 'Maaari ka nang sumubok muli.',
-  'tooMany.returnHome': 'Bumalik sa Bahay',
+  'tooMany.returnHome': 'Bumalik sa Home',
 
   // Map Section
   'map.eyebrow': 'Hanapin Kami',
@@ -964,7 +964,7 @@ export const fil: Dict = {
   'map.desc': 'Hanapin ang Palawan Wildlife Rescue and Conservation Center sa Puerto Princesa City.',
   'map.address': 'Address',
   'map.operatingHours': 'Oras ng Operasyon',
-  'map.contact': 'Kontak',
+  'map.contact': 'Contact',
   'map.inKindDonations': 'In-Kind Donations',
   'map.donationsValue': 'Ang mga sariwang prutas, gulay, vet supplies at pang-araw-araw na pangangailangan ay tinatanggap.',
   'map.distanceTitle': 'Distansya mula sa Iyo',
@@ -1058,7 +1058,7 @@ export const fil: Dict = {
   'general.noResults': 'Walang nakitang resulta.',
   'general.viewAll': 'Tingnan Lahat',
   'general.saveChanges': 'I-save ang mga pagbabago',
-  'general.returnHome': 'Bumalik sa Bahay',
+  'general.returnHome': 'Bumalik sa Home',
 
   // Logout confirm
   'logout.title': 'Mag-logout?',
