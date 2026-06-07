@@ -238,6 +238,13 @@ export function DomesticReportForm() {
       toast.error(t('reportFormWildlife.errorRequiredFields'))
       return
     }
+
+    // NEW FIX: Require the user to drop a pin on the map
+    if (!coords) {
+      toast.error(t('reportFormDomestic.errorMapPinRequired') || 'Please drop a pin on the map to provide an exact location.')
+      return
+    }
+
     const photoError = validateReportPhotosForSubmit(photos)
     if (photoError) {
       toast.error(photoError)
@@ -289,8 +296,8 @@ export function DomesticReportForm() {
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
         photoStorageIds: photoStorageIdsForSubmit(photos),
-        latitude: coords?.lat,
-        longitude: coords?.lng,
+        latitude: coords.lat,
+        longitude: coords.lng,
       })
       navigate('/report/success')
     } catch {
@@ -605,11 +612,9 @@ export function DomesticReportForm() {
               </div>
               <Input
                 value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
+                readOnly
                 placeholder={t('reportFormDomestic.locationPlaceholder')}
-                className="pl-10 h-12 bg-background border-border rounded-xl pr-3"
+                className="pl-10 h-12 bg-background border-border rounded-xl pr-3 cursor-not-allowed opacity-80"
                 required
               />
             </div>
