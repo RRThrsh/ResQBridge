@@ -1,5 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import { ChevronRight, MapPin } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog'
 import { RescuerStatusBadge } from '@/components/rescuer/RescuerStatusBadge'
 import { formatDate } from '@/lib/dates'
 import { statusLabel } from '@/lib/reports'
@@ -13,6 +18,7 @@ type Props = {
 export function DomesticReportCard({ report, variant = 'default' }: Props) {
   const isCompact = variant === 'compact'
   const rawData = report as any
+  const [openImage, setOpenImage] = useState(false)
 
   // ---------------------------------------------------------
   // 1. EXACT SAME PHOTO LOGIC AS THE DETAIL PAGE
@@ -33,7 +39,8 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
   // Calculate how many EXTRA photos there are for the +2 badge
   const extraPhotos = allPhotos.length > 1 ? allPhotos.length - 1 : 0
 
-  return (
+return (
+  <>
     <Link
       to={`/pwrcc/domestic/reports/${rawData._id}`}
       className={cn(
@@ -52,7 +59,12 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
             <img
               src={finalPhotoUrl}
               alt={rawData.animalName || 'Report photo'}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="h-full w-full cursor-pointer object-cover transition-transform duration-300 group-hover:scale-105"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setOpenImage(true)
+              }}
             />
             {extraPhotos > 0 ? (
               <span className="absolute bottom-1 right-1 rounded-md bg-background/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground">
@@ -77,23 +89,23 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
           ) : null}
         </div>
 
-<h3
-  className={cn(
-    'truncate font-semibold text-foreground',
-    isCompact ? 'text-sm' : 'text-base sm:text-lg',
-  )}
-  style={{ fontFamily: 'var(--font-heading)' }}
->
-  {rawData.type === 'missing'
-    ? 'Missing Pet'
-    : rawData.type === 'found'
-    ? 'Found Animal'
-    : rawData.type === 'stray'
-    ? 'Stray Animal'
-    : rawData.type === 'injured'
-    ? 'Injured Animal'
-    : 'Domestic Report'}
-</h3>
+        <h3
+          className={cn(
+            'truncate font-semibold text-foreground',
+            isCompact ? 'text-sm' : 'text-base sm:text-lg',
+          )}
+          style={{ fontFamily: 'var(--font-heading)' }}
+        >
+          {rawData.type === 'missing'
+            ? 'Missing Pet'
+            : rawData.type === 'found'
+            ? 'Found Animal'
+            : rawData.type === 'stray'
+            ? 'Stray Animal'
+            : rawData.type === 'injured'
+            ? 'Injured Animal'
+            : 'Domestic Report'}
+        </h3>
 
         <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="h-3 w-3 shrink-0" />
@@ -108,8 +120,24 @@ if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
           {statusLabel(rawData.status)}
         </p>
       </div>
+      
 
       <ChevronRight className="h-5 w-5 shrink-0 self-center text-muted-foreground/50 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
     </Link>
+        <Dialog
+      open={openImage}
+      onOpenChange={setOpenImage}
+    >
+      <DialogContent className="w-full max-w-6xl border-none bg-transparent p-0 shadow-none">
+        <div className="flex items-center justify-center">
+          <img
+            src={finalPhotoUrl || ''}
+            alt="Expanded report"
+            className="max-h-[90vh] max-w-full rounded-xl object-contain"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
