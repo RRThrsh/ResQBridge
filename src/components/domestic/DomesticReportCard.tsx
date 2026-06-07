@@ -128,14 +128,14 @@ return (
       open={openImage}
       onOpenChange={setOpenImage}
     >
-      <DialogContent className="w-full max-w-6xl border-none bg-transparent p-0 shadow-none">
-        <div className="flex items-center justify-center">
-          <img
-            src={finalPhotoUrl || ''}
-            alt="Expanded report"
-            className="max-h-[90vh] max-w-full rounded-xl object-contain"
-          />
-        </div>
+      <DialogContent className="flex h-screen w-screen items-center justify-center border-none bg-black/95 p-2 shadow-none">
+<div className="flex h-full w-full items-center justify-center">
+  <img
+    src={finalPhotoUrl || ''}
+    alt="Expanded report"
+    className="h-auto w-auto max-h-[90vh] max-w-[95vw] rounded-xl object-contain"
+  />
+</div>
       </DialogContent>
     </Dialog>
     </>
