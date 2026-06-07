@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation } from 'convex/react'
-import { Calendar, Loader2, MapPin } from 'lucide-react'
+import { Calendar, Loader2, MapPin, Search, User, Phone, Bird, PawPrint } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { AdminAssignRescuerPanel } from '@/components/admin/AdminAssignRescuerPanel'
@@ -36,6 +36,7 @@ import {
 import { formatDateTime } from '@/lib/dates'
 import { normalizeEmail } from '@/lib/admin'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 type DialogMode = 'view' | 'edit'
 
@@ -61,10 +62,17 @@ export function AdminReportDialog({
   const [saving, setSaving] = useState(false)
   const [assignRescuerEmail, setAssignRescuerEmail] = useState('')
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [mainPhotoIdx, setMainPhotoIdx] = useState(0)
 
-if (!open && previewImage) {
-  setPreviewImage(null)
-}
+  // Reset gallery view when report changes
+  useEffect(() => {
+    setMainPhotoIdx(0)
+  }, [report?.id])
+
+  if (!open && previewImage) {
+    setPreviewImage(null)
+  }
+
   const [draft, setDraft] = useState({
     animalName: '',
     location: '',
@@ -138,301 +146,283 @@ if (!open && previewImage) {
     }
   }
 
+  const CategoryIcon = activeReport.category === 'domestic' ? PawPrint : Bird
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      
-                {previewImage && (
-                  <div
-                    className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/90"
-                    onClick={() => setPreviewImage(null)}
-                  >
-                    {/* IMAGE WRAPPER */}
-                    <div
-                      className="relative flex items-center justify-center"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* CLOSE BUTTON */}
-                      <button
-                        type="button"
-                        onClick={() => setPreviewImage(null)}
-                        className="absolute -top-4 -right-4 z-[999999] flex h-10 w-10 items-center justify-center rounded-full bg-white text-3xl font-bold text-black shadow-lg"
-                      >
-                        ×
-                      </button>
+      {/* FULLSCREEN IMAGE PREVIEW */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/95 backdrop-blur-sm"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative flex items-center justify-center p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewImage(null)}
+              className="absolute -right-2 -top-12 z-[999999] flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-2xl font-bold text-white shadow-lg transition hover:bg-zinc-700 sm:-right-12 sm:-top-4"
+            >
+              ×
+            </button>
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
 
-                      {/* IMAGE */}
-                      <img
-                        src={previewImage}
-                        alt="Preview"
-                        className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain"
-                      />
-                    </div>
-                  </div>
-                )}
-<DialogContent
-  className="
-    w-[95vw]
-    max-w-5xl
-    max-h-[92vh]
-    overflow-y-auto
-    rounded-2xl
-    bg-background
-    text-foreground
-    dark:bg-zinc-950
-    dark:text-white
-    dark:border-zinc-800
-    p-4
-    sm:p-6
-  "
->
-        <DialogHeader>
-          <DialogTitle>{isView ? 'View report' : 'Edit report'}</DialogTitle>
-          <DialogDescription>
-            {activeReport.reportNumber ?? activeReport.id} · {activeReport.animalName} ·{' '}
-            {formatReporterName(activeReport.reporterFirstName, activeReport.reporterLastName)}
-          </DialogDescription>
+      <DialogContent
+        className="
+          flex w-[95vw] max-w-2xl max-h-[92vh] flex-col overflow-hidden
+          rounded-2xl border border-border/20 bg-[#0a0a0a] p-0 text-foreground
+          shadow-2xl sm:w-full
+        "
+      >
+        <DialogHeader className="shrink-0 border-b border-border/10 bg-[#0a0a0a]/80 px-6 py-5 backdrop-blur-md">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+            PWRCC Report
+          </p>
+          <DialogTitle className="text-xl font-medium tracking-tight">
+            {activeReport.reportNumber ?? activeReport.id}
+          </DialogTitle>
+          {!isView && (
+            <DialogDescription className="text-sm text-muted-foreground mt-1">
+              Editing report details
+            </DialogDescription>
+          )}
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="capitalize">
-              {activeReport.category}
-            </Badge>
-            <Badge variant="outline">{formatReportType(activeReport.type)}</Badge>
-            <Badge variant="default">{statusLabel(activeReport.status)}</Badge>
-          </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-8 sm:px-8">
+          
+          {/* TOP STATUS BADGE */}
+          {isView && (
+            <div className="mb-10 flex flex-col items-center justify-center gap-3">
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span>
+                {statusLabel(activeReport.status)}
+              </span>
+              <p className="text-xs text-muted-foreground font-mono">
+                {activeReport.reportNumber ?? activeReport.id}
+              </p>
+            </div>
+          )}
 
-          {activeReport.assignedRescuerName ? (
-            <p className="text-sm text-muted-foreground">
-              Assigned to:{' '}
-              <span className="font-medium text-foreground">{activeReport.assignedRescuerName}</span>
-            </p>
-          ) : showAssign ? (
-            <p className="text-sm text-amber-600 dark:text-amber-400">No rescuer assigned yet.</p>
-          ) : null}
+          {/* EDIT MODE TOGGLES */}
+          {!isView && (
+            <div className="mb-8 flex flex-wrap gap-2">
+              <Badge variant="outline" className="capitalize bg-background/50 border-border/20">
+                {activeReport.category}
+              </Badge>
+              <Badge variant="outline" className="bg-background/50 border-border/20">
+                {formatReportType(activeReport.type)}
+              </Badge>
+            </div>
+          )}
 
+          {/* ASSIGNMENT PANEL */}
           {showAssign ? (
-            <AdminAssignRescuerPanel
-              report={activeReport}
-              adminEmail={adminEmail}
-              rescuerEmail={assignRescuerEmail}
-              onRescuerEmailChange={setAssignRescuerEmail}
-              onAssigned={() => onOpenChange(false)}
-            />
-          ) : null}
-
-          {activeReport.photoDataUrls.length > 0 ? (
-            <div className="space-y-2">
-              <div className="grid grid-cols-1 gap-4 place-items-center">
-                {activeReport.photoDataUrls.map((photo, index) => (
-<div className="flex justify-center">
-  <img
-    key={`${index}-${photo.slice(0, 16)}`}
-    src={photo}
-    alt={`${activeReport.animalName} ${index + 1}`}
-    onClick={() => setPreviewImage(photo)}
-className="
-  w-full
-  max-w-2xl
-  max-h-[520px]
-  rounded-xl
-  border
-  border-border
-  object-cover
-  bg-muted
-  cursor-pointer
-  transition
-  hover:opacity-80
-"
-  />
-</div>
-                ))}
-              </div>
-
+            <div className="mb-8">
+              <AdminAssignRescuerPanel
+                report={activeReport}
+                adminEmail={adminEmail}
+                rescuerEmail={assignRescuerEmail}
+                onRescuerEmailChange={setAssignRescuerEmail}
+                onAssigned={() => onOpenChange(false)}
+              />
+            </div>
+          ) : activeReport.assignedRescuerName ? (
+            <div className="mb-8 rounded-xl border border-border/10 bg-zinc-900/40 p-4 text-sm">
+              <span className="text-muted-foreground">Assigned to: </span>
+              <span className="font-medium text-foreground">{activeReport.assignedRescuerName}</span>
             </div>
           ) : null}
 
-{isView ? (
-  <dl className="grid gap-4 text-sm">
+          {/* IMAGE GALLERY */}
+          {activeReport.photoDataUrls.length > 0 ? (
+            <div className="mb-10 flex flex-col items-center">
+              <div 
+                className="relative flex w-full max-w-lg cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-zinc-950/80 aspect-[4/3] group"
+                onClick={() => setPreviewImage(activeReport.photoDataUrls[mainPhotoIdx])}
+              >
+                <span className="absolute right-3 top-3 z-10 rounded-full bg-black/80 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">
+                  {activeReport.photoDataUrls.length} photo{activeReport.photoDataUrls.length !== 1 && 's'}
+                </span>
+                <img
+                  src={activeReport.photoDataUrls[mainPhotoIdx]}
+                  alt={`${activeReport.animalName} main view`}
+                  className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeReport.photoDataUrls.length > 1 && (
+                <div className="mt-4 flex max-w-lg w-full gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                  {activeReport.photoDataUrls.map((photo, index) => (
+                    <button
+                      key={`${index}-${photo.slice(0, 16)}`}
+                      onClick={() => setMainPhotoIdx(index)}
+                      className={cn(
+                        "relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200",
+                        mainPhotoIdx === index 
+                          ? "border-primary opacity-100 ring-2 ring-primary/20 ring-offset-2 ring-offset-[#0a0a0a]" 
+                          : "border-transparent opacity-40 hover:opacity-100"
+                      )}
+                    >
+                      <img src={photo} alt={`Thumbnail ${index + 1}`} className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Search className="h-3.5 w-3.5" /> 
+                Tap to expand {activeReport.photoDataUrls.length > 1 && '· swipe between photos'}
+              </p>
+            </div>
+          ) : null}
 
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Species
-        </dt>
-        <dd className="font-medium">
-          {activeReport.speciesId ?? 'N/A'}
-        </dd>
-      </div>
+          {/* DETAILS VIEW OR EDIT FORM */}
+          {isView ? (
+            <div className="space-y-8">
+              
+              {/* WILDLIFE / DOMESTIC DETAILS */}
+              <section>
+                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                  <CategoryIcon className="h-3.5 w-3.5" />
+                  <span>{activeReport.category === 'domestic' ? 'Domestic Details' : 'Wildlife Details'}</span>
+                </div>
+                <div className="rounded-2xl border border-border/10 bg-zinc-900/30 p-5 space-y-5">
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div>
+                      <div className="mb-1 text-xs text-muted-foreground">Reported Animal</div>
+                      <div className="font-serif text-lg text-foreground font-medium tracking-wide">
+                        {activeReport.animalName || activeReport.speciesId || 'N/A'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-xs text-muted-foreground">Date & time seen</div>
+                      <div className="font-medium text-foreground">
+                        {formatDateTime(activeReport.seenAt ?? activeReport.createdAt)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-xs text-muted-foreground">Quantity</div>
+                      <div className="font-medium text-foreground">{activeReport.quantity ?? 1}</div>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-xs text-muted-foreground">Size</div>
+                      <div className="font-medium capitalize text-foreground">{activeReport.reportedSize ?? 'N/A'}</div>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <div className="mb-1 text-xs text-muted-foreground">Condition / behavior</div>
+                      <div className="font-medium text-primary bg-primary/10 inline-flex px-2 py-0.5 rounded text-sm capitalize">
+                        {activeReport.condition || activeReport.behavior || 'N/A'}
+                      </div>
+                    </div>
+                  </div>
 
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Report Type
-        </dt>
-        <dd className="capitalize">
-          {activeReport.type}
-        </dd>
-      </div>
+                  {activeReport.description && (
+                    <div className="pt-2 border-t border-border/10">
+                      <div className="mb-1 text-xs text-muted-foreground">Additional Details</div>
+                      <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                        {activeReport.description}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
 
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Reporter
-        </dt>
-        <dd className="font-medium">
-          {formatReporterName(
-            activeReport.reporterFirstName,
-            activeReport.reporterLastName,
-          )}
-        </dd>
-      </div>
+              {/* LOCATION */}
+              <section>
+                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>Location</span>
+                </div>
+                <div className="rounded-2xl border border-border/10 bg-zinc-900/30 p-5">
+                  <div className="mb-2 text-xs text-muted-foreground">Address / Landmark</div>
+                  <div className="text-sm font-medium leading-relaxed text-foreground">
+                    {activeReport.location}
+                  </div>
+                </div>
+              </section>
 
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Contact
-        </dt>
-        <dd>
-          {activeReport.reporterPhone ?? 'N/A'}
-        </dd>
-      </div>
+              {/* REPORTER */}
+              <section>
+                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                  <User className="h-3.5 w-3.5" />
+                  <span>Reporter</span>
+                </div>
+                <div className="rounded-2xl border border-border/10 bg-zinc-900/30 p-5">
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div>
+                      <div className="mb-1 text-xs text-muted-foreground">Name</div>
+                      <div className="font-medium text-foreground">
+                        {formatReporterName(activeReport.reporterFirstName, activeReport.reporterLastName)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-xs text-muted-foreground">Contact</div>
+                      <div className="inline-flex items-center gap-2 font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-md">
+                        {activeReport.reporterPhone ?? 'N/A'}
+                        {activeReport.reporterPhone && <Phone className="h-3 w-3" />}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Quantity
-        </dt>
-        <dd>
-          {activeReport.quantity ?? 1}
-        </dd>
-      </div>
-
-<div>
-  <dt className="text-xs text-muted-foreground">
-    Size
-  </dt>
-  <dd className="capitalize">
-    {activeReport.reportedSize ?? 'N/A'}
-  </dd>
-</div>
-
-<div>
-  <dt className="text-xs text-muted-foreground">
-    Condition
-  </dt>
-  <dd className="capitalize">
-    {activeReport.condition ?? 'N/A'}
-  </dd>
-</div>
-
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Color / Markings
-        </dt>
-        <dd>
-          {activeReport.color ?? 'N/A'}
-        </dd>
-      </div>
-
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Behavior / Severity
-        </dt>
-        <dd className="capitalize">
-          {activeReport.behavior ?? 'N/A'}
-        </dd>
-      </div>
-
-    </div>
-
-    <div className="flex items-start gap-2">
-      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Location
-        </dt>
-
-        <dd>{activeReport.location}</dd>
-      </div>
-    </div>
-
-    {activeReport.condition ? (
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Injuries / Condition
-        </dt>
-
-        <dd className="whitespace-pre-wrap">
-          {activeReport.condition}
-        </dd>
-      </div>
-    ) : null}
-
-    {activeReport.description ? (
-      <div>
-        <dt className="text-xs text-muted-foreground">
-          Description
-        </dt>
-
-        <dd className="whitespace-pre-wrap text-muted-foreground">
-          {activeReport.description}
-        </dd>
-      </div>
-    ) : null}
-
-    <div className="flex items-center gap-2 text-muted-foreground">
-      <Calendar className="h-4 w-4" />
-
-      <dd>
-        {formatDateTime(activeReport.seenAt ?? activeReport.createdAt)}
-      </dd>
-    </div>
-
-  </dl>
-) : (
-            <div className="grid gap-3">
+            </div>
+          ) : (
+            // EDIT FORM
+            <div className="grid gap-5 rounded-2xl border border-border/10 bg-zinc-900/30 p-5">
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Animal name</label>
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Animal name</label>
                 <Input
-  className="border-border bg-background text-foreground placeholder:text-muted-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
+                  className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                  value={draft.animalName}
                   onChange={(e) => setDraft((d) => ({ ...d, animalName: e.target.value }))}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Location</label>
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Location</label>
                 <Input
-  className="border-border bg-background text-foreground placeholder:text-muted-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
+                  className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
                   value={draft.location}
                   onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Description</label>
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Description</label>
                 <Textarea
-  className="border-border bg-background text-foreground placeholder:text-muted-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
+                  className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary resize-none"
                   value={draft.description}
                   onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
-                  rows={3}
+                  rows={4}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Reporter phone</label>
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reporter phone</label>
                 <Input
-  className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700 placeholder:text-zinc-400"
+                  className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
                   value={draft.reporterPhone}
                   onChange={(e) => setDraft((d) => ({ ...d, reporterPhone: e.target.value }))}
                 />
               </div>
+
               {activeReport.category === 'domestic' ? (
                 <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">Report type</label>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Report type</label>
                   <Select
                     value={draft.type}
                     onValueChange={(value) => value && setDraft((d) => ({ ...d, type: value }))}
                   >
-                    <SelectTrigger className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700">
+                    <SelectTrigger className="border-border/20 bg-background/50">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700">
+                    <SelectContent className="border-border/20 bg-background">
                       {DOMESTIC_REPORT_TYPES.map((item) => (
                         <SelectItem key={item.value} value={item.value}>
                           {item.label}
@@ -442,17 +432,17 @@ className="
                   </Select>
                 </div>
               ) : (
-                <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">Behavior</label>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Behavior</label>
                     <Select
                       value={draft.behavior || ''}
                       onValueChange={(value) => value && setDraft((d) => ({ ...d, behavior: value }))}
                     >
-                      <SelectTrigger className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700">
+                      <SelectTrigger className="border-border/20 bg-background/50">
                         <SelectValue placeholder="Select behavior" />
                       </SelectTrigger>
-                      <SelectContent className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700">
+                      <SelectContent className="border-border/20 bg-background">
                         {WILDLIFE_BEHAVIORS.map((item) => (
                           <SelectItem key={item.value} value={item.value}>
                             {item.label}
@@ -462,15 +452,15 @@ className="
                     </Select>
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">Condition</label>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Condition</label>
                     <Select
                       value={draft.condition || ''}
                       onValueChange={(value) => value && setDraft((d) => ({ ...d, condition: value }))}
                     >
-                      <SelectTrigger className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700">
+                      <SelectTrigger className="border-border/20 bg-background/50">
                         <SelectValue placeholder="Select condition" />
                       </SelectTrigger>
-                      <SelectContent className="border-border bg-background text-foreground dark:bg-zinc-900 dark:text-white dark:border-zinc-700">
+                      <SelectContent className="border-border/20 bg-background">
                         {WILDLIFE_CONDITIONS.map((item) => (
                           <SelectItem key={item.value} value={item.value}>
                             {item.label}
@@ -479,21 +469,29 @@ className="
                       </SelectContent>
                     </Select>
                   </div>
-                </>
+                </div>
               )}
             </div>
           )}
         </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            {isView ? 'Close' : 'Cancel'}
-          </Button>
-          {!isView ? (
-            <Button type="button" onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save changes'}
+        <DialogFooter className="shrink-0 border-t border-border/10 bg-[#0a0a0a]/90 px-6 py-4 backdrop-blur-md sm:justify-end">
+          <div className="flex w-full items-center justify-end gap-3 sm:w-auto">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="border-border/20 hover:bg-zinc-800"
+              onClick={() => onOpenChange(false)}
+            >
+              {isView ? 'Close' : 'Cancel'}
             </Button>
-          ) : null}
+            {!isView && (
+              <Button type="button" onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {saving ? 'Saving...' : 'Save changes'}
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
