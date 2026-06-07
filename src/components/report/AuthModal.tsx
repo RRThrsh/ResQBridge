@@ -1,1122 +1,549 @@
-import { useRef, useState, useEffect } from 'react';
-import {
-  Loader2,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Loader2, Eye, EyeOff, Mail, Smartphone } from 'lucide-react'
 
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import { useUserAuth } from '@/context/UserAuthContext';
-
-import { toast } from 'sonner';
+import { useUserAuth } from '@/context/UserAuthContext'
+import { toast } from 'sonner'
 
 import {
   sendOtp,
   verifyOtp,
-  resetUserPassword,
   type AuthMode,
-} from '@/lib/auth-api';
+} from '@/lib/auth-api'
 
 type Props = {
-  open: boolean;
-  onClose: () => void;
-};
+  open: boolean
+  onClose: () => void
+}
 
-const errMsg = (
-  err: unknown,
-  fallback: string,
-) =>
-  err instanceof Error
-    ? err.message
-    : fallback;
-
-export function AuthModal({
-  open,
-  onClose,
-}: Props) {
+export function AuthModal({ open, onClose }: Props) {
   return (
     <Dialog
       open={open}
-      onOpenChange={(isOpen) =>
-        !isOpen && onClose()
-      }
+      onOpenChange={(isOpen) => !isOpen && onClose()}
     >
-      <DialogContent className="sm:max-w-md gap-6 p-6">
-        {open && (
-          <AuthForm onClose={onClose} />
-        )}
+      <DialogContent className="sm:max-w-md gap-0 p-0 overflow-hidden">
+        {open && <AuthForm onClose={onClose} />}
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
-function AuthForm({
-  onClose,
-}: {
-  onClose: () => void;
-}) {
-  const { login } = useUserAuth();
+function errMsg(err: unknown, fallback: string) {
+  return err instanceof Error ? err.message : fallback
+}
 
-  // Core Auth State
-  const [mode, setMode] =
-    useState<AuthMode>('sign-in');
+function AuthForm({ onClose }: { onClose: () => void }) {
+  const { login } = useUserAuth()
 
-  const [step, setStep] = useState<
-    'details' | 'otp'
-  >('details');
+  const [mode, setMode] = useState<AuthMode>('sign-in')
+  const [step, setStep] = useState<'form' | 'otp'>('form')
+  const [identifier, setIdentifier] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [termsOpen, setTermsOpen] = useState(false)
+  const [privacyOpen, setPrivacyOpen] = useState(false)
+  const [code, setCode] = useState<string[]>(['', '', '', '', '', ''])
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  const [showPassword, setShowPassword] = useState(false)
 
-  const [firstName, setFirstName] =
-    useState('');
+  const submittingRef = useRef(false)
+  const codeInputsRef = useRef<(HTMLInputElement | null)[]>([])
 
-  const [lastName, setLastName] =
-    useState('');
+  const isEmailIdent = identifier.includes('@')
 
-  const [email, setEmail] =
-    useState('');
+  const identifierMasked = isEmailIdent
+    ? identifier.replace(/(.{3}).+@/, '$1***@')
+    : identifier.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2')
 
-  const [phone, setPhone] =
-    useState('');
+  const resetForm = useCallback(() => {
+    setStep('form')
+    setIdentifier('')
+    setFirstName('')
+    setLastName('')
+    setPassword('')
+    setConfirmPassword('')
+    setCode(['', '', '', '', '', ''])
+    setError(null)
+    setCountdown(0)
+    setShowPassword(false)
+  }, [])
 
-  const [password, setPassword] =
-    useState('');
-
-  const [
-    confirmPassword,
-    setConfirmPassword,
-  ] = useState('');
-const [termsOpen, setTermsOpen] =
-  useState(false)
-
-const [privacyOpen, setPrivacyOpen] =
-  useState(false)
-  const [code, setCode] = useState('');
-const [acceptedTerms, setAcceptedTerms] =
-  useState(false)
-const [error, setError] = useState<string | null>(null)
-  // UI State
-  const [loading, setLoading] =
-    useState(false);
-
-  const [countdown, setCountdown] =
-    useState(0);
-
-  const submittingRef = useRef(false);
-
-  // Forgot Password State
-  const [forgotMode, setForgotMode] =
-    useState(false);
-
-  const [forgotStep, setForgotStep] =
-    useState<
-      'identifier' | 'otp' | 'password'
-    >('identifier');
-
-  const [forgotOtp, setForgotOtp] =
-    useState('');
-
-  const [
-    forgotIdentifier,
-    setForgotIdentifier,
-  ] = useState('');
-
-  const [newPassword, setNewPassword] =
-    useState('');
-
-  // Show Password States
-  const [showPassword, setShowPassword] =
-    useState(false);
-
-  const [
-    showConfirmPassword,
-    setShowConfirmPassword,
-  ] = useState(false);
-
-  const [
-    showNewPassword,
-    setShowNewPassword,
-  ] = useState(false);
-
-  // Validation
-  const normalizedEmail = email
-    .trim()
-    .toLowerCase();
-
-  const emailValid =
-    normalizedEmail.includes('@');
-
-  const phoneValid =
-    phone.replace(/\D/g, '').length >= 10;
-
-  const passValid =
-    password.length >= 8;
-
-const signUpReady =
-  firstName.trim() &&
-  lastName.trim() &&
-  emailValid &&
-  phoneValid &&
-  passValid &&
-  password === confirmPassword &&
-  acceptedTerms;
-
-  const detailsReady =
-    mode === 'sign-up'
-      ? signUpReady
-      : emailValid && passValid;
-
-  const otpReady = code.length === 6;
+  const switchMode = useCallback(() => {
+    setMode((prev) => (prev === 'sign-in' ? 'sign-up' : 'sign-in'))
+    resetForm()
+  }, [resetForm])
 
   useEffect(() => {
-    if (countdown <= 0) return;
-
-    const timer = setInterval(() => {
-      setCountdown((c) => c - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [countdown]);
-
-  const switchMode = (
-    next: AuthMode,
-  ) => {
-    setMode(next);
-
-    setStep('details');
-    setCode('');
-    setCountdown(0);
-    setError(null);
-    setEmail('');
-    setPhone('');
-    setPassword('');
-    setConfirmPassword('');
-  };
-
-  const wrapLoad = async (
-    fn: () => Promise<unknown>,
-  ) => {
-    if (submittingRef.current) return;
-
-    submittingRef.current = true;
-
-    setLoading(true);
-
-    await fn();
-
-    submittingRef.current = false;
-
-    setLoading(false);
-  };
-
-  const handleSendCode = (
-    e?: React.FormEvent,
-  ) => {
-    if (e) e.preventDefault();
-    setError(null);
-
-    if (
-      mode === 'sign-up' &&
-      (!firstName.trim() ||
-        !lastName.trim())
-    ) {
-      return setError(
-        'Enter your full name',
-      );
+    if (step === 'otp' && countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => Math.max(prev - 1, 0))
+      }, 1000)
+      return () => clearInterval(timer)
     }
+  }, [step, countdown])
 
-    if (!emailValid) {
-      return setError(
-        'Enter a valid email',
-      );
-    }
-
-    if (
-      mode === 'sign-up' &&
-      !phoneValid
-    ) {
-      return setError(
-        'Enter a valid phone number',
-      );
-    }
-
-    if (!passValid) {
-      return setError(
-        'Password must be at least 8 characters',
-      );
-    }
-
-    if (
-      mode === 'sign-up' &&
-      password !== confirmPassword
-    ) {
-      return setError(
-        'Passwords do not match',
-      );
-    }
-
-    wrapLoad(async () => {
-      try {
-        await sendOtp({
-          mode,
-          identifier: normalizedEmail,
-          type: 'email',
-          password,
-
-          ...(mode === 'sign-up'
-            ? {
-                firstName:
-                  firstName.trim(),
-
-                lastName:
-                  lastName.trim(),
-
-                phone:
-                  phone.trim(),
-              }
-            : {}),
-        });
-
-        setEmail(normalizedEmail);
-
-        setCode('');
-        setStep('otp');
-
-        setCountdown(60);
-
-        setError(null);
-        toast.success(
-          `Code sent to ${normalizedEmail}`,
-        );
-      } catch (error) {
-        setError(
-          errMsg(
-            error,
-            'Could not send code',
-          ),
-        );
+  const handleOtpInput = useCallback(
+    (index: number, value: string) => {
+      if (value && !/^\d$/.test(value)) return
+      setCode((prev) => {
+        const next = [...prev]
+        next[index] = value
+        return next
+      })
+      if (value && index < 5) {
+        codeInputsRef.current[index + 1]?.focus()
       }
-    });
-  };
+    },
+    [],
+  )
 
-  const handleVerifyCode = (
-    e: React.FormEvent,
-  ) => {
-    e.preventDefault();
-
-    if (!otpReady) return;
-    setError(null);
-
-    wrapLoad(async () => {
-      try {
-        login(
-          await verifyOtp(
-            email,
-            code,
-            mode,
-            password,
-          ),
-        );
-
-        onClose();
-
-        toast.success(
-          mode === 'sign-up'
-            ? 'Account created'
-            : 'Signed in',
-        );
-      } catch (error) {
-        setError(
-          errMsg(error, 'Invalid code'),
-        );
+  const handleOtpKeyDown = useCallback(
+    (index: number, e: React.KeyboardEvent) => {
+      if (e.key === 'Backspace' && !code[index] && index > 0) {
+        codeInputsRef.current[index - 1]?.focus()
       }
-    });
-  };
+    },
+    [code],
+  )
 
-  const handleForgotFlow = (
-    action:
-      | 'send'
-      | 'verify'
-      | 'reset',
-    e: React.FormEvent,
-  ) => {
-    e.preventDefault();
-    setError(null);
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      e.preventDefault()
+      const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+      setCode(text.split(''))
+    },
+    [],
+  )
 
-    wrapLoad(async () => {
-      try {
-        if (action === 'send') {
-          if (!forgotIdentifier.trim()) {
-            return setError(
-              'Enter your email',
-            );
-          }
-
-          await sendOtp({
-            mode: 'sign-in',
-
-            identifier:
-              forgotIdentifier,
-
-            type: 'email',
-
-            password: 'reset-temp',
-          });
-
-          setForgotStep('otp');
-
-          setCountdown(60);
-
-          setError(null);
-          toast.success('OTP sent');
-        } else if (
-          action === 'verify'
-        ) {
-          await verifyOtp(
-            forgotIdentifier,
-            forgotOtp,
-            'sign-in',
-            'reset-temp',
-          );
-
-          setForgotStep('password');
-          setError(null);
-
-          toast.success(
-            'OTP verified',
-          );
-        } else if (
-          action === 'reset'
-        ) {
-          if (
-            newPassword.length < 8
-          ) {
-            return setError(
-              'Password must be at least 8 chars',
-            );
-          }
-
-          if (
-            newPassword !==
-            confirmPassword
-          ) {
-            return setError(
-              'Passwords do not match',
-            );
-          }
-
-          await resetUserPassword(
-            forgotIdentifier,
-            newPassword,
-          );
-
-          toast.success(
-            'Password reset successful',
-          );
-
-          setForgotMode(false);
-
-          setForgotIdentifier('');
-          setForgotOtp('');
-
-          setNewPassword('');
-          setConfirmPassword('');
-
-          setStep('details');
-        }
-      } catch (error) {
-        setError(
-          errMsg(error, 'Action failed'),
-        );
+  const handleSendOtp = useCallback(async () => {
+    if (submittingRef.current) return
+    const trimmed = identifier.trim().toLowerCase()
+    if (!trimmed) {
+      setError('Please enter your email or phone number.')
+      return
+    }
+    if (mode === 'sign-up') {
+      if (!firstName.trim() || !lastName.trim()) {
+        setError('Please enter your first and last name.')
+        return
       }
-    });
-  };
+      if (!password) {
+        setError('Please enter a password.')
+        return
+      }
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters.')
+        return
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.')
+        return
+      }
+      if (!acceptedTerms) {
+        setError('Please accept the terms and conditions.')
+        return
+      }
+    } else {
+      if (!password) {
+        setError('Please enter your password.')
+        return
+      }
+    }
+    submittingRef.current = true
+    setLoading(true)
+    setError(null)
+    try {
+      await sendOtp({
+        mode,
+        identifier: trimmed,
+        password,
+        firstName: mode === 'sign-up' ? firstName.trim() : undefined,
+        lastName: mode === 'sign-up' ? lastName.trim() : undefined,
+      })
+      setCountdown(120)
+      setStep('otp')
+    } catch (err) {
+      setError(errMsg(err, 'Failed to send verification code.'))
+    } finally {
+      setLoading(false)
+      submittingRef.current = false
+    }
+  }, [identifier, mode, firstName, lastName, password, confirmPassword, acceptedTerms])
+
+  const handleResendOtp = useCallback(async () => {
+    if (countdown > 0 || submittingRef.current) return
+    submittingRef.current = true
+    setLoading(true)
+    setError(null)
+    try {
+      await sendOtp({
+        mode,
+        identifier: identifier.trim().toLowerCase(),
+        password,
+        firstName: mode === 'sign-up' ? firstName.trim() : undefined,
+        lastName: mode === 'sign-up' ? lastName.trim() : undefined,
+      })
+      setCountdown(120)
+    } catch (err) {
+      setError(errMsg(err, 'Failed to resend verification code.'))
+    } finally {
+      setLoading(false)
+      submittingRef.current = false
+    }
+  }, [identifier, mode, password, firstName, lastName, countdown])
+
+  const handleVerifyOtp = useCallback(async () => {
+    if (submittingRef.current) return
+    const fullCode = code.join('')
+    if (fullCode.length !== 6) {
+      setError('Please enter the complete verification code.')
+      return
+    }
+    submittingRef.current = true
+    setLoading(true)
+    setError(null)
+    try {
+      const user = await verifyOtp(
+        identifier.trim().toLowerCase(),
+        fullCode,
+        mode,
+        mode === 'sign-up' ? password : undefined,
+      )
+      login(user)
+      toast.success(
+        mode === 'sign-up' ? 'Account created successfully!' : 'Signed in successfully!',
+      )
+      onClose()
+    } catch (err) {
+      setError(errMsg(err, 'Verification failed. Please try again.'))
+    } finally {
+      setLoading(false)
+      submittingRef.current = false
+    }
+  }, [code, identifier, mode, password, login, onClose])
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      if (step === 'otp') {
+        handleVerifyOtp()
+      } else {
+        handleSendOtp()
+      }
+    },
+    [step, handleSendOtp, handleVerifyOtp],
+  )
 
   return (
-    <>
-      <div className="space-y-1 text-center">
-        <DialogTitle
-          className="text-xl font-bold"
-          style={{
-            fontFamily:
-              'var(--font-heading)',
-          }}
-        >
-          {forgotMode
-            ? 'Reset Password'
-            : step === 'otp'
-              ? 'Enter verification code'
-              : mode === 'sign-up'
-                ? 'Create account'
-                : 'Welcome back'}
-        </DialogTitle>
+    <form onSubmit={handleSubmit} className="p-6">
+      <DialogTitle className="text-xl font-semibold mb-1">
+        {mode === 'sign-in' ? 'Sign In' : 'Create Account'}
+      </DialogTitle>
+      <DialogDescription className="text-sm text-muted-foreground mb-6">
+        {mode === 'sign-in'
+          ? 'Sign in to submit wildlife reports and track your rescues.'
+          : 'Create an account to help protect Palawan wildlife.'}
+      </DialogDescription>
 
-        <DialogDescription>
-          {forgotMode
-            ? 'Reset your password using OTP verification.'
-            : step === 'otp'
-              ? `6-digit code sent to ${email}`
-              : mode === 'sign-up'
-                ? 'Create an account to get started.'
-                : 'Sign in to your account.'}
-        </DialogDescription>
-      </div>
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-400">
+          {error}
+        </div>
+      )}
 
-      {forgotMode ? (
-        <form
-          onSubmit={(e) =>
-            handleForgotFlow(
-              forgotStep ===
-                'identifier'
-                ? 'send'
-                : forgotStep ===
-                    'otp'
-                  ? 'verify'
-                  : 'reset',
-              e,
-            )
-          }
-          className="space-y-4"
-        >
-          {forgotStep ===
-            'identifier' && (
-            <>
-              <Input
-                placeholder="Email"
-                value={
-                  forgotIdentifier
-                }
-                onChange={(e) =>
-                  setForgotIdentifier(
-                    e.target.value,
-                  )
-                }
-                required
-              />
-
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
-
-              <SubmitButton
-                loading={loading}
-                disabled={
-                  !forgotIdentifier
-                }
-              >
-                Send OTP
-              </SubmitButton>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setForgotMode(
-                    false,
-                  )
-                  setError(null)
-                }}
-                className="w-full text-sm text-muted-foreground hover:text-foreground"
-              >
-                Back to login
-              </button>
-            </>
-          )}
-
-          {forgotStep === 'otp' && (
-            <>
-              <Input
-                inputMode="numeric"
-                placeholder="000000"
-                maxLength={6}
-                value={forgotOtp}
-                onChange={(e) =>
-                  setForgotOtp(
-                    e.target.value.replace(
-                      /\D/g,
-                      '',
-                    ),
-                  )
-                }
-                className="h-12 text-center text-xl font-mono tracking-[0.35em]"
-              />
-
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
-
-              <SubmitButton
-                loading={loading}
-                disabled={
-                  forgotOtp.length !==
-                  6
-                }
-              >
-                Verify OTP
-              </SubmitButton>
-
-              <div className="flex flex-col items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    setError(null)
-                    handleForgotFlow(
-                      'send',
-                      e as unknown as React.FormEvent,
-                    )
-                  }}
-                  disabled={
-                    loading ||
-                    countdown > 0
-                  }
-                  className="text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"
-                >
-                  {countdown > 0
-                    ? `Resend code in ${countdown}s`
-                    : 'Resend code'}
-                </button>
-              </div>
-            </>
-          )}
-
-          {forgotStep ===
-            'password' && (
-            <>
-              <div className="relative">
-                <Input
-                  type={
-                    showNewPassword
-                      ? 'text'
-                      : 'password'
-                  }
-                  placeholder="New password"
-                  value={newPassword}
-                  onChange={(e) =>
-                    setNewPassword(
-                      e.target.value,
-                    )
-                  }
-                  className="pr-10"
-                  required
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowNewPassword(
-                      (
-                        prev,
-                      ) => !prev,
-                    )
-                  }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground opacity-80 hover:opacity-100 transition-colors z-10"
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-
-              <div className="relative">
-                <Input
-                  type={
-                    showConfirmPassword
-                      ? 'text'
-                      : 'password'
-                  }
-                  placeholder="Confirm password"
-                  value={
-                    confirmPassword
-                  }
-                  onChange={(e) =>
-                    setConfirmPassword(
-                      e.target.value,
-                    )
-                  }
-                  className="pr-10"
-                  required
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowConfirmPassword(
-                      (
-                        prev,
-                      ) => !prev,
-                    )
-                  }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground opacity-80 hover:opacity-100 transition-colors z-10"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
-
-              <SubmitButton
-                loading={loading}
-                disabled={
-                  !newPassword
-                }
-              >
-                Reset Password
-              </SubmitButton>
-            </>
-          )}
-        </form>
-      ) : step === 'details' ? (
-        <form
-          onSubmit={handleSendCode}
-          className="space-y-4"
-        >
+      {step === 'form' ? (
+        <div className="space-y-4">
           {mode === 'sign-up' && (
             <div className="grid grid-cols-2 gap-3">
-              <Input
-                placeholder="First name"
-                value={firstName}
-                onChange={(e) =>
-                  setFirstName(
-                    e.target.value,
-                  )
-                }
-                required
-              />
-
-              <Input
-                placeholder="Last name"
-                value={lastName}
-                onChange={(e) =>
-                  setLastName(
-                    e.target.value,
-                  )
-                }
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium mb-1.5">First Name</label>
+                <Input
+                  placeholder="Juan"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  disabled={loading}
+                  autoComplete="given-name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Last Name</label>
+                <Input
+                  placeholder="Dela Cruz"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  disabled={loading}
+                  autoComplete="family-name"
+                />
+              </div>
             </div>
           )}
 
-          <Input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
-            required
-          />
-
-          {mode === 'sign-up' && (
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Email or Phone</label>
             <Input
-              type="tel"
-              placeholder="Phone number"
-              value={phone}
-              onChange={(e) =>
-                setPhone(
-                  e.target.value.replace(
-                    /\D/g,
-                    '',
-                  ),
-                )
-              }
-              maxLength={11}
+              placeholder="e.g. email@example.com or 09123456789"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              disabled={loading}
+              autoComplete="username"
+              type="text"
             />
-          )}
-
-          <div className="relative">
-            <Input
-              type={
-                showPassword
-                  ? 'text'
-                  : 'password'
-              }
-              placeholder="Password"
-              value={password}
-              onChange={(e) =>
-                setPassword(
-                  e.target.value,
-                )
-              }
-              className="pr-10"
-              required
-            />
-
-            <button
-              type="button"
-              onClick={() =>
-                setShowPassword(
-                  (prev) => !prev,
-                )
-              }
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </button>
           </div>
 
-          {mode === 'sign-up' && (
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Password</label>
             <div className="relative">
               <Input
-                type={
-                  showConfirmPassword
-                    ? 'text'
-                    : 'password'
-                }
-                placeholder="Confirm password"
-                value={
-                  confirmPassword
-                }
-                onChange={(e) =>
-                  setConfirmPassword(
-                    e.target.value,
-                  )
-                }
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                type={showPassword ? 'text' : 'password'}
+                autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
                 className="pr-10"
-                required
               />
-
               <button
                 type="button"
-                onClick={() =>
-                  setShowConfirmPassword(
-                    (
-                      prev,
-                    ) => !prev,
-                  )
-                }
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
               >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
-          )}
+          </div>
 
           {mode === 'sign-up' && (
-            <div className="flex items-start gap-2 rounded-md border border-border p-3">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={acceptedTerms}
-                onChange={(e) =>
-                  setAcceptedTerms(
-                    e.target.checked,
-                  )
-                }
-                className="mt-1 h-4 w-4 rounded border-border"
-              />
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Confirm Password</label>
+                <Input
+                  placeholder="Re-enter your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={loading}
+                  type="password"
+                  autoComplete="new-password"
+                />
+              </div>
 
-              <label
-                htmlFor="terms"
-                className="text-xs text-muted-foreground leading-relaxed"
-              >
-                By continuing, you agree to our{' '}
-                <button
-                  type="button"
-                  onClick={() => setTermsOpen(true)}
-                  className="text-primary hover:underline inline font-semibold"
-                >
-                  Terms of Service
-                </button>{' '}
-                and{' '}
-                <button
-                  type="button"
-                  onClick={() => setPrivacyOpen(true)}
-                  className="text-primary hover:underline inline font-semibold"
-                >
-                  Privacy Policy
-                </button>
-              </label>
-            </div>
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  disabled={loading}
+                  className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                />
+                <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
+                  I agree to the{' '}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setTermsOpen(true) }}
+                    className="text-primary hover:underline inline font-semibold"
+                  >
+                    Terms and Conditions
+                  </button>{' '}
+                  and{' '}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setPrivacyOpen(true) }}
+                    className="text-primary hover:underline inline font-semibold"
+                  >
+                    Privacy Policy
+                  </button>
+                  .
+                </label>
+              </div>
+            </>
           )}
 
-          {mode === 'sign-in' && (
-            <div className="flex justify-end">
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : mode === 'sign-in' ? (
+              'Sign In'
+            ) : (
+              'Sign Up'
+            )}
+          </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            {mode === 'sign-in' ? (
+              <>
+                Don&apos;t have any account yet?{' '}
+                <button
+                  type="button"
+                  onClick={switchMode}
+                  className="text-primary font-medium hover:underline underline-offset-2"
+                >
+                  Signup
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={switchMode}
+                  className="text-primary font-medium hover:underline underline-offset-2"
+                >
+                  Login
+                </button>
+              </>
+            )}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="text-center mb-2">
+            <div className="flex justify-center mb-3">
+              {isEmailIdent ? (
+                <Mail className="size-10 text-primary" />
+              ) : (
+                <Smartphone className="size-10 text-primary" />
+              )}
+            </div>
+            <p className="text-sm font-medium text-foreground mb-1">
+              {isEmailIdent ? 'Check your email' : 'Check your phone'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isEmailIdent ? 'Enter the OTP sent to' : 'Enter the SMS code sent to'}{' '}
+              <span className="font-medium text-foreground">{identifierMasked}</span>
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-2">
+            {code.map((digit, i) => (
+              <input
+                key={i}
+                ref={(el) => { codeInputsRef.current[i] = el }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleOtpInput(i, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                onPaste={i === 0 ? handlePaste : undefined}
+                disabled={loading}
+                className="w-11 h-12 text-center text-lg font-semibold rounded-lg border border-input bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50"
+                autoFocus={i === 0}
+              />
+            ))}
+          </div>
+
+          <div className="flex justify-center">
+            {countdown > 0 ? (
+              <span className="text-xs text-muted-foreground">
+                Resend code in {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
+              </span>
+            ) : (
               <button
                 type="button"
-                onClick={() => {
-                  setForgotMode(
-                    true,
-                  );
-
-                  setForgotStep(
-                    'identifier',
-                  );
-                }}
-                className="text-xs text-primary hover:underline"
+                onClick={handleResendOtp}
+                disabled={loading}
+                className="text-xs text-primary font-medium hover:underline underline-offset-2 disabled:opacity-50"
               >
-                Forgot password?
+                Resend verification code
               </button>
-            </div>
-          )}
-
-{error && (
-  <p className="text-sm text-destructive">{error}</p>
-)}
-
-<SubmitButton
-  loading={loading}
-  disabled={!detailsReady}
->
-  Send Code
-</SubmitButton>
-
-{!forgotMode && step === 'details' && (
-  <div className="text-center">
-    <button
-      type="button"
-      onClick={() => {
-        switchMode(mode === 'sign-up' ? 'sign-in' : 'sign-up')
-        setAcceptedTerms(false)
-      }}
-      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-    >
-      {mode === 'sign-up' ? (
-        <>Already have an account? <span className="text-primary font-medium hover:underline">Sign in</span></>
-      ) : (
-        <>Create Account? <span className="text-primary font-medium hover:underline">Sign up</span></>
-      )}
-    </button>
-  </div>
-)}
-
-<Dialog
-  open={termsOpen}
-  onOpenChange={setTermsOpen}
->
-  <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-    <DialogTitle>
-      Terms of Service
-    </DialogTitle>
-
-    <div className="space-y-4 text-sm text-muted-foreground">
-      <div>
-        <h3 className="font-semibold text-foreground">
-          1. Acceptance of Terms
-        </h3>
-        <p>
-          By creating an account and using ResQBridge,
-          you agree to these Terms of Service.
-        </p>
-      </div>
-
-      <div>
-        <h3 className="font-semibold text-foreground">
-          2. Account Registration
-        </h3>
-        <p>
-          Users must provide accurate information and
-          keep login credentials secure.
-        </p>
-      </div>
-
-      <div>
-        <h3 className="font-semibold text-foreground">
-          3. Acceptable Use
-        </h3>
-        <p>
-          The system is intended for wildlife and
-          domestic rescue reporting only.
-        </p>
-      </div>
-
-      <div>
-        <h3 className="font-semibold text-foreground">
-          4. Limitation of Liability
-        </h3>
-        <p>
-          The platform is provided &ldquo;as is&rdquo; without
-          warranties.
-        </p>
-      </div>
-
-      <div>
-        <h3 className="font-semibold text-foreground">
-          5. Changes to Terms
-        </h3>
-        <p>
-          Terms may be updated periodically.
-        </p>
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
-  <Dialog
-  open={privacyOpen}
-  onOpenChange={setPrivacyOpen}
->
-  <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-    <DialogTitle>
-      Privacy Policy
-    </DialogTitle>
-
-    <div className="space-y-4 text-sm text-muted-foreground">
-      <div>
-        <h3 className="font-semibold text-foreground">
-          1. Information We Collect
-        </h3>
-        <p>
-          We collect account information and report
-          details submitted through the platform.
-        </p>
-      </div>
-
-      <div>
-        <h3 className="font-semibold text-foreground">
-          2. How We Use Data
-        </h3>
-        <p>
-          Data is used for rescue coordination,
-          verification, and reporting workflows.
-        </p>
-      </div>
-
-      <div>
-        <h3 className="font-semibold text-foreground">
-          3. Security
-        </h3>
-        <p>
-          We implement security measures to protect
-          user data.
-        </p>
-      </div>
-
-      <div>
-        <h3 className="font-semibold text-foreground">
-          4. Your Rights
-        </h3>
-        <p>
-          Users may request correction or deletion of
-          account data.
-        </p>
-      </div>
-
-      <div>
-        <h3 className="font-semibold text-foreground">
-          5. Changes
-        </h3>
-        <p>
-          This policy may be updated over time.
-        </p>
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
-        </form>
-      ) : (
-        <form
-          onSubmit={handleVerifyCode}
-          className="space-y-4"
-        >
-          <Input
-            inputMode="numeric"
-            autoFocus
-            placeholder="000000"
-            maxLength={6}
-            value={code}
-            onChange={(e) =>
-              setCode(
-                e.target.value.replace(
-                  /\D/g,
-                  '',
-                ),
-              )
-            }
-            className="h-12 text-center text-xl font-mono tracking-[0.35em]"
-          />
-
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-
-          <SubmitButton
-            loading={loading}
-            disabled={!otpReady}
-          >
-            {mode === 'sign-up'
-              ? 'Create account'
-              : 'Sign in'}
-          </SubmitButton>
-
-          <div className="flex flex-col items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => {
-                setError(null)
-                handleSendCode()
-              }}
-              disabled={
-                loading ||
-                countdown > 0
-              }
-              className="text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"
-            >
-              {countdown > 0
-                ? `Resend code in ${countdown}s`
-                : 'Resend code'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setStep('details');
-
-                setCode('');
-                setCountdown(0);
-                setError(null);
-              }}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Use a different email
-            </button>
+            )}
           </div>
-        </form>
-      )}
-    </>
-  );
-}
 
-function SubmitButton({
-  loading,
-  disabled,
-  children,
-}: {
-  loading: boolean;
-  disabled: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button
-      type="submit"
-      disabled={disabled || loading}
-      className="w-full"
-    >
-      {loading ? (
-        <Loader2 className="size-4 animate-spin" />
-      ) : (
-        children
+          <Button type="submit" disabled={loading || code.join('').length !== 6} className="w-full">
+            {loading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              'Verify'
+            )}
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            <button
+              type="button"
+              onClick={() => {
+                setStep('form')
+                setCode(['', '', '', '', '', ''])
+                setError(null)
+              }}
+              className="hover:underline underline-offset-2"
+            >
+              Use a different email or phone
+            </button>
+          </p>
+        </div>
       )}
-    </Button>
-  );
+
+      <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogTitle>Terms of Service</DialogTitle>
+          <div className="space-y-4 text-sm text-muted-foreground">
+            <div>
+              <h3 className="font-semibold text-foreground">1. Acceptance of Terms</h3>
+              <p>By creating an account and using ResQBridge, you agree to these Terms of Service.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">2. Account Registration</h3>
+              <p>Users must provide accurate information and keep login credentials secure.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">3. Acceptable Use</h3>
+              <p>The system is intended for wildlife and domestic rescue reporting only.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">4. Limitation of Liability</h3>
+              <p>The platform is provided &ldquo;as is&rdquo; without warranties.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">5. Changes to Terms</h3>
+              <p>Terms may be updated periodically.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={privacyOpen} onOpenChange={setPrivacyOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogTitle>Privacy Policy</DialogTitle>
+          <div className="space-y-4 text-sm text-muted-foreground">
+            <div>
+              <h3 className="font-semibold text-foreground">1. Information We Collect</h3>
+              <p>We collect account information and report details submitted through the platform.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">2. How We Use Data</h3>
+              <p>Data is used for rescue coordination, verification, and reporting workflows.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">3. Security</h3>
+              <p>We implement security measures to protect user data.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">4. Your Rights</h3>
+              <p>Users may request correction or deletion of account data.</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">5. Changes</h3>
+              <p>This policy may be updated over time.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </form>
+  )
 }

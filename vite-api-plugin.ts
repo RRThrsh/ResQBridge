@@ -349,27 +349,41 @@ interface SendOtpParams {
   phone?: string
 }
 
-function parseSendOtpParams(
-  body: Record<string, unknown>,
-  requireMode: boolean,
-): SendOtpParams | { error: string } {
-  const mode: AuthMode = body.mode === 'sign-in' ? 'sign-in' : 'sign-up'
-  const email = String(body.email ?? '')
-    .trim()
-    .toLowerCase()
-  const firstName = String(body.firstName ?? '').trim()
-  const lastName = String(body.lastName ?? '').trim()
-  const phone = String(body.phone ?? '').trim()
+function isEmail(value: string): boolean {
+  return value.includes('@')
+}
 
-  if (!email.includes('@')) {
-    return { error: 'Please enter a valid email address.' }
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+  if (digits.length === 12 && digits.startsWith('63')) return '0' + digits.slice(2)
+  if (digits.length === 11 && digits.startsWith('0')) return digits
+  if (digits.length === 10) return '0' + digits
+  return digits
+}
+
+async function sendOtpSms(phone: string, code: string) {
+  const clean = phone.replace(/\D/g, '')
+  const formatted = clean.startsWith('0') && clean.length === 11
+    ? '63' + clean.slice(1)
+    : clean
+  const response = await fetch('https://dashboard.philsms.com/api/v3/sms/send', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.PHILSMS_API_TOKEN ?? ''}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      recipient: formatted,
+      sender_id: 'PhilSMS',
+      type: 'plain',
+      message: `Your PWRRC verification code is: ${code}`,
+    }),
+  })
+  if (!response.ok) {
+    const errorData = await response.text()
+    throw new Error(`PhilSMS API Error: ${response.status} - ${errorData}`)
   }
-
-  if (requireMode && mode === 'sign-up' && (!firstName || !lastName)) {
-    return { error: 'First name and last name are required.' }
-  }
-
-  return { email, firstName, lastName, mode, phone: phone || undefined }
 }
 
 async function executeSendOtp(
@@ -423,48 +437,117 @@ async function handleUserSendOtp(
   options: ApiPluginOptions,
   body: Record<string, unknown>,
 ) {
-  const params = parseSendOtpParams(body, true)
-  if ('error' in params) {
-    sendJson(res, 400, { error: params.error })
+  const identifier = String(body.identifier ?? '').trim().toLowerCase()
+  const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
+  const firstName = String(body.firstName ?? '').trim()
+  const lastName = String(body.lastName ?? '').trim()
+  const password = String(body.password ?? '')
+
+  if (!identifier) {
+    sendJson(res, 400, { error: 'Email or phone is required.' })
     return
   }
 
   const convex = getConvexClientForOtp(options.otpEnv)
-  const { email, mode } = params
-  const password = String(body.password ?? '') 
 
-  const existing = await convex.query(api.users.getByEmail, { email })
+  if (isEmail(identifier)) {
+    const email = identifier
 
-  if (mode === 'sign-in') {
-    if (!existing) {
-      sendJson(res, 400, {
-        error: 'No account found for this email. Please sign up first.',
+    if (mode === 'sign-up' && (!firstName || !lastName)) {
+      sendJson(res, 400, { error: 'First name and last name are required.' })
+      return
+    }
+
+    const existing = await convex.query(api.users.getByEmail, { email })
+
+    if (mode === 'sign-in') {
+      if (!existing) {
+        sendJson(res, 400, { error: 'No account found. Please sign up first.' })
+        return
+      }
+      if (password !== 'reset-temp' && existing.password !== password) {
+        sendJson(res, 401, { error: 'Incorrect password.' })
+        return
+      }
+      await executeSendOtp(res, options, 'user', 'Your PWRRC verification code', {
+        email,
+        firstName: existing.firstName,
+        lastName: existing.lastName,
+        mode,
       })
       return
     }
-    
-    if (password !== 'reset-temp' && existing.password !== password) {
-      sendJson(res, 401, { error: 'Incorrect password.' })
+
+    if (existing) {
+      sendJson(res, 400, { error: 'An account already exists. Please sign in.' })
       return
     }
 
     await executeSendOtp(res, options, 'user', 'Your PWRRC verification code', {
-      email,
-      firstName: existing.firstName,
-      lastName: existing.lastName,
-      mode,
+      email, firstName, lastName, mode,
     })
     return
   }
 
-  if (existing) {
-    sendJson(res, 400, {
-      error: 'An account with this email already exists. Please sign in.',
-    })
+  // --- Phone flow ---
+  const phone = normalizePhone(identifier)
+  if (!phone || phone.length < 10) {
+    sendJson(res, 400, { error: 'Please enter a valid phone number.' })
     return
   }
 
-  await executeSendOtp(res, options, 'user', 'Your PWRRC verification code', params)
+  if (mode === 'sign-up' && (!firstName || !lastName)) {
+    sendJson(res, 400, { error: 'First name and last name are required.' })
+    return
+  }
+
+  const existing = await convex.query(api.users.getByEmail, { email: phone })
+
+  if (mode === 'sign-in') {
+    if (!existing) {
+      sendJson(res, 400, { error: 'No account found. Please sign up first.' })
+      return
+    }
+    if (password !== 'reset-temp' && existing.password !== password) {
+      sendJson(res, 401, { error: 'Incorrect password.' })
+      return
+    }
+  } else if (existing) {
+    sendJson(res, 400, { error: 'An account already exists. Please sign in.' })
+    return
+  }
+
+  const finalFirstName = mode === 'sign-in' ? existing!.firstName : firstName
+  const finalLastName = mode === 'sign-in' ? existing!.lastName : lastName
+
+  const code = generateOtp()
+  const expiresAt = Date.now() + 5 * 60 * 1000
+  const record: OtpRecord = {
+    email: phone,
+    firstName: finalFirstName,
+    lastName: finalLastName,
+    code,
+    expiresAt,
+    mode,
+    phone,
+  }
+
+  try {
+    await saveOtpRecord(options.otpEnv, 'user', record)
+  } catch (error) {
+    sendJson(res, 500, { error: formatOtpError(error) })
+    return
+  }
+
+  try {
+    await sendOtpSms(phone, code)
+  } catch (error) {
+    await deleteOtpRecord(options.otpEnv, 'user', phone)
+    sendJson(res, 500, { error: formatSmtpError(error) })
+    return
+  }
+
+  sendJson(res, 200, { success: true })
 }
 
 function getConvexClientForOtp(config: OtpStoreConfig) {
@@ -477,28 +560,31 @@ function getConvexClientForOtp(config: OtpStoreConfig) {
 async function handleUserVerifyOtp(
   res: ServerResponse,
   options: ApiPluginOptions,
-  email: string,
+  identifier: string,
   code: string,
   mode: AuthMode,
   password: string,
 ) {
   try {
     const convex = getConvexClientForOtp(options.otpEnv)
+    const email = isEmail(identifier) ? identifier : normalizePhone(identifier)
 
-    const isAdmin = await convex.query(api.admin.isAdmin, { email })
-    if (isAdmin) {
-      sendJson(res, 400, {
-        error: 'This email is for admin access only. Please use the admin sign-in page.',
-      })
-      return
-    }
+    if (isEmail(identifier)) {
+      const isAdmin = await convex.query(api.admin.isAdmin, { email })
+      if (isAdmin) {
+        sendJson(res, 400, {
+          error: 'This email is for admin access only. Please use the admin sign-in page.',
+        })
+        return
+      }
 
-    const isRescuer = await convex.query(api.rescuers.isRescuer, { email })
-    if (isRescuer) {
-      sendJson(res, 400, {
-        error: 'This email is for rescuer access only. Please use the rescuer sign-in page.',
-      })
-      return
+      const isRescuer = await convex.query(api.rescuers.isRescuer, { email })
+      if (isRescuer) {
+        sendJson(res, 400, {
+          error: 'This email is for rescuer access only. Please use the rescuer sign-in page.',
+        })
+        return
+      }
     }
 
     const profile = await validateOtpRecord(options.otpEnv, 'user', email, code, mode)
@@ -516,7 +602,7 @@ async function handleUserVerifyOtp(
       const existing = await convex.query(api.users.getByEmail, { email })
       if (!existing) {
         sendJson(res, 400, {
-          error: 'No account found for this email. Please sign up first.',
+          error: 'No account found. Please sign up first.',
         })
         return
       }
@@ -702,14 +788,14 @@ async function handleApi(
   if (req.method === 'POST' && pathname === '/api/auth/verify-otp') {
     try {
       const body = await readJsonBody(req)
-      const email = String(body.email ?? '')
+      const identifier = String(body.identifier ?? '')
         .trim()
         .toLowerCase()
       const code = String(body.code ?? '').trim()
       const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
       const password = String(body.password ?? '')
 
-      await handleUserVerifyOtp(res, options, email, code, mode, password)
+      await handleUserVerifyOtp(res, options, identifier, code, mode, password)
       return true
     } catch (error) {
       console.error('user verify-otp error:', error)
