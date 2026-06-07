@@ -1,4 +1,5 @@
 import { type LucideIcon } from 'lucide-react'
+import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 
 interface ReportTypeCardProps {
@@ -19,6 +20,7 @@ export function ReportTypeCard({
   isSelected,
   onClick,
 }: ReportTypeCardProps) {
+  const { t } = useLanguage()
   return (
     <button
       onClick={onClick}
@@ -57,7 +59,7 @@ export function ReportTypeCard({
       {isSelected && (
         <div className="mt-4 pt-4 border-t border-border flex items-center gap-2 text-primary text-xs font-medium">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          Selected — fill in details below
+          {t('reportTypeCard.selected')}
         </div>
       )}
     </button>

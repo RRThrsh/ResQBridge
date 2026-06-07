@@ -1,25 +1,24 @@
 import { Shield, Globe, HeartHandshake } from 'lucide-react'
+import { useLanguage } from '@/context/LanguageContext'
 
 
 export function AboutSection() {
+  const { t } = useLanguage()
 const features = [
   {
     icon: Shield,
-    title: 'Animal Protection',
-    description:
-      'Coordinating rescue, response, and protection efforts for both domestic and wildlife animals in need across the community.',
+    title: t('about.feature1Title'),
+    description: t('about.feature1Desc'),
   },
   {
     icon: Globe,
-    title: 'Community Reporting',
-    description:
-      'Empowering citizens to report injured, stray, abandoned, abused, and wildlife animals through an accessible digital platform.',
+    title: t('about.feature2Title'),
+    description: t('about.feature2Desc'),
   },
   {
     icon: HeartHandshake,
-    title: 'Rescue & Rehabilitation',
-    description:
-      'Connecting the public with authorized responders and partner organizations to ensure safe rescue, proper care, and rehabilitation of domestic and wildlife animals.',
+    title: t('about.feature3Title'),
+    description: t('about.feature3Desc'),
   },
 ]
 
@@ -35,25 +34,21 @@ const features = [
           {/* Left content */}
           <div className="max-w-3xl text-center">
             <p className="text-primary text-xs font-semibold tracking-widest uppercase mb-3">
-              About the System
+              {t('about.eyebrow')}
             </p>
             <h2
               className="text-4xl sm:text-5xl font-bold text-foreground leading-tight mb-6"
               style={{ fontFamily: 'var(--font-heading)' }}
             >
-              Every Rescue
+              {t('about.title1')}
               <br />
-              <span className="text-gradient">Matters</span>
+              <span className="text-gradient">{t('about.title2')}</span>
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-  <strong className="text-foreground">ResQBridge</strong> — A Web-Based Animal Rescue and Reporting System
-  that helps communities and authorities manage wildlife and domestic animal concerns,
-  rescue incidents, monitoring, and conservation efforts across Palawan.
+  {t('about.desc1')}
 </p>
             <p className="text-muted-foreground text-sm leading-relaxed mb-8">
-              The system bridges the gap between concerned citizens, animal rescuers,
-              and responsible authorities, ensuring every animal welfare concern is
-              promptly addressed and monitored through a centralized platform.
+              {t('about.desc2')}
             </p>
 
             {/* Features */}

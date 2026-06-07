@@ -2,17 +2,19 @@ import { useSyncExternalStore } from 'react'
 import { Monitor, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/context/LanguageContext'
 
 type Theme = 'light' | 'dark' | 'system'
 
-const options: { value: Theme; label: string; description: string; icon: typeof Sun }[] = [
-  { value: 'light', label: 'Light', description: 'Bright backgrounds', icon: Sun },
-  { value: 'dark', label: 'Dark', description: 'Low-light viewing', icon: Moon },
-  { value: 'system', label: 'System', description: 'Match device setting', icon: Monitor },
-]
-
 export function ThemeSetting() {
+  const { t } = useLanguage()
   const { theme, setTheme } = useTheme()
+
+  const options: { value: Theme; label: string; description: string; icon: typeof Sun }[] = [
+    { value: 'light', label: t('theme.light'), description: t('theme.lightDesc'), icon: Sun },
+    { value: 'dark', label: t('theme.dark'), description: t('theme.darkDesc'), icon: Moon },
+    { value: 'system', label: t('theme.system'), description: t('theme.systemDesc'), icon: Monitor },
+  ]
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -35,7 +37,7 @@ export function ThemeSetting() {
   }
 
   return (
-    <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Color theme">
+    <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label={t('theme.colorTheme')}>
       {options.map(({ value, label, description, icon: Icon }) => {
         const selected = active === value
         return (

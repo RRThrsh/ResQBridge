@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -15,6 +16,7 @@ export function ReportPhotosGallery({
   variant = 'hero',
   className,
 }: Props) {
+  const { t } = useLanguage()
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
 
   if (photos.length === 0) return null
@@ -120,7 +122,7 @@ export function ReportPhotosGallery({
           />
           {photos.length > 1 ? (
             <span className="absolute right-3 top-3 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground shadow-sm">
-              {photos.length} photos
+              {photos.length} {t('reportPhotos.label')}
             </span>
           ) : null}
         </button>
@@ -144,7 +146,7 @@ export function ReportPhotosGallery({
         ) : null}
         <p className="mt-2 flex items-center justify-center gap-1 text-[11px] text-muted-foreground">
           <Search className="h-3 w-3" />
-          Tap to expand{photos.length > 1 ? ' · swipe between photos' : ''}
+          {t('reportPhotos.tapToExpand')}{photos.length > 1 ? <>&nbsp;· {t('reportPhotos.swipeHint')}</> : ''}
         </p>
       </div>
       {expandedIndex !== null ? (
@@ -181,13 +183,13 @@ function PhotoLightbox({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Expanded report photos"
+      aria-label={t('reportPhotos.expandedLabel')}
     >
       <button
         type="button"
         className="absolute inset-0"
         onClick={onClose}
-        aria-label="Close expanded photos"
+        aria-label={t('reportPhotos.closeLabel')}
       />
       {photos.length > 1 ? (
         <>
@@ -198,7 +200,7 @@ function PhotoLightbox({
               e.stopPropagation()
               onPrev()
             }}
-            aria-label="Previous photo"
+            aria-label={t('reportPhotos.prevLabel')}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -209,7 +211,7 @@ function PhotoLightbox({
               e.stopPropagation()
               onNext()
             }}
-            aria-label="Next photo"
+            aria-label={t('reportPhotos.nextLabel')}
           >
             <ChevronRight className="h-5 w-5" />
           </button>

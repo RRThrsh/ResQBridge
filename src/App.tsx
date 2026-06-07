@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer'
 import { AuthModal } from '@/components/report/AuthModal'
 import { AuthProviders } from '@/context/AuthProviders'
 import { AuthSync } from '@/components/AuthSync'
+import { LanguageProvider } from '@/context/LanguageContext'
 import { Dashboard } from '@/pages/Dashboard'
 import { WildlifeGuide } from '@/pages/WildlifeGuide'
 import { ReportPage } from '@/pages/ReportPage'
@@ -28,7 +29,7 @@ function RefreshRateLimit({ children }: { children: React.ReactNode }) {
     if (location.pathname === '/too-many-request') return
 
     const key = 'pwrrc_refresh_log'
-    const maxRefreshes = 10
+    const maxRefreshes = 100
     const windowMs = 60_000
     const now = Date.now()
 
@@ -112,7 +113,8 @@ function PublicApp() {
 export default function App() {
   return (
     <AuthProviders>
-      <AuthSync /> {/* <--- THE INVISIBLE GUARD SITS RIGHT HERE! */}
+      <LanguageProvider>
+      <AuthSync />
       <BrowserRouter>
         <RefreshRateLimit>
           <RouteWrapper>
@@ -125,6 +127,7 @@ export default function App() {
           </RouteWrapper>
         </RefreshRateLimit>
       </BrowserRouter>
+      </LanguageProvider>
     </AuthProviders>
   )
 }

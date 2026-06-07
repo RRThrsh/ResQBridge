@@ -10,14 +10,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/context/LanguageContext'
 
 type Theme = 'light' | 'dark' | 'system'
-
-const options: { value: Theme; label: string; icon: typeof Sun }[] = [
-  { value: 'light', label: 'Light', icon: Sun },
-  { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'system', label: 'System', icon: Monitor },
-]
 
 export function ThemeToggle({
   className,
@@ -28,7 +23,14 @@ export function ThemeToggle({
   variant?: 'ghost' | 'outline'
   size?: 'icon' | 'sm'
 }) {
+  const { t } = useLanguage()
   const { theme, setTheme, resolvedTheme } = useTheme()
+
+  const options: { value: Theme; label: string; icon: typeof Sun }[] = [
+    { value: 'light', label: t('theme.light'), icon: Sun },
+    { value: 'dark', label: t('theme.dark'), icon: Moon },
+    { value: 'system', label: t('theme.system'), icon: Monitor },
+  ]
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -67,12 +69,12 @@ export function ThemeToggle({
           variant === 'ghost' && 'text-muted-foreground hover:bg-accent hover:text-foreground',
           className,
         )}
-        aria-label="Change theme"
+        aria-label={t('theme.changeLabel')}
       >
         <ActiveIcon className="h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs text-muted-foreground">{t('theme.label')}</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={active} onValueChange={(v) => setTheme(v as Theme)}>
           {options.map(({ value, label, icon: Icon }) => (
             <DropdownMenuRadioItem key={value} value={value} className="gap-2">

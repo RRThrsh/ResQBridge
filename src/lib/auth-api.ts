@@ -1,36 +1,14 @@
 import type { AuthUser } from '@/types/auth'
-import { normalizeEmail } from '@/lib/admin'
 import { getAuthApiUrl, parseAuthError } from '@/lib/auth-api-base'
-import { ConvexHttpClient } from 'convex/browser'
-import { api } from '../../convex/_generated/api'
-
-const convex = new ConvexHttpClient(
-  import.meta.env.VITE_CONVEX_URL,
-)
-
-export async function resetUserPassword(
-  email: string,
-  newPassword: string,
-) {
-  return await convex.mutation(
-    api.users.resetUserPassword,
-    {
-      email,
-      newPassword,
-    },
-  )
-}
 
 export type AuthMode = 'sign-in' | 'sign-up'
 
 interface SendOtpInput {
   mode: AuthMode
   identifier: string
-  type: 'email' | 'phone'
   password?: string
   firstName?: string
   lastName?: string
-  phone?: string
 }
 
 function isNetworkError(error: unknown): boolean {
@@ -79,20 +57,16 @@ async function handleAuthResponse(response: Response): Promise<void> {
 }
 
 export async function sendOtp(input: SendOtpInput): Promise<void> {
-  // Only normalize if it's an email, otherwise just trim the phone number
-  const normalizedId = input.type === 'email' 
-    ? normalizeEmail(input.identifier) 
-    : input.identifier.trim()
+  const identifier = input.identifier.trim().toLowerCase()
 
   const response = await authFetch('/api/auth/send-otp', {
+    identifier,
     mode: input.mode,
-    email: normalizedId,
     password: input.password,
     ...(input.mode === 'sign-up'
       ? {
           firstName: input.firstName?.trim() ?? '',
           lastName: input.lastName?.trim() ?? '',
-          phone: input.phone?.trim() ?? '',
         }
       : {}),
   })
@@ -106,12 +80,10 @@ export async function verifyOtp(
   mode: AuthMode,
   password?: string,
 ): Promise<AuthUser> {
-  // Check if it's an email so we don't accidentally break a phone number string
-  const isEmail = identifier.includes('@')
-  const normalizedId = isEmail ? normalizeEmail(identifier) : identifier.trim()
+  const normalizedId = identifier.trim().toLowerCase()
 
   const response = await authFetch('/api/auth/verify-otp', {
-    email: normalizedId,
+    identifier: normalizedId,
     code: code.trim(),
     mode,
     password,
@@ -121,8 +93,7 @@ export async function verifyOtp(
 
   const data = (await response.json()) as { user: AuthUser }
   return {
-    // Fallback to empty string if they logged in with phone and have no email attached yet
-    email: data.user.email ? normalizeEmail(data.user.email) : '',
+    email: data.user.email ?? '',
     firstName: data.user.firstName,
     lastName: data.user.lastName,
     role: 'user',

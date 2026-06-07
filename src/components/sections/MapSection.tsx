@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { VenueHoursStatusBadge } from '@/components/sections/VenueHoursStatusBadge'
 import { useVenueHoursStatus } from '@/hooks/useVenueHoursStatus'
-import { VENUE_HOURS_LABEL, VENUE_TIMEZONE } from '@/lib/venueHours'
+import { VENUE_HOURS_LABEL } from '@/lib/venueHours'
+import { useLanguage } from '@/context/LanguageContext'
 
 const PWRCC_ADDRESS = 'Irawan, Puerto Princesa City, Palawan 5300'
 const PWRCC_COORDS = { lat: 9.79938415802644, lng: 118.69127134046641 }
@@ -34,6 +35,7 @@ function haversineDistance(
 }
 
 export function MapSection() {
+  const { t } = useLanguage()
   const hoursStatus = useVenueHoursStatus()
   const [distance, setDistance] = useState<{ km: number; mi: number } | null>(null)
   const [distanceLoading, setDistanceLoading] = useState(false)
@@ -41,7 +43,7 @@ export function MapSection() {
 
   const handleGetDistance = () => {
     if (!navigator.geolocation) {
-      setDistanceError('Geolocation is not supported by your browser.')
+      setDistanceError(t('map.errorGeolocation'))
       return
     }
     setDistanceLoading(true)
@@ -58,8 +60,8 @@ export function MapSection() {
       (err) => {
         setDistanceError(
           err.code === err.PERMISSION_DENIED
-            ? 'Location permission denied. Allow location access and try again.'
-            : 'Could not retrieve your location. Try again.',
+            ? t('map.errorPermission')
+            : t('map.errorRetrieve'),
         )
         setDistanceLoading(false)
       },
@@ -67,18 +69,18 @@ export function MapSection() {
   }
 
   const infoItems = [
-    { Icon: MapPin, label: 'Address', value: PWRCC_ADDRESS },
+    { Icon: MapPin, label: t('map.address'), value: PWRCC_ADDRESS },
     {
       Icon: Clock,
-      label: 'Operating Hours',
+      label: t('map.operatingHours'),
       value: VENUE_HOURS_LABEL,
       isHours: true as const,
     },
-    { Icon: Phone, label: 'Contact', value: '09950338967' },
+    { Icon: Phone, label: t('map.contact'), value: '09950338967' },
     {
       Icon: Info,
-      label: 'In-Kind Donations',
-      value: 'Fresh fruits, vegetables, vet supplies & daily necessities are welcome.',
+      label: t('map.inKindDonations'),
+      value: t('map.donationsValue'),
     },
   ]
 
@@ -89,12 +91,12 @@ export function MapSection() {
         {/* Header */}
         <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-primary">Find Us</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-primary">{t('map.eyebrow')}</p>
             <h2 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-              PWRCC Location
+              {t('map.title')}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-              Locate the Palawan Wildlife Rescue and Conservation Center in Puerto Princesa City.
+              {t('map.desc')}
             </p>
           </div>
           <VenueHoursStatusBadge
@@ -121,7 +123,7 @@ export function MapSection() {
                       <div className="mt-2 space-y-1.5">
                         <VenueHoursStatusBadge snapshot={hoursStatus} showDetail />
                         <p className="text-[10px] text-muted-foreground/80">
-                          Times shown in {VENUE_TIMEZONE.replace('_', ' ')} (PHT)
+                          {t('map.timezoneNote')}
                         </p>
                       </div>
                     )}
@@ -138,11 +140,11 @@ export function MapSection() {
                     <Navigation className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-foreground">Distance from You</p>
+                    <p className="text-xs font-semibold text-foreground">{t('map.distanceTitle')}</p>
                     {distance ? (
                       <div className="mt-2 space-y-1">
                         <p className="text-xs text-muted-foreground">
-                          You are <strong className="text-foreground">{distance.km.toFixed(1)} km</strong> ({distance.mi.toFixed(1)} mi) away from PWRCC.
+                          {t('map.distanceText').replace('{km}', distance.km.toFixed(1)).replace('{mi}', distance.mi.toFixed(1))}
                         </p>
                         <a
                           href={MAP_DIRECTIONS_URL}
@@ -150,7 +152,7 @@ export function MapSection() {
                           rel="noopener noreferrer"
                           className="text-xs text-primary hover:underline"
                         >
-                          Get directions
+                          {t('map.getDirections')}
                         </a>
                       </div>
                     ) : (
@@ -163,7 +165,7 @@ export function MapSection() {
                           disabled={distanceLoading}
                           className="text-xs h-8 px-3"
                         >
-                          {distanceLoading ? 'Locating...' : 'Check distance'}
+                          {distanceLoading ? t('map.locating') : t('map.checkDistance')}
                         </Button>
                         {distanceError && (
                           <p className="mt-1.5 text-xs text-destructive">{distanceError}</p>
@@ -196,7 +198,7 @@ export function MapSection() {
                 rel="noopener noreferrer"
                 className="text-primary hover:opacity-80 transition-opacity"
               >
-                Open directions in Google Maps
+                {t('map.openDirections')}
               </a>
             </p>
           </div>

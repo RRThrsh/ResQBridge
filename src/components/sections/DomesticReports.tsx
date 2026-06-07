@@ -14,8 +14,10 @@ import {
 } from '@/lib/domesticPublic'
 import { getReportPhotos } from '@/lib/reportPhotos'
 import { DomesticReportDetailDialog } from '@/components/report/DomesticReportDetailDialog'
+import { useLanguage } from '@/context/LanguageContext'
 
 export function DomesticReports() {
+  const { t } = useLanguage()
   const reports = useQuery(api.reports.listPublicDomestic)
   const [selectedReport, setSelectedReport] = useState<PublicDomesticReport | null>(null)
   const [timedOut, setTimedOut] = useState(false)
@@ -38,17 +40,17 @@ export function DomesticReports() {
 
         <div className="mb-10 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-primary">Community Board</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-primary">{t('domesticSection.eyebrow')}</p>
             <h2 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-              Domestic Reports
+              {t('domesticSection.title')}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Recent reports of missing, found, stray & injured domestic animals.
+              {t('domesticSection.desc')}
             </p>
           </div>
           <Link to="/report"
             className="group mt-4 sm:mt-0 inline-flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition-opacity shrink-0">
-            Submit report
+            {t('domesticSection.submitLink')}
             <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
@@ -60,17 +62,17 @@ export function DomesticReports() {
         ) : timedOut ? (
           <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
             <AlertCircle className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
-            <p className="text-sm font-medium text-foreground">Could not load reports</p>
+            <p className="text-sm font-medium text-foreground">{t('domesticSection.errorTitle')}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Taking longer than expected. Please check your connection and try refreshing the page.
+              {t('domesticSection.errorDesc')}
             </p>
           </div>
         ) : reports?.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
             <PawPrint className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
-            <p className="text-sm font-medium text-foreground">No domestic reports yet</p>
+            <p className="text-sm font-medium text-foreground">{t('domesticSection.emptyTitle')}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Be the first to post a missing, found, stray, or injured animal report.
+              {t('domesticSection.emptyDesc')}
             </p>
           </div>
         ) : (

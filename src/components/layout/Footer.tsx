@@ -1,23 +1,30 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Phone } from 'lucide-react'
+import { MapPin, Phone, Globe } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
+import { useLanguage } from '@/context/LanguageContext'
 
 const links = {
   pages: [
-    { label: 'Dashboard',    href: '/' },
-    { label: 'Wildlife Guide',href: '/wildlife' },
-    { label: 'Submit Report', href: '/report' },
-    { label: 'News & Events', href: '/#events' },
+    { label: 'Dashboard', href: '/', key: 'footer.dashboard' },
+    { label: 'Wildlife Guide', href: '/wildlife', key: 'footer.wildlifeGuide' },
+    { label: 'Submit Report', href: '/report', key: 'footer.submitReport' },
+    { label: 'News & Events', href: '/#events', key: 'footer.newsEvents' },
   ],
   reports: [
-    { label: 'Wildlife Sighting',   href: '/report' },
-    { label: 'Wildlife Surrender',  href: '/report' },
-    { label: 'Stray / Injured',     href: '/report' },
-    { label: 'Missing / Found Pet', href: '/report' },
+    { label: 'Wildlife Sighting', href: '/report', key: 'footer.wildlifeSighting' },
+    { label: 'Wildlife Surrender', href: '/report', key: 'footer.wildlifeSurrender' },
+    { label: 'Stray / Injured', href: '/report', key: 'footer.strayInjured' },
+    { label: 'Missing / Found Pet', href: '/report', key: 'footer.missingFoundPet' },
   ],
 }
 
 export function Footer() {
+  const { t, lang, setLang } = useLanguage()
+
+  const toggleLang = () => {
+    setLang(lang === 'en' ? 'fil' : 'en')
+  }
+
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
@@ -35,61 +42,60 @@ export function Footer() {
             </div>
               <span className="text-sm font-bold" style={{ fontFamily: 'var(--font-heading)' }}>ResQBridge</span>
             </Link>
-<p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
-  ResQBridge is a Web-Based Animal Rescue and Reporting System connecting
-  communities, rescuers, and animal welfare organizations across Palawan.
-</p>
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
+              {t('footer.description')}
+            </p>
 
-<div className="space-y-4">
+            <div className="space-y-4">
 
-  {/* Wildlife Shelter */}
-  <div className="space-y-1">
-    <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
-      Wildlife Shelter
-    </p>
+              {/* Wildlife Shelter */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                  {t('footer.wildlifeShelter')}
+                </p>
 
-    <div className="flex items-start gap-2 text-xs text-muted-foreground">
-      <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
-      <span>Irawan, Puerto Princesa City, Palawan 5300</span>
-    </div>
+                <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+                  <span>Irawan, Puerto Princesa City, Palawan 5300</span>
+                </div>
 
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-      <Phone className="h-3.5 w-3.5 shrink-0 text-primary/60" />
-      <span>0995-033-8967</span>
-    </div>
-  </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Phone className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+                  <span>0995-033-8967</span>
+                </div>
+              </div>
 
-  {/* Domestic Shelter */}
-  <div className="space-y-1">
-    <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
-      Domestic Shelter
-    </p>
+              {/* Domestic Shelter */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                  {t('footer.domesticShelter')}
+                </p>
 
-    <div className="flex items-start gap-2 text-xs text-muted-foreground">
-      <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
-      <span>
-        Sitio Baruang, Bgy. Macarascas, Puerto Princesa,
-        Philippines, 5300
-      </span>
-    </div>
+                <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+                  <span>
+                    Sitio Baruang, Bgy. Macarascas, Puerto Princesa,
+                    Philippines, 5300
+                  </span>
+                </div>
 
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-      <Phone className="h-3.5 w-3.5 shrink-0 text-primary/60" />
-      <span>0938 927 0317</span>
-    </div>
-  </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Phone className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+                  <span>0938 927 0317</span>
+                </div>
+              </div>
 
-</div>
+            </div>
           </div>
 
           {/* Pages */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Pages</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t('footer.pages')}</p>
             <ul className="space-y-2">
               {links.pages.map(l => (
-                <li key={l.href}>
+                <li key={l.key}>
                   <Link to={l.href} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {l.label}
+                    {t(l.key, l.label)}
                   </Link>
                 </li>
               ))}
@@ -98,12 +104,12 @@ export function Footer() {
 
           {/* Report types */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Report</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t('footer.report')}</p>
             <ul className="space-y-2">
               {links.reports.map(l => (
-                <li key={l.label}>
+                <li key={l.key}>
                   <Link to={l.href} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {l.label}
+                    {t(l.key, l.label)}
                   </Link>
                 </li>
               ))}
@@ -113,11 +119,17 @@ export function Footer() {
 
         <Separator className="my-8" />
 
-        <div className="flex flex-col sm:flex-row justify-between gap-3">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 items-center">
           <p className="text-xs text-muted-foreground">
-            © 2026 ResQBridge — Palawan Wildlife Rescue & Conservation Center
+            {t('footer.copyright')}
           </p>
-          {/* <p className="text-xs text-muted-foreground">Made for Palawan wildlife 🌿</p> */}
+          <button
+            onClick={toggleLang}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            <span className="font-medium">{lang === 'en' ? 'English' : 'Filipino'}</span>
+          </button>
         </div>
       </div>
     </footer>

@@ -19,6 +19,7 @@ import {
   reportTypeOverlayColors,
   type PublicDomesticReport,
 } from '@/lib/domesticPublic'
+import { useLanguage } from '@/context/LanguageContext'
 import { getReportPhotos } from '@/lib/reportPhotos'
 
 interface DomesticReportDetailDialogProps {
@@ -30,6 +31,7 @@ export function DomesticReportDetailDialog({
   report,
   onClose,
 }: DomesticReportDetailDialogProps) {
+  const { t } = useLanguage()
   if (!report) return null
 
   const photos = getReportPhotos({ photoDataUrls: report.images, photoDataUrl: report.image })
@@ -78,7 +80,7 @@ export function DomesticReportDetailDialog({
 
           <div>
             <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest mb-2">
-              Description
+              {t('domesticDetail.description')}
             </h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
               {report.description}
@@ -88,15 +90,15 @@ export function DomesticReportDetailDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-card border border-border rounded-xl p-3">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-                Color / Appearance
+                {t('domesticDetail.color')}
               </p>
               <p className="text-sm text-foreground font-medium">
-                {report.color || 'Not specified'}
+                {report.color || t('domesticDetail.notSpecified')}
               </p>
             </div>
             <div className="bg-card border border-border rounded-xl p-3">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-                Status
+                {t('domesticDetail.status')}
               </p>
               <p className="text-sm text-foreground font-medium capitalize">
                 {publicStatusLabels[report.status]}
@@ -112,7 +114,7 @@ export function DomesticReportDetailDialog({
                 <MapPin className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-foreground">Location</p>
+                <p className="text-xs font-semibold text-foreground">{t('domesticDetail.location')}</p>
                 <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">
                   {report.location}
                 </p>
@@ -124,7 +126,7 @@ export function DomesticReportDetailDialog({
                 <Clock className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-foreground">Date reported</p>
+                <p className="text-xs font-semibold text-foreground">{t('domesticDetail.dateReported')}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   {formatDateWithWeekday(report.createdAt)}
                 </p>
@@ -137,7 +139,7 @@ export function DomesticReportDetailDialog({
                   <Phone className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-foreground">Contact number</p>
+                  <p className="text-xs font-semibold text-foreground">{t('domesticDetail.contactNumber')}</p>
                   <p className="text-sm text-foreground mt-0.5 font-medium">
                     {report.contactNumber}
                   </p>
@@ -152,11 +154,10 @@ export function DomesticReportDetailDialog({
             <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
             <div>
               <p className="text-sm font-semibold text-amber-500 mb-1">
-                Help resolve this report
+                {t('domesticDetail.helpTitle')}
               </p>
               <p className="text-xs text-amber-500/80 leading-relaxed">
-                If you have information about this animal, contact the reporter using the
-                phone number above when available.
+                {t('domesticDetail.helpText')}
               </p>
             </div>
           </div>
@@ -170,7 +171,7 @@ export function DomesticReportDetailDialog({
               )}
             >
               <Phone className="mr-2 h-4 w-4" />
-              Call reporter
+              {t('domesticDetail.callReporter')}
             </a>
           ) : null}
         </div>

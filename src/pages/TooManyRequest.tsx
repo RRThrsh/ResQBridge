@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Clock, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/context/LanguageContext'
 
 export function TooManyRequest() {
+  const { t } = useLanguage()
   const [searchParams] = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
   const [countdown, setCountdown] = useState(60)
@@ -25,16 +27,16 @@ export function TooManyRequest() {
           429
         </h1>
         <h2 className="text-xl font-semibold text-foreground mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
-          Too Many Requests
+          {t('tooMany.title')}
         </h2>
 
         <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-          You have sent too many requests in a short period. Please wait before trying again.
+          {t('tooMany.desc')}
         </p>
 
         {countdown > 0 && (
           <div className="mb-8">
-            <p className="text-xs text-muted-foreground mb-2">Retry in</p>
+            <p className="text-xs text-muted-foreground mb-2">{t('tooMany.retryLabel')}</p>
             <p className="text-4xl font-bold text-foreground tabular-nums" style={{ fontFamily: 'var(--font-heading)' }}>
               {countdown}s
             </p>
@@ -48,13 +50,13 @@ export function TooManyRequest() {
         )}
 
         {countdown <= 0 && (
-          <p className="text-sm text-primary font-medium mb-8">You can now try again.</p>
+          <p className="text-sm text-primary font-medium mb-8">{t('tooMany.ready')}</p>
         )}
 
         <Link to={redirectTo}>
           <Button className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-none">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Return Home
+            {t('tooMany.returnHome')}
           </Button>
         </Link>
       </div>

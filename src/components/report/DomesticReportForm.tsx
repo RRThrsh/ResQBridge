@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useUserAuth } from '@/context/UserAuthContext'
+import { useLanguage } from '@/context/LanguageContext'
 import { toast } from 'sonner'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
@@ -140,6 +141,7 @@ function ClickableMap({
 export function DomesticReportForm() {
   const navigate = useNavigate()
   const { user } = useUserAuth()
+  const { t } = useLanguage()
   const createReportMutation = useMutation(api.reports.create)
   const profile = useQuery(
     api.users.getProfile,
@@ -202,7 +204,7 @@ export function DomesticReportForm() {
 
   const fetchCurrentLocation = useCallback(async () => {
     if (!('geolocation' in navigator)) {
-      toast.error('Location is not supported in this browser')
+      toast.error(t('reportFormWildlife.errorLocationUnsupported'))
       return
     }
 
@@ -217,23 +219,23 @@ export function DomesticReportForm() {
       setLocFetching(false) 
       const geoErr = err as GeolocationPositionError
       if (geoErr?.code === geoErr?.PERMISSION_DENIED) {
-        toast.error('Location permission denied. Enable location or enter the address manually.')
+        toast.error(t('reportFormWildlife.errorLocationPermission'))
       } else if (geoErr?.code === geoErr?.POSITION_UNAVAILABLE) {
-        toast.error('Location unavailable. Try outdoors or check device settings.')
+        toast.error(t('reportFormWildlife.errorLocationUnavailable'))
       } else {
-        toast.error('Could not get an accurate location. Try again or enter it manually.')
+        toast.error(t('reportFormWildlife.errorLocationInaccurate'))
       }
     }
-  }, [updateLocationData])
+  }, [t, updateLocationData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) {
-      toast.error('Please log in to submit a report')
+      toast.error(t('reportFormWildlife.errorLoginRequired'))
       return
     }
     if (!formData.species.trim() || !formData.location || !formData.description) {
-      toast.error('Please fill in all required fields')
+      toast.error(t('reportFormWildlife.errorRequiredFields'))
       return
     }
     const photoError = validateReportPhotosForSubmit(photos)
@@ -243,20 +245,20 @@ export function DomesticReportForm() {
     }
 
     if (profile === undefined) {
-      toast.error('Still loading your account details. Please try again.')
+      toast.error(t('reportFormWildlife.errorLoadingAccount'))
       return
     }
 
     const contactPhone = formData.reporterPhone.trim()
     
     if (!contactPhone) {
-      toast.error('Contact number is required')
+      toast.error(t('reportFormWildlife.errorContactRequired'))
       return
     }
 
     const cleanPhone = contactPhone.replace(/\D/g, '')
     if (!/^09\d{9}$/.test(cleanPhone)) {
-      toast.error('Contact number must be exactly 11 digits and start with "09"')
+      toast.error(t('reportFormWildlife.errorContactInvalid'))
       return
     }
 
@@ -292,7 +294,7 @@ export function DomesticReportForm() {
       })
       navigate('/report/success')
     } catch {
-      toast.error('Could not submit report. Please try again.')
+      toast.error(t('reportFormWildlife.errorSubmit'))
     } finally {
       setLoading(false)
     }
@@ -304,25 +306,25 @@ export function DomesticReportForm() {
       <div className="mb-8 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm text-muted-foreground">
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <p>
-          <strong className="font-semibold text-foreground">Important Note:</strong> This report concerns domestic animals. Please note that domestic animal rescue and shelter services are managed by <strong>Nativity's Stray Rescue Shelter</strong>, not PWRCC.
+          <strong className="font-semibold text-foreground">{t('reportFormDomestic.importantNote')}</strong> {t('reportFormDomestic.importantText')}
         </p>
       </div>
 
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
-          Domestic Animal Report
+          {t('reportFormDomestic.title')}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Report a missing pet, found animal, stray, or injured domestic animal (dogs, cats, etc).
+          {t('reportFormDomestic.subtitle')}
         </p>
       </div>
 
       <Tabs value={reportType} onValueChange={setReportType} className="mb-8 w-full">
         <TabsList className="grid w-full grid-cols-4 bg-background border border-border h-12 p-1">
-          <TabsTrigger value="missing" className="h-full rounded-lg text-xs aria-selected:bg-primary aria-selected:text-primary-foreground">Missing</TabsTrigger>
-          <TabsTrigger value="found" className="h-full rounded-lg text-xs aria-selected:bg-primary aria-selected:text-primary-foreground">Found</TabsTrigger>
-          <TabsTrigger value="stray" className="h-full rounded-lg text-xs aria-selected:bg-primary aria-selected:text-primary-foreground">Stray</TabsTrigger>
-          <TabsTrigger value="injured" className="h-full rounded-lg text-xs aria-selected:bg-primary aria-selected:text-primary-foreground">Injured</TabsTrigger>
+          <TabsTrigger value="missing" className="h-full rounded-lg text-xs aria-selected:bg-primary aria-selected:text-primary-foreground">{t('reportFormDomestic.tabMissing')}</TabsTrigger>
+          <TabsTrigger value="found" className="h-full rounded-lg text-xs aria-selected:bg-primary aria-selected:text-primary-foreground">{t('reportFormDomestic.tabFound')}</TabsTrigger>
+          <TabsTrigger value="stray" className="h-full rounded-lg text-xs aria-selected:bg-primary aria-selected:text-primary-foreground">{t('reportFormDomestic.tabStray')}</TabsTrigger>
+          <TabsTrigger value="injured" className="h-full rounded-lg text-xs aria-selected:bg-primary aria-selected:text-primary-foreground">{t('reportFormDomestic.tabInjured')}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -331,12 +333,12 @@ export function DomesticReportForm() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Species <span className="text-destructive">*</span>
+              {t('reportFormDomestic.speciesLabel')} <span className="text-destructive">*</span>
             </label>
             <Input
               value={formData.species}
               onChange={(e) => setFormData({ ...formData, species: e.target.value })}
-              placeholder="e.g. Dog, Cat"
+              placeholder={t('reportFormDomestic.speciesPlaceholder')}
               className="h-12 bg-background border-border rounded-xl"
               required
             />
@@ -345,7 +347,7 @@ export function DomesticReportForm() {
           {reportType !== 'stray' && reportType !== 'injured' && (
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {reportType === 'missing' ? "Pet's Name *" : 'Name (if known)'}
+                {reportType === 'missing' ? t('reportFormDomestic.petNameLabel') : t('reportFormDomestic.nameLabel')}
               </label>
 
               <Input
@@ -356,7 +358,7 @@ export function DomesticReportForm() {
                     animalName: e.target.value,
                   })
                 }
-                placeholder="e.g. Bella"
+                placeholder={t('reportFormDomestic.namePlaceholder')}
                 className="h-12 bg-background border-border rounded-xl"
               />
             </div>
@@ -368,26 +370,26 @@ export function DomesticReportForm() {
             {/* Nature of Injury */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Nature of Injury (Check all that apply)
+                {t('reportFormDomestic.injuryLabel')}
               </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                 {[
-                  'Open wound / bleeding',
-                  'Broken bone / suspected fracture',
-                  'Limping or difficulty walking',
-                  'Hit by a vehicle',
-                  'Burn injury',
-                  'Animal trapped or entangled',
-                  'Eye injury',
-                  'Head injury',
-                  'Bite wound from another animal',
-                  'Skin injury or infection',
-                  'Unconscious / unresponsive',
-                  'Difficulty breathing',
-                  'Weak or unable to stand',
-                  'Signs of poisoning',
+                  t('reportFormDomestic.injuryOpenWound'),
+                  t('reportFormDomestic.injuryBrokenBone'),
+                  t('reportFormDomestic.injuryLimping'),
+                  t('reportFormDomestic.injuryHitByVehicle'),
+                  t('reportFormDomestic.injuryBurn'),
+                  t('reportFormDomestic.injuryTrapped'),
+                  t('reportFormDomestic.injuryEye'),
+                  t('reportFormDomestic.injuryHead'),
+                  t('reportFormDomestic.injuryBite'),
+                  t('reportFormDomestic.injurySkin'),
+                  t('reportFormDomestic.injuryUnconscious'),
+                  t('reportFormDomestic.injuryBreathing'),
+                  t('reportFormDomestic.injuryWeak'),
+                  t('reportFormDomestic.injuryPoisoning'),
                 ].map((injury) => (
                   <label
                     key={injury}
@@ -427,7 +429,7 @@ export function DomesticReportForm() {
             {/* Severity of Injury */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Severity of Injury
+                {t('reportFormDomestic.severityLabel')}
               </label>
 
               <Select
@@ -440,24 +442,24 @@ export function DomesticReportForm() {
                 }
               >
                 <SelectTrigger className="h-12 rounded-xl border-border bg-background">
-                  <SelectValue placeholder="Select severity" />
+                  <SelectValue placeholder={t('reportFormDomestic.severityPlaceholder')} />
                 </SelectTrigger>
 
                 <SelectContent>
                   <SelectItem value="critical">
-                    Critical — Severe bleeding, unconscious, difficulty breathing, or life-threatening injury
+                    {t('reportFormDomestic.severityCritical')}
                   </SelectItem>
 
                   <SelectItem value="urgent">
-                    Urgent — Serious injury requiring immediate medical attention but animal is conscious
+                    {t('reportFormDomestic.severityUrgent')}
                   </SelectItem>
 
                   <SelectItem value="moderate">
-                    Moderate — Visible injury but animal is stable and mobile
+                    {t('reportFormDomestic.severityModerate')}
                   </SelectItem>
 
                   <SelectItem value="minor">
-                    Minor — Small wounds or minor injuries
+                    {t('reportFormDomestic.severityMinor')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -466,7 +468,7 @@ export function DomesticReportForm() {
             {/* Current Condition */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Animal's Current Condition
+                {t('reportFormDomestic.conditionLabel')}
               </label>
 
               <Select
@@ -479,28 +481,28 @@ export function DomesticReportForm() {
                 }
               >
                 <SelectTrigger className="h-12 rounded-xl border-border bg-background">
-                  <SelectValue placeholder="Select condition" />
+                  <SelectValue placeholder={t('reportFormDomestic.conditionPlaceholder')} />
                 </SelectTrigger>
 
                 <SelectContent>
                   <SelectItem value="alert">
-                    Alert and responsive
+                    {t('reportFormDomestic.conditionAlert')}
                   </SelectItem>
 
                   <SelectItem value="frightened">
-                    Frightened but mobile
+                    {t('reportFormDomestic.conditionFrightened')}
                   </SelectItem>
 
                   <SelectItem value="weak">
-                    Weak and lethargic
+                    {t('reportFormDomestic.conditionWeak')}
                   </SelectItem>
 
                   <SelectItem value="unable">
-                    Unable to move
+                    {t('reportFormDomestic.conditionUnable')}
                   </SelectItem>
 
                   <SelectItem value="unconscious">
-                    Unconscious
+                    {t('reportFormDomestic.conditionUnconscious')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -509,7 +511,7 @@ export function DomesticReportForm() {
             {/* Additional Information */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Additional Information
+                {t('reportFormDomestic.additionalInfoLabel')}
               </label>
 
               <Textarea
@@ -520,19 +522,19 @@ export function DomesticReportForm() {
                     description: e.target.value,
                   })
                 }
-                placeholder="Describe the animal's injuries and condition..."
+                placeholder={t('reportFormDomestic.additionalInfoPlaceholder')}
                 className="min-h-[100px] rounded-xl border-border bg-background resize-none"
               />
 
               <p className="text-xs text-muted-foreground">
-                Not required
+                {t('reportFormDomestic.notRequired')}
               </p>
             </div>
 
             {/* Rescue Assistance Priority */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Rescue Assistance Priority Level
+                {t('reportFormDomestic.priorityLabel')}
               </label>
 
               <Select
@@ -545,24 +547,24 @@ export function DomesticReportForm() {
                 }
               >
                 <SelectTrigger className="h-12 rounded-xl border-border bg-background">
-                  <SelectValue placeholder="Select priority level" />
+                  <SelectValue placeholder={t('reportFormDomestic.priorityPlaceholder')} />
                 </SelectTrigger>
 
                 <SelectContent>
                   <SelectItem value="critical">
-                    Critical — Immediate Response Required
+                    {t('reportFormDomestic.priorityCritical')}
                   </SelectItem>
 
                   <SelectItem value="urgent">
-                    Urgent — Response Needed within 24h
+                    {t('reportFormDomestic.priorityUrgent')}
                   </SelectItem>
 
                   <SelectItem value="moderate">
-                    Moderate — Needs Assessment or Assistance
+                    {t('reportFormDomestic.priorityModerate')}
                   </SelectItem>
 
                   <SelectItem value="low">
-                    Low Priority — Observation / Information only
+                    {t('reportFormDomestic.priorityLow')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -574,7 +576,7 @@ export function DomesticReportForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Color / Markings
+                {t('reportFormDomestic.colorLabel')}
               </label>
 
               <Input
@@ -585,7 +587,7 @@ export function DomesticReportForm() {
                     color: e.target.value,
                   })
                 }
-                placeholder="e.g. Black with white paws"
+                placeholder={t('reportFormDomestic.colorPlaceholder')}
                 className="h-12 bg-background border-border rounded-xl"
               />
             </div>
@@ -594,7 +596,7 @@ export function DomesticReportForm() {
 
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Location <span className="text-destructive">*</span>
+            {t('reportFormDomestic.locationLabel')} <span className="text-destructive">*</span>
           </label>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
             <div className="relative flex-1 min-w-0">
@@ -606,7 +608,7 @@ export function DomesticReportForm() {
                 onChange={(e) =>
                   setFormData({ ...formData, location: e.target.value })
                 }
-                placeholder="Click the map, use GPS, or describe..."
+                placeholder={t('reportFormDomestic.locationPlaceholder')}
                 className="pl-10 h-12 bg-background border-border rounded-xl pr-3"
                 required
               />
@@ -623,7 +625,7 @@ export function DomesticReportForm() {
               ) : (
                 <Crosshair className="mr-2 h-4 w-4" />
               )}
-              Current location
+              {t('reportFormDomestic.currentLocation')}
             </Button>
           </div>
 
@@ -648,13 +650,13 @@ export function DomesticReportForm() {
           </div>
           
           <p className="text-[11px] text-muted-foreground">
-            <span className="font-medium text-foreground">Interactive Map:</span> You can manually tap/click anywhere on the map above to drop a pin and auto-fill the address.
+            {t('reportFormDomestic.mapHelper')}
           </p>
         </div>
 
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Date & Time Seen
+            {t('reportFormDomestic.dateLabel')}
           </label>
           <Input
             type="datetime-local"
@@ -668,7 +670,7 @@ export function DomesticReportForm() {
 
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Reported Quantity
+              {t('reportFormDomestic.quantityLabel')}
             </label>
 
             <Input
@@ -688,7 +690,7 @@ export function DomesticReportForm() {
           {reportType !== 'injured' && (
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Reported Size
+                {t('reportFormDomestic.sizeLabel')}
               </label>
 
               <Select
@@ -701,13 +703,13 @@ export function DomesticReportForm() {
                 }
               >
                 <SelectTrigger className="h-12 bg-background border-border rounded-xl">
-                  <SelectValue placeholder="Select size" />
+                  <SelectValue placeholder={t('reportFormDomestic.sizePlaceholder')} />
                 </SelectTrigger>
 
                 <SelectContent>
-                  <SelectItem value="small">Small</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="large">Large</SelectItem>
+                  <SelectItem value="small">{t('reportFormDomestic.sizeSmall')}</SelectItem>
+                  <SelectItem value="medium">{t('reportFormDomestic.sizeMedium')}</SelectItem>
+                  <SelectItem value="large">{t('reportFormDomestic.sizeLarge')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -732,7 +734,7 @@ export function DomesticReportForm() {
         {reportType !== 'injured' && (
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Additional Details <span className="text-destructive">*</span>
+              {t('reportFormDomestic.detailsLabel')} <span className="text-destructive">*</span>
             </label>
 
             <Textarea
@@ -743,7 +745,7 @@ export function DomesticReportForm() {
                   description: e.target.value,
                 })
               }
-              placeholder="Provide any additional context about the animal..."
+              placeholder={t('reportFormDomestic.detailsPlaceholder')}
               className="min-h-[100px] bg-background border-border rounded-xl resize-none"
               required
             />
@@ -752,7 +754,7 @@ export function DomesticReportForm() {
 
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Photos <span className="text-destructive">*</span>
+            {t('reportFormDomestic.photosLabel')} <span className="text-destructive">*</span>
           </label>
           <ReportPhotoField value={photos} onChange={setPhotos} />
         </div>
@@ -760,7 +762,7 @@ export function DomesticReportForm() {
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex gap-3 items-start">
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
           <p className="text-xs text-amber-500/80 leading-relaxed">
-            By submitting this report, it will be posted on the public Community Board to help locate or resolve the issue. Your email will be used for follow-up contact.
+            {t('reportFormDomestic.warningText')}
           </p>
         </div>
 
@@ -769,7 +771,7 @@ export function DomesticReportForm() {
           disabled={loading}
           className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90"
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : `Submit ${reportType} Report`}
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('reportFormDomestic.submitButton').replace('{type}', reportType)}
         </Button>
       </form>
     </div>

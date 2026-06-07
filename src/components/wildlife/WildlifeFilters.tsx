@@ -2,6 +2,7 @@ import { Search, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { categories, type Category } from '@/data/wildlife'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface WildlifeFiltersProps {
   search: string
@@ -10,21 +11,25 @@ interface WildlifeFiltersProps {
   onCategoryChange: (category: Category) => void
 }
 
-const categoryLabels: Record<Category, string> = {
-  All: 'All Species',
-  mammal: '🦁 Mammals',
-  bird: '🦅 Birds',
-  reptile: '🦎 Reptiles',
-  amphibian: '🐸 Amphibians',
-  marine: '🐢 Marine',
-}
-
 export function WildlifeFilters({
   search,
   onSearchChange,
   activeCategory,
   onCategoryChange,
 }: WildlifeFiltersProps) {
+  const { t } = useLanguage()
+  const categoryLabel = (cat: Category): string => {
+    const labels: Record<Category, string> = {
+      All: t('wildlifeFilters.all'),
+      mammal: t('wildlifeFilters.mammal'),
+      bird: t('wildlifeFilters.bird'),
+      reptile: t('wildlifeFilters.reptile'),
+      amphibian: t('wildlifeFilters.amphibian'),
+      marine: t('wildlifeFilters.marine'),
+    }
+    return labels[cat]
+  }
+
   return (
     <div className="space-y-4">
       {/* Search */}
@@ -33,14 +38,14 @@ export function WildlifeFilters({
         <Input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search species by name..."
+          placeholder={t('wildlifeFilters.searchPlaceholder')}
           className="pl-10 pr-10 h-11 rounded-xl"
         />
         {search && (
           <button
             onClick={() => onSearchChange('')}
             className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Clear search"
+            aria-label={t('wildlifeFilters.clearSearch')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -60,7 +65,7 @@ export function WildlifeFilters({
                 : 'bg-primary/5 text-muted-foreground border-border hover:border-primary/40 hover:text-primary hover:bg-primary/10'
             )}
           >
-            {categoryLabels[cat]}
+            {categoryLabel(cat)}
           </button>
         ))}
       </div>

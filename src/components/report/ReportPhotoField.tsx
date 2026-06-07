@@ -12,6 +12,7 @@ import {
   sumPhotoBytes,
   type ReportPhotoItem,
 } from '@/lib/reportPhotos'
+import { useLanguage } from '@/context/LanguageContext'
 import { toast } from 'sonner'
 
 type Props = {
@@ -45,6 +46,7 @@ export function ReportPhotoField({
   maxPhotos = MAX_REPORT_PHOTOS,
   useStorageUpload = true,
 }: Props) {
+  const { t } = useLanguage()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const generateUploadUrl = useMutation(api.reportPhotoStorage.generateUploadUrl)
   const [uploading, setUploading] = useState(false)
@@ -84,7 +86,7 @@ export function ReportPhotoField({
 
     const remaining = maxPhotos - value.length
     if (remaining <= 0) {
-      toast.error(`You can attach up to ${maxPhotos} photos per report`)
+      toast.error(t('reportPhoto.errorMax').replace('{max}', String(maxPhotos)))
       return
     }
 
@@ -92,13 +94,9 @@ export function ReportPhotoField({
     if (files.length > remaining) {
       const skipped = files.length - remaining
       if (value.length === 0 && files.length > maxPhotos) {
-        toast.message(
-          `You selected ${files.length} photos; only the first ${maxPhotos} were added.`,
-        )
+        toast.message(t('reportPhoto.errorTooMany').replace('{total}', String(files.length)).replace('{max}', String(maxPhotos)))
       } else {
-        toast.message(
-          `Only ${remaining} photo${remaining === 1 ? '' : 's'} added (${skipped} skipped, max ${maxPhotos} per report).`,
-        )
+        toast.message(t('reportPhoto.errorSomeSkipped').replace('{remaining}', String(remaining)).replace('{skipped}', String(skipped)).replace('{max}', String(maxPhotos)))
       }
     }
 
@@ -107,14 +105,12 @@ export function ReportPhotoField({
 
     for (const file of toAdd) {
       if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} must be a JPG, PNG, or WebP image`)
+        toast.error(t('reportPhoto.errorInvalidType').replace('{name}', file.name))
         continue
       }
       if (runningTotal + file.size > MAX_REPORT_PHOTOS_TOTAL_BYTES) {
         const remainingMb = formatPhotoSizeMb(remainingPhotoBudgetBytes(runningTotal))
-        toast.error(
-          `${file.name} exceeds the remaining photo budget (${remainingMb} MB left of 50 MB total)`,
-        )
+        toast.error(t('reportPhoto.errorBudget').replace('{name}', file.name).replace('{remaining}', remainingMb))
         continue
       }
       accepted.push(file)
@@ -157,10 +153,10 @@ export function ReportPhotoField({
 
       if (added > 0) {
         onChange(next)
-        toast.success(added === 1 ? 'Photo added' : `${added} photos added`)
+        toast.success(added === 1 ? t('reportPhoto.successAdded') : t('reportPhoto.successAddedMany').replace('{count}', String(added)))
       }
     } catch {
-      toast.error('Could not upload photos. Please try again.')
+      toast.error(t('reportPhoto.errorUpload'))
     } finally {
       setUploading(false)
     }
@@ -202,7 +198,7 @@ export function ReportPhotoField({
                 type="button"
                 className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-background/95 text-muted-foreground shadow-sm hover:bg-destructive/10 hover:text-destructive"
                 onClick={() => removePhoto(index)}
-                aria-label={`Remove photo ${index + 1}`}
+                aria-label={t('reportPhoto.removeLabel').replace('{index}', String(index + 1))}
                 disabled={uploading}
               >
                 <X className="h-3.5 w-3.5" />
@@ -233,20 +229,19 @@ export function ReportPhotoField({
           )}
           <p className="mb-1 text-sm font-medium text-foreground">
             {uploading
-              ? 'Uploading photos…'
+              ? t('reportPhoto.uploading')
               : value.length === 0
-                ? 'Click to upload photos'
-                : 'Add more photos'}
+                ? t('reportPhoto.clickToUpload')
+                : t('reportPhoto.addMore')}
           </p>
           <p className="text-xs text-muted-foreground">
-            JPG, PNG, WebP · up to {maxPhotos} photos · 50 MB total · {value.length}/{maxPhotos}{' '}
-            · {usageLabel}
+            {t('reportPhoto.helper').replace('{max}', String(maxPhotos)).replace('{count}', String(value.length)).replace('{usage}', usageLabel)}
           </p>
         </button>
       ) : null}
 
       {required && value.length === 0 ? (
-        <p className="text-xs text-destructive">At least one photo is required for this report.</p>
+        <p className="text-xs text-destructive">{t('reportPhoto.required')}</p>
       ) : null}
     </div>
   )
