@@ -38,7 +38,13 @@ export function DomesticProfilePage() {
   const [lastName, setLastName] = useState(
     domesticApprover?.lastName ?? '',
   )
+const [contactPhone, setContactPhone] = useState(
+  domesticApprover?.contactPhone ?? '',
+)
 
+const [password, setPassword] = useState('')
+
+const [confirmPassword, setConfirmPassword] = useState('')
   const [saving, setSaving] = useState(false)
 
   if (!domesticApprover) {
@@ -54,6 +60,9 @@ function startEditing() {
 
   setFirstName(domesticApprover.firstName)
   setLastName(domesticApprover.lastName)
+  setContactPhone(domesticApprover.contactPhone ?? '')
+  setPassword('')
+  setConfirmPassword('')
   setIsEditing(true)
 }
 
@@ -62,22 +71,38 @@ function cancelEditing() {
 
   setFirstName(domesticApprover.firstName)
   setLastName(domesticApprover.lastName)
+  setContactPhone(domesticApprover.contactPhone ?? '')
+  setPassword('')
+  setConfirmPassword('')
   setIsEditing(false)
 }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
+async function handleSave(e: React.FormEvent) {
+  e.preventDefault()
 
-    setSaving(true)
+  const isValidPhone =
+  /^09\d{9}$/.test(contactPhone)
 
-    try {
-      // backend update later
+if (!isValidPhone) {
+  return
+}
 
-      setIsEditing(false)
-    } finally {
-      setSaving(false)
-    }
+{password && password.length < 8 ? (
+  <p className="mt-1 text-xs text-red-500">
+    Password must be at least 8 characters.
+  </p>
+) : null}
+
+  setSaving(true)
+
+  try {
+    // backend update later
+
+    setIsEditing(false)
+  } finally {
+    setSaving(false)
   }
+}
 
   const initials = `${domesticApprover.firstName?.[0] ?? ''}${
     domesticApprover.lastName?.[0] ?? ''
@@ -99,7 +124,7 @@ function cancelEditing() {
                 {domesticApprover.firstName}{' '}
                 {domesticApprover.lastName}
               </p>
-
+            
               <p className="mt-0.5 truncate text-sm text-muted-foreground">
                 {domesticApprover.email}
               </p>
@@ -202,7 +227,66 @@ function cancelEditing() {
                     required
                   />
                 </div>
+                <div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    Contact number
+  </label>
 
+  <Input
+    type="tel"
+    value={contactPhone}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, '')
+      if (value.length <= 11) {
+        setContactPhone(value)
+      }
+    }}
+    placeholder="09XXXXXXXXX"
+    required
+    minLength={11}
+    maxLength={11}
+  />
+
+  {contactPhone.length > 0 && !/^09\d{9}$/.test(contactPhone) ? (
+    <p className="mt-1 text-xs text-red-500">
+      Contact number must be exactly 11 digits.
+    </p>
+  ) : null}
+</div>
+<div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    New password
+  </label>
+
+  <Input
+    type="password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    placeholder="Leave blank to keep current password"
+  />
+</div>
+<div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    Confirm password
+  </label>
+
+  <Input
+    type="password"
+    value={confirmPassword}
+    onChange={(e) =>
+      setConfirmPassword(e.target.value)
+    }
+    placeholder="Confirm new password"
+  />
+
+  {password &&
+  confirmPassword &&
+  password !== confirmPassword ? (
+    <p className="mt-1 text-xs text-red-500">
+      Passwords do not match.
+    </p>
+  ) : null}
+</div>
                 <div className="flex gap-2 pt-2">
                   <Button
                     type="button"
@@ -213,7 +297,15 @@ function cancelEditing() {
                     Cancel
                   </Button>
 
-                  <Button type="submit" disabled={saving}>
+                  <Button
+  type="submit"
+  disabled={
+    saving ||
+    contactPhone.length !== 11 ||
+    (password !== '' &&
+      password !== confirmPassword)
+  }
+>
                     {saving ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
@@ -250,6 +342,19 @@ function cancelEditing() {
                     <dd>{domesticApprover.email}</dd>
                   </div>
                 </div>
+                <div className="flex items-start gap-3">
+  <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+
+  <div>
+    <dt className="text-xs text-muted-foreground">
+      Contact number
+    </dt>
+
+    <dd>
+      {domesticApprover.contactPhone || 'Not set'}
+    </dd>
+  </div>
+</div>
 
                 <div className="flex items-start gap-3">
                   <Shield className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />

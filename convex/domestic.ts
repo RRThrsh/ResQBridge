@@ -122,11 +122,16 @@ export const addApprover = mutation({
     email: v.string(),
     firstName: v.string(),
     lastName: v.string(),
-    contactPhone: v.string(),
-    password: v.string(),
+    contactPhone: v.optional(v.string()),
+    password: v.optional(v.string()),
   },
+
+  returns: v.null(),
+
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email)
+
+    console.log('ADD APPROVER:', args)
 
     const existing = await ctx.db
       .query('users')
@@ -141,11 +146,13 @@ export const addApprover = mutation({
       email,
       firstName: args.firstName.trim(),
       lastName: args.lastName.trim(),
-      password: args.password,
+      password: args.password || '',
       role: 'domestic_approver',
-      contactPhone: args.contactPhone.trim(),
+      contactPhone: args.contactPhone?.trim() || '',
       createdAt: Date.now(),
     })
+
+    return null
   },
 })
 

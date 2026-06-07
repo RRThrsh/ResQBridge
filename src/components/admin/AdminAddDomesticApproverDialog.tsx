@@ -23,7 +23,7 @@ type Props = {
 
 export function AdminAddDomesticApproverDialog({ adminEmail, open, onOpenChange }: Props) {
   // @ts-ignore - Bypassing strict TS check
-  const addApprover = useMutation((api as any).domestic.addApprover)
+  const addApprover = useMutation(api.domestic.addApprover)
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')

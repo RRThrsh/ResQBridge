@@ -12,8 +12,6 @@ function resolveSmtpConfig() {
   const user = stripQuotes(process.env.EMAIL_USER ?? '')
   const pass = stripQuotes(process.env.EMAIL_PASS ?? '').replace(/\s+/g, '')
 
-  // UPDATE: Removed `isGmail` declaration to fix TS6133
-
   return {
     host: 'smtp.gmail.com',
     port: 465,
@@ -50,38 +48,21 @@ export const alertAdmin = internalAction({
       // =========================
       // EMAIL NOTIFICATION
       // =========================
-// =========================
-// GET ALL ADMINS
-// =========================
-const admins = await _ctx.runQuery(
-  'admin:getAdminsForNotifications' as any
-)
+      
+      // HARDCODED ADMIN EMAIL
+      // Replace this string with the actual admin email you want to use.
+      // You can add more emails to the array if needed: ['admin1@email.com', 'admin2@email.com']
+      const adminEmails = ['dwarms.official@gmail.com'] 
 
-const adminEmails = admins
-  .map((admin: {
-    email: string
-    firstName: string
-    lastName: string
-  }) => admin.email)
-  .filter(Boolean)
+      console.log('ADMIN EMAILS:', adminEmails)
 
-if (adminEmails.length === 0) {
-  throw new Error('No admin emails found.')
-}
+      const emailResult = await transporter.sendMail({
+        from: `"${config.fromName}" <${config.fromAddress}>`,
+        to: adminEmails,
 
-// =========================
-// EMAIL NOTIFICATION
-// =========================
+        subject: 'PWRRC Wildlife Report Alert',
 
-console.log('ADMIN EMAILS:', adminEmails)
-
-const emailResult = await transporter.sendMail({
-  from: `"${config.fromName}" <${config.fromAddress}>`,
-  to: adminEmails,
-
-  subject: 'PWRRC Wildlife Report Alert',
-
-  text: `
+        text: `
 New Wildlife Report Submitted
 
 Animal: ${args.species}
@@ -90,22 +71,20 @@ Location: ${args.location}
 Please check now.
 `,
 
-  html: `
+        html: `
     <h2>New Wildlife Report Submitted</h2>
-
     <p><strong>Animal:</strong> ${args.species}</p>
-
     <p><strong>Location:</strong> ${args.location}</p>
-
     <p>Please check now.</p>
   `,
-})
+      })
 
-console.log('EMAIL RESULT:', emailResult)
+      console.log('EMAIL RESULT:', emailResult)
 
       // =========================
-      // SMS NOTIFICATION
+      // SMS NOTIFICATION (COMMENTED OUT)
       // =========================
+      /*
       let cleanNumber = '09539814023'.replace(/\D/g, '')
       let formattedPhone = ''
 
@@ -118,8 +97,10 @@ console.log('EMAIL RESULT:', emailResult)
       } else {
         formattedPhone = '+' + cleanNumber
       }
+      
       console.log('PHILSMS TOKEN EXISTS:', !!process.env.PHILSMS_API_TOKEN)
-console.log('FORMATTED PHONE:', formattedPhone)
+      console.log('FORMATTED PHONE:', formattedPhone)
+      
       const response = await fetch(
         'https://dashboard.philsms.com/api/v3/sms/send',
         {
@@ -145,6 +126,7 @@ console.log('FORMATTED PHONE:', formattedPhone)
 
       const result = await response.json()
       console.log('SMS RESPONSE:', result)
+      */
       
     } catch (error: any) {
       console.error('NOTIFICATION ERROR:', error.message || error)
@@ -166,21 +148,17 @@ export const notifyRescuer = internalAction({
       console.log('NOTIFY RESCUER TRIGGERED')
 
       // =========================
-      // EMAIL
+      // EMAIL (Dynamically uses args.rescuerEmail)
       // =========================
-        const emailResult = await transporter.sendMail({
-          from: `"${config.fromName}" <${config.fromAddress}>`,
-          to: args.rescuerEmail,
+      const emailResult = await transporter.sendMail({
+        from: `"${config.fromName}" <${config.fromAddress}>`,
+        to: args.rescuerEmail, // Identifies and targets the specific rescuer's email
         subject: 'New Rescue Assignment',
         html: `
           <h2>New Rescue Assignment</h2>
-
           <p><strong>Report Number:</strong> ${args.reportNumber}</p>
-
           <p><strong>Animal:</strong> ${args.animalName}</p>
-
           <p><strong>Location:</strong> ${args.location}</p>
-
           <p>Please check now.</p>
         `,
       })
@@ -188,8 +166,9 @@ export const notifyRescuer = internalAction({
       console.log('RESCUER EMAIL RESULT:', emailResult)
 
       // =========================
-      // SMS
+      // SMS (COMMENTED OUT)
       // =========================
+      /*
       if (args.rescuerPhone) {
         const cleanPhone = args.rescuerPhone.replace(/\D/g, '')
 
@@ -216,6 +195,7 @@ export const notifyRescuer = internalAction({
 
         console.log('RESCUER SMS RESULT:', result)
       }
+      */
     } catch (error: any) {
       console.error(
         'RESCUER NOTIFICATION ERROR:',

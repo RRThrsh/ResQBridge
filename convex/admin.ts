@@ -1,7 +1,6 @@
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 import { mutation, query, type MutationCtx } from './_generated/server'
-import { v } from 'convex/values'
 import { assertAdmin, getAdminByEmail, isAdminEmail, seedDefaultAdmin } from './lib/adminAccess'
 import { normalizeEmail } from './lib/admins'
 import { reportDocValidator } from './lib/reportFields'
@@ -10,6 +9,7 @@ import { generateReportNumber, isTerminalStatus, normalizeReportStatus } from '.
 import { buildReportAnalytics } from './lib/reportAnalytics'
 import { getRescuerByEmail } from './lib/rescuerAccess'
 import { writeAuditLog } from './lib/auditLog'
+import { v, ConvexError } from 'convex/values' // KEEP THIS ONE
 
 const userRoleValidator = v.optional(v.union(v.literal('admin'), v.literal('user'), v.literal('rescuer'), v.literal('domestic_approver')))
 
@@ -113,11 +113,13 @@ export const addAdmin = mutation({
     const lastName = args.lastName.trim()
     const password = args.password 
 
-    if (!email.includes('@')) throw new Error('Enter a valid email address.')
-    if (!firstName || !lastName) throw new Error('First and last name are required.')
+    if (!email.includes('@')) throw new ConvexError('Enter a valid email address.') // <-- Changed
+    if (!firstName || !lastName) throw new ConvexError('First and last name are required.') // <-- Changed
 
     const existing = await getAdminByEmail(ctx, email)
-    if (existing) throw new Error('This email is already an admin.')
+    
+    // THIS IS THE FIX FOR YOUR POPUP:
+    if (existing) throw new ConvexError('This email is already an admin.') 
 
     // UPDATE: Inserting password field
     await ctx.db.insert('admins', { email, firstName, lastName, password, createdAt: Date.now() })

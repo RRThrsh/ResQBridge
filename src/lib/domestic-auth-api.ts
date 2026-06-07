@@ -6,6 +6,8 @@ export type DomesticUser = {
   email: string
   firstName: string
   lastName: string
+  contactPhone?: string
+  password?: string
   role: 'admin' | 'domestic_approver'
 }
 
@@ -86,14 +88,23 @@ export async function verifyDomesticOtp(email: string, code: string): Promise<Do
 
   await handleAuthResponse(response)
 
-  const data = (await response.json()) as {
-    user: { email: string; firstName: string; lastName: string; role: 'admin' | 'domestic_approver' }
+const data = (await response.json()) as {
+  user: {
+    email: string
+    firstName: string
+    lastName: string
+    contactPhone?: string
+    password?: string
+    role: 'admin' | 'domestic_approver'
   }
+}
 
-  return {
-    email: normalizeEmail(data.user.email),
-    firstName: data.user.firstName,
-    lastName: data.user.lastName,
-    role: data.user.role,
-  }
+return {
+  email: normalizeEmail(data.user.email),
+  firstName: data.user.firstName,
+  lastName: data.user.lastName,
+  contactPhone: data.user.contactPhone,
+  password: data.user.password,
+  role: data.user.role,
+}
 }

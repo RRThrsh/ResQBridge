@@ -99,7 +99,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
   try {
     const body = await readJsonBody(request)
 
-    const identifier = String(body.identifier ?? '').trim().toLowerCase()
+    const identifier = String(body.identifier ?? body.email ?? body.phone ?? '').trim().toLowerCase()
     const mode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
     const firstName = String(body.firstName ?? '').trim()
     const lastName = String(body.lastName ?? '').trim()

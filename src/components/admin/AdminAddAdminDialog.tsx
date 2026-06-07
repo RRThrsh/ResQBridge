@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { normalizeEmail } from '@/lib/admin'
 import { toast } from 'sonner'
+import { ConvexError } from 'convex/values'
 
 type Props = {
   adminEmail: string
@@ -57,11 +58,19 @@ export function AdminAddAdminDialog({ adminEmail, open, onOpenChange }: Props) {
       resetForm()
       onOpenChange(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not add admin')
+      // Check if it's a ConvexError and extract the custom string payload
+      const errorMessage =
+        error instanceof ConvexError
+          ? (error.data as string)
+          : error instanceof Error
+            ? error.message
+            : 'Could not add admin'
+            
+      toast.error(errorMessage)
     } finally {
       setSaving(false)
     }
-  }
+  } // <-- THIS WAS THE MISSING BRACKET
 
   return (
     <Dialog
