@@ -137,15 +137,16 @@ export const addApprover = mutation({
       throw new Error('A user with this email already exists.')
     }
 
-    await ctx.db.insert('users', {
-      email,
-      firstName: args.firstName.trim(),
-      lastName: args.lastName.trim(),
-      password: args.password,
-      role: 'domestic_approver',
-      contactPhone: args.contactPhone.trim(),
-      createdAt: Date.now(),
-    })
+await ctx.db.insert('users', {
+  email,
+  firstName: args.firstName.trim(),
+  lastName: args.lastName.trim(),
+  password: args.password,
+  role: 'domestic_approver',
+  contactPhone: args.contactPhone.trim(),
+  createdAt: Date.now(),
+  activeSessionId: undefined,
+})
   },
 })
 
