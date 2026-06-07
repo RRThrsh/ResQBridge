@@ -10,7 +10,7 @@ export interface OtpRecord {
   lastName: string
   code: string
   expiresAt: number
-  mode: 'sign-in' | 'sign-up'
+  mode: 'sign-in' | 'sign-up' | 'forgot-password'
   phone?: string
 }
 
