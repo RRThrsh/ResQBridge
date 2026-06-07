@@ -330,16 +330,23 @@ function AuthForm({ onClose }: { onClose: () => void }) {
 
           {mode === 'sign-up' && (
             <>
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium mb-1.5">{t('auth.confirmPassword')}</label>
                 <Input
                   placeholder={t('auth.confirmPasswordPlaceholder')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={loading}
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                </button>
               </div>
 
               <div className="flex items-start gap-2">
