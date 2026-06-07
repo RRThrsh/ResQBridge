@@ -70,6 +70,7 @@ export function AdminAddAdminDialog({ adminEmail, open, onOpenChange }: Props) {
     } finally {
       setSaving(false)
     }
+  } // <-- THIS WAS THE MISSING BRACKET
 
   return (
     <Dialog
