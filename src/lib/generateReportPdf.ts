@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 import type { AdminStoredReport } from './reports'
 import { formatReportType, statusLabel } from './reports'
 import { formatDateTime } from './dates'
@@ -52,7 +52,7 @@ export function generateReportPdf(report: AdminStoredReport) {
 
   const body = fields.map(([label, value]) => [label, value])
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: y,
     head: [['Field', 'Value']],
     body,

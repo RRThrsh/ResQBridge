@@ -68,6 +68,7 @@ export function ReportPhotosGallery({
             onClose={close}
             onPrev={showPrev}
             onNext={showNext}
+            t={t}
           />
         ) : null}
       </>
@@ -101,6 +102,7 @@ export function ReportPhotosGallery({
             onClose={close}
             onPrev={showPrev}
             onNext={showNext}
+            t={t}
           />
         ) : null}
       </>
@@ -157,6 +159,7 @@ export function ReportPhotosGallery({
           onClose={close}
           onPrev={showPrev}
           onNext={showNext}
+          t={t}
         />
       ) : null}
     </>
@@ -170,6 +173,7 @@ function PhotoLightbox({
   onClose,
   onPrev,
   onNext,
+  t,
 }: {
   photos: string[]
   alt: string
@@ -177,6 +181,7 @@ function PhotoLightbox({
   onClose: () => void
   onPrev: () => void
   onNext: () => void
+  t: (key: string) => string
 }) {
   return (
     <div
