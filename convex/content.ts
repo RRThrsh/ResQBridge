@@ -2,7 +2,6 @@ import { mutation, query } from './_generated/server'
 import type { MutationCtx, QueryCtx } from './_generated/server'
 import { v } from 'convex/values'
 import { assertAdmin } from './lib/adminAccess'
-import { defaultNews, defaultWildlife } from './lib/defaultContent'
 import { writeAuditLog } from './lib/auditLog'
 
 // Root validator that handles both singular and plural images
@@ -83,18 +82,6 @@ type NewsItem = {
   category: string
 }
 
-function getMappedDefaultWildlife(): WildlifeItem[] {
-  return defaultWildlife.map((item: any) => {
-    const { image, ...rest } = item;
-    return {
-      ...rest,
-      safetyTips: Array.isArray(item.safetyTips) ? [...item.safetyTips] : [],
-      tags: Array.isArray(item.tags) ? [...item.tags] : [],
-      images: Array.isArray(item.images) ? [...item.images] : (image ? [image] : []),
-    } as WildlifeItem;
-  });
-}
-
 async function getItems<T>(
   ctx: QueryCtx | MutationCtx,
   key: 'wildlife' | 'news',
@@ -150,11 +137,7 @@ export const listWildlife = query({
   args: {},
   returns: v.any(),
   handler: async (ctx) => {
-    return await getItems<WildlifeItem>(
-      ctx,
-      'wildlife',
-      getMappedDefaultWildlife()
-    )
+    return await getItems<WildlifeItem>(ctx, 'wildlife', [])
   },
 })
 
@@ -162,7 +145,7 @@ export const listNews = query({
   args: {},
   returns: v.array(newsItemValidator),
   handler: async (ctx) => {
-    return await getItems<NewsItem>(ctx, 'news', defaultNews.map((item) => ({ ...item })))
+    return await getItems<NewsItem>(ctx, 'news', [])
   },
 })
 
@@ -180,7 +163,7 @@ export const seedContent = mutation({
     if (!wildlifeRow) {
       await ctx.db.insert('siteContent', {
         key: 'wildlife',
-        itemsJson: JSON.stringify(getMappedDefaultWildlife()),
+        itemsJson: JSON.stringify([]),
         updatedAt: Date.now(),
       })
     }
@@ -193,7 +176,7 @@ export const seedContent = mutation({
     if (!newsRow) {
       await ctx.db.insert('siteContent', {
         key: 'news',
-        itemsJson: JSON.stringify(defaultNews),
+        itemsJson: JSON.stringify([]),
         updatedAt: Date.now(),
       })
     }
@@ -237,8 +220,7 @@ export const createWildlifeItem = mutation({
   returns: v.string(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const fallback = getMappedDefaultWildlife()
-    const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
+    const items = await getItems<WildlifeItem>(ctx, 'wildlife', [])
 
     const baseId = slugId(args.item.commonName, `species-${Date.now()}`)
     let id = baseId
@@ -252,14 +234,11 @@ export const createWildlifeItem = mutation({
     let finalImages: string[] = []
     if (Array.isArray(args.item.images)) {
       finalImages = args.item.images.map((img) => {
-  // Limit every image to ~200KB base64
-
-  return img
-})
+        // Limit every image to ~200KB base64
+        return img
+      })
     } else if (typeof args.item.image === 'string' && args.item.image) {
-
-
-finalImages = [args.item.image]
+      finalImages = [args.item.image]
     }
 
     // ENFORCE LIMIT: Keep only the first 3 pictures if more are sent
@@ -315,7 +294,7 @@ export const createNewsItem = mutation({
   returns: v.string(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const items = await getItems<NewsItem>(ctx, 'news', defaultNews.map((item) => ({ ...item })))
+    const items = await getItems<NewsItem>(ctx, 'news', [])
     const prefix = args.item.type === 'event' ? 'ev' : 'nw'
     const id = `${prefix}-${Date.now()}`
     const nextItem: NewsItem = { ...args.item, id }
@@ -342,20 +321,15 @@ export const updateWildlifeItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const fallback = getMappedDefaultWildlife()
-    const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
+    const items = await getItems<WildlifeItem>(ctx, 'wildlife', [])
     
     let finalImages: string[] = []
     if (Array.isArray(args.item.images)) {
       finalImages = args.item.images.map((img) => {
-
-
-  return img
-})
+        return img
+      })
     } else if (typeof (args.item as any).image === 'string' && (args.item as any).image) {
-
-
-finalImages = [(args.item as any).image]
+      finalImages = [(args.item as any).image]
     }
     const normalizedItem: WildlifeItem = {
       id: args.item.id,
@@ -405,8 +379,7 @@ export const deleteWildlifeItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const fallback = getMappedDefaultWildlife()
-    const items = await getItems<WildlifeItem>(ctx, 'wildlife', fallback)
+    const items = await getItems<WildlifeItem>(ctx, 'wildlife', [])
     const next = items.filter((item) => item.id !== args.itemId)
     if (next.length === items.length) {
       throw new Error('Species not found.')
@@ -433,7 +406,7 @@ export const updateNewsItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const items = await getItems<NewsItem>(ctx, 'news', defaultNews.map((item) => ({ ...item })))
+    const items = await getItems<NewsItem>(ctx, 'news', [])
     const next = items.map((item) => (item.id === args.item.id ? args.item : item))
     if (!next.some((item) => item.id === args.item.id)) {
       throw new Error('Item not found.')
@@ -458,7 +431,7 @@ export const deleteNewsItem = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const items = await getItems<NewsItem>(ctx, 'news', defaultNews.map((item) => ({ ...item })))
+    const items = await getItems<NewsItem>(ctx, 'news', [])
     const next = items.filter((item) => item.id !== args.itemId)
     if (next.length === items.length) {
       throw new Error('Item not found.')
