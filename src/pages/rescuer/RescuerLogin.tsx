@@ -340,7 +340,7 @@ export function RescuerLogin() {
                 fontFamily: 'var(--font-heading)',
               }}
             >
-              PWRRC Rescuer
+              PWRCC Rescuer
             </CardTitle>
 
             <CardDescription>
