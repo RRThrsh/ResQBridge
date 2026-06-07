@@ -67,7 +67,7 @@ async function authFetch(path: string, body: Record<string, unknown>): Promise<R
 async function handleAuthResponse(response: Response): Promise<void> {
   if (!response.ok) {
     if (response.status === 429) {
-      window.location.href = '/too-many-request'
+      window.location.href = '/too-many-request?redirect=' + encodeURIComponent(window.location.pathname)
       await new Promise(() => {}) // halt
     }
     if (response.status === 401) {
