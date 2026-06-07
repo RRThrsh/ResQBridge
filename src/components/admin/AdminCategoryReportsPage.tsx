@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
   import { useMutation, useQuery } from 'convex/react'
-  import { Loader2, Search } from 'lucide-react'
+  import { FileDown, Loader2, Search } from 'lucide-react'
   import { api } from '../../../convex/_generated/api'
   import type { Id } from '../../../convex/_generated/dataModel'
   import { AdminConfirmDialog } from '@/components/admin/AdminConfirmDialog'
@@ -26,6 +26,7 @@ import { useMemo, useState } from 'react'
     type ReportCategory,
   } from '@/lib/reports'
   import { cn } from '@/lib/utils'
+  import { generateReportPdf } from '@/lib/generateReportPdf'
   import { toast } from 'sonner'
 
   type DialogMode = 'view' | 'edit'
@@ -142,6 +143,10 @@ import { useMemo, useState } from 'react'
       } finally {
         setDeleting(false)
       }
+    }
+
+    function handleDownloadPdf(report: AdminStoredReport) {
+      generateReportPdf(report)
     }
 
     if (!admin || rows === undefined) {
@@ -281,16 +286,26 @@ import { useMemo, useState } from 'react'
                           {dateLine}
                         </AdminTableCell>
                         <AdminTableActionsCell>
-                          <AdminTableActions
-                            viewOnly={isDomestic}
-                            showAssign={
-                              !isDomestic &&
-                              report.status !== 'en_route' &&
-                              canAdminAssignRescuer(report.status)
-                            }
-                            onAssign={() => openAssignDialog(report)}
-                            onAction={(action) => handleAction(report, action)}
-                          />
+                          <div className="flex items-center gap-1">
+                            <AdminTableActions
+                              viewOnly={isDomestic}
+                              showAssign={
+                                !isDomestic &&
+                                report.status !== 'en_route' &&
+                                canAdminAssignRescuer(report.status)
+                              }
+                              onAssign={() => openAssignDialog(report)}
+                              onAction={(action) => handleAction(report, action)}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadPdf(report)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                              aria-label="Download PDF"
+                            >
+                              <FileDown className="h-4 w-4" />
+                            </button>
+                          </div>
                         </AdminTableActionsCell>
                       </tr>
                     )
