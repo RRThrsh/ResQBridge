@@ -251,6 +251,14 @@ export function WildlifeSightingForm() {
       toast.error(t('reportFormWildlife.errorLoginRequired'))
       return
     }
+
+    // --- NEW VALIDATION: Force Map Pin ---
+    if (!coords) {
+      // Fallback text if the translation key isn't set up yet
+      toast.error(t('reportFormWildlife.errorMapPinRequired') || 'Please drop a pin on the map or use the current location button to confirm the exact spot.')
+      return
+    }
+
     if (!formData.species.trim() || !formData.location || !formData.description) {
       toast.error(t('reportFormWildlife.errorRequiredFields'))
       return
@@ -395,6 +403,7 @@ export function WildlifeSightingForm() {
                 placeholder={t('reportFormWildlife.locationPlaceholder')}
                 className="pl-10 h-12 bg-background border-border rounded-xl pr-3"
                 required
+                readOnly // --- NEW: Forces user to use the map/GPS button instead of typing manually ---
               />
             </div>
             <Button
