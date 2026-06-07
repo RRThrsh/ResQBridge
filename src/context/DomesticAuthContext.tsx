@@ -7,7 +7,9 @@ interface DomesticAuthContextType {
   isLoggedIn: boolean
   domesticApprover: DomesticUser | null
   login: (approver: DomesticUser) => void
-  updateApprover: (patch: Pick<DomesticUser, 'firstName' | 'lastName'>) => void
+  updateApprover: (
+  patch: Partial<DomesticUser>
+) => void
   logout: () => void
 }
 
@@ -38,7 +40,9 @@ export function DomesticAuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
   }
 
-  const updateApprover = (patch: Pick<DomesticUser, 'firstName' | 'lastName'>) => {
+  const updateApprover = (
+  patch: Partial<DomesticUser>
+) => {
     setApprover((current) => {
       if (!current) return current
       const next = { ...current, ...patch }
