@@ -97,7 +97,6 @@ export function AdminAddDomesticApproverDialog({ adminEmail, open, onOpenChange 
               type="tel"
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
-              placeholder="For contact purposes"
               required
             />
           </div>
@@ -112,7 +111,6 @@ export function AdminAddDomesticApproverDialog({ adminEmail, open, onOpenChange 
     onChange={(e) =>
       setPassword(e.target.value)
     }
-    placeholder="Enter password"
     required
   />
 </div>
