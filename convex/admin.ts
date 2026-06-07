@@ -240,10 +240,16 @@ const [users, reports, rescuers, admins] = await Promise.all([
   ctx.db.query('rescuers').collect(),
   ctx.db.query('admins').collect(),
 ])
-    return buildReportAnalytics(
+console.log(
+  users.map((u) => ({
+    email: u.email,
+    role: u.role,
+  })),
+)
+return buildReportAnalytics(
   reports,
   rescuers,
-  users.length + rescuers.length + admins.length,
+  users.length,
   args.days ?? null,
 )
   },

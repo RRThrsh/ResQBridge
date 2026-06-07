@@ -356,10 +356,6 @@ export function WildlifeSightingForm() {
             </p>
           </div>
 
-          <p className="text-muted-foreground">
-            Report a protected or endemic species sighting.
-            Please keep your distance and do not disturb the animal.
-          </p>
         </div>
       </div>
 
