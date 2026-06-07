@@ -133,11 +133,7 @@ export function AdminAuditLogsPage() {
     <div className="mx-auto w-full max-w-full" style={{ fontFamily: "'Courier New', 'Consolas', monospace" }}>
       <div className="rounded-lg border border-[#00ff8844] bg-[#0a0a0a] p-4 sm:p-6">
         <pre className="mb-6 text-xs leading-tight text-[#00ff88] sm:text-sm" style={{ textShadow: '0 0 8px rgba(0,255,136,0.3)' }}>
-{`
-      AUDIT LOG TERMINAL
-
-
-`}
+          
         </pre>
 
         {logs === undefined ? (
