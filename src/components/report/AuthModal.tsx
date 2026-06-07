@@ -69,8 +69,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const isEmailIdent = identifier.includes('@')
 
   const identifierMasked = isEmailIdent
-    ? identifier.replace(/(.{3}).+@/, '$1***@')
-    : identifier.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2')
+    identifier.replace(/(.{3}).+@/, '$1***@')
+    // : identifier.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2')
 
   const resetForm = useCallback(() => {
     setStep('form')
@@ -136,7 +136,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     if (submittingRef.current) return
     const trimmed = identifier.trim().toLowerCase()
     if (!trimmed) {
-      setError('Please enter your email or phone number.')
+      setError('Please enter your email')
       return
     }
     if (mode === 'sign-up') {

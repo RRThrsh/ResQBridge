@@ -444,7 +444,7 @@ async function handleUserSendOtp(
   const password = String(body.password ?? '')
 
   if (!identifier) {
-    sendJson(res, 400, { error: 'Email or phone is required.' })
+    sendJson(res, 400, { error: 'Email is required.' })
     return
   }
 

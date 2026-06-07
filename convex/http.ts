@@ -105,7 +105,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
     const lastName = String(body.lastName ?? '').trim()
     const password = String(body.password ?? '')
 
-    if (!identifier) return jsonResponse({ error: 'Email or phone is required.' }, 400)
+    if (!identifier) return jsonResponse({ error: 'Email is required.' }, 400)
 
     const secret = getOtpSecret()
 
@@ -251,7 +251,7 @@ const userVerifyOtp = async (ctx: ActionCtx, request: Request) => {
     const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
     const password = String(body.password ?? '')
 
-    if (!identifier) return jsonResponse({ error: 'Email or phone is required.' }, 400)
+    if (!identifier) return jsonResponse({ error: 'Email is required.' }, 400)
 
     const secret = getOtpSecret()
     const email = isEmail(identifier) ? identifier : normalizePhone(identifier)
