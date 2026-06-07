@@ -1,7 +1,6 @@
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 import { mutation, query, type MutationCtx } from './_generated/server'
-import { v } from 'convex/values'
 import { assertAdmin, getAdminByEmail, isAdminEmail, seedDefaultAdmin } from './lib/adminAccess'
 import { normalizeEmail } from './lib/admins'
 import { reportDocValidator } from './lib/reportFields'
@@ -10,7 +9,7 @@ import { generateReportNumber, isTerminalStatus, normalizeReportStatus } from '.
 import { buildReportAnalytics } from './lib/reportAnalytics'
 import { getRescuerByEmail } from './lib/rescuerAccess'
 import { writeAuditLog } from './lib/auditLog'
-import { v, ConvexError } from 'convex/values'
+import { v, ConvexError } from 'convex/values' // KEEP THIS ONE
 
 const userRoleValidator = v.optional(v.union(v.literal('admin'), v.literal('user'), v.literal('rescuer'), v.literal('domestic_approver')))
 
