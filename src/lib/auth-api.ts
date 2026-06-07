@@ -48,10 +48,6 @@ async function handleAuthResponse(response: Response): Promise<void> {
       window.location.href = '/too-many-request?redirect=' + encodeURIComponent(window.location.pathname)
       await new Promise(() => {}) // halt
     }
-    if (response.status === 401) {
-      window.location.href = '/error/401'
-      await new Promise(() => {}) // halt
-    }
     throw new Error(await parseAuthError(response))
   }
 }
