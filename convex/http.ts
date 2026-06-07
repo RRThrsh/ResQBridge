@@ -105,7 +105,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
     const lastName = String(body.lastName ?? '').trim()
     const password = String(body.password ?? '')
 
-    if (!identifier) return jsonResponse({ error: 'Email or phone is required.' }, 400)
+    if (!identifier) return jsonResponse({ error: 'Email is required.' }, 400)
 
     const secret = getOtpSecret()
 
@@ -136,8 +136,8 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
           }
           if (!loginCheck.allowed) {
             return jsonResponse({
-              error: `Invalid password. ${loginCheck.remainingAttempts} attempt(s) remaining.`,
-            }, 401)
+              error: `Invalid Password`,
+            }, 400)
           }
         } else {
           await ctx.runMutation(api.users.validateLoginAttempt, {
@@ -202,7 +202,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
         if (!loginCheck.allowed) {
           return jsonResponse({
             error: `Invalid password. ${loginCheck.remainingAttempts} attempt(s) remaining.`,
-          }, 401)
+          }, 400)
         }
       } else {
         await ctx.runMutation(api.users.validateLoginAttempt, {
@@ -251,7 +251,7 @@ const userVerifyOtp = async (ctx: ActionCtx, request: Request) => {
     const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
     const password = String(body.password ?? '')
 
-    if (!identifier) return jsonResponse({ error: 'Email or phone is required.' }, 400)
+    if (!identifier) return jsonResponse({ error: 'Email is required.' }, 400)
 
     const secret = getOtpSecret()
     const email = isEmail(identifier) ? identifier : normalizePhone(identifier)
@@ -320,7 +320,7 @@ const adminSendOtp = async (ctx: ActionCtx, request: Request) => {
 
     // ✅ Reset flow bypass added here
     if (password !== 'reset-temp' && profile.password !== password) {
-      return jsonResponse({ error: 'Incorrect password.' }, 401)
+      return jsonResponse({ error: 'Incorrect password.' }, 400)
     }
 
     const code = generateOtp()
@@ -389,7 +389,7 @@ const rescuerSendOtp = async (ctx: ActionCtx, request: Request) => {
 
     // ✅ Reset flow bypass added here
     if (password !== 'reset-temp' && profile.password !== password) {
-      return jsonResponse({ error: 'Incorrect password.' }, 401)
+      return jsonResponse({ error: 'Incorrect password.' }, 400)
     }
 
     const code = generateOtp()
@@ -465,7 +465,7 @@ const domesticSendOtp = async (ctx: ActionCtx, request: Request) => {
 
     // ✅ Reset flow bypass added here
     if (password !== 'reset-temp' && profile.password !== password) {
-      return jsonResponse({ error: 'Incorrect password.' }, 401)
+      return jsonResponse({ error: 'Incorrect password.' }, 400)
     }
 
     const code = generateOtp()

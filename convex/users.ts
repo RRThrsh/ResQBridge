@@ -188,7 +188,7 @@ export const updateProfile = mutation({
         .unique()
       
       if (emailTaken) {
-        throw new Error('This email or phone number is already in use by another account.')
+        throw new Error('This email number is already in use by another account.')
       }
     }
 

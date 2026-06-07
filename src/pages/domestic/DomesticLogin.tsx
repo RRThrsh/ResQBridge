@@ -264,7 +264,7 @@ export function DomesticLogin() {
       if (action === 'send') {
         if (!forgotIdentifier.trim()) {
           return setError(
-            'Enter your email or phone',
+            'Enter your email',
           )
         }
 
@@ -377,7 +377,7 @@ export function DomesticLogin() {
                 {forgotStep === 'identifier' && (
                   <>
                     <Input
-                      placeholder="Email or phone"
+                      placeholder="Email"
                       value={forgotIdentifier}
                       onChange={(e) =>
                         setForgotIdentifier(
