@@ -28,67 +28,39 @@ export function AdminAddRescuerDialog({
   open,
   onOpenChange,
 }: Props) {
-  const addRescuer =
-    useMutation(
-      api.rescuers.addRescuer,
-    )
+  const addRescuer = useMutation(api.rescuers.addRescuer)
 
-  const [email, setEmail] =
-    useState('')
-
-  const [
-    firstName,
-    setFirstName,
-  ] = useState('')
-
-  const [lastName, setLastName] =
-    useState('')
-
-  const [
-    contactPhone,
-    setContactPhone,
-  ] = useState('')
-
-  const [password, setPassword] =
-    useState('ChangeMe123!')
-
-  const [saving, setSaving] =
-    useState(false)
+  const [email, setEmail] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [contactPhone, setContactPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [saving, setSaving] = useState(false)
 
   function resetForm() {
     setEmail('')
     setFirstName('')
     setLastName('')
     setContactPhone('')
-    setPassword('ChangeMe123!')
+    setPassword('')
   }
 
-  async function handleSubmit(
-    e: React.FormEvent,
-  ) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     setSaving(true)
 
     try {
       await addRescuer({
-        adminEmail:
-          normalizeEmail(
-            adminEmail,
-          ),
-
-        email:
-          normalizeEmail(email),
-
+        adminEmail: normalizeEmail(adminEmail),
+        email: normalizeEmail(email),
         firstName,
         lastName,
         contactPhone,
         password,
       })
 
-      toast.success(
-        'Rescuer added successfully.',
-      )
+      toast.success('Rescuer added successfully.')
 
       resetForm()
       onOpenChange(false)
@@ -113,34 +85,21 @@ export function AdminAddRescuerDialog({
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            Add rescuer
-          </DialogTitle>
-
+          <DialogTitle>Add rescuer</DialogTitle>
           <DialogDescription>
-            Create a rescuer account
-            with password login and
-            OTP verification.
+            Create a rescuer account with password login and OTP verification.
           </DialogDescription>
         </DialogHeader>
 
-        <form
-          onSubmit={handleSubmit}
-          className="grid gap-3"
-        >
+        <form onSubmit={handleSubmit} className="grid gap-3">
           <div>
             <label className="mb-1 block text-xs text-muted-foreground">
               Email
             </label>
-
             <Input
               type="email"
               value={email}
-              onChange={(e) =>
-                setEmail(
-                  e.target.value,
-                )
-              }
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -149,14 +108,9 @@ export function AdminAddRescuerDialog({
             <label className="mb-1 block text-xs text-muted-foreground">
               First name
             </label>
-
             <Input
               value={firstName}
-              onChange={(e) =>
-                setFirstName(
-                  e.target.value,
-                )
-              }
+              onChange={(e) => setFirstName(e.target.value)}
               required
             />
           </div>
@@ -165,14 +119,9 @@ export function AdminAddRescuerDialog({
             <label className="mb-1 block text-xs text-muted-foreground">
               Last name
             </label>
-
             <Input
               value={lastName}
-              onChange={(e) =>
-                setLastName(
-                  e.target.value,
-                )
-              }
+              onChange={(e) => setLastName(e.target.value)}
               required
             />
           </div>
@@ -181,15 +130,10 @@ export function AdminAddRescuerDialog({
             <label className="mb-1 block text-xs text-muted-foreground">
               Contact number
             </label>
-
             <Input
               type="tel"
               value={contactPhone}
-              onChange={(e) =>
-                setContactPhone(
-                  e.target.value,
-                )
-              }
+              onChange={(e) => setContactPhone(e.target.value)}
               placeholder="For dispatch and follow-up"
               required
             />
@@ -197,17 +141,12 @@ export function AdminAddRescuerDialog({
 
           <div>
             <label className="mb-1 block text-xs text-muted-foreground">
-              Temporary password
+              Password
             </label>
-
             <Input
               type="text"
               value={password}
-              onChange={(e) =>
-                setPassword(
-                  e.target.value,
-                )
-              }
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
@@ -216,17 +155,11 @@ export function AdminAddRescuerDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() =>
-                onOpenChange(false)
-              }
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-
-            <Button
-              type="submit"
-              disabled={saving}
-            >
+            <Button type="submit" disabled={saving}>
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
