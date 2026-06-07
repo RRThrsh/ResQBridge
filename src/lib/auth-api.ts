@@ -1,7 +1,7 @@
 import type { AuthUser } from '@/types/auth'
 import { getAuthApiUrl, parseAuthError } from '@/lib/auth-api-base'
 
-export type AuthMode = 'sign-in' | 'sign-up'
+export type AuthMode = 'sign-in' | 'sign-up' | 'forgot-password'
 
 interface SendOtpInput {
   mode: AuthMode

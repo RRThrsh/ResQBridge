@@ -11,7 +11,7 @@ const scopeValidator = v.union(
   v.literal('user'),
   v.literal('rescuer'),
 )
-const modeValidator = v.union(v.literal('sign-in'), v.literal('sign-up'))
+const modeValidator = v.union(v.literal('sign-in'), v.literal('sign-up'), v.literal('forgot-password'))
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()

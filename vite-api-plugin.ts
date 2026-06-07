@@ -339,7 +339,7 @@ async function sendVerificationEmail(
   })
 }
 
-type AuthMode = 'sign-in' | 'sign-up'
+type AuthMode = 'sign-in' | 'sign-up' | 'forgot-password'
 
 interface SendOtpParams {
   email: string
@@ -584,6 +584,81 @@ async function handleUserSendOtp(
   sendJson(res, 200, { success: true })
 }
 
+async function handleForgotPasswordSendOtp(
+  res: ServerResponse,
+  options: ApiPluginOptions,
+  body: Record<string, unknown>,
+) {
+  const identifier = String(body.identifier ?? '').trim().toLowerCase()
+
+  if (!identifier) {
+    sendJson(res, 400, { error: 'Email is required.' })
+    return
+  }
+
+  const convex = getConvexClientForOtp(options.otpEnv)
+
+  if (isEmail(identifier)) {
+    const email = identifier
+    const existing = await convex.query(api.users.getByEmail, { email })
+
+    if (!existing) {
+      sendJson(res, 400, { error: 'No account found with this email.' })
+      return
+    }
+
+    await executeSendOtp(res, options, 'user', 'Your PWRRC password reset code', {
+      email,
+      firstName: existing.firstName,
+      lastName: existing.lastName,
+      mode: 'sign-in',
+    })
+    return
+  }
+
+  // Phone flow
+  const phone = normalizePhone(identifier)
+  if (!phone || phone.length < 10) {
+    sendJson(res, 400, { error: 'Please enter a valid phone number.' })
+    return
+  }
+
+  const existing = await convex.query(api.users.getByEmail, { email: phone })
+  if (!existing) {
+    sendJson(res, 400, { error: 'No account found with this phone number.' })
+    return
+  }
+
+  const code = generateOtp()
+  const expiresAt = Date.now() + 5 * 60 * 1000
+  const record: OtpRecord = {
+    email: phone,
+    firstName: existing.firstName,
+    lastName: existing.lastName,
+    code,
+    expiresAt,
+    mode: 'sign-in',
+    phone,
+  }
+
+  try {
+    await saveOtpRecord(options.otpEnv, 'user', record)
+  } catch (error) {
+    sendJson(res, 500, { error: formatOtpError(error) })
+    return
+  }
+
+  try {
+    await sendOtpSms(phone, code)
+  } catch (error) {
+    await deleteOtpRecord(options.otpEnv, 'user', phone)
+    sendJson(res, 500, { error: formatSmtpError(error) })
+    return
+  }
+
+  sendJson(res, 200, { success: true })
+}
+
 function getConvexClientForOtp(config: OtpStoreConfig) {
   if (!config.convexUrl) {
     throw new Error('Convex is not configured. Set VITE_CONVEX_URL in .env.')
@@ -632,6 +707,12 @@ async function handleUserVerifyOtp(
         password,
         phone: profile.phone,
       })
+    } else if (mode === 'forgot-password') {
+      // For forgot password, just verify the OTP and return success
+      // The frontend should handle the password reset separately
+      await consumeOtpRecord(options.otpEnv, 'user', email)
+      sendJson(res, 200, { success: true, user: { email, firstName: profile.firstName, lastName: profile.lastName, role: 'user' as const } })
+      return
     } else {
       const existing = await convex.query(api.users.getByEmail, { email })
       if (!existing) {
@@ -810,7 +891,11 @@ async function handleApi(
   if (req.method === 'POST' && pathname === '/api/auth/send-otp') {
     try {
       const body = await readJsonBody(req)
-      await handleUserSendOtp(res, options, body)
+      if (body.mode === 'forgot-password') {
+        await handleForgotPasswordSendOtp(res, options, body)
+      } else {
+        await handleUserSendOtp(res, options, body)
+      }
       return true
     } catch (error) {
       console.error('user send-otp error:', error)
@@ -822,11 +907,10 @@ async function handleApi(
   if (req.method === 'POST' && pathname === '/api/auth/verify-otp') {
     try {
       const body = await readJsonBody(req)
-      const identifier = String(body.identifier ?? '')
-        .trim()
-        .toLowerCase()
+      const identifier = String(body.identifier ?? '').trim().toLowerCase()
       const code = String(body.code ?? '').trim()
-      const mode: AuthMode = body.mode === 'sign-up' ? 'sign-up' : 'sign-in'
+      const rawMode = String(body.mode ?? '')
+      const mode: AuthMode = rawMode === 'sign-up' ? 'sign-up' : rawMode === 'forgot-password' ? 'forgot-password' : 'sign-in'
       const password = String(body.password ?? '')
 
       await handleUserVerifyOtp(res, options, identifier, code, mode, password)

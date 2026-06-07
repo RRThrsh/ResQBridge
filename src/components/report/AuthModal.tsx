@@ -48,7 +48,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const { t } = useLanguage()
 
   const [mode, setMode] = useState<AuthMode>('sign-in')
-  const [step, setStep] = useState<'form' | 'otp'>('form')
+  const [step, setStep] = useState<'form' | 'otp' | 'forgot-password' | 'forgot-otp'>('form')
   const [identifier, setIdentifier] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -69,8 +69,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const isEmailIdent = identifier.includes('@')
 
   const identifierMasked = isEmailIdent
-    identifier.replace(/(.{3}).+@/, '$1***@')
-    // : identifier.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2')
+    ? identifier.replace(/(.{3}).+@/, '$1***@')
+    : identifier.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2')
 
   const resetForm = useCallback(() => {
     setStep('form')
@@ -84,6 +84,34 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     setCountdown(0)
     setShowPassword(false)
   }, [])
+
+  const handleForgotPassword = useCallback(async () => {
+    if (submittingRef.current) return
+    const trimmed = identifier.trim().toLowerCase()
+    if (!trimmed) {
+      setError('Please enter your email')
+      return
+    }
+    submittingRef.current = true
+    setLoading(true)
+    setError(null)
+    try {
+      await sendOtp({
+        mode: 'forgot-password',
+        identifier: trimmed,
+        password: '',
+        firstName: undefined,
+        lastName: undefined,
+      })
+      setCountdown(120)
+      setStep('forgot-otp')
+    } catch (err) {
+      setError(errMsg(err, 'Failed to send verification code.'))
+    } finally {
+      setLoading(false)
+      submittingRef.current = false
+    }
+  }, [identifier])
 
   const switchMode = useCallback(() => {
     setMode((prev) => (prev === 'sign-in' ? 'sign-up' : 'sign-in'))
@@ -242,13 +270,15 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
-      if (step === 'otp') {
+      if (step === 'otp' || step === 'forgot-otp') {
         handleVerifyOtp()
+      } else if (step === 'forgot-password') {
+        handleForgotPassword()
       } else {
         handleSendOtp()
       }
     },
-    [step, handleSendOtp, handleVerifyOtp],
+    [step, handleSendOtp, handleVerifyOtp, handleForgotPassword],
   )
 
   return (
@@ -330,16 +360,23 @@ function AuthForm({ onClose }: { onClose: () => void }) {
 
           {mode === 'sign-up' && (
             <>
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium mb-1.5">{t('auth.confirmPassword')}</label>
                 <Input
                   placeholder={t('auth.confirmPasswordPlaceholder')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={loading}
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                </button>
               </div>
 
               <div className="flex items-start gap-2">
@@ -376,6 +413,21 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             )}
           </Button>
 
+          {mode === 'sign-in' && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('forgot-password')
+                  setError(null)
+                }}
+                className="text-sm text-primary hover:underline underline-offset-2"
+              >
+                {t('ForgotPassword')}
+              </button>
+            </div>
+          )}
+
           <p className="text-center text-sm text-muted-foreground">
             {mode === 'sign-in' ? (
               <>
@@ -402,7 +454,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             )}
           </p>
         </div>
-      ) : (
+      ) : step === 'otp' ? (
         <div className="space-y-4">
           <div className="text-center mb-2">
             <div className="flex justify-center mb-3">
@@ -458,30 +510,122 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           </div>
 
           <Button type="submit" disabled={loading || code.join('').length !== 6} className="w-full">
-            {loading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t('auth.verify')
-            )}
+            {loading ? <Loader2 className="size-4 animate-spin" /> : t('auth.verify')}
           </Button>
 
           <p className="text-center text-xs text-muted-foreground">
             <button
               type="button"
-              onClick={() => {
-                setStep('form')
-                setCode(['', '', '', '', '', ''])
-                setError(null)
-              }}
+              onClick={() => { setStep('form'); setCode(['', '', '', '', '', '']); setError(null) }}
               className="hover:underline underline-offset-2"
             >
               {t('auth.useDifferent')}
             </button>
           </p>
         </div>
-      )}
+      ) : step === 'forgot-password' ? (
+        <div className="space-y-4">
+          <div className="text-center mb-2">
+            <div className="flex justify-center mb-3">
+              <Mail className="size-10 text-primary" />
+            </div>
+            <p className="text-sm font-medium text-foreground mb-1">Reset your password</p>
+            <p className="text-sm text-muted-foreground">Enter your email to receive a reset code.</p>
+          </div>
 
-      <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">{t('auth.emailOrPhone')}</label>
+            <Input
+              placeholder={t('auth.emailOrPhonePlaceholder')}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              disabled={loading}
+              autoComplete="username"
+              type="text"
+              autoFocus
+            />
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? <Loader2 className="size-4 animate-spin" /> : 'Send Reset Code'}
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            <button
+              type="button"
+              onClick={() => { setStep('form'); setError(null) }}
+              className="hover:underline underline-offset-2"
+            >
+              {t('auth.loginLink')}
+            </button>
+          </p>
+        </div>
+      ) : step === 'forgot-otp' ? (
+        <div className="space-y-4">
+          <div className="text-center mb-2">
+            <div className="flex justify-center mb-3">
+              <Mail className="size-10 text-primary" />
+            </div>
+            <p className="text-sm font-medium text-foreground mb-1">{t('auth.checkEmail')}</p>
+            <p className="text-sm text-muted-foreground">
+              {t('auth.enterOtp')}{' '}
+              <span className="font-medium text-foreground">{identifierMasked}</span>
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-2">
+            {code.map((digit, i) => (
+              <input
+                key={i}
+                ref={(el) => { codeInputsRef.current[i] = el }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleOtpInput(i, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                onPaste={i === 0 ? handlePaste : undefined}
+                disabled={loading}
+                className="w-11 h-12 text-center text-lg font-semibold rounded-lg border border-input bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50"
+                autoFocus={i === 0}
+              />
+            ))}
+          </div>
+
+          <div className="flex justify-center">
+            {countdown > 0 ? (
+              <span className="text-xs text-muted-foreground">
+                {t('auth.resendIn')} {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={loading}
+                className="text-xs text-primary font-medium hover:underline underline-offset-2 disabled:opacity-50"
+              >
+                {t('auth.resendCode')}
+              </button>
+            )}
+          </div>
+
+          <Button type="submit" disabled={loading || code.join('').length !== 6} className="w-full">
+            {loading ? <Loader2 className="size-4 animate-spin" /> : t('auth.resetPassword')}
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            <button
+              type="button"
+              onClick={() => { setStep('forgot-password'); setCode(['', '', '', '', '', '']); setError(null) }}
+              className="hover:underline underline-offset-2"
+            >
+              {t('auth.useDifferent')}
+            </button>
+          </p>
+        </div>
+      ) : (
+        <>
+          <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogTitle>Terms of Service</DialogTitle>
           <div className="space-y-4 text-sm text-muted-foreground">
@@ -536,6 +680,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           </div>
         </DialogContent>
       </Dialog>
+        </>
+      )}
     </form>
   )
 }
