@@ -234,10 +234,18 @@ export const getReportAnalytics = query({
   }),
   handler: async (ctx, args) => {
     await assertAdmin(ctx, args.adminEmail)
-    const [users, reports, rescuers] = await Promise.all([
-      ctx.db.query('users').collect(), ctx.db.query('reports').collect(), ctx.db.query('rescuers').collect(),
-    ])
-    return buildReportAnalytics(reports, rescuers, users.length, args.days ?? null)
+const [users, reports, rescuers, admins] = await Promise.all([
+  ctx.db.query('users').collect(),
+  ctx.db.query('reports').collect(),
+  ctx.db.query('rescuers').collect(),
+  ctx.db.query('admins').collect(),
+])
+    return buildReportAnalytics(
+  reports,
+  rescuers,
+  users.length + rescuers.length + admins.length,
+  args.days ?? null,
+)
   },
 })
 
