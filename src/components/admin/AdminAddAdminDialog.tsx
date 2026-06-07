@@ -108,7 +108,7 @@ export function AdminAddAdminDialog({ adminEmail, open, onOpenChange }: Props) {
           
           {/* New Password Field */}
           <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Initial Password</label>
+            <label className="mb-1 block text-xs text-muted-foreground">Password</label>
             <Input
               type="password"
               value={password}
