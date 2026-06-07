@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import {
-  Eye,
-  EyeOff,
   Loader2,
   Mail,
   Pencil,
   Phone,
   Shield,
   User,
+  
 } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { ThemeSetting } from '@/components/theme/ThemeSetting'
@@ -35,23 +34,12 @@ const changePassword = useMutation(
   const [lastName, setLastName] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [saving, setSaving] = useState(false)
-const [currentPassword, setCurrentPassword] =
-  useState('')
 
-const [newPassword, setNewPassword] =
+  const [newPassword, setNewPassword] =
   useState('')
 
 const [confirmPassword, setConfirmPassword] =
   useState('')
-
-const [showCurrentPassword, setShowCurrentPassword] =
-  useState(false)
-
-const [showNewPassword, setShowNewPassword] =
-  useState(false)
-
-const [showConfirmPassword, setShowConfirmPassword] =
-  useState(false)
   function startEditing() {
     if (!profile) return
     setFirstName(profile.firstName)
@@ -71,7 +59,23 @@ const [showConfirmPassword, setShowConfirmPassword] =
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!rescuer) return
+if (
+  newPassword &&
+  newPassword !== confirmPassword
+) {
+  toast.error('Passwords do not match')
+  return
+}
 
+if (
+  newPassword &&
+  newPassword.length < 8
+) {
+  toast.error(
+    'Password must be at least 8 characters',
+  )
+  return
+}
     setSaving(true)
     try {
       const updated = await updateProfile({
@@ -84,7 +88,17 @@ const [showConfirmPassword, setShowConfirmPassword] =
         firstName: updated.firstName,
         lastName: updated.lastName,
       })
+      if (newPassword) {
+  await changePassword({
+    email: normalizeEmail(
+      rescuer.email,
+    ),
+    newPassword,
+  })
+}
       toast.success('Profile updated')
+      setNewPassword('')
+setConfirmPassword('')
       setIsEditing(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update profile')
@@ -92,59 +106,7 @@ const [showConfirmPassword, setShowConfirmPassword] =
       setSaving(false)
     }
   }
-  async function handlePasswordChange(
-  e: React.FormEvent,
-) {
-  e.preventDefault()
 
-  if (!rescuer) return
-
-  if (
-    newPassword !== confirmPassword
-  ) {
-    toast.error(
-      'Passwords do not match',
-    )
-    return
-  }
-
-  if (
-    newPassword.length < 8 ||
-    newPassword.length > 16
-  ) {
-    toast.error(
-      'Password must be 8 to 16 characters',
-    )
-    return
-  }
-
-  setSaving(true)
-
-  try {
-await changePassword({
-  email: normalizeEmail(
-    rescuer.email,
-  ),
-  newPassword,
-})
-
-    toast.success(
-      'Password changed successfully',
-    )
-
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-  } catch (error) {
-    toast.error(
-      error instanceof Error
-        ? error.message
-        : 'Could not change password',
-    )
-  } finally {
-    setSaving(false)
-  }
-}
   if (!rescuer || profile === undefined) {
     return (
       <div className="flex justify-center py-20">
@@ -245,24 +207,87 @@ await changePassword({
                   required
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Last name</label>
-                <Input
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Contact number</label>
-                <Input
-                  type="tel"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  placeholder="For dispatch and follow-up"
-                  required
-                />
-              </div>
+<div>
+  <label className="mb-1 block text-xs text-muted-foreground">Last name</label>
+  <Input
+    value={lastName}
+    onChange={(e) => setLastName(e.target.value)}
+    required
+  />
+</div>
+  <div>
+  <label className="mb-1 block text-xs text-muted-foreground">
+    Contact number
+  </label>
+
+  <Input
+    type="tel"
+    value={contactPhone}
+    onChange={(e) => {
+      const value =
+        e.target.value.replace(/\D/g, '')
+
+      if (value.length <= 11) {
+        setContactPhone(value)
+      }
+    }}
+    placeholder="09XXXXXXXXX"
+    required
+  />
+
+  {contactPhone.length > 0 &&
+  !/^09\d{9}$/.test(contactPhone) ? (
+    <p className="mt-1 text-xs text-red-500">
+      Enter a valid 11-digit PH number.
+    </p>
+  ) : null}
+</div>
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">
+            New password
+          </label>
+
+          <Input
+            type="password"
+            value={newPassword}
+            onChange={(e) =>
+              setNewPassword(e.target.value)
+            }
+            placeholder="Leave blank to keep current password"
+          />
+
+          {newPassword &&
+          newPassword.length < 8 ? (
+            <p className="mt-1 text-xs text-red-500">
+              Password must be at least 8 characters.
+            </p>
+          ) : null}
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">
+            Confirm password
+          </label>
+
+          <Input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) =>
+              setConfirmPassword(
+                e.target.value,
+              )
+            }
+            placeholder="Confirm new password"
+          />
+
+          {newPassword &&
+          confirmPassword &&
+          newPassword !== confirmPassword ? (
+            <p className="mt-1 text-xs text-red-500">
+              Passwords do not match.
+            </p>
+          ) : null}
+        </div>
               <div className="flex gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={cancelEditing} disabled={saving}>
                   Cancel
@@ -271,6 +296,7 @@ await changePassword({
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save changes'}
                 </Button>
               </div>
+
             </form>
           ) : (
             <dl className="grid gap-4 text-sm">
@@ -307,166 +333,7 @@ await changePassword({
             </dl>
           )}
         </CardContent>
-              {isEditing ? (
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle
-              className="text-base"
-              style={{
-                fontFamily:
-                  'var(--font-heading)',
-              }}
-            >
-              Change Password
-            </CardTitle>
-
-            <CardDescription>
-              Update your rescuer password
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <form
-              onSubmit={
-                handlePasswordChange
-              }
-              className="space-y-4"
-            >
-              <div>
-  <label className="mb-1 block text-xs text-muted-foreground">
-    Current Password
-  </label>
-
-  <div className="relative">
-    <Input
-      type={
-        showCurrentPassword
-          ? 'text'
-          : 'password'
-      }
-      value={currentPassword}
-      onChange={(e) =>
-        setCurrentPassword(
-          e.target.value,
-        )
-      }
-      required
-    />
-
-    <button
-      type="button"
-      onClick={() =>
-        setShowCurrentPassword(
-          !showCurrentPassword,
-        )
-      }
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-    >
-      {showCurrentPassword ? (
-        <EyeOff className="h-4 w-4" />
-      ) : (
-        <Eye className="h-4 w-4" />
-      )}
-    </button>
-  </div>
-</div>
-
-<div>
-  <label className="mb-1 block text-xs text-muted-foreground">
-    New Password
-  </label>
-
-  <div className="relative">
-    <Input
-      type={
-        showNewPassword
-          ? 'text'
-          : 'password'
-      }
-      value={newPassword}
-      onChange={(e) =>
-        setNewPassword(
-          e.target.value,
-        )
-      }
-      required
-    />
-
-    <button
-      type="button"
-      onClick={() =>
-        setShowNewPassword(
-          !showNewPassword,
-        )
-      }
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-    >
-      {showNewPassword ? (
-        <EyeOff className="h-4 w-4" />
-      ) : (
-        <Eye className="h-4 w-4" />
-      )}
-    </button>
-  </div>
-</div>
-
-<div>
-  <label className="mb-1 block text-xs text-muted-foreground">
-    Confirm Password
-  </label>
-
-  <div className="relative">
-    <Input
-      type={
-        showConfirmPassword
-          ? 'text'
-          : 'password'
-      }
-      value={confirmPassword}
-      onChange={(e) =>
-        setConfirmPassword(
-          e.target.value,
-        )
-      }
-      required
-    />
-
-    <button
-      type="button"
-      onClick={() =>
-        setShowConfirmPassword(
-          !showConfirmPassword,
-        )
-      }
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-    >
-      {showConfirmPassword ? (
-        <EyeOff className="h-4 w-4" />
-      ) : (
-        <Eye className="h-4 w-4" />
-      )}
-    </button>
-  </div>
-</div>
-
-<div className="flex gap-2 pt-2">
-  <Button
-    type="submit"
-    disabled={saving}
-  >
-    {saving ? (
-      <Loader2 className="h-4 w-4 animate-spin" />
-    ) : (
-      'Change Password'
-    )}
-  </Button>
-</div>
-            </form>
-          </CardContent>
-        </Card>
-      ) : null}
       </Card>
-      
     </div>
   )
 }
