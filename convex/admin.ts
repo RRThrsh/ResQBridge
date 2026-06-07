@@ -23,6 +23,8 @@ const userDocValidator = v.object({
   role: userRoleValidator,
   contactPhone: v.optional(v.string()),
   createdAt: v.number(),
+  failedLoginAttempts: v.optional(v.number()),
+  lockedUntil: v.optional(v.number()),
 })
 
 const adminReportDocValidator = v.object({
