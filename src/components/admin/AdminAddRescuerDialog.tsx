@@ -134,7 +134,6 @@ export function AdminAddRescuerDialog({
               type="tel"
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
-              placeholder="For dispatch and follow-up"
               required
             />
           </div>
