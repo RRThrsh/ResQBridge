@@ -122,11 +122,16 @@ export const addApprover = mutation({
     email: v.string(),
     firstName: v.string(),
     lastName: v.string(),
-    contactPhone: v.string(),
-    password: v.string(),
+    contactPhone: v.optional(v.string()),
+    password: v.optional(v.string()),
   },
+
+  returns: v.null(),
+
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email)
+
+    console.log('ADD APPROVER ARGS:', args)
 
     const existing = await ctx.db
       .query('users')
@@ -137,15 +142,17 @@ export const addApprover = mutation({
       throw new Error('A user with this email already exists.')
     }
 
-await ctx.db.insert('users', {
-  email,
-  firstName: args.firstName.trim(),
-  lastName: args.lastName.trim(),
-  password: args.password,
-  role: 'domestic_approver',
-  contactPhone: args.contactPhone.trim(),
-  createdAt: Date.now(),
-})
+    await ctx.db.insert('users', {
+      email,
+      firstName: args.firstName.trim(),
+      lastName: args.lastName.trim(),
+      password: args.password || '',
+      role: 'domestic_approver',
+      contactPhone: args.contactPhone?.trim() || '',
+      createdAt: Date.now(),
+    })
+
+    return null
   },
 })
 
