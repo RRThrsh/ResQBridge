@@ -15,7 +15,6 @@ import { normalizeEmail } from '@/lib/admin'
 import { formatDate } from '@/lib/dates'
 import { toast } from 'sonner'
 
-
 type AdminUserRow = Doc<'users'>
 
 export function AdminUsersPage() {
@@ -33,29 +32,28 @@ export function AdminUsersPage() {
     admin ? { adminEmail: normalizeEmail(admin.email) } : 'skip',
   )
 
+  const users = useMemo(() => {
+    if (!rows) return []
 
-const users = useMemo(() => {
-  if (!rows) return []
+    const q = search.trim().toLowerCase()
 
-  const q = search.trim().toLowerCase()
+    return rows
+      .filter((row) => row.role === 'user')
+      .filter((row) => {
+        if (!q) return true
 
-  return rows
-    .filter((row) => row.role === 'user')
-    .filter((row) => {
-      if (!q) return true
+        const fullName = `${row.firstName} ${row.lastName}`.toLowerCase()
 
-      const fullName = `${row.firstName} ${row.lastName}`.toLowerCase()
-
-      return row.email.includes(q) || fullName.includes(q)
-    })
-}, [rows, search])
+        return row.email.includes(q) || fullName.includes(q)
+      })
+  }, [rows, search])
 
   const pagination = usePaginatedRows(users, { resetKey: search })
 
-function openDialog(row: AdminUserRow) {
-  setSelected(row)
-  setDialogOpen(true)
-}
+  function openDialog(row: AdminUserRow) {
+    setSelected(row)
+    setDialogOpen(true)
+  }
 
   function handleAction(row: AdminUserRow, action: AdminRowAction) {
     if (action === 'delete') {
@@ -111,7 +109,7 @@ function openDialog(row: AdminUserRow) {
               <tr>
                 <th className="w-[22%] px-4 py-3 font-medium">Name</th>
                 <th className="w-[34%] px-4 py-3 font-medium">Email</th>
-<th className="w-[20%] px-4 py-3 font-medium">Joined</th>
+                <th className="w-[20%] px-4 py-3 font-medium">Joined</th>
                 <th className="w-14 px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
@@ -124,7 +122,6 @@ function openDialog(row: AdminUserRow) {
                 </tr>
               ) : (
                 pagination.paginatedRows.map((row) => {
-
                   const isSelf = row.email === admin.email
                   const fullName = `${row.firstName} ${row.lastName}`
 
@@ -140,13 +137,11 @@ function openDialog(row: AdminUserRow) {
                         {formatDate(row.createdAt)}
                       </AdminTableCell>
                       <AdminTableActionsCell>
-<AdminTableActions
-  onAction={(action) =>
-    handleAction(row, action)
-  }
-  disableDelete={isSelf}
-  disableEdit
-/>
+                        <AdminTableActions
+                          onAction={(action) => handleAction(row, action)}
+                          disableDelete={isSelf}
+                          disableEdit
+                        />
                       </AdminTableActionsCell>
                     </tr>
                   )
@@ -160,7 +155,6 @@ function openDialog(row: AdminUserRow) {
 
       <AdminUserDialog
         userRow={selected}
-
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
