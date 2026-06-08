@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { query, mutation } from './_generated/server'
 import { v } from 'convex/values'
 import { withResolvedReportPhotos } from './lib/reportPhotos'
@@ -273,11 +274,11 @@ export const changeDomesticPassword = mutation({
       .unique()
 
     if (!user || user.role !== 'domestic_approver') {
-      throw new Error('Account not found.')
+      throw new ConvexError('Account not found.')
     }
 
     if (user.password !== args.currentPassword) {
-      throw new Error('Incorrect current password.')
+      throw new ConvexError('Incorrect current password.')
     }
 
     await ctx.db.patch(user._id, {
