@@ -54,7 +54,7 @@ export default defineSchema({
     code: v.string(),
     firstName: v.string(),
     lastName: v.string(),
-    mode: v.union(v.literal('sign-in'), v.literal('sign-up')),
+    mode: v.union(v.literal('sign-in'), v.literal('sign-up'), v.literal('forgot-password')),
     expiresAt: v.number(),
     phone: v.optional(v.string()),
   }).index('by_email_scope', ['email', 'scope']),
