@@ -565,6 +565,16 @@ export const resetAdminPasswordWithOtp = mutation({
     if (args.newPassword.length < 8) throw new Error('Password must be at least 8 characters.')
 
     await ctx.db.patch(target._id, { password: args.newPassword })
+
+    await writeAuditLog(ctx, {
+      action: 'admin.password_reset',
+      actorEmail: args.adminEmail,
+      actorName: `${target.firstName} ${target.lastName}`.trim(),
+      actorRole: 'admin',
+      targetType: 'admin',
+      targetId: target.email,
+    })
+
     return null
   },
 })

@@ -1,7 +1,7 @@
 import { query, mutation } from './_generated/server'
 import { v } from 'convex/values'
 import { withResolvedReportPhotos } from './lib/reportPhotos'
-// 🚨 WE IMPORT THE PHOTO UNLOCKER HERE
+import { writeAuditLog } from './lib/auditLog'
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
@@ -131,8 +131,6 @@ export const addApprover = mutation({
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email)
 
-    console.log('ADD APPROVER:', args)
-
     const existing = await ctx.db
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', email))
@@ -150,6 +148,15 @@ export const addApprover = mutation({
       role: 'domestic_approver',
       contactPhone: args.contactPhone?.trim() || '',
       createdAt: Date.now(),
+    })
+
+    await writeAuditLog(ctx, {
+      action: 'admin.approver.add',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'domestic_approver',
+      targetId: email,
+      details: JSON.stringify({ firstName: args.firstName.trim(), lastName: args.lastName.trim() }),
     })
 
     return null
@@ -202,6 +209,15 @@ export const removeApprover = mutation({
     }
 
     await ctx.db.delete(user._id)
+
+    await writeAuditLog(ctx, {
+      action: 'admin.approver.remove',
+      actorEmail: args.adminEmail,
+      actorRole: 'admin',
+      targetType: 'domestic_approver',
+      targetId: email,
+      details: JSON.stringify({ firstName: user.firstName, lastName: user.lastName }),
+    })
   },
 })
 
@@ -237,3 +253,5 @@ export const resetDomesticPassword = mutation({
     return null
   },
 })
+
+

@@ -575,6 +575,13 @@ export const resetRescuerPassword = mutation({
       })
     }
 
+    await writeAuditLog(ctx, {
+      action: 'rescuer.password_reset',
+      actorEmail: email,
+      actorName: `${rescuer.firstName} ${rescuer.lastName}`.trim(),
+      actorRole: 'rescuer',
+    })
+
     return null
   },
 })
