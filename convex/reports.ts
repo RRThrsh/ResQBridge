@@ -76,13 +76,18 @@ export const listPublicDomestic = query({
 const domestic = rows
   .filter((row) => row.category === 'domestic')
   .filter((row) => row.status === 'published')
-  .filter(
-    (row) =>
-      row.type === 'missing' ||
-      row.type === 'found',
-  )
-  .sort((a, b) => b.createdAt - a.createdAt)
+  .filter((row) => {
+    const type = row.type?.toLowerCase()
 
+    return (
+      type.includes('missing') ||
+      type.includes('found')
+    )
+  })
+  .sort((a, b) => b.createdAt - a.createdAt)
+console.log(
+  domestic.map((r) => r.type)
+)
     return Promise.all(
       domestic.map((row) => toPublicDomesticReport(ctx, row))
     )
