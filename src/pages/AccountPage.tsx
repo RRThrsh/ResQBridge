@@ -237,7 +237,9 @@ async function handlePasswordChange(
 
                   {/* Unified Contact Label */}
                   <div>
-                    <dt className="text-xs text-muted-foreground">{t('account.contactLabel')}</dt>
+                    <dt className="text-xs text-muted-foreground">
+  Email
+</dt>
                     <dd className="font-medium">{profile.email}</dd>
                   </div>
 
@@ -269,7 +271,9 @@ async function handlePasswordChange(
                   
                   {/* Unified Read-Only Contact Field */}
                   <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">{t('account.contactLabel')}</label>
+                    <label className="mb-1 block text-xs text-muted-foreground">
+  Email
+</label>
                     <Input
                       value={profile.email}
                       disabled
