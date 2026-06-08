@@ -63,6 +63,14 @@ export const en: Dict = {
   'auth.resendCode': 'Resend verification code',
   'auth.resendIn': 'Resend code in',
   'auth.useDifferent': 'Use a different email',
+  'auth.forgotPassword': 'Forgot Password',
+  'auth.forgotPasswordTitle': 'Reset your password',
+  'auth.forgotPasswordDesc': 'Enter your email to receive a reset code.',
+  'auth.sendResetCode': 'Send Reset Code',
+  'auth.setNewPassword': 'Set new password',
+  'auth.setNewPasswordDesc': 'Enter your new password below.',
+  'auth.resetPassword': 'Reset Password',
+  'auth.back': 'Back',
   'auth.termsAndPrivacy': 'I agree to the Terms and Conditions and Privacy Policy.',
 
   // Hero / Landing
@@ -539,6 +547,32 @@ export const en: Dict = {
   'domesticStatus.open': 'Open',
   'domesticStatus.reunited': 'Reunited',
   'domesticStatus.resolved': 'Resolved',
+
+  // Terms & Conditions
+  'terms.title': 'Terms of Service',
+  'terms.point1Title': '1. Acceptance of Terms',
+  'terms.point1Desc': 'By creating an account and using ResQBridge, you agree to these Terms of Service.',
+  'terms.point2Title': '2. Account Registration',
+  'terms.point2Desc': 'Users must provide accurate information and keep login credentials secure.',
+  'terms.point3Title': '3. Acceptable Use',
+  'terms.point3Desc': 'The system is intended for wildlife and domestic rescue reporting only.',
+  'terms.point4Title': '4. Limitation of Liability',
+  'terms.point4Desc': 'The platform is provided "as is" without warranties.',
+  'terms.point5Title': '5. Changes to Terms',
+  'terms.point5Desc': 'Terms may be updated periodically.',
+
+  // Privacy Policy
+  'privacy.title': 'Privacy Policy',
+  'privacy.point1Title': '1. Information We Collect',
+  'privacy.point1Desc': 'We collect account information and report details submitted through the platform.',
+  'privacy.point2Title': '2. How We Use Data',
+  'privacy.point2Desc': 'Data is used for rescue coordination, verification, and reporting workflows.',
+  'privacy.point3Title': '3. Security',
+  'privacy.point3Desc': 'We implement security measures to protect user data.',
+  'privacy.point4Title': '4. Your Rights',
+  'privacy.point4Desc': 'Users may request correction or deletion of account data.',
+  'privacy.point5Title': '5. Changes',
+  'privacy.point5Desc': 'This policy may be updated over time.',
 }
 
 export const fil: Dict = {
@@ -602,6 +636,14 @@ export const fil: Dict = {
   'auth.resendCode': 'I-resend ang verification code',
   'auth.resendIn': 'I-resend sa',
   'auth.useDifferent': 'Gumamit ng ibang email o telepono',
+  'auth.forgotPassword': 'Nakalimutan ang Password',
+  'auth.forgotPasswordTitle': 'I-reset ang iyong password',
+  'auth.forgotPasswordDesc': 'Ilagay ang iyong email upang makatanggap ng reset code.',
+  'auth.sendResetCode': 'Ipadala ang Reset Code',
+  'auth.setNewPassword': 'Magtakda ng bagong password',
+  'auth.setNewPasswordDesc': 'Ilagay ang iyong bagong password sa ibaba.',
+  'auth.resetPassword': 'I-reset ang Password',
+  'auth.back': 'Bumalik',
   'auth.termsAndPrivacy': 'Sumasang-ayon ako sa Mga Tuntunin at Kundisyon at Patakaran sa Privacy.',
 
   // Hero / Landing
@@ -965,7 +1007,7 @@ export const fil: Dict = {
   'map.address': 'Address',
   'map.operatingHours': 'Oras ng Operasyon',
   'map.contact': 'Contact',
-  'map.inKindDonations': 'In-Kind Donations',
+  'map.inKindDonations': 'Mga In-Kind na Donasyon',
   'map.donationsValue': 'Ang mga sariwang prutas, gulay, vet supplies at pang-araw-araw na pangangailangan ay tinatanggap.',
   'map.distanceTitle': 'Distansya mula sa Iyo',
   'map.distanceText': 'Ikaw ay {km} km ({mi} mi) ang layo mula sa PWRCC.',
@@ -1029,12 +1071,12 @@ export const fil: Dict = {
   // Theme
   'theme.light': 'Maliwanag',
   'theme.dark': 'Madilim',
-  'theme.system': 'System',
+  'theme.system': 'Sistema',
   'theme.lightDesc': 'Maliwanag na background',
   'theme.darkDesc': 'Pagtingin sa mababang ilaw',
   'theme.systemDesc': 'Itugma sa setting ng device',
-  'theme.changeLabel': 'Baguhin ang theme',
-  'theme.label': 'Theme',
+  'theme.changeLabel': 'Baguhin ang Tema',
+  'theme.label': 'Tema',
   'theme.colorTheme': 'Color theme',
 
   // Auth Sync
@@ -1072,6 +1114,32 @@ export const fil: Dict = {
   'domesticStatus.open': 'Bukas',
   'domesticStatus.reunited': 'Muling Nakasama',
   'domesticStatus.resolved': 'Nalutas',
+
+  // Terms & Conditions
+  'terms.title': 'Mga Tuntunin ng Serbisyo',
+  'terms.point1Title': '1. Pagtanggap ng Mga Tuntunin',
+  'terms.point1Desc': 'Sa paggawa ng account at paggamit ng ResQBridge, sumasang-ayon ka sa Mga Tuntunin ng Serbisyo na ito.',
+  'terms.point2Title': '2. Pagpaparehistro ng Account',
+  'terms.point2Desc': 'Ang mga gumagamit ay dapat magbigay ng tumpak na impormasyon at panatilihing secure ang kanilang login credentials.',
+  'terms.point3Title': '3. Wastong Paggamit',
+  'terms.point3Desc': 'Ang sistema ay para lamang sa pag-uulat ng wildlife at domestic rescue.',
+  'terms.point4Title': '4. Limitasyon ng Pananagutan',
+  'terms.point4Desc': 'Ang platform ay ibinibigay "as is" nang walang anumang garantiya.',
+  'terms.point5Title': '5. Pagbabago ng Mga Tuntunin',
+  'terms.point5Desc': 'Ang mga tuntunin ay maaaring i-update pana-panahon.',
+
+  // Privacy Policy
+  'privacy.title': 'Patakaran sa Privacy',
+  'privacy.point1Title': '1. Impormasyong Kinokolekta Namin',
+  'privacy.point1Desc': 'Kinokolekta namin ang impormasyon ng account at mga detalye ng ulat na isinumite sa pamamagitan ng platform.',
+  'privacy.point2Title': '2. Paano Namin Ginagamit ang Data',
+  'privacy.point2Desc': 'Ang data ay ginagamit para sa rescue coordination, verification, at reporting workflows.',
+  'privacy.point3Title': '3. Seguridad',
+  'privacy.point3Desc': 'Nagpapatupad kami ng mga security measures upang protektahan ang data ng gumagamit.',
+  'privacy.point4Title': '4. Iyong mga Karapatan',
+  'privacy.point4Desc': 'Ang mga gumagamit ay maaaring humiling ng pagwawasto o pagtanggal ng account data.',
+  'privacy.point5Title': '5. Mga Pagbabago',
+  'privacy.point5Desc': 'Ang patakarang ito ay maaaring i-update sa paglipas ng panahon.',
 }
 
 export const defaultLang: Language = 'en'

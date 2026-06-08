@@ -484,7 +484,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
                 }}
                 className="text-sm text-primary hover:underline underline-offset-2"
               >
-                {t('ForgotPassword')}
+                {t('auth.forgotPassword')}
               </button>
             </div>
           )}
@@ -590,8 +590,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             <div className="flex justify-center mb-3">
               <Mail className="size-10 text-primary" />
             </div>
-            <p className="text-sm font-medium text-foreground mb-1">Reset your password</p>
-            <p className="text-sm text-muted-foreground">Enter your email to receive a reset code.</p>
+            <p className="text-sm font-medium text-foreground mb-1">{t('auth.forgotPasswordTitle')}</p>
+            <p className="text-sm text-muted-foreground">{t('auth.forgotPasswordDesc')}</p>
           </div>
 
           <div>
@@ -608,7 +608,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           </div>
 
           <Button type="submit" disabled={loading} className="w-full">
-            {loading ? <Loader2 className="size-4 animate-spin" /> : 'Send Reset Code'}
+            {loading ? <Loader2 className="size-4 animate-spin" /> : t('auth.sendResetCode')}
           </Button>
 
           <p className="text-center text-xs text-muted-foreground">
@@ -687,8 +687,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       ) : step === 'forgot-reset' ? (
         <div className="space-y-4">
           <div className="text-center mb-2">
-            <p className="text-sm font-medium text-foreground mb-1">Set new password</p>
-            <p className="text-sm text-muted-foreground">Enter your new password below.</p>
+            <p className="text-sm font-medium text-foreground mb-1">{t('auth.setNewPassword')}</p>
+            <p className="text-sm text-muted-foreground">{t('auth.setNewPasswordDesc')}</p>
           </div>
 
           <div>
@@ -727,7 +727,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           </div>
 
           <Button type="submit" disabled={loading} className="w-full">
-            {loading ? <Loader2 className="size-4 animate-spin" /> : 'Reset Password'}
+            {loading ? <Loader2 className="size-4 animate-spin" /> : t('auth.resetPassword')}
           </Button>
 
           <p className="text-center text-xs text-muted-foreground">
@@ -736,7 +736,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
               onClick={() => { setStep('forgot-password'); setPassword(''); setConfirmPassword(''); setError(null) }}
               className="hover:underline underline-offset-2"
             >
-              Back
+              {t('auth.back')}
             </button>
           </p>
         </div>
@@ -745,27 +745,27 @@ function AuthForm({ onClose }: { onClose: () => void }) {
 
     <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogTitle>Terms of Service</DialogTitle>
+          <DialogTitle>{t('terms.title')}</DialogTitle>
           <div className="space-y-4 text-sm text-muted-foreground">
             <div>
-              <h3 className="font-semibold text-foreground">1. Acceptance of Terms</h3>
-              <p>By creating an account and using ResQBridge, you agree to these Terms of Service.</p>
+              <h3 className="font-semibold text-foreground">{t('terms.point1Title')}</h3>
+              <p>{t('terms.point1Desc')}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">2. Account Registration</h3>
-              <p>Users must provide accurate information and keep login credentials secure.</p>
+              <h3 className="font-semibold text-foreground">{t('terms.point2Title')}</h3>
+              <p>{t('terms.point2Desc')}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">3. Acceptable Use</h3>
-              <p>The system is intended for wildlife and domestic rescue reporting only.</p>
+              <h3 className="font-semibold text-foreground">{t('terms.point3Title')}</h3>
+              <p>{t('terms.point3Desc')}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">4. Limitation of Liability</h3>
-              <p>The platform is provided &ldquo;as is&rdquo; without warranties.</p>
+              <h3 className="font-semibold text-foreground">{t('terms.point4Title')}</h3>
+              <p>{t('terms.point4Desc')}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">5. Changes to Terms</h3>
-              <p>Terms may be updated periodically.</p>
+              <h3 className="font-semibold text-foreground">{t('terms.point5Title')}</h3>
+              <p>{t('terms.point5Desc')}</p>
             </div>
           </div>
         </DialogContent>
@@ -773,27 +773,27 @@ function AuthForm({ onClose }: { onClose: () => void }) {
 
       <Dialog open={privacyOpen} onOpenChange={setPrivacyOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogTitle>Privacy Policy</DialogTitle>
+          <DialogTitle>{t('privacy.title')}</DialogTitle>
           <div className="space-y-4 text-sm text-muted-foreground">
             <div>
-              <h3 className="font-semibold text-foreground">1. Information We Collect</h3>
-              <p>We collect account information and report details submitted through the platform.</p>
+              <h3 className="font-semibold text-foreground">{t('privacy.point1Title')}</h3>
+              <p>{t('privacy.point1Desc')}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">2. How We Use Data</h3>
-              <p>Data is used for rescue coordination, verification, and reporting workflows.</p>
+              <h3 className="font-semibold text-foreground">{t('privacy.point2Title')}</h3>
+              <p>{t('privacy.point2Desc')}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">3. Security</h3>
-              <p>We implement security measures to protect user data.</p>
+              <h3 className="font-semibold text-foreground">{t('privacy.point3Title')}</h3>
+              <p>{t('privacy.point3Desc')}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">4. Your Rights</h3>
-              <p>Users may request correction or deletion of account data.</p>
+              <h3 className="font-semibold text-foreground">{t('privacy.point4Title')}</h3>
+              <p>{t('privacy.point4Desc')}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">5. Changes</h3>
-              <p>This policy may be updated over time.</p>
+              <h3 className="font-semibold text-foreground">{t('privacy.point5Title')}</h3>
+              <p>{t('privacy.point5Desc')}</p>
             </div>
           </div>
         </DialogContent>
