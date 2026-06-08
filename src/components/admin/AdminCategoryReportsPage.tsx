@@ -110,6 +110,11 @@ import { useMemo, useState } from 'react'
     }
 
     function handleAction(report: AdminStoredReport, action: AdminRowAction) {
+      if (isDomestic && action === 'delete') {
+        setDeleteTarget(report)
+        setDeleteOpen(true)
+        return
+      }
       if (isDomestic) {
         openDialog(report, 'view')
         return
@@ -288,7 +293,7 @@ import { useMemo, useState } from 'react'
                         <AdminTableActionsCell>
                           <div className="flex items-center gap-1">
                             <AdminTableActions
-                              viewOnly={isDomestic}
+                              disableEdit={isDomestic}
                               showAssign={
                                 !isDomestic &&
                                 report.status !== 'en_route' &&
@@ -327,28 +332,26 @@ import { useMemo, useState } from 'react'
         />
 
         {!isDomestic ? (
-          <>
-            <AdminAssignRescuerDialog
-              report={assignTarget}
-              adminEmail={admin.email}
-              open={assignOpen}
-              onOpenChange={setAssignOpen}
-            />
-
-            <AdminConfirmDialog
-              open={deleteOpen}
-              onOpenChange={setDeleteOpen}
-              title="Delete report?"
-              description={
-                deleteTarget
-                  ? `This will permanently delete the report for "${deleteTarget.animalName}". This action cannot be undone.`
-                  : ''
-              }
-              loading={deleting}
-              onConfirm={confirmDelete}
-            />
-          </>
+          <AdminAssignRescuerDialog
+            report={assignTarget}
+            adminEmail={admin.email}
+            open={assignOpen}
+            onOpenChange={setAssignOpen}
+          />
         ) : null}
+
+        <AdminConfirmDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          title="Delete report?"
+          description={
+            deleteTarget
+              ? `This will permanently delete the report for "${deleteTarget.animalName}". This action cannot be undone.`
+              : ''
+          }
+          loading={deleting}
+          onConfirm={confirmDelete}
+        />
       </div>
     )
   }
