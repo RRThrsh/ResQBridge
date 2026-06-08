@@ -1,98 +1,200 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
-import { CheckCircle2, Clock, Loader2, Sparkles, XCircle, PawPrint, Search } from 'lucide-react'
+import { ChevronRight, Loader2, PawPrint, Search, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
-import { DomesticReportCard } from '@/components/domestic/DomesticReportCard'
+import { formatDate } from '@/lib/dates'
+import { statusLabel } from '@/lib/reports'
 import { cn } from '@/lib/utils'
+import { RescuerStatusBadge } from '@/components/rescuer/RescuerStatusBadge'
 
-type Tab = 'pending' | 'published' | 'rejected'
+function ReportCard({ report }: { report: any }) {
+  const rawData = report as any
+  let allPhotos: string[] = []
+  if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
+    allPhotos = rawData.photoDataUrls
+  } else if (rawData.photos && Array.isArray(rawData.photos)) {
+    allPhotos = rawData.photos
+  } else if (rawData.photoUrl) {
+    allPhotos = [rawData.photoUrl]
+  }
+  const photo = allPhotos.length > 0 ? allPhotos[0] : null
+  const extra = allPhotos.length > 1 ? allPhotos.length - 1 : 0
 
-function StatCard({ label, value, icon: Icon, active, onClick }: { label: string, value: number, icon: typeof Clock, active?: boolean, onClick?: () => void }) {
-  const Comp = onClick ? 'button' : 'div'
   return (
-    <Comp
-      type={onClick ? 'button' : undefined}
-      onClick={onClick}
-      className={cn(
-        'flex flex-1 flex-col items-start rounded-2xl border p-4 text-left transition-all',
-        active ? 'border-primary/40 bg-primary/5 shadow-sm' : 'border-border bg-card/60 hover:border-border/80',
-      )}
+    <Link
+      to={`/pwrcc/domestic/reports/${rawData._id}`}
+      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/30 hover:shadow-sm"
     >
-      <div className={cn('mb-3 flex h-9 w-9 items-center justify-center rounded-lg', active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground')}>
-        <Icon className="h-4 w-4" />
+      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+        {photo ? (
+          <>
+            <img
+              src={photo}
+              alt={rawData.animalName || 'Report photo'}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            {extra > 0 && (
+              <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                +{extra}
+              </span>
+            )}
+          </>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-wider text-muted-foreground">
+            No photo
+          </div>
+        )}
       </div>
-      <p className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>{value}</p>
-      <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
-    </Comp>
+      <div className="flex flex-1 flex-col gap-1.5 p-3">
+        <div className="flex items-center gap-2">
+          <RescuerStatusBadge status={rawData.status} compact />
+          {rawData.reportNumber && (
+            <span className="text-[10px] font-mono text-muted-foreground">{rawData.reportNumber}</span>
+          )}
+        </div>
+        <h3 className="truncate text-sm font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+          {rawData.animalName || 'Unnamed Animal'}
+        </h3>
+        <p className="line-clamp-2 text-[11px] text-muted-foreground leading-relaxed">
+          {rawData.location || 'No location'}
+        </p>
+        <p className="mt-auto text-[10px] text-muted-foreground">
+          {formatDate(rawData.seenAt ?? rawData.createdAt ?? rawData._creationTime ?? Date.now())}
+          <span className="mx-1.5 text-border">·</span>
+          {statusLabel(rawData.status)}
+        </p>
+      </div>
+    </Link>
   )
 }
 
-function EmptyState({ tab }: { tab: Tab }) {
+function CategoryModal({ title, icon: Icon, iconBg, reports, open, onClose }: {
+  title: string
+  icon: typeof Search
+  iconBg: string
+  reports: any[]
+  open: boolean
+  onClose: () => void
+}) {
+  if (!open) return null
+
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/40 px-6 py-16 text-center">
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
-        {tab === 'pending' ? (
-          <Clock className="h-6 w-6 text-primary" />
-        ) : tab === 'published' ? (
-          <CheckCircle2 className="h-6 w-6 text-primary" />
-        ) : (
-          <XCircle className="h-6 w-6 text-destructive" />
-        )}
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 pt-8 pb-8 backdrop-blur-sm">
+      <div className="relative w-full max-w-6xl rounded-2xl bg-popover p-6 shadow-lg ring-1 ring-foreground/10 mx-4">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', iconBg)}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>{title}</h2>
+              <p className="text-xs text-muted-foreground">{reports.length} accepted report{reports.length !== 1 ? 's' : ''}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {reports.map((report: any) => (
+            <ReportCard key={report._id} report={report} />
+          ))}
+        </div>
       </div>
-      <h3 className="text-lg font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-        {tab === 'pending' ? 'No pending reports' : tab === 'published' ? 'No published reports' : 'No rejected reports'}
-      </h3>
-      <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
-        {tab === 'pending'
-          ? 'When a user submits a domestic report, it will appear here for your review.'
-          : tab === 'published'
-          ? 'Approved domestic reports will show up here and on the public feed.'
-          : 'Reports that have been rejected will appear here.'}
-      </p>
     </div>
+  )
+}
+
+function SectionGrid({ title, icon: Icon, iconBg, reports, empty, maxVisible = 6, onViewMore }: {
+  title: string
+  icon: typeof Search
+  iconBg: string
+  reports: any[]
+  empty: string
+  maxVisible?: number
+  onViewMore?: () => void
+}) {
+  const hasMore = reports.length > maxVisible
+  const visible = hasMore ? reports.slice(0, maxVisible) : reports
+
+  return (
+    <section>
+      <div className="mb-4 flex items-center gap-3">
+        <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg', iconBg)}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>{title}</h2>
+          <p className="text-xs text-muted-foreground">{reports.length} accepted report{reports.length !== 1 ? 's' : ''}</p>
+        </div>
+      </div>
+      {reports.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border py-14 text-center text-sm text-muted-foreground">
+          {empty}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {visible.map((report: any) => (
+              <ReportCard key={report._id} report={report} />
+            ))}
+          </div>
+          {hasMore && (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={onViewMore}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
+              >
+                View More ({reports.length - maxVisible} more)
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </section>
   )
 }
 
 export function DomesticReportsPage() {
   const { domesticApprover } = useDomesticAuth()
-  const [tab, setTab] = useState<Tab>('pending')
+  const [modalCategory, setModalCategory] = useState<'missing' | 'found' | null>(null)
 
-  // @ts-ignore
-  const pendingRows = useQuery((api as any).domestic.listPendingReports)
   // @ts-ignore
   const publishedRows = useQuery((api as any).domestic.listPublishedReports)
-  // @ts-ignore
-  const rejectedRows = useQuery((api as any).domestic.listRejectedReports)
 
-  const pending = useMemo(() => pendingRows ?? [], [pendingRows])
   const published = useMemo(() => publishedRows ?? [], [publishedRows])
-  const rejected = useMemo(() => rejectedRows ?? [], [rejectedRows])
+  const loading = publishedRows === undefined
 
-  const loading = pendingRows === undefined || publishedRows === undefined || rejectedRows === undefined
-  const list = tab === 'pending' ? pending : tab === 'published' ? published : rejected
-
-  const missingReports = useMemo(
+  const missing = useMemo(
     () => published.filter((r: any) => r.type === 'missing'),
     [published],
   )
-  const foundReports = useMemo(
+  const found = useMemo(
     () => published.filter((r: any) => r.type === 'found'),
     [published],
   )
 
   return (
-    <>
-      <section className="mb-8">
+    <div className="space-y-10">
+      {/* Header */}
+      <section>
         <div className="mb-1 flex items-center gap-2 text-primary">
-          <Sparkles className="h-4 w-4" />
-          <span className="text-xs font-medium uppercase tracking-widest">Review Dashboard</span>
+          <PawPrint className="h-4 w-4" />
+          <span className="text-xs font-medium uppercase tracking-widest">Community Board</span>
         </div>
-        <h2 className="text-2xl font-bold text-foreground sm:text-3xl" style={{ fontFamily: 'var(--font-heading)' }}>
-          {domesticApprover ? `Hello, ${domesticApprover.firstName}` : 'Domestic Approvals'}
-        </h2>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground leading-relaxed">
-          Review user-submitted domestic reports before they are published to the public feed.
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl" style={{ fontFamily: 'var(--font-heading)' }}>
+          {domesticApprover ? `Hello, ${domesticApprover.firstName}` : 'Domestic Reports'}
+        </h1>
+        <p className="mt-2 max-w-lg text-sm text-muted-foreground leading-relaxed">
+          Accepted missing and found animal reports from the community.
         </p>
       </section>
 
@@ -102,138 +204,43 @@ export function DomesticReportsPage() {
         </div>
       ) : (
         <>
-          <div className="mb-8 flex gap-3">
-            <StatCard label="Needs Review" value={pending.length} icon={Clock} active={tab === 'pending'} onClick={() => setTab('pending')} />
-            <StatCard label="Published" value={published.length} icon={CheckCircle2} active={tab === 'published'} onClick={() => setTab('published')} />
-            <StatCard label="Rejected" value={rejected.length} icon={XCircle} active={tab === 'rejected'} onClick={() => setTab('rejected')} />
-          </div>
+          <SectionGrid
+            title="Missing"
+            icon={Search}
+            iconBg="bg-rose-500/10 text-rose-500"
+            reports={missing}
+            empty="No accepted missing pet reports yet."
+            onViewMore={() => setModalCategory('missing')}
+          />
 
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <div className="inline-flex rounded-xl border border-border bg-muted/40 p-1">
-              {(
-                [
-                  ['pending', 'Needs Review'],
-                  ['published', 'Published'],
-                  ['rejected', 'Rejected'],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setTab(value)}
-                  className={cn(
-                    'rounded-lg px-4 py-2 text-xs font-medium transition-all',
-                    tab === value
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {label}
-                  <span className="ml-1.5 tabular-nums text-muted-foreground">
-                    ({value === 'pending' ? pending.length : value === 'published' ? published.length : rejected.length})
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {tab === 'published' && published.length > 0 ? (
-            <p className="mb-4 text-xs text-muted-foreground">
-              {published.length} published reports
-            </p>
-          ) : null}
-
-          {tab === 'rejected' && rejected.length > 0 ? (
-            <p className="mb-4 text-xs text-muted-foreground">
-              {rejected.length} rejected reports
-            </p>
-          ) : null}
-
-          {list.length === 0 ? (
-            <EmptyState tab={tab} />
-          ) : (
-            <div className="space-y-3">
-              {list.map((report: any) => (
-                <DomesticReportCard key={report._id} report={report} />
-              ))}
-            </div>
-          )}
+          <SectionGrid
+            title="Found"
+            icon={PawPrint}
+            iconBg="bg-emerald-500/10 text-emerald-500"
+            reports={found}
+            empty="No accepted found animal reports yet."
+            onViewMore={() => setModalCategory('found')}
+          />
         </>
       )}
 
-      {/* Community Board */}
-      <section className="mt-12">
-        <div className="mb-1 flex items-center gap-2 text-primary">
-          <PawPrint className="h-4 w-4" />
-          <span className="text-xs font-medium uppercase tracking-widest">Community Board</span>
-        </div>
-        <h2 className="text-2xl font-bold text-foreground sm:text-3xl" style={{ fontFamily: 'var(--font-heading)' }}>
-          Missing & Found
-        </h2>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground leading-relaxed">
-          Published reports that have been accepted and arrangements set.
-        </p>
+      <CategoryModal
+        title="Missing"
+        icon={Search}
+        iconBg="bg-rose-500/10 text-rose-500"
+        reports={missing}
+        open={modalCategory === 'missing'}
+        onClose={() => setModalCategory(null)}
+      />
 
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <div className="mt-6 grid gap-6 sm:grid-cols-2">
-            {/* Missing */}
-            <div className="rounded-2xl border border-border bg-card">
-              <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
-                  <Search className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>Missing</h3>
-                  <p className="text-xs text-muted-foreground">{missingReports.length} report{missingReports.length !== 1 ? 's' : ''}</p>
-                </div>
-              </div>
-              <div className="divide-y divide-border">
-                {missingReports.length === 0 ? (
-                  <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                    No missing pet reports published yet.
-                  </div>
-                ) : (
-                  missingReports.map((report: any) => (
-                    <div key={report._id} className="px-5 py-3">
-                      <DomesticReportCard report={report} variant="compact" />
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Found */}
-            <div className="rounded-2xl border border-border bg-card">
-              <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
-                  <PawPrint className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>Found</h3>
-                  <p className="text-xs text-muted-foreground">{foundReports.length} report{foundReports.length !== 1 ? 's' : ''}</p>
-                </div>
-              </div>
-              <div className="divide-y divide-border">
-                {foundReports.length === 0 ? (
-                  <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                    No found animal reports published yet.
-                  </div>
-                ) : (
-                  foundReports.map((report: any) => (
-                    <div key={report._id} className="px-5 py-3">
-                      <DomesticReportCard report={report} variant="compact" />
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
-    </>
+      <CategoryModal
+        title="Found"
+        icon={PawPrint}
+        iconBg="bg-emerald-500/10 text-emerald-500"
+        reports={found}
+        open={modalCategory === 'found'}
+        onClose={() => setModalCategory(null)}
+      />
+    </div>
   )
 }
