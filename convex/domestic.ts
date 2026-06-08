@@ -235,30 +235,47 @@ export const removeApprover = mutation({
 export const resetDomesticPassword = mutation({
   args: {
     email: v.string(),
-    currentPassword: v.string(), // Added this line
     newPassword: v.string(),
   },
-
   returns: v.null(),
-
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email)
-
     const user = await ctx.db
       .query('users')
-      .withIndex('by_email', (q) =>
-        q.eq('email', email),
-      )
+      .withIndex('by_email', (q) => q.eq('email', email))
       .unique()
 
-    if (
-      !user ||
-      user.role !== 'domestic_approver'
-    ) {
+    if (!user || user.role !== 'domestic_approver') {
       throw new Error('Account not found.')
     }
 
-    // Added this check!
+    await ctx.db.patch(user._id, {
+      password: args.newPassword,
+    })
+
+    return null
+  },
+})
+
+// 2. NEW mutation for the Profile Page (Requires currentPassword)
+export const changeDomesticPassword = mutation({
+  args: {
+    email: v.string(),
+    currentPassword: v.string(),
+    newPassword: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const email = normalizeEmail(args.email)
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .unique()
+
+    if (!user || user.role !== 'domestic_approver') {
+      throw new Error('Account not found.')
+    }
+
     if (user.password !== args.currentPassword) {
       throw new Error('Incorrect current password.')
     }
