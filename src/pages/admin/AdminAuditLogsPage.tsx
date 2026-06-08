@@ -229,7 +229,7 @@ export function AdminAuditLogsPage() {
           <div className="py-12 text-center text-[#00ff8866]">
             <p>{'>'} No audit logs found.</p>
           </div>
-        ) : filteredLogs.length === 0 ? (
+        ) : filteredLogs === undefined || filteredLogs.length === 0 ? (
           <div className="py-12 text-center text-[#00ff8866]">
             <p>{'>'} No logs match the selected filter.</p>
           </div>
@@ -247,7 +247,7 @@ export function AdminAuditLogsPage() {
                   <span className="text-right">Timestamp</span>
                 </div>
 
-              {filteredLogs.map((log) => {
+              {filteredLogs!.map((log) => {
                 const color =
                   ACTION_COLORS[log.action] ?? '#ffffff'
 
