@@ -58,8 +58,6 @@ export function DomesticProfilePage() {
   const [saving, setSaving] = useState(false)
 
   const updateApproverMutation = useMutation(api.domestic.updateApprover)
-  
-  // Make sure your Convex backend has this mutation as added in the previous steps!
   const changeDomesticPassword = useMutation(api.domestic.changeDomesticPassword)
 
   if (!domesticApprover) {
@@ -69,6 +67,13 @@ export function DomesticProfilePage() {
       </div>
     )
   }
+
+  // 1. Check if the user has actually changed anything
+  const hasChanges =
+    firstName !== (domesticApprover.firstName ?? '') ||
+    lastName !== (domesticApprover.lastName ?? '') ||
+    contactPhone !== (domesticApprover.contactPhone ?? '') ||
+    password !== ''
 
   function startEditing() {
     if (!domesticApprover) return
@@ -110,11 +115,11 @@ export function DomesticProfilePage() {
         return
       }
       if (password !== confirmPassword) {
-        setAuthError('Passwords do not match.')
+        setAuthError('New passwords do not match.')
         return
       }
       if (password.length < 8) {
-        setAuthError('Password must be at least 8 characters.')
+        setAuthError('New password must be at least 8 characters.')
         return
       }
     }
@@ -122,7 +127,6 @@ export function DomesticProfilePage() {
     setSaving(true)
 
     try {
-      // If changing password, handle that first so we can catch auth errors early
       if (password) {
         await changeDomesticPassword({
           email: domesticApprover!.email,
@@ -131,7 +135,6 @@ export function DomesticProfilePage() {
         })
       }
 
-      // Always update the profile details regardless of password changes
       await updateApproverMutation({
         adminEmail: domesticApprover!.email,
         targetEmail: domesticApprover!.email,
@@ -151,8 +154,14 @@ export function DomesticProfilePage() {
       setConfirmPassword('')
       setIsEditing(false)
     } catch (error: any) {
-      // Catch incorrect current password errors from Convex
-      setAuthError(error.message || 'Incorrect current password or update failed.')
+      // 2. Cleaned up error handling to hide the ugly Convex server error
+      const errorMessage = error?.message || ''
+      if (errorMessage.includes('Incorrect current password')) {
+        setAuthError('Incorrect current password. Please try again.')
+      } else {
+        // Fallback friendly message if Convex obscures the exact error
+        setAuthError('Failed to update. Please ensure your current password is correct.')
+      }
     } finally {
       setSaving(false)
     }
@@ -402,6 +411,7 @@ export function DomesticProfilePage() {
                 <Button
                   type="submit"
                   disabled={
+                    !hasChanges || // 3. Button is now disabled if nothing changed
                     saving ||
                     contactPhone.length !== 11 ||
                     (password !== '' && password !== confirmPassword) ||
