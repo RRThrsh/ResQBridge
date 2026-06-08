@@ -334,6 +334,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   )
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="p-6">
       <DialogTitle className="text-xl font-semibold mb-1">
         {mode === 'sign-in' ? t('auth.signIn') : t('auth.createAccount')}
@@ -742,7 +743,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       ) : null}
     </form>
 
-      <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+    <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogTitle>Terms of Service</DialogTitle>
           <div className="space-y-4 text-sm text-muted-foreground">
@@ -797,5 +798,6 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           </div>
         </DialogContent>
       </Dialog>
+    </>
   )
 }
