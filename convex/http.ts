@@ -201,7 +201,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
         }
         if (!loginCheck.allowed) {
           return jsonResponse({
-            error: `Invalid password. ${loginCheck.remainingAttempts} attempt(s) remaining.`,
+            error: `Invalid Password`,
           }, 400)
         }
       } else {
