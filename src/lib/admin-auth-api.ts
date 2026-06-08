@@ -51,7 +51,7 @@ async function handleAuthResponse(response: Response): Promise<void> {
   }
 }
 
-export async function sendAdminOtp(email: string, password?: string): Promise<void> {
+export async function sendAdminOtp(email: string, password?: string): Promise<{ otpDisabled?: boolean }> {
   const normalizedEmail = normalizeEmail(email)
 
   const response = await adminAuthFetch('/api/admin/auth/send-otp', {
@@ -60,6 +60,9 @@ export async function sendAdminOtp(email: string, password?: string): Promise<vo
   })
 
   await handleAuthResponse(response)
+
+  const data = await response.json()
+  return { otpDisabled: data.otpDisabled === true }
 }
 
 export async function verifyAdminOtp(email: string, code: string): Promise<AdminUser> {

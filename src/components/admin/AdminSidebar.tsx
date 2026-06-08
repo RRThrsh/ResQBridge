@@ -8,6 +8,7 @@ import {
   PawPrint,
   LogOut,
   Newspaper,
+  Settings,
   Shield,
   Truck,
   UserCircle,
@@ -29,6 +30,7 @@ const navItems = [
   { to: '/pwrcc/admin/rescuers', label: 'Rescuers', icon: Truck },
   { to: '/pwrcc/admin/domestic-approvers', label: 'Domestic Approvers', icon: Home },
   { to: '/pwrcc/admin/audit-logs', label: 'Audit Logs', icon: ScrollText },
+  { to: '/pwrcc/admin/config', label: 'App Config', icon: Settings },
   { to: '/pwrcc/admin/admins', label: 'Admins', icon: Shield },
   { to: '/pwrcc/admin/profile', label: 'My profile', icon: UserCircle },
 ] as const

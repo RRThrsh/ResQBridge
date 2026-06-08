@@ -53,7 +53,7 @@ async function handleAuthResponse(response: Response): Promise<void> {
 export async function sendRescuerOtp(
   email: string,
   password?: string,
-): Promise<void> {
+): Promise<{ otpDisabled?: boolean }> {
   const normalizedEmail = normalizeEmail(email)
 
   const response = await rescuerAuthFetch(
@@ -65,6 +65,9 @@ export async function sendRescuerOtp(
   )
 
   await handleAuthResponse(response)
+
+  const data = await response.json()
+  return { otpDisabled: data.otpDisabled === true }
 }
 
 export async function verifyRescuerOtp(email: string, code: string): Promise<RescuerUser> {

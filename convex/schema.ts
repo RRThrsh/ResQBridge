@@ -72,6 +72,13 @@ export default defineSchema({
     createdAt: v.number(),
   }).index('by_created_at', ['createdAt']),
 
+  appConfig: defineTable({
+    key: v.string(),
+    value: v.union(v.boolean(), v.string(), v.number()),
+    updatedAt: v.number(),
+    updatedBy: v.string(),
+  }).index('by_key', ['key']),
+
   reports: defineTable({
     userEmail: v.string(),
     category: v.union(v.literal('wildlife'), v.literal('domestic')),

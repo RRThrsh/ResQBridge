@@ -62,7 +62,7 @@ async function handleAuthResponse(response: Response): Promise<void> {
 export async function sendDomesticOtp(
   identifier: string,
   password?: string,
-): Promise<void> {
+): Promise<{ otpDisabled?: boolean }> {
   const normalized =
     normalizeEmail(identifier)
 
@@ -76,6 +76,9 @@ export async function sendDomesticOtp(
     )
 
   await handleAuthResponse(response)
+
+  const data = await response.json()
+  return { otpDisabled: data.otpDisabled === true }
 }
 
 export async function verifyDomesticOtp(email: string, code: string): Promise<DomesticUser> {
