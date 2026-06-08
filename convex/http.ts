@@ -519,6 +519,23 @@ const domesticVerifyOtp = async (ctx: ActionCtx, request: Request) => {
   }
 }
 
+const userResetPassword = async (ctx: ActionCtx, request: Request) => {
+  try {
+    const body = await readJsonBody(request)
+    const email = normalizeEmail(String(body.email ?? ''))
+    const newPassword = String(body.newPassword ?? '')
+
+    if (!email) return jsonResponse({ error: 'Email is required.' }, 400)
+    if (newPassword.length < 8) return jsonResponse({ error: 'Password must be at least 8 characters.' }, 400)
+
+    await ctx.runMutation(api.users.resetUserPassword, { email, newPassword })
+
+    return jsonResponse({ success: true }, 200)
+  } catch (error) {
+    return jsonResponse({ error: formatHandlerError(error) }, 400)
+  }
+}
+
 const routes = [
   { path: '/api/auth/send-otp', handler: withRateLimit(userSendOtp, 'user-send-otp') },
   { path: '/api/auth/verify-otp', handler: withRateLimit(userVerifyOtp, 'user-verify-otp') },
@@ -528,6 +545,7 @@ const routes = [
   { path: '/api/rescuer/auth/verify-otp', handler: withRateLimit(rescuerVerifyOtp, 'rescuer-verify-otp') },
   { path: '/api/domestic/auth/send-otp', handler: withRateLimit(domesticSendOtp, 'domestic-send-otp') },
   { path: '/api/domestic/auth/verify-otp', handler: withRateLimit(domesticVerifyOtp, 'domestic-verify-otp') },
+  { path: '/api/auth/reset-password', handler: userResetPassword },
 ] as const
 
 for (const route of routes) {

@@ -95,3 +95,12 @@ export async function verifyOtp(
     role: 'user',
   }
 }
+
+export async function resetUserPassword(email: string, newPassword: string): Promise<void> {
+  const response = await authFetch('/api/auth/reset-password', {
+    email: email.trim().toLowerCase(),
+    newPassword,
+  })
+
+  await handleAuthResponse(response)
+}

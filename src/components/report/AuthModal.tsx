@@ -12,12 +12,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 import { useUserAuth } from '@/context/UserAuthContext'
+import type { AuthUser } from '@/types/auth'
 import { useLanguage } from '@/context/LanguageContext'
 import { toast } from 'sonner'
 
 import {
   sendOtp,
   verifyOtp,
+  resetUserPassword,
   type AuthMode,
 } from '@/lib/auth-api'
 
@@ -48,7 +50,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const { t } = useLanguage()
 
   const [mode, setMode] = useState<AuthMode>('sign-in')
-  const [step, setStep] = useState<'form' | 'otp' | 'forgot-password' | 'forgot-otp'>('form')
+  const [step, setStep] = useState<'form' | 'otp' | 'forgot-password' | 'forgot-otp' | 'forgot-reset'>('form')
   const [identifier, setIdentifier] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -62,6 +64,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [showPassword, setShowPassword] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotUser, setForgotUser] = useState<AuthUser | null>(null)
 
   const submittingRef = useRef(false)
   const codeInputsRef = useRef<(HTMLInputElement | null)[]>([])
@@ -83,6 +87,8 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     setError(null)
     setCountdown(0)
     setShowPassword(false)
+    setForgotEmail('')
+    setForgotUser(null)
   }, [])
 
   const handleForgotPassword = useCallback(async () => {
@@ -99,7 +105,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       await sendOtp({
         mode: 'forgot-password',
         identifier: trimmed,
-        password: '',
+        password: 'reset-temp',
         firstName: undefined,
         lastName: undefined,
       })
@@ -248,24 +254,68 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     setLoading(true)
     setError(null)
     try {
-      const user = await verifyOtp(
-        identifier.trim().toLowerCase(),
-        fullCode,
-        mode,
-        mode === 'sign-up' ? password : undefined,
-      )
-      login(user)
-      toast.success(
-        mode === 'sign-up' ? 'Account created successfully!' : 'Signed in successfully!',
-      )
-      onClose()
+      if (step === 'forgot-otp') {
+        const user = await verifyOtp(
+          identifier.trim().toLowerCase(),
+          fullCode,
+          'sign-in',
+          undefined,
+        )
+        setForgotEmail(identifier.trim().toLowerCase())
+        setForgotUser(user)
+        setStep('forgot-reset')
+        setCode(['', '', '', '', '', ''])
+        setError(null)
+      } else {
+        const user = await verifyOtp(
+          identifier.trim().toLowerCase(),
+          fullCode,
+          mode,
+          mode === 'sign-up' ? password : undefined,
+        )
+        login(user)
+        toast.success(
+          mode === 'sign-up' ? 'Account created successfully!' : 'Signed in successfully!',
+        )
+        onClose()
+      }
     } catch (err) {
       setError(errMsg(err, 'Verification failed. Please try again.'))
     } finally {
       setLoading(false)
       submittingRef.current = false
     }
-  }, [code, identifier, mode, password, login, onClose])
+  }, [step, code, identifier, mode, password, login, onClose])
+
+  const handleForgotReset = useCallback(async () => {
+    if (submittingRef.current) return
+    if (!password) {
+      setError('Please enter a new password.')
+      return
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+    submittingRef.current = true
+    setLoading(true)
+    setError(null)
+    try {
+      await resetUserPassword(forgotEmail, password)
+      if (forgotUser) login(forgotUser)
+      toast.success('Password reset successfully!')
+      onClose()
+    } catch (err) {
+      setError(errMsg(err, 'Failed to reset password.'))
+    } finally {
+      setLoading(false)
+      submittingRef.current = false
+    }
+  }, [forgotEmail, forgotUser, password, confirmPassword, login, onClose])
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -274,11 +324,13 @@ function AuthForm({ onClose }: { onClose: () => void }) {
         handleVerifyOtp()
       } else if (step === 'forgot-password') {
         handleForgotPassword()
+      } else if (step === 'forgot-reset') {
+        handleForgotReset()
       } else {
         handleSendOtp()
       }
     },
-    [step, handleSendOtp, handleVerifyOtp, handleForgotPassword],
+    [step, handleSendOtp, handleVerifyOtp, handleForgotPassword, handleForgotReset],
   )
 
   return (
@@ -620,6 +672,62 @@ function AuthForm({ onClose }: { onClose: () => void }) {
               className="hover:underline underline-offset-2"
             >
               {t('auth.useDifferent')}
+            </button>
+          </p>
+        </div>
+      ) : step === 'forgot-reset' ? (
+        <div className="space-y-4">
+          <div className="text-center mb-2">
+            <p className="text-sm font-medium text-foreground mb-1">Set new password</p>
+            <p className="text-sm text-muted-foreground">Enter your new password below.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5">{t('auth.password')}</label>
+            <div className="relative">
+              <Input
+                placeholder={t('auth.passwordPlaceholder')}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5">{t('auth.confirmPassword')}</label>
+            <Input
+              placeholder={t('auth.confirmPasswordPlaceholder')}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+            />
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? <Loader2 className="size-4 animate-spin" /> : 'Reset Password'}
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            <button
+              type="button"
+              onClick={() => { setStep('forgot-password'); setPassword(''); setConfirmPassword(''); setError(null) }}
+              className="hover:underline underline-offset-2"
+            >
+              Back
             </button>
           </p>
         </div>
