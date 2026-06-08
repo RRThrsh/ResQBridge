@@ -40,6 +40,7 @@ export type AuditLogAction =
   | 'rescuer.complete_rescue'
   | 'rescuer.password_reset'
   | 'domestic_approver.login'
+  | 'guest.page_view'
 
 export async function writeAuditLog(
   ctx: MutationCtx,
@@ -47,11 +48,12 @@ export async function writeAuditLog(
     action: AuditLogAction
     actorEmail: string
     actorName?: string
-    actorRole?: 'user' | 'admin' | 'rescuer' | 'domestic_approver'
+    actorRole?: 'user' | 'admin' | 'rescuer' | 'domestic_approver' | 'guest'
     targetType?: string
     targetId?: string
     details?: string
     metadata?: string
+    ipAddress?: string
   },
 ) {
   await ctx.db.insert('auditLogs', {
@@ -63,6 +65,7 @@ export async function writeAuditLog(
     targetId: fields.targetId,
     details: fields.details,
     metadata: fields.metadata,
+    ipAddress: fields.ipAddress,
     createdAt: Date.now(),
   })
 }

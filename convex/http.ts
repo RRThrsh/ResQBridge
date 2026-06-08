@@ -292,6 +292,7 @@ const userVerifyOtp = async (ctx: ActionCtx, request: Request) => {
       details: isSignup
         ? JSON.stringify({ mode: 'sign-up', phone: profile.phone ?? '' })
         : JSON.stringify({ mode: 'sign-in' }),
+      ipAddress: getClientIp(request),
     })
 
     return jsonResponse({ success: true, user }, 200)
@@ -360,6 +361,7 @@ const adminVerifyOtp = async (ctx: ActionCtx, request: Request) => {
       actorEmail: email,
       actorName: `${admin.firstName} ${admin.lastName}`.trim(),
       actorRole: 'admin',
+      ipAddress: getClientIp(request),
     })
 
     return jsonResponse({
@@ -431,6 +433,7 @@ const rescuerVerifyOtp = async (ctx: ActionCtx, request: Request) => {
       actorEmail: email,
       actorName: `${rescuer.firstName} ${rescuer.lastName}`.trim(),
       actorRole: 'rescuer',
+      ipAddress: getClientIp(request),
     })
 
     return jsonResponse({
@@ -508,6 +511,7 @@ const domesticVerifyOtp = async (ctx: ActionCtx, request: Request) => {
       actorEmail: email,
       actorName: `${profile.firstName} ${profile.lastName}`.trim(),
       actorRole: 'domestic_approver',
+      ipAddress: getClientIp(request),
     })
 
     return jsonResponse({
@@ -536,6 +540,33 @@ const userResetPassword = async (ctx: ActionCtx, request: Request) => {
   }
 }
 
+const logGuest = async (ctx: ActionCtx, request: Request) => {
+  try {
+    const body = await readJsonBody(request)
+    const sessionId = String(body.sessionId ?? '').trim()
+    const page = String(body.page ?? '').trim()
+    const guestAction = String(body.action ?? 'guest.page_view').trim()
+    const referrer = String(body.referrer ?? '').trim()
+
+    if (!sessionId || !page) return jsonResponse({ error: 'sessionId and page are required.' }, 400)
+
+    await ctx.runMutation(api.auditLogs.fromAction, {
+      action: guestAction,
+      actorEmail: sessionId,
+      actorName: `Guest (${page})`,
+      actorRole: 'guest',
+      targetType: 'page',
+      targetId: page,
+      details: JSON.stringify({ referrer, userAgent: request.headers.get('user-agent') ?? '' }),
+      ipAddress: getClientIp(request),
+    })
+
+    return jsonResponse({ success: true }, 200)
+  } catch (error) {
+    return jsonResponse({ error: formatHandlerError(error) }, 400)
+  }
+}
+
 const routes = [
   { path: '/api/auth/send-otp', handler: withRateLimit(userSendOtp, 'user-send-otp') },
   { path: '/api/auth/verify-otp', handler: withRateLimit(userVerifyOtp, 'user-verify-otp') },
@@ -546,6 +577,7 @@ const routes = [
   { path: '/api/domestic/auth/send-otp', handler: withRateLimit(domesticSendOtp, 'domestic-send-otp') },
   { path: '/api/domestic/auth/verify-otp', handler: withRateLimit(domesticVerifyOtp, 'domestic-verify-otp') },
   { path: '/api/auth/reset-password', handler: httpAction(userResetPassword) },
+  { path: '/api/log-guest', handler: httpAction(logGuest) },
 ] as const
 
 for (const route of routes) {
