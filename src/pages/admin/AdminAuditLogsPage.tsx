@@ -154,6 +154,7 @@ function buildLogObject(log: AuditLogEntry): Record<string, unknown> {
 export function AdminAuditLogsPage() {
   const { admin } = useAdminAuth()
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [refreshTick, setRefreshTick] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const adminEmail = admin ? normalizeEmail(admin.email) : null
@@ -162,6 +163,11 @@ export function AdminAuditLogsPage() {
     api.auditLogs.list,
     adminEmail ? { adminEmail, limit: 500 } : 'skip',
   )
+
+  useEffect(() => {
+    const id = setInterval(() => setRefreshTick((t) => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [])
 
   useEffect(() => {
     if (!scrollRef.current || !logs) return
@@ -312,9 +318,11 @@ export function AdminAuditLogsPage() {
         <div className="mt-4 border-t border-[#00ff8822] pt-3 text-[10px] text-[#00ff8844]">
           <span className="animate-pulse">●</span>
           {' '}LIVE
-          {' '}|{' '}
+          {' | '}
           {logs?.length ?? 0} entries
-          {' '}|{' '}
+          {' | '}
+          {refreshTick}s
+          {' | '}
           click row to inspect payload
         </div>
       </div>

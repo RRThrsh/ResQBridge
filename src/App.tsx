@@ -21,6 +21,10 @@ import { DomesticApp } from '@/pages/domestic/DomesticApp'
 import { Toaster } from '@/components/ui/sonner'
 import { useScrollToHash } from '@/hooks/useScrollToHash'
 import { useGuestLogger } from '@/hooks/useGuestLogger'
+import { useUserAuth } from '@/context/UserAuthContext'
+import { useAdminAuth } from '@/context/AdminAuthContext'
+import { useRescuerAuth } from '@/context/RescuerAuthContext'
+import { useDomesticAuth } from '@/context/DomesticAuthContext'
 
 function RefreshRateLimit({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
@@ -57,7 +61,11 @@ function RefreshRateLimit({ children }: { children: React.ReactNode }) {
 
 function RouteWrapper({ children }: { children: React.ReactNode }) {
   useScrollToHash()
-  useGuestLogger()
+  const { isLoggedIn: isUser } = useUserAuth()
+  const { isLoggedIn: isAdmin } = useAdminAuth()
+  const { isLoggedIn: isRescuer } = useRescuerAuth()
+  const { isLoggedIn: isDomestic } = useDomesticAuth()
+  useGuestLogger(isUser || isAdmin || isRescuer || isDomestic)
   return <>{children}</>
 }
 
