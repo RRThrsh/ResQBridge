@@ -543,11 +543,37 @@ export function AdminReportDialog({
                   <MapPin className="h-3.5 w-3.5" />
                   <span>Location</span>
                 </div>
-                <div className="rounded-2xl border border-border/10 bg-muted/30 p-5">
-                  <div className="mb-2 text-xs text-muted-foreground">Address / Landmark</div>
-                  <div className="text-sm font-medium leading-relaxed text-foreground">
-                    {activeReport.location}
+                
+                <div className="flex flex-col overflow-hidden rounded-2xl border border-border/10 bg-muted/30">
+                  <div className="p-5">
+                    <div className="mb-2 text-xs text-muted-foreground">Address / Landmark</div>
+                    <div className="text-sm font-medium leading-relaxed text-foreground">
+                      {activeReport.location || 'N/A'}
+                    </div>
                   </div>
+                  
+                  {/* MAP EMBED */}
+                  {activeReport.location && (
+                    <div className="relative h-[200px] w-full border-t border-border/10 bg-muted/50 sm:h-[250px]">
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                        allowFullScreen
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Report Location Map"
+                        className="absolute inset-0"
+                        src={`https://www.google.com/maps?q=${encodeURIComponent(
+                          // Adding a regional fallback ensures local street names or barangays 
+                          // map to the correct local area instead of generic streets overseas.
+                          activeReport.location.toLowerCase().includes('palawan') 
+                            ? activeReport.location 
+                            : `${activeReport.location}, Puerto Princesa, Palawan`
+                        )}&output=embed`}
+                      />
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -634,16 +660,17 @@ export function AdminReportDialog({
                   </Select>
                 </div>
               ) : (
-                // CHANGED TO grid-cols-3 to fit the new size input nicely
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                // CHANGED TO grid-cols-2 since we only have two inputs now
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* UPDATED LABEL AND PLACEHOLDER */}
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Behavior</label>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Condition / Behavior</label>
                     <Select
                       value={draft.behavior || ''}
                       onValueChange={(value) => value && setDraft((d) => ({ ...d, behavior: value }))}
                     >
                       <SelectTrigger className="border-border/20 bg-background/50">
-                        <SelectValue placeholder="Select behavior" />
+                        <SelectValue placeholder="Select condition / behavior" />
                       </SelectTrigger>
                       <SelectContent className="border-border/20 bg-background">
                         {WILDLIFE_BEHAVIORS.map((item) => (
@@ -654,25 +681,8 @@ export function AdminReportDialog({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Condition</label>
-                    <Select
-                      value={draft.condition || ''}
-                      onValueChange={(value) => value && setDraft((d) => ({ ...d, condition: value }))}
-                    >
-                      <SelectTrigger className="border-border/20 bg-background/50">
-                        <SelectValue placeholder="Select condition" />
-                      </SelectTrigger>
-                      <SelectContent className="border-border/20 bg-background">
-                        {WILDLIFE_CONDITIONS.map((item) => (
-                          <SelectItem key={item.value} value={item.value}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {/* ADDED REPORTED SIZE EDIT FIELD */}
+                  
+                  {/* REPORTED SIZE REMAINS HERE */}
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reported Size</label>
                     <Input
