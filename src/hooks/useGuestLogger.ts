@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
+import { getAuthApiUrl } from '@/lib/auth-api-base'
 
 let guestSessionId: string | null = null
 
@@ -24,7 +25,13 @@ export function useGuestLogger() {
     lastPath.current = path
 
     const sessionId = getSessionId()
-    fetch('/api/log-guest', {
+    let url: string
+    try {
+      url = getAuthApiUrl('/api/log-guest')
+    } catch {
+      return
+    }
+    fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
