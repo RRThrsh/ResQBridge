@@ -271,8 +271,8 @@ export function DomesticReportForm() {
         return
       }
       
-      // Specifically Missing or Found
-      if ((reportType === 'missing' || reportType === 'found') && !formData.animalName.trim()) {
+      // Pet Name is only required for 'missing' reports
+      if (reportType === 'missing' && !formData.animalName.trim()) {
         toast.error(t('reportFormWildlife.errorRequiredFields') || 'Please fill in all required fields.')
         return
       }
@@ -402,7 +402,8 @@ export function DomesticReportForm() {
           {reportType !== 'stray' && reportType !== 'injured' && (
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {reportType === 'missing' ? t('reportFormDomestic.petNameLabel') : t('reportFormDomestic.nameLabel')} <span className="text-destructive">*</span>
+                {reportType === 'missing' ? t('reportFormDomestic.petNameLabel') : t('reportFormDomestic.nameLabel')}
+                {reportType === 'missing' && <span className="text-destructive"> *</span>}
               </label>
 
               <Input
@@ -415,7 +416,7 @@ export function DomesticReportForm() {
                 }
                 placeholder={t('reportFormDomestic.namePlaceholder')}
                 className="h-12 bg-background border-border rounded-xl"
-                required
+                required={reportType === 'missing'}
               />
             </div>
           )}
