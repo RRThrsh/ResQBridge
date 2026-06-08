@@ -123,14 +123,12 @@ async function handlePasswordChange(
   e: React.FormEvent,
 ) {
   e.preventDefault()
-<<<<<<< HEAD
-=======
-      if (!validatePassword) {
+
+
+if (!validatePassword) {
   toast.error('Current password is incorrect')
   return
 }
->>>>>>> 6ea2468 (Initial commit)
-
   if (!user) return
 
   if (
