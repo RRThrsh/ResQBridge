@@ -45,7 +45,7 @@ export function DomesticLayout({
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,var(--color-primary)/0.12,transparent)]" />
 
       <header className="z-20 shrink-0 border-b border-border/80 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-none items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             {backTo ? (
               <Link
@@ -106,7 +106,7 @@ export function DomesticLayout({
         </div>
 
         {subtitle ? (
-          <p className="mx-auto max-w-5xl px-4 pb-3 text-xs text-muted-foreground sm:px-6">
+          <p className="mx-auto max-w-none px-4 pb-3 text-xs text-muted-foreground sm:px-6">
             {subtitle}
           </p>
         ) : null}
@@ -114,7 +114,7 @@ export function DomesticLayout({
 
         <main
           className={cn(
-            'mx-auto min-h-0 w-full max-w-5xl flex-1 overflow-y-auto overscroll-y-contain px-4 py-6 sm:px-6 sm:py-8',
+            'mx-auto min-h-0 w-full flex-1 overflow-y-auto overscroll-y-contain px-4 py-6 sm:px-6 sm:py-8',
             className,
           )}
         >
