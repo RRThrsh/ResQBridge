@@ -36,7 +36,6 @@ import {
 } from '@/lib/reportPhotos'
 import { cn } from '@/lib/utils'
 
-// --- IMPORTS FOR INTERACTIVE MAP ---
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -50,10 +49,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog.tsx'
+
 const DEFAULT_MAP_LAT = 9.7393
 const DEFAULT_MAP_LNG = 118.7361
 
-// --- FIX 1: ACCURATE PIN PLACEMENT ---
 const customMarkerIcon = L.divIcon({
   className: 'custom-map-marker',
   html: `<div style="background-color: hsl(var(--primary)); width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
@@ -135,7 +134,6 @@ function formatPinLine(lat: number, lng: number, placename: string | null): stri
   return placename ? `${placename} · ${pair}` : pair
 }
 
-// --- FIX 2: STOP MAP FROM JUMPING ON MANUAL CLICK ---
 function ClickableMap({ 
   coords, 
   onMapClick 
@@ -145,7 +143,6 @@ function ClickableMap({
 }) {
   const map = useMap()
 
-  // ONLY move the camera if the source is GPS. Do nothing to the camera on click.
   useEffect(() => {
     if (coords && coords.source === 'gps') {
       map.flyTo([coords.lat, coords.lng], 16, { animate: true })
@@ -174,7 +171,6 @@ export function WildlifeSightingForm() {
   const [loading, setLoading] = useState(false)
   const [locFetching, setLocFetching] = useState(false)
   
-  // Added source tracking for the map
   const [coords, setCoords] = useState<{ lat: number; lng: number; source?: 'gps' | 'click' } | null>(null)
   const [photos, setPhotos] = useState<ReportPhotoItem[]>([])
 
@@ -190,7 +186,6 @@ export function WildlifeSightingForm() {
     seenAt: '',
   })
 
-  // --- VERCEL FIX: EXTRACT OUTSIDE USEEFFECT ---
   const userContactPhone = profile?.contactPhone;
 
   useEffect(() => {
@@ -237,7 +232,6 @@ export function WildlifeSightingForm() {
     setLocFetching(true)
     try {
       const { lat, lng, accuracyM } = await getRefinedPosition()
-      // Pass 'gps' to trigger the map flyTo animation
       await updateLocationData(lat, lng, 'gps')
 
       const accNote = accuracyM < 9999 ? ` (~${Math.round(accuracyM)} m accuracy)` : ''
@@ -255,24 +249,37 @@ export function WildlifeSightingForm() {
     }
   }, [t])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleValidationBeforeSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!user) {
       toast.error(t('reportFormWildlife.errorLoginRequired'))
       return
     }
 
-    // --- NEW VALIDATION: Force Map Pin ---
+    if (
+      !formData.species.trim() ||
+      !formData.location ||
+      !formData.seenAt ||
+      !formData.quantity ||
+      !formData.reportedSize ||
+      !formData.behavior ||
+      !formData.description.trim()
+    ) {
+      toast.error(t('reportFormWildlife.errorRequiredFields') || 'Please fill in all required fields.')
+      return
+    }
+
+    if (formData.behavior === WILDLIFE_BEHAVIOR_OTHER && !formData.behaviorOther.trim()) {
+      toast.error(t('reportFormWildlife.errorBehaviorSpecify') || 'Please specify the other behavior.')
+      return
+    }
+
     if (!coords) {
-      // Fallback text if the translation key isn't set up yet
       toast.error(t('reportFormWildlife.errorMapPinRequired') || 'Please drop a pin on the map or use the current location button to confirm the exact spot.')
       return
     }
 
-    if (!formData.species.trim() || !formData.location || !formData.description) {
-      toast.error(t('reportFormWildlife.errorRequiredFields'))
-      return
-    }
     const photoError = validateReportPhotosForSubmit(photos)
     if (photoError) {
       toast.error(photoError)
@@ -296,32 +303,26 @@ export function WildlifeSightingForm() {
       return
     }
 
-    if (!formData.behavior) {
-      toast.error(t('reportFormWildlife.errorBehaviorRequired'))
-      return
-    }
+    setConfirmOpen(true)
+  }
 
-    const behavior =
-      formData.behavior === WILDLIFE_BEHAVIOR_OTHER
-        ? formData.behaviorOther.trim()
-        : wildlifeBehaviorLabelForValue(formData.behavior)
-
-    if (
-      formData.behavior === WILDLIFE_BEHAVIOR_OTHER &&
-      (!behavior || behavior === wildlifeBehaviorLabelForValue(WILDLIFE_BEHAVIOR_OTHER))
-    ) {
-      toast.error(t('reportFormWildlife.errorBehaviorSpecify'))
-      return
-    }
-
+  const executeSubmit = async () => {
     setLoading(true)
     try {
       const seenAt = formData.seenAt
         ? new Date(formData.seenAt).getTime()
         : Date.now()
 
+      const behavior =
+        formData.behavior === WILDLIFE_BEHAVIOR_OTHER
+          ? formData.behaviorOther.trim()
+          : wildlifeBehaviorLabelForValue(formData.behavior)
+
+      const contactPhone = formData.reporterPhone.trim()
+      const cleanPhone = contactPhone.replace(/\D/g, '')
+
       await createReportMutation({
-        userEmail: user.email,
+        userEmail: user!.email,
         category: 'wildlife',
         type: 'wildlife-sighting',
         animalName: formData.species.trim(),
@@ -330,12 +331,13 @@ export function WildlifeSightingForm() {
         behavior: behavior || undefined,
         reporterPhone: cleanPhone,
         quantity: Math.max(1, Number(formData.quantity) || 1),
-        reportedSize: formData.reportedSize.trim() || undefined,
+        reportedSize: formData.reportedSize.trim(),
         seenAt,
         photoStorageIds: photoStorageIdsForSubmit(photos),
-        latitude: coords?.lat,
-        longitude: coords?.lng,
+        latitude: coords!.lat,
+        longitude: coords!.lng,
       })
+      setConfirmOpen(false)
       navigate('/report/success')
     } catch {
       toast.error(t('reportFormWildlife.errorSubmit'))
@@ -370,17 +372,10 @@ export function WildlifeSightingForm() {
               </span>
             </p>
           </div>
-
         </div>
       </div>
 
-      <form
-  onSubmit={(e) => {
-    e.preventDefault()
-    setConfirmOpen(true)
-  }}
-  className="space-y-6"
->
+      <form onSubmit={handleValidationBeforeSubmit} className="space-y-6">
 
         {/* Species */}
         <div className="space-y-3">
@@ -417,9 +412,9 @@ export function WildlifeSightingForm() {
                   setFormData({ ...formData, location: e.target.value })
                 }
                 placeholder={t('reportFormWildlife.locationPlaceholder')}
-                className="pl-10 h-12 bg-background border-border rounded-xl pr-3"
+                className="pl-10 h-12 bg-background border-border rounded-xl pr-3 cursor-not-allowed opacity-80"
                 required
-                readOnly // --- NEW: Forces user to use the map/GPS button instead of typing manually ---
+                readOnly
               />
             </div>
             <Button
@@ -438,7 +433,6 @@ export function WildlifeSightingForm() {
             </Button>
           </div>
 
-          {/* --- INTERACTIVE LEAFLET MAP --- */}
           <div className={cn(
             'overflow-hidden rounded-xl border border-border bg-muted/30 relative z-0 h-[260px]',
           )}>
@@ -467,20 +461,21 @@ export function WildlifeSightingForm() {
         {/* Date & time seen */}
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {t('reportFormWildlife.dateLabel')}
+            {t('reportFormWildlife.dateLabel')} <span className="text-destructive">*</span>
           </label>
           <Input
             type="datetime-local"
             value={formData.seenAt}
             onChange={(e) => setFormData({ ...formData, seenAt: e.target.value })}
             className="h-12 bg-background border-border rounded-xl"
+            required
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {t('reportFormWildlife.quantityLabel')}
+              {t('reportFormWildlife.quantityLabel')} <span className="text-destructive">*</span>
             </label>
             <Input
               type="number"
@@ -488,11 +483,12 @@ export function WildlifeSightingForm() {
               value={formData.quantity}
               onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
               className="h-12 bg-background border-border rounded-xl"
+              required
             />
           </div>
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {t('reportFormWildlife.sizeLabel')}
+              {t('reportFormWildlife.sizeLabel')} <span className="text-destructive">*</span>
             </label>
             <Select
               value={formData.reportedSize}
@@ -502,6 +498,7 @@ export function WildlifeSightingForm() {
                   reportedSize: value || '',
                 })
               }
+              required
             >
               <SelectTrigger className="h-12 bg-background border-border rounded-xl">
                 <SelectValue placeholder={t('reportFormWildlife.sizePlaceholder')} />
@@ -526,7 +523,7 @@ export function WildlifeSightingForm() {
 
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {t('reportFormWildlife.behaviorLabel')}
+            {t('reportFormWildlife.behaviorLabel')} <span className="text-destructive">*</span>
           </label>
           <Select
             value={formData.behavior}
@@ -540,6 +537,7 @@ export function WildlifeSightingForm() {
                   value === WILDLIFE_BEHAVIOR_OTHER ? (preset?.label ?? '') : '',
               })
             }}
+            required
           >
             <SelectTrigger className="h-12 bg-background border-border rounded-xl [&_[data-slot=select-value]]:line-clamp-none">
               <SelectValue placeholder={t('reportFormWildlife.behaviorPlaceholder')}>
@@ -563,7 +561,7 @@ export function WildlifeSightingForm() {
                 setFormData({ ...formData, behaviorOther: e.target.value })
               }
               placeholder={t('reportFormWildlife.behaviorOtherPlaceholder')}
-              className="h-12 bg-background border-border rounded-xl"
+              className="h-12 bg-background border-border rounded-xl mt-2"
               required
             />
           ) : null}
@@ -613,56 +611,51 @@ export function WildlifeSightingForm() {
             {t('reportFormWildlife.warningText')}
           </p>
         </div>
-<Button
-  type="submit"
-  disabled={loading}
-  className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90"
->
-  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('reportFormWildlife.submitButton')}
-</Button>
-</form>
+        
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90"
+        >
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('reportFormWildlife.submitButton')}
+        </Button>
+      </form>
 
-<AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-  <AlertDialogContent className="rounded-2xl">
-    <AlertDialogHeader>
-      <AlertDialogTitle className="text-xl font-bold">
-        Important Reminder
-      </AlertDialogTitle>
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">
+              Important Reminder
+            </AlertDialogTitle>
 
-      <AlertDialogDescription className="space-y-3 pt-2 text-sm leading-relaxed text-muted-foreground">
-        <p>
-          Your wildlife report will only be accepted and reviewed properly
-          if you answer calls from the rescue team or administrators.
-        </p>
+            <AlertDialogDescription className="space-y-3 pt-2 text-sm leading-relaxed text-muted-foreground">
+              <p>
+                Your wildlife report will only be accepted and reviewed properly
+                if you answer calls from the rescue team or administrators.
+              </p>
 
-        <p>
-          Please make sure your contact number is active and reachable.
-        </p>
+              <p>
+                Please make sure your contact number is active and reachable.
+              </p>
 
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
-          Failure to answer verification calls may result in your report
-          being rejected.
-        </div>
-      </AlertDialogDescription>
-    </AlertDialogHeader>
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
+                Failure to answer verification calls may result in your report
+                being rejected.
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
 
-    <AlertDialogFooter>
-      <AlertDialogCancel>
-        Cancel
-      </AlertDialogCancel>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              Cancel
+            </AlertDialogCancel>
 
-      <AlertDialogAction
-        onClick={(e) => {
-          handleSubmit(e as unknown as React.FormEvent)
-        }}
-      >
-        Continue Submit
-      </AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
-
-</div>
-
-)
+            <AlertDialogAction onClick={executeSubmit}>
+              Continue Submit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
 }
