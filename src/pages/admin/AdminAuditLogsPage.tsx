@@ -50,61 +50,53 @@ const ACTION_COLORS: Record<string, string> = {
 }
 
 const ACTION_LABELS: Record<string, string> = {
-  'user.signup': 'Signup',
-  'user.login': 'Login',
-  'user.login.failed': 'Login Failed',
-  'user.account_locked': 'Locked',
-  'user.update_profile': 'Profile Update',
-  'user.report.submit': 'Report Submitted',
-  'user.report.update': 'Report Updated',
-  'user.report.delete': 'Report Deleted',
-  'user.password_reset': 'Password Reset',
-  'user.logout': 'Logout',
-  'admin.login': 'Admin Login',
-  'admin.logout': 'Admin Logout',
-  'admin.update_profile': 'Admin Profile',
-  'admin.change_password': 'Change Password',
-  'admin.add': 'Admin Added',
-  'admin.remove': 'Admin Removed',
-  'admin.update': 'Admin Updated',
-  'admin.report.update': 'Edit Report',
-  'admin.report.delete': 'Delete Report',
-  'admin.report.assign_rescuer': 'Assign Rescuer',
-  'admin.report.reassign': 'Reassign Rescuer',
-  'admin.rescuer.add': 'Rescuer Added',
-  'admin.rescuer.update': 'Rescuer Updated',
-  'admin.rescuer.remove': 'Rescuer Removed',
-  'admin.approver.add': 'Approver Added',
-  'admin.approver.remove': 'Approver Removed',
-  'admin.wildlife.create': 'Wildlife Created',
-  'admin.wildlife.update': 'Wildlife Updated',
-  'admin.wildlife.delete': 'Wildlife Deleted',
-  'admin.news.create': 'News Created',
-  'admin.news.update': 'News Updated',
-  'admin.news.delete': 'News Deleted',
-  'admin.password_reset': 'Admin Password Reset',
-  'rescuer.login': 'Rescuer Login',
-  'rescuer.accept_report': 'Accepted',
-  'rescuer.mark_en_route': 'En Route',
-  'rescuer.complete_rescue': 'Completed',
-  'rescuer.password_reset': 'Rescuer Password Reset',
-  'rescuer.logout': 'Rescuer Logout',
-  'domestic_approver.login': 'Approver Login',
-  'domestic_approver.logout': 'Approver Logout',
-  'guest.page_view': 'Page View',
+  'user.signup': 'USER SIGNUP',
+  'user.login': 'USER LOGIN',
+  'user.login.failed': 'LOGIN FAILED',
+  'user.account_locked': 'ACCOUNT LOCKED',
+  'user.update_profile': 'USER UPDATE PROFILE',
+  'user.report.submit': 'REPORT SUBMITTED',
+  'user.report.update': 'REPORT UPDATED',
+  'user.report.delete': 'REPORT DELETED',
+  'user.password_reset': 'PASSWORD RESET',
+  'user.logout': 'USER LOGOUT',
+  'admin.login': 'ADMIN LOGIN',
+  'admin.logout': 'ADMIN LOGOUT',
+  'admin.update_profile': 'ADMIN UPDATE PROFILE',
+  'admin.change_password': 'ADMIN CHANGE PASSWORD',
+  'admin.add': 'ADMIN ADDED',
+  'admin.remove': 'ADMIN REMOVED',
+  'admin.update': 'ADMIN UPDATED',
+  'admin.report.update': 'ADMIN EDIT REPORT',
+  'admin.report.delete': 'ADMIN DELETE REPORT',
+  'admin.report.assign_rescuer': 'RESCUER ASSIGNED',
+  'admin.report.reassign': 'RESCUER REASSIGNED',
+  'admin.rescuer.add': 'RESCUER ADDED',
+  'admin.rescuer.update': 'RESCUER UPDATED',
+  'admin.rescuer.remove': 'RESCUER REMOVED',
+  'admin.approver.add': 'APPROVER ADDED',
+  'admin.approver.remove': 'APPROVER REMOVED',
+  'admin.wildlife.create': 'WILDLIFE CREATED',
+  'admin.wildlife.update': 'WILDLIFE UPDATED',
+  'admin.wildlife.delete': 'WILDLIFE DELETED',
+  'admin.news.create': 'NEWS CREATED',
+  'admin.news.update': 'NEWS UPDATED',
+  'admin.news.delete': 'NEWS DELETED',
+  'admin.password_reset': 'ADMIN PASSWORD RESET',
+  'rescuer.login': 'RESCUER LOGIN',
+  'rescuer.accept_report': 'RESCUER ACCEPTED',
+  'rescuer.mark_en_route': 'RESCUER EN ROUTE',
+  'rescuer.complete_rescue': 'RESCUE COMPLETED',
+  'rescuer.password_reset': 'RESCUER PASSWORD RESET',
+  'rescuer.logout': 'RESCUER LOGOUT',
+  'domestic_approver.login': 'APPROVER LOGIN',
+  'domestic_approver.logout': 'APPROVER LOGOUT',
+  'guest.page_view': 'GUEST PAGE VIEW',
 }
 
-function formatTime(ts: number): string {
+function formatTimestamp(ts: number): string {
   const d = new Date(ts)
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mm = String(d.getMinutes()).padStart(2, '0')
-  const ss = String(d.getSeconds()).padStart(2, '0')
-  return `${hh}:${mm}:${ss}`
-}
-
-function formatDate(ts: number): string {
-  const d = new Date(ts)
-  return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
+  return d.toISOString().replace('T', ' ').slice(0, 19)
 }
 
 type AuditLogEntry = {
@@ -131,29 +123,41 @@ function buildLogObject(log: AuditLogEntry): Record<string, unknown> {
   const obj: Record<string, unknown> = {
     action: log.action,
     actor: log.actorEmail,
-    timestamp: `${formatDate(log.createdAt)} ${formatTime(log.createdAt)}`,
+    timestamp: formatTimestamp(log.createdAt),
   }
+
   if (log.actorName) obj.actorName = log.actorName
   if (log.actorRole) obj.role = log.actorRole
   if (log.targetType) obj.targetType = log.targetType
   if (log.targetId) obj.targetId = log.targetId
   if (log.ipAddress) obj.ip = log.ipAddress
+
   if (log.details) {
-    try { obj.details = JSON.parse(log.details) } catch { obj.details = log.details }
+    try {
+      obj.details = JSON.parse(log.details)
+    } catch {
+      obj.details = log.details
+    }
   }
+
   if (log.metadata) {
-    try { obj.metadata = JSON.parse(log.metadata) } catch { obj.metadata = log.metadata }
+    try {
+      obj.metadata = JSON.parse(log.metadata)
+    } catch {
+      obj.metadata = log.metadata
+    }
   }
+
   return obj
 }
 
 const ROLE_OPTIONS = [
-  { value: 'all', label: 'All Roles' },
-  { value: 'user', label: 'User' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'rescuer', label: 'Rescuer' },
-  { value: 'domestic_approver', label: 'Approver' },
-  { value: 'guest', label: 'Guest' },
+  { value: 'all', label: 'ALL' },
+  { value: 'user', label: 'USER' },
+  { value: 'admin', label: 'ADMIN' },
+  { value: 'rescuer', label: 'RESCUER' },
+  { value: 'domestic_approver', label: 'APPROVER' },
+  { value: 'guest', label: 'GUEST' },
 ]
 
 export function AdminAuditLogsPage() {
@@ -171,7 +175,8 @@ export function AdminAuditLogsPage() {
   )
 
   const filteredLogs = useMemo(() => {
-    return logs?.filter(
+    const reversed = logs?.slice().reverse()
+    return reversed?.filter(
       (log) => roleFilter === 'all' || log.actorRole === roleFilter,
     )
   }, [logs, roleFilter])
@@ -183,99 +188,119 @@ export function AdminAuditLogsPage() {
 
   useEffect(() => {
     if (!scrollRef.current || !filteredLogs) return
-    scrollRef.current.scrollTop = 0
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [filteredLogs?.length])
 
   if (!admin) return null
 
   return (
-    <div className="mx-auto w-full max-w-full font-mono">
-      <div className="rounded-lg border border-[#00ff8833] bg-[#0a0a0a]">
-        {/* Header bar */}
-        <div className="flex items-center justify-between border-b border-[#00ff8822] px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-bold tracking-wider text-[#00ff88]">
-              AUDIT LOG
-            </span>
-            <span className="flex items-center gap-1.5 text-[10px] text-[#00ff8866]">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#00ff88]" />
-              LIVE
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-[11px] text-[#00ff8844]">
-              {logs?.length ?? 0} total
-            </span>
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="rounded border border-[#00ff8833] bg-black px-2 py-1 text-[11px] text-[#00ff88] outline-none"
-            >
-              {ROLE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+    <div
+      className="mx-auto w-full max-w-full"
+      style={{
+        fontFamily: "'Courier New', 'Consolas', monospace",
+      }}
+    >
+      <div className="rounded-lg border border-[#00ff8844] bg-[#0a0a0a] p-4 sm:p-6">
+        {/* Header */}
+        <pre
+          className="mb-6 text-xs leading-tight text-[#00ff88] sm:text-sm"
+          style={{
+            textShadow: '0 0 8px rgba(0,255,136,0.3)',
+          }}
+        >
+{`  ╔══════════════════════════════════════╗
+  ║  🐱  AUDIT LOG TERMINAL  v1.0  🐱  ║
+  ╚══════════════════════════════════════╝
+`}
+        </pre>
+
+        {/* Role filter */}
+        <div className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#00ff8877]">
+          <span>Filter by role:</span>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="rounded border border-[#00ff8844] bg-[#0a0a0a] px-2 py-1 text-[10px] uppercase text-[#00ff88] outline-none focus:border-[#00ff88]"
+          >
+            {ROLE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
 
-        {/* Table */}
         {logs === undefined ? (
-          <div className="flex items-center justify-center py-20 text-[#00ff8866]">
-            <span className="animate-pulse text-xs">connecting to audit stream...</span>
+          <div className="py-12 text-center text-[#00ff8866]">
+            <span className="animate-pulse">
+              connecting to audit stream...
+            </span>
           </div>
         ) : logs.length === 0 ? (
-          <div className="py-20 text-center text-[#00ff8866]">
-            <p className="text-xs">No audit logs found.</p>
+          <div className="py-12 text-center text-[#00ff8866]">
+            <p>{'>'} No audit logs found.</p>
           </div>
         ) : filteredLogs === undefined || filteredLogs.length === 0 ? (
-          <div className="py-20 text-center text-[#00ff8866]">
-            <p className="text-xs">No logs match the selected filter.</p>
+          <div className="py-12 text-center text-[#00ff8866]">
+            <p>{'>'} No logs match the selected filter.</p>
           </div>
         ) : (
-          <>
-            {/* Scrollable list */}
-            <div ref={scrollRef} className="h-[600px] overflow-y-auto">
-              {/* Sticky header row */}
-              <div className="sticky top-0 z-20 flex border-b border-[#00ff8822] bg-[#0a0a0a] px-4 py-2 text-[10px] uppercase tracking-wider text-[#00ff8877]">
-                <div className="w-[140px] min-w-0 shrink-0">Action</div>
-                <div className="w-[120px] min-w-0 shrink-0">Actor</div>
-                <div className="w-[70px] min-w-0 shrink-0">Role</div>
-                <div className="w-[100px] min-w-0 shrink-0">IP</div>
-                <div className="ml-auto w-[130px] min-w-0 shrink-0 text-right">Time</div>
-              </div>
+            <div className="overflow-hidden rounded-md border border-[#00ff8815]">
+              {/* Fixed Height Container */}
+              <div ref={scrollRef} className="h-[650px] overflow-y-auto">
+                {/* Sticky Header */}
+                <div className="sticky top-0 z-20 grid grid-cols-[24px_200px_120px_90px_120px_180px] border-b border-[#00ff8822] bg-[#0a0a0a] px-2 py-2 text-[10px] uppercase tracking-widest text-[#00ff8877] backdrop-blur">
+                  <span />
+                  <span>Action</span>
+                  <span>Actor</span>
+                  <span>Role</span>
+                  <span>IP</span>
+                  <span className="text-right">Timestamp</span>
+                </div>
 
               {filteredLogs!.map((log) => {
                 const color = ACTION_COLORS[log.action] ?? '#ffffff'
-                const label = ACTION_LABELS[log.action] ?? log.action.replace(/_/g, ' ')
+                const label = ACTION_LABELS[log.action] ?? log.action.toUpperCase()
                 const isExpanded = expandedId === log._id
+                const logObj = buildLogObject(log)
 
                 return (
-                  <div key={log._id} className="border-b border-[#ffffff08] last:border-0">
+                  <div key={log._id} className="border-b border-[#ffffff08]">
                     <button
                       type="button"
                       onClick={() => setExpandedId(isExpanded ? null : log._id)}
-                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-[#ffffff05]"
+                      className="w-full text-left transition-colors hover:bg-[#ffffff05]"
                     >
-                      <span className={`text-[10px] text-[#00ff8877] transition-transform ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
-                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <div className="grid grid-cols-[24px_200px_120px_90px_120px_180px] items-center px-2 py-2">
                         <span
-                          className="shrink-0 truncate text-[11px] font-semibold tracking-wide"
-                          style={{ color }}
+                          className={`text-xs transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                          style={{ color: '#00ff8877' }}
                         >
-                          {label}
+                          ▶
                         </span>
-                        <span className="w-[120px] shrink-0 truncate text-[11px] text-[#999]">
+
+                        <span
+                          className="truncate text-xs font-bold tracking-wide"
+                          style={{
+                            color,
+                            textShadow: `0 0 6px ${color}`,
+                          }}
+                        >
+                          [{label}]
+                        </span>
+
+                        <span className="truncate text-xs text-[#999]">
                           {extractActorName(log)}
                         </span>
-                        <span className="w-[70px] shrink-0 truncate text-[10px] text-[#666]">
+
+                        <span className="truncate text-xs text-[#666]">
                           {log.actorRole ?? '-'}
                         </span>
-                        <span className="w-[100px] shrink-0 truncate text-[10px] text-[#555]">
+
+                        <span className="truncate text-[10px] text-[#555] font-mono">
                           {log.ipAddress ?? '-'}
                         </span>
-                        <span className="ml-auto shrink-0 text-right text-[10px] text-[#555] tabular-nums">
-                          <span className="hidden sm:inline">{formatDate(log.createdAt)} </span>
-                          {formatTime(log.createdAt)}
+
+                        <span className="text-right text-[10px] text-[#555]">
+                          {formatTimestamp(log.createdAt)}
                         </span>
                       </div>
                     </button>
@@ -284,9 +309,9 @@ export function AdminAuditLogsPage() {
                     <div
                       className={`overflow-hidden transition-all duration-300 ease-out ${isExpanded ? 'max-h-[600px]' : 'max-h-0'}`}
                     >
-                      <div className="border-t border-[#ffffff08] bg-[#00000055] px-4 py-3">
+                      <div className="bg-[#00000055] px-4 py-3">
                         <pre className="overflow-x-auto text-[11px] leading-relaxed text-[#bdbdbd]">
-{JSON.stringify(buildLogObject(log), null, 2)}
+{JSON.stringify(logObj, null, 2)}
                         </pre>
                       </div>
                     </div>
@@ -294,16 +319,22 @@ export function AdminAuditLogsPage() {
                 )
               })}
             </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-between border-t border-[#00ff8822] px-4 py-2 text-[10px] text-[#00ff8844]">
-              <span>
-                {filteredLogs!.length} shown · {refreshTick}s
-              </span>
-              <span>click a row to inspect</span>
-            </div>
-          </>
+          </div>
         )}
+
+        {/* Footer */}
+        <div className="mt-4 border-t border-[#00ff8822] pt-3 text-[10px] text-[#00ff8844]">
+          <span className="animate-pulse">●</span>
+          {' '}LIVE
+          {' | '}
+          {logs?.length ?? 0} total
+          {' | '}
+          {filteredLogs?.length ?? 0} shown
+          {' | '}
+          {refreshTick}s
+          {' | '}
+          click row to inspect payload
+        </div>
       </div>
     </div>
   )
