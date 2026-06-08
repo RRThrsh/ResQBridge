@@ -2,16 +2,20 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { normalizeEmail } from '@/lib/admin'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const ACTION_COLORS: Record<string, string> = {
   'user.signup': '#00ff88',
   'user.login': '#00ff88',
+  'user.login.failed': '#ff4444',
+  'user.account_locked': '#ff4444',
   'user.update_profile': '#00ff88',
   'user.report.submit': '#ffcc00',
   'user.report.update': '#ffcc00',
   'user.report.delete': '#ff4444',
+  'user.password_reset': '#ff8800',
   'admin.login': '#00aaff',
+  'admin.logout': '#00aaff',
   'admin.update_profile': '#00aaff',
   'admin.change_password': '#ff8800',
   'admin.add': '#ff44ff',
@@ -20,29 +24,39 @@ const ACTION_COLORS: Record<string, string> = {
   'admin.report.update': '#00aaff',
   'admin.report.delete': '#ff4444',
   'admin.report.assign_rescuer': '#ff8800',
+  'admin.report.reassign': '#ff8800',
   'admin.rescuer.add': '#ff44ff',
   'admin.rescuer.update': '#00aaff',
   'admin.rescuer.remove': '#ff4444',
+  'admin.approver.add': '#ff44ff',
+  'admin.approver.remove': '#ff4444',
   'admin.wildlife.create': '#ff44ff',
   'admin.wildlife.update': '#00aaff',
   'admin.wildlife.delete': '#ff4444',
   'admin.news.create': '#ff44ff',
   'admin.news.update': '#00aaff',
   'admin.news.delete': '#ff4444',
+  'admin.password_reset': '#ff8800',
   'rescuer.login': '#88ff88',
+  'rescuer.accept_report': '#88ff88',
   'rescuer.mark_en_route': '#88ff88',
   'rescuer.complete_rescue': '#88ff88',
+  'rescuer.password_reset': '#ff8800',
   'domestic_approver.login': '#88aaff',
 }
 
 const ACTION_LABELS: Record<string, string> = {
   'user.signup': 'USER SIGNUP',
   'user.login': 'USER LOGIN',
+  'user.login.failed': 'LOGIN FAILED',
+  'user.account_locked': 'ACCOUNT LOCKED',
   'user.update_profile': 'USER UPDATE PROFILE',
   'user.report.submit': 'REPORT SUBMITTED',
   'user.report.update': 'REPORT UPDATED',
   'user.report.delete': 'REPORT DELETED',
+  'user.password_reset': 'PASSWORD RESET',
   'admin.login': 'ADMIN LOGIN',
+  'admin.logout': 'ADMIN LOGOUT',
   'admin.update_profile': 'ADMIN UPDATE PROFILE',
   'admin.change_password': 'ADMIN CHANGE PASSWORD',
   'admin.add': 'ADMIN ADDED',
@@ -51,18 +65,24 @@ const ACTION_LABELS: Record<string, string> = {
   'admin.report.update': 'ADMIN EDIT REPORT',
   'admin.report.delete': 'ADMIN DELETE REPORT',
   'admin.report.assign_rescuer': 'RESCUER ASSIGNED',
+  'admin.report.reassign': 'RESCUER REASSIGNED',
   'admin.rescuer.add': 'RESCUER ADDED',
   'admin.rescuer.update': 'RESCUER UPDATED',
   'admin.rescuer.remove': 'RESCUER REMOVED',
+  'admin.approver.add': 'APPROVER ADDED',
+  'admin.approver.remove': 'APPROVER REMOVED',
   'admin.wildlife.create': 'WILDLIFE CREATED',
   'admin.wildlife.update': 'WILDLIFE UPDATED',
   'admin.wildlife.delete': 'WILDLIFE DELETED',
   'admin.news.create': 'NEWS CREATED',
   'admin.news.update': 'NEWS UPDATED',
   'admin.news.delete': 'NEWS DELETED',
+  'admin.password_reset': 'ADMIN PASSWORD RESET',
   'rescuer.login': 'RESCUER LOGIN',
+  'rescuer.accept_report': 'RESCUER ACCEPTED',
   'rescuer.mark_en_route': 'RESCUER EN ROUTE',
   'rescuer.complete_rescue': 'RESCUE COMPLETED',
+  'rescuer.password_reset': 'RESCUER PASSWORD RESET',
   'domestic_approver.login': 'APPROVER LOGIN',
 }
 
@@ -124,13 +144,19 @@ function buildLogObject(log: AuditLogEntry): Record<string, unknown> {
 export function AdminAuditLogsPage() {
   const { admin } = useAdminAuth()
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const adminEmail = admin ? normalizeEmail(admin.email) : null
 
   const logs = useQuery(
     api.auditLogs.list,
-    adminEmail ? { adminEmail, limit: 200 } : 'skip',
+    adminEmail ? { adminEmail, limit: 500 } : 'skip',
   )
+
+  useEffect(() => {
+    if (!scrollRef.current || !logs) return
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [logs?.length])
 
   if (!admin) return null
 
@@ -166,19 +192,19 @@ export function AdminAuditLogsPage() {
             <p>{'>'} No audit logs found.</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-md border border-[#00ff8815]">
-            {/* Fixed Height Container */}
-            <div className="h-[650px] overflow-y-auto">
-              {/* Sticky Header */}
-              <div className="sticky top-0 z-20 grid grid-cols-[24px_240px_160px_120px_180px] border-b border-[#00ff8822] bg-[#0a0a0a] px-2 py-2 text-[10px] uppercase tracking-widest text-[#00ff8877] backdrop-blur">
-                <span />
-                <span>Action</span>
-                <span>Actor</span>
-                <span>Role</span>
-                <span className="text-right">Timestamp</span>
-              </div>
+            <div className="overflow-hidden rounded-md border border-[#00ff8815]">
+              {/* Fixed Height Container */}
+              <div ref={scrollRef} className="h-[650px] overflow-y-auto">
+                {/* Sticky Header */}
+                <div className="sticky top-0 z-20 grid grid-cols-[24px_240px_160px_120px_180px] border-b border-[#00ff8822] bg-[#0a0a0a] px-2 py-2 text-[10px] uppercase tracking-widest text-[#00ff8877] backdrop-blur">
+                  <span />
+                  <span>Action</span>
+                  <span>Actor</span>
+                  <span>Role</span>
+                  <span className="text-right">Timestamp</span>
+                </div>
 
-              {[...logs].reverse().map((log) => {
+              {logs.map((log) => {
                 const color =
                   ACTION_COLORS[log.action] ?? '#ffffff'
 

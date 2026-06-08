@@ -265,10 +265,24 @@ export const validateLoginAttempt = mutation({
     }
 
     const attempts = (user.failedLoginAttempts ?? 0) + 1
+    await writeAuditLog(ctx, {
+      action: 'user.login.failed',
+      actorEmail: email,
+      actorName: `${user.firstName} ${user.lastName}`.trim(),
+      actorRole: 'user',
+      details: JSON.stringify({ attempt: attempts, remaining: 5 - attempts }),
+    })
     if (attempts >= 5) {
       await ctx.db.patch(user._id, {
         failedLoginAttempts: attempts,
         lockedUntil: Date.now() + 15 * 60 * 1000,
+      })
+      await writeAuditLog(ctx, {
+        action: 'user.account_locked',
+        actorEmail: email,
+        actorName: `${user.firstName} ${user.lastName}`.trim(),
+        actorRole: 'user',
+        details: JSON.stringify({ reason: '5 failed attempts', lockoutMinutes: 15 }),
       })
       return { allowed: false, remainingAttempts: 0, locked: true, lockoutMinutes: 15 }
     }
