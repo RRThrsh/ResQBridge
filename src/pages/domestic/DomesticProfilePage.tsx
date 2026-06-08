@@ -167,15 +167,13 @@ export function DomesticProfilePage() {
       setIsEditing(false)
       
     } catch (error: any) {
-      // ConvexError passes its custom message in `error.data`, not `error.message`
+      console.error("Mutation failed:", error)
       const errorMessage = error?.data || error?.message || ''
 
       if (typeof errorMessage === 'string' && errorMessage.includes('Incorrect current password')) {
         toast.error('Incorrect current password. Please try again.')
-      } else if (typeof errorMessage === 'string' && errorMessage.includes('Server Error')) {
-        // Fallback just in case the backend hasn't fully synced the ConvexError update yet
-        toast.error('Incorrect current password. Please try again.')
       } else {
+        // Just show the raw error so we don't accidentally mask a real crash!
         toast.error(typeof errorMessage === 'string' ? errorMessage : 'Could not change password.')
       }
     } finally {
