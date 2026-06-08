@@ -316,3 +316,30 @@ export const getReportById = query({
     return await withResolvedReportPhotos(ctx, row)
   },
 })
+export const cleanupDomesticReports = mutation({
+  args: {},
+
+  handler: async (ctx) => {
+    const rows = await ctx.db
+      .query('reports')
+      .collect()
+
+    const invalidReports = rows.filter(
+      (r) =>
+        r.category === 'domestic' &&
+        r.status === 'published' &&
+        (
+          r.type === 'stray' ||
+          r.type === 'injured'
+        )
+    )
+
+    for (const report of invalidReports) {
+      await ctx.db.patch(report._id, {
+        status: 'rejected',
+      })
+    }
+
+    return invalidReports.length
+  },
+})

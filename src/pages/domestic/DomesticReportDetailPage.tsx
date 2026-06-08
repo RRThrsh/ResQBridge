@@ -34,8 +34,12 @@ export function DomesticReportDetailPage() {
   const [confirmApprove, setConfirmApprove] = useState(false)
   const [confirmReject, setConfirmReject] = useState(false)
 
-  // @ts-ignore
-  const updateStatus = useMutation((api as any).reports.update)
+
+// @ts-ignore
+const publishReport = useMutation((api as any).domestic.publishReport)
+
+// @ts-ignore
+const rejectReport = useMutation((api as any).domestic.rejectReport)
 
   // @ts-ignore
   const row = useQuery(
@@ -102,49 +106,54 @@ export function DomesticReportDetailPage() {
     report.type === 'found'
   )
 
-  async function handleStatusChange(newStatus: 'published' | 'rejected') {
-    if (
-  newStatus === 'published' &&
-  report.type !== 'missing' &&
-  report.type !== 'found'
+async function handleStatusChange(
+  newStatus: 'published' | 'rejected',
 ) {
-  toast.error(
-    'Only missing and found reports can be published.',
-  )
-  return
-}
-    if (!domesticApprover || !report) return
+  if (!domesticApprover || !report) return
 
-    setLoading(true)
+  setLoading(true)
 
-    try {
-      await updateStatus({
-        reportId: report._id as Id<'reports'>,
-        userEmail: report.userEmail || report.email,
-        animalName: report.animalName,
-        location: report.location,
-        type: report.type || report.animalType,
-        status: newStatus as any,
+  try {
+    if (newStatus === 'published') {
+      if (
+        report.type !== 'missing' &&
+        report.type !== 'found'
+      ) {
+        toast.error(
+          'Only missing and found reports can be published.',
+        )
+        return
+      }
+
+      await publishReport({
+        reportId: report._id,
       })
 
       toast.success(
-        newStatus === 'published'
-          ? 'Report published to public feed.'
-          : 'Report rejected.'
+        'Report published to public feed.',
       )
+    } else {
+      await rejectReport({
+        reportId: report._id,
+      })
 
-      setConfirmApprove(false)
-      setConfirmReject(false)
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Could not update report status'
+      toast.success(
+        'Report rejected.',
       )
-    } finally {
-      setLoading(false)
     }
+
+    setConfirmApprove(false)
+    setConfirmReject(false)
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : 'Could not update report status',
+    )
+  } finally {
+    setLoading(false)
   }
+}
 
   const actionFooter = canAct ? (
     <div className="mx-auto max-w-2xl space-y-2 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 flex gap-2">
