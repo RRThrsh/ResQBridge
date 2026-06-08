@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { getAuthApiUrl } from '@/lib/auth-api-base'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '../../convex/_generated/api'
+
+const client = new ConvexHttpClient(import.meta.env.VITE_CONVEX_URL ?? '')
 
 let guestSessionId: string | null = null
 
@@ -21,28 +24,20 @@ export function useGuestLogger(skip?: boolean) {
 
   useEffect(() => {
     if (skip) return
+    if (!import.meta.env.VITE_CONVEX_URL) return
     const path = location.pathname + location.search
     if (path === lastPath.current) return
     lastPath.current = path
 
     const sessionId = getSessionId()
-    let url: string
-    try {
-      url = getAuthApiUrl('/api/log-guest')
-    } catch {
-      return
-    }
-    fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId,
-        page: path,
-        action: 'guest.page_view',
-        referrer: document.referrer,
-      }),
-    }).then((r) => {
-      if (!r.ok) console.warn('[guest-logger]', r.status, r.statusText)
+
+    client.mutation(api.auditLogs.fromAction, {
+      action: 'guest.page_view',
+      actorEmail: sessionId,
+      actorName: `Guest (${path})`,
+      actorRole: 'guest',
+      targetType: 'page',
+      targetId: path,
     }).catch((e) => console.warn('[guest-logger]', e))
   }, [location.pathname, location.search])
 }
