@@ -71,11 +71,22 @@ const rows = await ctx.db
   .query('reports')
   .filter((q) => q.eq(q.field('category'), 'domestic'))
   .filter((q) => q.eq(q.field('status'), 'published'))
-  .order('desc')
   .collect()
 
+const filteredRows = rows.filter(
+  (report) =>
+    report.type === 'missing' ||
+    report.type === 'found',
+)
+
+filteredRows.sort(
+  (a, b) => b._creationTime - a._creationTime,
+)
+
 return await Promise.all(
-  rows.map((row) => withResolvedReportPhotos(ctx, row))
+  filteredRows.map((row) =>
+  withResolvedReportPhotos(ctx, row),
+)
 )
   },
 })
