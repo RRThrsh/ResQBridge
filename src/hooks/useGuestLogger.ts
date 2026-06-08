@@ -41,6 +41,8 @@ export function useGuestLogger(skip?: boolean) {
         action: 'guest.page_view',
         referrer: document.referrer,
       }),
-    }).catch(() => {})
+    }).then((r) => {
+      if (!r.ok) console.warn('[guest-logger]', r.status, r.statusText)
+    }).catch((e) => console.warn('[guest-logger]', e))
   }, [location.pathname, location.search])
 }
