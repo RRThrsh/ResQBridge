@@ -58,7 +58,7 @@ export function DomesticProfilePage() {
   const [saving, setSaving] = useState(false)
 
   const updateApproverMutation = useMutation(api.domestic.updateApprover)
-  const resetDomesticPassword = useMutation(api.domestic.resetDomesticPassword)
+  const changeDomesticPassword = useMutation(api.domestic.changeDomesticPassword)
 
   if (!domesticApprover) {
     return (
@@ -115,9 +115,9 @@ export function DomesticProfilePage() {
     try {
       // If changing password, handle that first so we can catch auth errors early
       if (password) {
-        await resetDomesticPassword({
+        await changeDomesticPassword({
           email: domesticApprover!.email,
-          currentPassword, // Make sure your Convex backend expects this!
+          currentPassword, 
           newPassword: password,
         })
       }
