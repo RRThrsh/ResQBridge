@@ -449,7 +449,13 @@ function AuthForm({ onClose }: { onClose: () => void }) {
                   >
                     {t('auth.termsLink')}
                   </button>{' '}
-                  {t('auth.privacyLink')}.
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setPrivacyOpen(true) }}
+                    className="text-primary hover:underline inline font-semibold"
+                  >
+                    {t('auth.privacyLink')}
+                  </button>.
                 </label>
               </div>
             </>
