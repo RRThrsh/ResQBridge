@@ -15,7 +15,7 @@ export function RescuerShell() {
     <RescuerLayout
       footer={
         <nav aria-label="Rescuer navigation">
-          <div className="mx-auto max-w-2xl px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-6">
+          <div className="mx-auto max-w-none px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-6">
             <div className="flex w-full gap-1 rounded-2xl border border-border bg-muted/40 p-1">
               {navItems.map(({ to, label, icon: Icon, end }) => {
                 const active = end
