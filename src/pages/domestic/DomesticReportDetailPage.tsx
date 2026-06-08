@@ -95,9 +95,24 @@ export function DomesticReportDetailPage() {
       ? `${report.latitude},${report.longitude}`
       : encodeURIComponent(report.location || 'Unknown location')
 
-  const canAct = report.status === 'pending'
+  const canAct =
+  report.status === 'pending' &&
+  (
+    report.type === 'missing' ||
+    report.type === 'found'
+  )
 
   async function handleStatusChange(newStatus: 'published' | 'rejected') {
+    if (
+  newStatus === 'published' &&
+  report.type !== 'missing' &&
+  report.type !== 'found'
+) {
+  toast.error(
+    'Only missing and found reports can be published.',
+  )
+  return
+}
     if (!domesticApprover || !report) return
 
     setLoading(true)
