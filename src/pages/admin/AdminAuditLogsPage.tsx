@@ -175,8 +175,7 @@ export function AdminAuditLogsPage() {
   )
 
   const filteredLogs = useMemo(() => {
-    const reversed = logs?.slice().reverse()
-    return reversed?.filter(
+    return logs?.filter(
       (log) => roleFilter === 'all' || log.actorRole === roleFilter,
     )
   }, [logs, roleFilter])

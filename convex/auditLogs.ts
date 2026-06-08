@@ -27,7 +27,7 @@ export const list = query({
       .withIndex('by_created_at')
       .order('desc')
       .take(limit)
-    return logs
+    return logs.reverse()
   },
 })
 

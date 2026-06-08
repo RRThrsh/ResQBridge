@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
-import { CheckCircle2, Clock, Loader2, Sparkles, XCircle } from 'lucide-react'
+import { CheckCircle2, Clock, Loader2, Sparkles, XCircle, PawPrint, Search } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
-import { DomesticReportCard } from '@/components/domestic/DomesticReportCard' 
+import { DomesticReportCard } from '@/components/domestic/DomesticReportCard'
 import { cn } from '@/lib/utils'
 
 type Tab = 'pending' | 'published' | 'rejected'
@@ -71,6 +71,15 @@ export function DomesticReportsPage() {
 
   const loading = pendingRows === undefined || publishedRows === undefined || rejectedRows === undefined
   const list = tab === 'pending' ? pending : tab === 'published' ? published : rejected
+
+  const missingReports = useMemo(
+    () => published.filter((r: any) => r.type === 'missing'),
+    [published],
+  )
+  const foundReports = useMemo(
+    () => published.filter((r: any) => r.type === 'found'),
+    [published],
+  )
 
   return (
     <>
@@ -151,6 +160,80 @@ export function DomesticReportsPage() {
           )}
         </>
       )}
+
+      {/* Community Board */}
+      <section className="mt-12">
+        <div className="mb-1 flex items-center gap-2 text-primary">
+          <PawPrint className="h-4 w-4" />
+          <span className="text-xs font-medium uppercase tracking-widest">Community Board</span>
+        </div>
+        <h2 className="text-2xl font-bold text-foreground sm:text-3xl" style={{ fontFamily: 'var(--font-heading)' }}>
+          Missing & Found
+        </h2>
+        <p className="mt-2 max-w-md text-sm text-muted-foreground leading-relaxed">
+          Published reports that have been accepted and arrangements set.
+        </p>
+
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-6 sm:grid-cols-2">
+            {/* Missing */}
+            <div className="rounded-2xl border border-border bg-card">
+              <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
+                  <Search className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>Missing</h3>
+                  <p className="text-xs text-muted-foreground">{missingReports.length} report{missingReports.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <div className="divide-y divide-border">
+                {missingReports.length === 0 ? (
+                  <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    No missing pet reports published yet.
+                  </div>
+                ) : (
+                  missingReports.map((report: any) => (
+                    <div key={report._id} className="px-5 py-3">
+                      <DomesticReportCard report={report} variant="compact" />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Found */}
+            <div className="rounded-2xl border border-border bg-card">
+              <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <PawPrint className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>Found</h3>
+                  <p className="text-xs text-muted-foreground">{foundReports.length} report{foundReports.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <div className="divide-y divide-border">
+                {foundReports.length === 0 ? (
+                  <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    No found animal reports published yet.
+                  </div>
+                ) : (
+                  foundReports.map((report: any) => (
+                    <div key={report._id} className="px-5 py-3">
+                      <DomesticReportCard report={report} variant="compact" />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
     </>
   )
 }
