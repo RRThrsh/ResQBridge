@@ -366,8 +366,8 @@ async function handlePasswordChange(
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-muted-foreground">
-  Email
+<label className="mb-1 block text-xs text-muted-foreground">
+  {t('account.newPassword')}
 </label>
 
           <div className="relative">
