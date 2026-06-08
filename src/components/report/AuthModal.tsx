@@ -200,13 +200,22 @@ function AuthForm({ onClose }: { onClose: () => void }) {
     setLoading(true)
     setError(null)
     try {
-      await sendOtp({
+      const result = await sendOtp({
         mode,
         identifier: trimmed,
         password,
         firstName: mode === 'sign-up' ? firstName.trim() : undefined,
         lastName: mode === 'sign-up' ? lastName.trim() : undefined,
       })
+
+      if (result.otpDisabled) {
+        const user = await verifyOtp(trimmed, '000000', mode, mode === 'sign-up' ? password : undefined)
+        login(user)
+        toast.success(mode === 'sign-up' ? 'Account created successfully!' : 'Signed in successfully!')
+        onClose()
+        return
+      }
+
       setCountdown(120)
       setStep('otp')
     } catch (err) {

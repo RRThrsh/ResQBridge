@@ -107,6 +107,8 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
 
     if (!identifier) return jsonResponse({ error: 'Email is required.' }, 400)
 
+    const otpEnabled = await ctx.runQuery(api.config.get, { key: 'otpEnabled' })
+
     const secret = getOtpSecret()
 
     if (isEmail(identifier)) {
@@ -151,7 +153,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
         return jsonResponse({ error: 'An account already exists. Please sign in.' }, 400)
       }
 
-      const code = generateOtp()
+      const code = otpEnabled === false ? '000000' : generateOtp()
       await ctx.runMutation(api.otp.saveVerificationCode, {
         secret,
         email,
@@ -163,20 +165,22 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
         expiresAt: Date.now() + OTP_TTL_MS,
       })
 
-      try {
-        await sendOtpEmail(ctx, {
-          email,
-          firstName: finalFirstName,
-          lastName: finalLastName,
-          subject: 'Your verification code',
-          code,
-        })
-      } catch (error) {
-        await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'user' })
-        return jsonResponse({ error: formatHandlerError(error) }, 500)
+      if (otpEnabled !== false) {
+        try {
+          await sendOtpEmail(ctx, {
+            email,
+            firstName: finalFirstName,
+            lastName: finalLastName,
+            subject: 'Your verification code',
+            code,
+          })
+        } catch (error) {
+          await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'user' })
+          return jsonResponse({ error: formatHandlerError(error) }, 500)
+        }
       }
 
-      return jsonResponse({ success: true }, 200)
+      return jsonResponse({ success: true, ...(otpEnabled === false ? { otpDisabled: true } : {}) }, 200)
     }
 
     // --- Phone flow ---
@@ -216,7 +220,7 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
       return jsonResponse({ error: 'An account already exists. Please sign in.' }, 400)
     }
 
-    const code = generateOtp()
+    const code = otpEnabled === false ? '000000' : generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
       secret,
       email: phone,
@@ -229,14 +233,16 @@ const userSendOtp = async (ctx: ActionCtx, request: Request) => {
       phone,
     })
 
-    try {
-      await sendOtpSms(phone, code)
-    } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email: phone, scope: 'user' })
-      return jsonResponse({ error: formatHandlerError(error) }, 500)
+    if (otpEnabled !== false) {
+      try {
+        await sendOtpSms(phone, code)
+      } catch (error) {
+        await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email: phone, scope: 'user' })
+        return jsonResponse({ error: formatHandlerError(error) }, 500)
+      }
     }
 
-    return jsonResponse({ success: true }, 200)
+    return jsonResponse({ success: true, ...(otpEnabled === false ? { otpDisabled: true } : {}) }, 200)
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 500)
   }
@@ -310,6 +316,8 @@ const adminSendOtp = async (ctx: ActionCtx, request: Request) => {
 
     if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
+    const otpEnabled = await ctx.runQuery(api.config.get, { key: 'otpEnabled' })
+
     const secret = getOtpSecret()
     await ctx.runMutation(api.admin.bootstrapAdmins, {})
 
@@ -324,21 +332,23 @@ const adminSendOtp = async (ctx: ActionCtx, request: Request) => {
       return jsonResponse({ error: 'Incorrect password.' }, 400)
     }
 
-    const code = generateOtp()
+    const code = otpEnabled === false ? '000000' : generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
       secret, email, scope: 'admin', code,
       firstName: profile.firstName, lastName: profile.lastName,
       mode: 'sign-in', expiresAt: Date.now() + OTP_TTL_MS,
     })
 
-    try {
-      await sendOtpEmail(ctx, { email, firstName: profile.firstName, lastName: profile.lastName, subject: 'Your PWRRC Admin verification code', code })
-    } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'admin' })
-      return jsonResponse({ error: formatHandlerError(error) }, 500)
+    if (otpEnabled !== false) {
+      try {
+        await sendOtpEmail(ctx, { email, firstName: profile.firstName, lastName: profile.lastName, subject: 'Your PWRRC Admin verification code', code })
+      } catch (error) {
+        await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'admin' })
+        return jsonResponse({ error: formatHandlerError(error) }, 500)
+      }
     }
 
-    return jsonResponse({ success: true }, 200)
+    return jsonResponse({ success: true, ...(otpEnabled === false ? { otpDisabled: true } : {}) }, 200)
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 500)
   }
@@ -382,6 +392,8 @@ const rescuerSendOtp = async (ctx: ActionCtx, request: Request) => {
 
     if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
+    const otpEnabled = await ctx.runQuery(api.config.get, { key: 'otpEnabled' })
+
     const secret = getOtpSecret()
     const allowed = await ctx.runQuery(api.rescuers.isRescuer, { email })
     if (!allowed) return jsonResponse({ error: 'This email is not authorized for rescuer access.' }, 400)
@@ -394,21 +406,23 @@ const rescuerSendOtp = async (ctx: ActionCtx, request: Request) => {
       return jsonResponse({ error: 'Incorrect password.' }, 400)
     }
 
-    const code = generateOtp()
+    const code = otpEnabled === false ? '000000' : generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
       secret, email, scope: 'rescuer', code,
       firstName: profile.firstName, lastName: profile.lastName,
       mode: 'sign-in', expiresAt: Date.now() + OTP_TTL_MS,
     })
 
-    try {
-      await sendOtpEmail(ctx, { email, firstName: profile.firstName, lastName: profile.lastName, subject: 'Your PWRCC Rescuer verification code', code })
-    } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'rescuer' })
-      return jsonResponse({ error: formatHandlerError(error) }, 500)
+    if (otpEnabled !== false) {
+      try {
+        await sendOtpEmail(ctx, { email, firstName: profile.firstName, lastName: profile.lastName, subject: 'Your PWRCC Rescuer verification code', code })
+      } catch (error) {
+        await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'rescuer' })
+        return jsonResponse({ error: formatHandlerError(error) }, 500)
+      }
     }
 
-    return jsonResponse({ success: true }, 200)
+    return jsonResponse({ success: true, ...(otpEnabled === false ? { otpDisabled: true } : {}) }, 200)
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 500)
   }
@@ -459,6 +473,8 @@ const domesticSendOtp = async (ctx: ActionCtx, request: Request) => {
 
     if (!email.includes('@')) return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
 
+    const otpEnabled = await ctx.runQuery(api.config.get, { key: 'otpEnabled' })
+
     const secret = getOtpSecret()
     const allowed = await ctx.runQuery(api.domestic.isDomesticApprover, { email })
     if (!allowed) return jsonResponse({ error: 'This email is not authorized for domestic approver access.' }, 400)
@@ -471,24 +487,26 @@ const domesticSendOtp = async (ctx: ActionCtx, request: Request) => {
       return jsonResponse({ error: 'Incorrect password.' }, 400)
     }
 
-    const code = generateOtp()
+    const code = otpEnabled === false ? '000000' : generateOtp()
     await ctx.runMutation(api.otp.saveVerificationCode, {
       secret, email, scope: 'admin', code,
       firstName: profile.firstName, lastName: profile.lastName,
       mode: 'sign-in', expiresAt: Date.now() + OTP_TTL_MS,
     })
 
-    try {
-      await sendOtpEmail(ctx, {
-        email, firstName: profile.firstName, lastName: profile.lastName,
-        subject: 'Your Domestic Portal verification code', code,
-      })
-    } catch (error) {
-      await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'admin' })
-      return jsonResponse({ error: formatHandlerError(error) }, 500)
+    if (otpEnabled !== false) {
+      try {
+        await sendOtpEmail(ctx, {
+          email, firstName: profile.firstName, lastName: profile.lastName,
+          subject: 'Your Domestic Portal verification code', code,
+        })
+      } catch (error) {
+        await ctx.runMutation(api.otp.deleteVerificationCode, { secret, email, scope: 'admin' })
+        return jsonResponse({ error: formatHandlerError(error) }, 500)
+      }
     }
 
-    return jsonResponse({ success: true }, 200)
+    return jsonResponse({ success: true, ...(otpEnabled === false ? { otpDisabled: true } : {}) }, 200)
   } catch (error) {
     return jsonResponse({ error: formatHandlerError(error) }, 500)
   }

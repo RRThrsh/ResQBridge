@@ -1,40 +1,43 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
 import { ChevronRight, Loader2, PawPrint, Search, X } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 import { formatDate } from '@/lib/dates'
-import { statusLabel } from '@/lib/reports'
 import { cn } from '@/lib/utils'
-import { RescuerStatusBadge } from '@/components/rescuer/RescuerStatusBadge'
+import { DomesticReportDetailDialog } from '@/components/report/DomesticReportDetailDialog'
+import type { PublicDomesticReport } from '@/lib/domesticPublic'
+import {
+  reportTypeLabels,
+  reportTypeOverlayBase,
+  reportTypeOverlayColors,
+} from '@/lib/domesticPublic'
+import { getReportPhotos } from '@/lib/reportPhotos'
 
-function ReportCard({ report }: { report: any }) {
-  const rawData = report as any
-  let allPhotos: string[] = []
-  if (rawData.photoDataUrls && Array.isArray(rawData.photoDataUrls)) {
-    allPhotos = rawData.photoDataUrls
-  } else if (rawData.photos && Array.isArray(rawData.photos)) {
-    allPhotos = rawData.photos
-  } else if (rawData.photoUrl) {
-    allPhotos = [rawData.photoUrl]
-  }
-  const photo = allPhotos.length > 0 ? allPhotos[0] : null
-  const extra = allPhotos.length > 1 ? allPhotos.length - 1 : 0
+function ReportCard({ report, onClick }: { report: PublicDomesticReport; onClick: () => void }) {
+  const photos = getReportPhotos({ photoDataUrls: report.images, photoDataUrl: report.image })
+  const photo = photos[0]
+  const extra = photos.length > 1 ? photos.length - 1 : 0
 
   return (
-    <Link
-      to={`/pwrcc/domestic/reports/${rawData._id}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/30 hover:shadow-sm"
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full flex-col overflow-hidden rounded-xl border border-border bg-card text-left transition-all hover:border-primary/30 hover:shadow-sm"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {photo ? (
           <>
             <img
               src={photo}
-              alt={rawData.animalName || 'Report photo'}
+              alt={report.animalName}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
+            <div className="absolute top-2 left-2 z-10">
+              <span className={cn(reportTypeOverlayBase, reportTypeOverlayColors[report.type])}>
+                {reportTypeLabels[report.type]}
+              </span>
+            </div>
             {extra > 0 && (
               <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
                 +{extra}
@@ -48,35 +51,28 @@ function ReportCard({ report }: { report: any }) {
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <div className="flex items-center gap-2">
-          <RescuerStatusBadge status={rawData.status} compact />
-          {rawData.reportNumber && (
-            <span className="text-[10px] font-mono text-muted-foreground">{rawData.reportNumber}</span>
-          )}
-        </div>
         <h3 className="truncate text-sm font-semibold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-          {rawData.animalName || 'Unnamed Animal'}
+          {report.animalName}
         </h3>
         <p className="line-clamp-2 text-[11px] text-muted-foreground leading-relaxed">
-          {rawData.location || 'No location'}
+          {report.location}
         </p>
         <p className="mt-auto text-[10px] text-muted-foreground">
-          {formatDate(rawData.seenAt ?? rawData.createdAt ?? rawData._creationTime ?? Date.now())}
-          <span className="mx-1.5 text-border">·</span>
-          {statusLabel(rawData.status)}
+          {formatDate(report.createdAt)}
         </p>
       </div>
-    </Link>
+    </button>
   )
 }
 
-function CategoryModal({ title, icon: Icon, iconBg, reports, open, onClose }: {
+function CategoryModal({ title, icon: Icon, iconBg, reports, open, onClose, onReportClick }: {
   title: string
   icon: typeof Search
   iconBg: string
-  reports: any[]
+  reports: PublicDomesticReport[]
   open: boolean
   onClose: () => void
+  onReportClick: (report: PublicDomesticReport) => void
 }) {
   if (!open) return null
 
@@ -102,8 +98,8 @@ function CategoryModal({ title, icon: Icon, iconBg, reports, open, onClose }: {
           </button>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {reports.map((report: any) => (
-            <ReportCard key={report._id} report={report} />
+          {reports.map((report) => (
+            <ReportCard key={report.id} report={report} onClick={() => onReportClick(report)} />
           ))}
         </div>
       </div>
@@ -111,17 +107,17 @@ function CategoryModal({ title, icon: Icon, iconBg, reports, open, onClose }: {
   )
 }
 
-function SectionGrid({ title, icon: Icon, iconBg, reports, empty, maxVisible = 6, onViewMore }: {
+function SectionGrid({ title, icon: Icon, iconBg, reports, empty, onViewMore, onReportClick }: {
   title: string
   icon: typeof Search
   iconBg: string
-  reports: any[]
+  reports: PublicDomesticReport[]
   empty: string
-  maxVisible?: number
   onViewMore?: () => void
+  onReportClick: (report: PublicDomesticReport) => void
 }) {
-  const hasMore = reports.length > maxVisible
-  const visible = hasMore ? reports.slice(0, maxVisible) : reports
+  const maxVisible = 6
+  const visible = reports.slice(0, maxVisible)
 
   return (
     <section>
@@ -135,16 +131,14 @@ function SectionGrid({ title, icon: Icon, iconBg, reports, empty, maxVisible = 6
             <p className="text-xs text-muted-foreground">{reports.length} accepted report{reports.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
-        {hasMore && (
-          <button
-            type="button"
-            onClick={onViewMore}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
-          >
-            View More
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onViewMore}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
+        >
+          View More
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
       </div>
       {reports.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-14 text-center text-sm text-muted-foreground">
@@ -152,8 +146,8 @@ function SectionGrid({ title, icon: Icon, iconBg, reports, empty, maxVisible = 6
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-          {visible.map((report: any) => (
-            <ReportCard key={report._id} report={report} />
+          {visible.map((report) => (
+            <ReportCard key={report.id} report={report} onClick={() => onReportClick(report)} />
           ))}
         </div>
       )}
@@ -164,25 +158,23 @@ function SectionGrid({ title, icon: Icon, iconBg, reports, empty, maxVisible = 6
 export function DomesticReportsPage() {
   const { domesticApprover } = useDomesticAuth()
   const [modalCategory, setModalCategory] = useState<'missing' | 'found' | null>(null)
+  const [selectedReport, setSelectedReport] = useState<PublicDomesticReport | null>(null)
 
-  // @ts-ignore
-  const publishedRows = useQuery((api as any).domestic.listPublishedReports)
+  const reports = useQuery(api.reports.listPublicDomestic)
 
-  const published = useMemo(() => publishedRows ?? [], [publishedRows])
-  const loading = publishedRows === undefined
+  const loading = reports === undefined
 
   const missing = useMemo(
-    () => published.filter((r: any) => r.type === 'missing'),
-    [published],
+    () => (reports ?? []).filter((r) => r.type === 'missing'),
+    [reports],
   )
   const found = useMemo(
-    () => published.filter((r: any) => r.type === 'found'),
-    [published],
+    () => (reports ?? []).filter((r) => r.type === 'found'),
+    [reports],
   )
 
   return (
     <div className="space-y-10">
-      {/* Header */}
       <section>
         <div className="mb-1 flex items-center gap-2 text-primary">
           <PawPrint className="h-4 w-4" />
@@ -209,6 +201,7 @@ export function DomesticReportsPage() {
             reports={missing}
             empty="No accepted missing pet reports yet."
             onViewMore={() => setModalCategory('missing')}
+            onReportClick={setSelectedReport}
           />
 
           <SectionGrid
@@ -218,6 +211,7 @@ export function DomesticReportsPage() {
             reports={found}
             empty="No accepted found animal reports yet."
             onViewMore={() => setModalCategory('found')}
+            onReportClick={setSelectedReport}
           />
         </>
       )}
@@ -229,6 +223,7 @@ export function DomesticReportsPage() {
         reports={missing}
         open={modalCategory === 'missing'}
         onClose={() => setModalCategory(null)}
+        onReportClick={setSelectedReport}
       />
 
       <CategoryModal
@@ -238,6 +233,12 @@ export function DomesticReportsPage() {
         reports={found}
         open={modalCategory === 'found'}
         onClose={() => setModalCategory(null)}
+        onReportClick={setSelectedReport}
+      />
+
+      <DomesticReportDetailDialog
+        report={selectedReport}
+        onClose={() => setSelectedReport(null)}
       />
     </div>
   )

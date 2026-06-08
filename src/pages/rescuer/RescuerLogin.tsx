@@ -124,7 +124,7 @@ export function RescuerLogin() {
         .trim()
         .toLowerCase()
 
-      await sendRescuerOtp(normalized, password)
+      const result = await sendRescuerOtp(normalized, password)
 
       setIdentifier(normalized)
 
@@ -132,6 +132,13 @@ export function RescuerLogin() {
         RESCUER_OTP_EMAIL_KEY,
         normalized,
       )
+
+      if (result.otpDisabled) {
+        login(await verifyRescuerOtp(normalized, '000000'))
+        sessionStorage.removeItem(RESCUER_OTP_EMAIL_KEY)
+        toast.success('Welcome back.')
+        return
+      }
 
       setStep('otp')
       setCountdown(60)

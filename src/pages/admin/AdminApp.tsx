@@ -19,6 +19,7 @@ import { AdminAdminsPage } from '@/pages/admin/AdminAdminsPage'
 import { AdminRescuersPage } from '@/pages/admin/AdminRescuersPage'
 import { AdminDomesticApproversPage } from '@/pages/admin/AdminDomesticApproversPage'
 import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage'
+import { AdminConfigPage } from '@/pages/admin/AdminConfigPage'
 import { Toaster } from '@/components/ui/sonner'
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
@@ -75,6 +76,7 @@ export function AdminApp() {
           <Route path="rescuers" element={<AdminRescuersPage />} />
           <Route path="domestic-approvers" element={<AdminDomesticApproversPage />} />
           <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+          <Route path="config" element={<AdminConfigPage />} />
           <Route path="admins" element={<AdminAdminsPage />} />
           <Route path="profile" element={<AdminProfilePage />} />
         </Route>

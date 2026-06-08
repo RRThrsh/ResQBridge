@@ -135,7 +135,7 @@ export function DomesticLogin() {
         .trim()
         .toLowerCase()
 
-      await sendDomesticOtp(normalized, password)
+      const result = await sendDomesticOtp(normalized, password)
 
       setIdentifier(normalized)
 
@@ -143,6 +143,13 @@ export function DomesticLogin() {
         DOMESTIC_OTP_EMAIL_KEY,
         normalized,
       )
+
+      if (result.otpDisabled) {
+        login(await verifyDomesticOtp(normalized, '000000'))
+        sessionStorage.removeItem(DOMESTIC_OTP_EMAIL_KEY)
+        toast.success('Welcome back.')
+        return
+      }
 
       setStep('otp')
       setCountdown(60)

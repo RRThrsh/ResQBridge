@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 
 import {
   Loader2,
@@ -40,6 +40,7 @@ const ADMIN_OTP_EMAIL_KEY =
 
 export function AdminLogin() {
   const { login, isLoggedIn } = useAdminAuth()
+  const navigate = useNavigate()
 
   const wasLoggedIn = useRef(isLoggedIn)
   const verifyingRef = useRef(false)
@@ -167,7 +168,7 @@ export function AdminLogin() {
         .trim()
         .toLowerCase()
 
-      await sendAdminOtp(
+      const result = await sendAdminOtp(
         normalizedEmail,
         password,
       )
@@ -178,6 +179,13 @@ export function AdminLogin() {
         ADMIN_OTP_EMAIL_KEY,
         normalizedEmail,
       )
+
+      if (result.otpDisabled) {
+        const adminData = await verifyAdminOtp(normalizedEmail, '000000')
+        await login(adminData)
+        navigate('/pwrcc/admin')
+        return
+      }
 
       setStep('otp')
       setResendCooldown(60)

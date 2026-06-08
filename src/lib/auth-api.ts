@@ -52,7 +52,7 @@ async function handleAuthResponse(response: Response): Promise<void> {
   }
 }
 
-export async function sendOtp(input: SendOtpInput): Promise<void> {
+export async function sendOtp(input: SendOtpInput): Promise<{ otpDisabled?: boolean }> {
   const identifier = input.identifier.trim().toLowerCase()
 
   const response = await authFetch('/api/auth/send-otp', {
@@ -68,6 +68,9 @@ export async function sendOtp(input: SendOtpInput): Promise<void> {
   })
 
   await handleAuthResponse(response)
+
+  const data = await response.json()
+  return { otpDisabled: data.otpDisabled === true }
 }
 
 export async function verifyOtp(
