@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Loader2, Eye, EyeOff, Mail, Smartphone } from 'lucide-react'
+import { Loader2, Eye, EyeOff, Mail } from 'lucide-react'
 
 import {
   Dialog,
@@ -70,11 +70,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   const submittingRef = useRef(false)
   const codeInputsRef = useRef<(HTMLInputElement | null)[]>([])
 
-  const isEmailIdent = identifier.includes('@')
-
-  const identifierMasked = isEmailIdent
-    ? identifier.replace(/(.{3}).+@/, '$1***@')
-    : identifier.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2')
+  const identifierMasked = identifier.replace(/(.{3}).+@/, '$1***@')
 
   const resetForm = useCallback(() => {
     setStep('form')
@@ -519,17 +515,13 @@ function AuthForm({ onClose }: { onClose: () => void }) {
         <div className="space-y-4">
           <div className="text-center mb-2">
             <div className="flex justify-center mb-3">
-              {isEmailIdent ? (
-                <Mail className="size-10 text-primary" />
-              ) : (
-                <Smartphone className="size-10 text-primary" />
-              )}
+              <Mail className="size-10 text-primary" />
             </div>
             <p className="text-sm font-medium text-foreground mb-1">
-              {isEmailIdent ? t('auth.checkEmail') : t('auth.checkPhone')}
+              {t('auth.checkEmail')}
             </p>
             <p className="text-sm text-muted-foreground">
-              {isEmailIdent ? t('auth.enterOtp') : t('auth.enterSms')}{' '}
+              {t('auth.enterOtp')}{' '}
               <span className="font-medium text-foreground">{identifierMasked}</span>
             </p>
           </div>
