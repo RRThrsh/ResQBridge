@@ -1,4 +1,3 @@
-
 import type { Doc } from '../../../convex/_generated/dataModel'
 
 import {
@@ -19,9 +18,7 @@ type AdminUser = Doc<'users'>
 type Props = {
   userRow: AdminUser | null
   open: boolean
-  onOpenChange: (
-    open: boolean,
-  ) => void
+  onOpenChange: (open: boolean) => void
 }
 
 export function AdminUserDialog({
@@ -34,9 +31,7 @@ export function AdminUserDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={
-        onOpenChange
-      }
+      onOpenChange={onOpenChange}
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -73,17 +68,6 @@ export function AdminUserDialog({
 
           <div>
             <dt className="text-xs text-muted-foreground">
-              Contact number
-            </dt>
-
-            <dd>
-              {userRow.contactPhone ||
-                '—'}
-            </dd>
-          </div>
-
-          <div>
-            <dt className="text-xs text-muted-foreground">
               Role
             </dt>
 
@@ -109,9 +93,7 @@ export function AdminUserDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
-              onOpenChange(false)
-            }
+            onClick={() => onOpenChange(false)}
           >
             Close
           </Button>
@@ -120,4 +102,3 @@ export function AdminUserDialog({
     </Dialog>
   )
 }
-
