@@ -337,23 +337,13 @@ export function AdminReportDialog({
 
         <div>
           <div className="mb-1 text-xs text-muted-foreground">
-            Wildlife Condition
-          </div>
-          <div className="font-medium capitalize text-foreground">
-            {activeReport.condition || 'N/A'}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Behavior
+            Condition / Behavior
           </div>
           <div className="font-medium text-primary bg-primary/10 inline-flex px-2 py-0.5 rounded text-sm">
             {activeReport.behavior || 'N/A'}
           </div>
         </div>
 
-        {/* ADDED REPORTED SIZE HERE */}
         <div>
           <div className="mb-1 text-xs text-muted-foreground">
             Reported Size
@@ -564,11 +554,12 @@ export function AdminReportDialog({
                         title="Report Location Map"
                         className="absolute inset-0"
                         src={`https://www.google.com/maps?q=${encodeURIComponent(
-                          // Adding a regional fallback ensures local street names or barangays 
-                          // map to the correct local area instead of generic streets overseas.
-                          activeReport.location.toLowerCase().includes('palawan') 
-                            ? activeReport.location 
-                            : `${activeReport.location}, Puerto Princesa, Palawan`
+                          // Extract coordinates if they exist after '·', otherwise use address string
+                          activeReport.location.includes('·')
+                            ? activeReport.location.split('·').pop()?.trim() || activeReport.location
+                            : activeReport.location.toLowerCase().includes('palawan') 
+                              ? activeReport.location 
+                              : `${activeReport.location}, Puerto Princesa, Palawan`
                         )}&output=embed`}
                       />
                     </div>
