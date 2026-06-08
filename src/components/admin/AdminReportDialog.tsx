@@ -307,12 +307,10 @@ export function AdminReportDialog({
     ========================= */}
     {activeReport.category === 'wildlife' ? (
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-
         <div>
           <div className="mb-1 text-xs text-muted-foreground">
             Species
           </div>
-
           <div className="font-serif text-lg font-medium tracking-wide text-foreground">
             {activeReport.animalName || 'N/A'}
           </div>
@@ -322,7 +320,6 @@ export function AdminReportDialog({
           <div className="mb-1 text-xs text-muted-foreground">
             Date & time seen
           </div>
-
           <div className="font-medium text-foreground">
             {formatDateTime(
               activeReport.seenAt ?? activeReport.createdAt,
@@ -334,7 +331,6 @@ export function AdminReportDialog({
           <div className="mb-1 text-xs text-muted-foreground">
             Quantity
           </div>
-
           <div className="font-medium text-foreground">
             {activeReport.quantity ?? 1}
           </div>
@@ -344,19 +340,27 @@ export function AdminReportDialog({
           <div className="mb-1 text-xs text-muted-foreground">
             Wildlife Condition
           </div>
-
           <div className="font-medium capitalize text-foreground">
             {activeReport.condition || 'N/A'}
           </div>
         </div>
 
-        <div className="sm:col-span-2">
+        <div>
           <div className="mb-1 text-xs text-muted-foreground">
             Behavior
           </div>
-
           <div className="font-medium text-primary bg-primary/10 inline-flex px-2 py-0.5 rounded text-sm">
             {activeReport.behavior || 'N/A'}
+          </div>
+        </div>
+
+        {/* ADDED REPORTED SIZE HERE */}
+        <div>
+          <div className="mb-1 text-xs text-muted-foreground">
+            Reported Size
+          </div>
+          <div className="font-medium capitalize text-foreground">
+            {activeReport.reportedSize || 'N/A'}
           </div>
         </div>
 
@@ -365,7 +369,6 @@ export function AdminReportDialog({
             <div className="mb-1 text-xs text-muted-foreground">
               Additional Details
             </div>
-
             <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
               {activeReport.description}
             </div>
@@ -631,7 +634,8 @@ export function AdminReportDialog({
                   </Select>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                // CHANGED TO grid-cols-3 to fit the new size input nicely
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Behavior</label>
                     <Select
@@ -668,11 +672,18 @@ export function AdminReportDialog({
                       </SelectContent>
                     </Select>
                   </div>
+                  {/* ADDED REPORTED SIZE EDIT FIELD */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reported Size</label>
+                    <Input
+                      className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                      value={draft.reportedSize}
+                      onChange={(e) => setDraft((d) => ({ ...d, reportedSize: e.target.value }))}
+                      placeholder="e.g. Small, 2ft"
+                    />
+                  </div>
                 </div>
               )}
-            </div>
-          )}
-        </div>
 
         <DialogFooter className="shrink-0 border-t border-border/10 bg-background/90 px-6 py-4 backdrop-blur-md sm:justify-end">
           <div className="flex w-full items-center justify-end gap-3 sm:w-auto">
