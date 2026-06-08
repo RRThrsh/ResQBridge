@@ -2,7 +2,7 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { normalizeEmail } from '@/lib/admin'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 const ACTION_COLORS: Record<string, string> = {
   'user.signup': '#00ff88',
@@ -165,9 +165,12 @@ export function AdminAuditLogsPage() {
     adminEmail ? { adminEmail, limit: 500 } : 'skip',
   )
 
-  const filteredLogs = logs?.filter(
-    (log) => roleFilter === 'all' || log.actorRole === roleFilter,
-  )
+  const filteredLogs = useMemo(() => {
+    const reversed = logs?.slice().reverse()
+    return reversed?.filter(
+      (log) => roleFilter === 'all' || log.actorRole === roleFilter,
+    )
+  }, [logs, roleFilter])
 
   useEffect(() => {
     const id = setInterval(() => setRefreshTick((t) => t + 1), 1000)

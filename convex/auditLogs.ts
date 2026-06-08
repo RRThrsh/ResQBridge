@@ -25,7 +25,7 @@ export const list = query({
     const logs = await ctx.db
       .query('auditLogs')
       .withIndex('by_created_at')
-      .order('asc')
+      .order('desc')
       .take(limit)
     return logs
   },
