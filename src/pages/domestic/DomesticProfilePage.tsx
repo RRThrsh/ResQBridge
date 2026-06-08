@@ -68,7 +68,7 @@ export function DomesticProfilePage() {
     )
   }
 
-  // 1. Check if the user has actually changed anything
+  // Check if the user has actually changed anything
   const hasChanges =
     firstName !== (domesticApprover.firstName ?? '') ||
     lastName !== (domesticApprover.lastName ?? '') ||
@@ -154,12 +154,10 @@ export function DomesticProfilePage() {
       setConfirmPassword('')
       setIsEditing(false)
     } catch (error: any) {
-      // 2. Cleaned up error handling to hide the ugly Convex server error
       const errorMessage = error?.message || ''
       if (errorMessage.includes('Incorrect current password')) {
         setAuthError('Incorrect current password. Please try again.')
       } else {
-        // Fallback friendly message if Convex obscures the exact error
         setAuthError('Failed to update. Please ensure your current password is correct.')
       }
     } finally {
@@ -250,12 +248,6 @@ export function DomesticProfilePage() {
         <CardContent>
           {isEditing ? (
             <form onSubmit={handleSave} className="space-y-4">
-              {authError && (
-                <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 border border-red-200">
-                  {authError}
-                </div>
-              )}
-
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">
                   Email
@@ -398,7 +390,7 @@ export function DomesticProfilePage() {
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -411,7 +403,7 @@ export function DomesticProfilePage() {
                 <Button
                   type="submit"
                   disabled={
-                    !hasChanges || // 3. Button is now disabled if nothing changed
+                    !hasChanges || 
                     saving ||
                     contactPhone.length !== 11 ||
                     (password !== '' && password !== confirmPassword) ||
@@ -425,6 +417,13 @@ export function DomesticProfilePage() {
                   )}
                 </Button>
               </div>
+
+              {/* Error message moved to the very bottom with dark mode styling */}
+              {authError && (
+                <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
+                  {authError}
+                </div>
+              )}
             </form>
           ) : (
             <dl className="grid gap-4 text-sm">
