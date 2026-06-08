@@ -26,7 +26,6 @@ import {
 import {
   DOMESTIC_REPORT_TYPES,
   WILDLIFE_BEHAVIORS,
-  WILDLIFE_CONDITIONS,
   canAdminAssignRescuer,
   formatReporterName,
   formatReportType,
