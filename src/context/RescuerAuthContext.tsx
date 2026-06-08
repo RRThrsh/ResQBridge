@@ -2,6 +2,7 @@ import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { RescuerUser } from '@/types/auth'
 import { normalizeEmail } from '@/lib/admin'
+import { logLogout } from '@/lib/logAudit'
 
 interface RescuerAuthContextType {
   isLoggedIn: boolean
@@ -48,8 +49,10 @@ export function RescuerAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
+    const current = rescuer
     setRescuer(null)
     localStorage.removeItem(STORAGE_KEY)
+    if (current) logLogout(current.email, `${current.firstName} ${current.lastName}`.trim(), 'rescuer')
   }
 
   return (

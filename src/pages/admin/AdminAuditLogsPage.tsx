@@ -14,6 +14,7 @@ const ACTION_COLORS: Record<string, string> = {
   'user.report.update': '#ffcc00',
   'user.report.delete': '#ff4444',
   'user.password_reset': '#ff8800',
+  'user.logout': '#ff4444',
   'admin.login': '#00aaff',
   'admin.logout': '#00aaff',
   'admin.update_profile': '#00aaff',
@@ -42,7 +43,9 @@ const ACTION_COLORS: Record<string, string> = {
   'rescuer.mark_en_route': '#88ff88',
   'rescuer.complete_rescue': '#88ff88',
   'rescuer.password_reset': '#ff8800',
+  'rescuer.logout': '#ff4444',
   'domestic_approver.login': '#88aaff',
+  'domestic_approver.logout': '#ff4444',
   'guest.page_view': '#aaaaaa',
 }
 
@@ -56,6 +59,7 @@ const ACTION_LABELS: Record<string, string> = {
   'user.report.update': 'REPORT UPDATED',
   'user.report.delete': 'REPORT DELETED',
   'user.password_reset': 'PASSWORD RESET',
+  'user.logout': 'USER LOGOUT',
   'admin.login': 'ADMIN LOGIN',
   'admin.logout': 'ADMIN LOGOUT',
   'admin.update_profile': 'ADMIN UPDATE PROFILE',
@@ -84,7 +88,9 @@ const ACTION_LABELS: Record<string, string> = {
   'rescuer.mark_en_route': 'RESCUER EN ROUTE',
   'rescuer.complete_rescue': 'RESCUE COMPLETED',
   'rescuer.password_reset': 'RESCUER PASSWORD RESET',
+  'rescuer.logout': 'RESCUER LOGOUT',
   'domestic_approver.login': 'APPROVER LOGIN',
+  'domestic_approver.logout': 'APPROVER LOGOUT',
   'guest.page_view': 'GUEST PAGE VIEW',
 }
 

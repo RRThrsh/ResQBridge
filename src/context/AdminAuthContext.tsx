@@ -18,6 +18,7 @@ import { api } from '../../convex/_generated/api'
 import type { AdminUser } from '@/types/auth'
 
 import { normalizeEmail } from '@/lib/admin'
+import { logLogout } from '@/lib/logAudit'
 
 interface AdminAuthContextType {
   isLoggedIn: boolean
@@ -177,6 +178,7 @@ export function AdminAuthProvider({
   }
 
   const logout = () => {
+    const current = admin
     setAdmin(null)
 
     localStorage.removeItem(
@@ -186,6 +188,8 @@ export function AdminAuthProvider({
     localStorage.removeItem(
       SESSION_KEY,
     )
+
+    if (current) logLogout(current.email, `${current.firstName} ${current.lastName}`.trim(), 'admin')
   }
 
   return (
