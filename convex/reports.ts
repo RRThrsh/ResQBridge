@@ -73,10 +73,15 @@ export const listPublicDomestic = query({
   handler: async (ctx) => {
     const rows = await ctx.db.query('reports').collect()
 
-    const domestic = rows
-      .filter((row) => row.category === 'domestic')
-      .filter((row) => row.status === 'published')
-      .sort((a, b) => b.createdAt - a.createdAt)
+const domestic = rows
+  .filter((row) => row.category === 'domestic')
+  .filter((row) => row.status === 'published')
+  .filter(
+    (row) =>
+      row.type === 'missing' ||
+      row.type === 'found',
+  )
+  .sort((a, b) => b.createdAt - a.createdAt)
 
     return Promise.all(
       domestic.map((row) => toPublicDomesticReport(ctx, row))
