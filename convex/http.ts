@@ -545,7 +545,7 @@ const routes = [
   { path: '/api/rescuer/auth/verify-otp', handler: withRateLimit(rescuerVerifyOtp, 'rescuer-verify-otp') },
   { path: '/api/domestic/auth/send-otp', handler: withRateLimit(domesticSendOtp, 'domestic-send-otp') },
   { path: '/api/domestic/auth/verify-otp', handler: withRateLimit(domesticVerifyOtp, 'domestic-verify-otp') },
-  { path: '/api/auth/reset-password', handler: userResetPassword },
+  { path: '/api/auth/reset-password', handler: httpAction(userResetPassword) },
 ] as const
 
 for (const route of routes) {
