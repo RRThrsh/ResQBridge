@@ -76,14 +76,11 @@ export const listPublicDomestic = query({
 const domestic = rows
   .filter((row) => row.category === 'domestic')
   .filter((row) => row.status === 'published')
-  .filter((row) => {
-    const type = row.type?.toLowerCase()
-
-    return (
-      type.includes('missing') ||
-      type.includes('found')
-    )
-  })
+  .filter(
+    (row) =>
+      row.type === 'missing' ||
+      row.type === 'found'
+  )
   .sort((a, b) => b.createdAt - a.createdAt)
 console.log(
   domestic.map((r) => r.type)
