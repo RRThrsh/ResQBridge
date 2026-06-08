@@ -277,6 +277,9 @@ export const changeDomesticPassword = mutation({
       throw new ConvexError('Account not found.')
     }
 
+    // === ADD THIS TO SEE THE TRUTH ===
+    console.log(`DB Password: "${user.password}" | Typed Password: "${args.currentPassword}"`);
+
     if (user.password !== args.currentPassword) {
       throw new ConvexError('Incorrect current password.')
     }
