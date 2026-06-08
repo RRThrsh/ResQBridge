@@ -29,7 +29,16 @@ import {
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog'
 const DEFAULT_MAP_LAT = 9.7393
 const DEFAULT_MAP_LNG = 118.7361
 
@@ -148,6 +157,7 @@ export function DomesticReportForm() {
     user ? { email: normalizeEmail(user.email) } : 'skip',
   )
   const [loading, setLoading] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [locFetching, setLocFetching] = useState(false)
   const [reportType, setReportType] = useState('missing')
   const [photos, setPhotos] = useState<ReportPhotoItem[]>([])
@@ -333,7 +343,13 @@ export function DomesticReportForm() {
         </TabsList>
       </Tabs>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form
+  onSubmit={(e) => {
+    e.preventDefault()
+    setConfirmOpen(true)
+  }}
+  className="space-y-6"
+>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-3">
@@ -759,6 +775,45 @@ export function DomesticReportForm() {
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('reportFormDomestic.submitButton').replace('{type}', reportType)}
         </Button>
       </form>
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+  <AlertDialogContent className="rounded-2xl">
+    <AlertDialogHeader>
+      <AlertDialogTitle className="text-xl font-bold">
+        Important Reminder
+      </AlertDialogTitle>
+
+      <AlertDialogDescription className="space-y-3 pt-2 text-sm leading-relaxed text-muted-foreground">
+        <p>
+          Your domestic report will only be properly reviewed if
+          you answer calls from rescue staff or administrators.
+        </p>
+
+        <p>
+          Please make sure your contact number is active and reachable.
+        </p>
+
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
+          Failure to answer verification calls may result in your
+          report being rejected.
+        </div>
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+
+    <AlertDialogFooter>
+      <AlertDialogCancel>
+        Cancel
+      </AlertDialogCancel>
+
+      <AlertDialogAction
+        onClick={(e) => {
+          handleSubmit(e as unknown as React.FormEvent)
+        }}
+      >
+        Continue Submit
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
     </div>
   )
 }
