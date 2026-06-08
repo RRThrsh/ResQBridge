@@ -15,11 +15,12 @@ function getSessionId(): string {
   return id
 }
 
-export function useGuestLogger() {
+export function useGuestLogger(skip?: boolean) {
   const location = useLocation()
   const lastPath = useRef('')
 
   useEffect(() => {
+    if (skip) return
     const path = location.pathname + location.search
     if (path === lastPath.current) return
     lastPath.current = path
