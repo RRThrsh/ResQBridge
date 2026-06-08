@@ -154,11 +154,16 @@ export function DomesticProfilePage() {
       setConfirmPassword('')
       setIsEditing(false)
     } catch (error: any) {
-      const errorMessage = error?.message || ''
-      if (errorMessage.includes('Incorrect current password')) {
+      // Log the exact error to the browser console for debugging
+      console.error("Mutation failed:", error)
+      
+      // Convex errors sent via ConvexError use error.data
+      const errorMessage = error?.data || error?.message || ''
+      
+      if (typeof errorMessage === 'string' && errorMessage.includes('Incorrect current password')) {
         setAuthError('Incorrect current password. Please try again.')
       } else {
-        setAuthError('Failed to update. Please ensure your current password is correct.')
+        setAuthError(`Failed to update. Check your browser console for details.`)
       }
     } finally {
       setSaving(false)
