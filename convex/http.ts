@@ -567,6 +567,36 @@ const logGuest = async (ctx: ActionCtx, request: Request) => {
   }
 }
 
+const logEvent = async (ctx: ActionCtx, request: Request) => {
+  try {
+    const body = await readJsonBody(request)
+    const action = String(body.action ?? '').trim()
+    const actorEmail = String(body.actorEmail ?? '').trim()
+    const actorName = String(body.actorName ?? '').trim()
+    const actorRole = String(body.actorRole ?? '').trim() as 'user' | 'admin' | 'rescuer' | 'domestic_approver' | 'guest'
+    const targetType = String(body.targetType ?? '').trim()
+    const targetId = String(body.targetId ?? '').trim()
+    const details = body.details ? JSON.stringify(body.details) : undefined
+
+    if (!action || !actorEmail) return jsonResponse({ error: 'action and actorEmail are required.' }, 400)
+
+    await ctx.runMutation(api.auditLogs.fromAction, {
+      action,
+      actorEmail,
+      actorName: actorName || undefined,
+      actorRole,
+      targetType: targetType || undefined,
+      targetId: targetId || undefined,
+      details,
+      ipAddress: getClientIp(request),
+    })
+
+    return jsonResponse({ success: true }, 200)
+  } catch (error) {
+    return jsonResponse({ error: formatHandlerError(error) }, 400)
+  }
+}
+
 const routes = [
   { path: '/api/auth/send-otp', handler: withRateLimit(userSendOtp, 'user-send-otp') },
   { path: '/api/auth/verify-otp', handler: withRateLimit(userVerifyOtp, 'user-verify-otp') },
@@ -578,6 +608,7 @@ const routes = [
   { path: '/api/domestic/auth/verify-otp', handler: withRateLimit(domesticVerifyOtp, 'domestic-verify-otp') },
   { path: '/api/auth/reset-password', handler: httpAction(userResetPassword) },
   { path: '/api/log-guest', handler: httpAction(logGuest) },
+  { path: '/api/log-event', handler: httpAction(logEvent) },
 ] as const
 
 for (const route of routes) {

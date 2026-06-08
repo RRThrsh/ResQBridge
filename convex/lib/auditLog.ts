@@ -10,6 +10,7 @@ export type AuditLogAction =
   | 'user.report.update'
   | 'user.report.delete'
   | 'user.password_reset'
+  | 'user.logout'
   | 'admin.login'
   | 'admin.logout'
   | 'admin.update_profile'
@@ -39,7 +40,9 @@ export type AuditLogAction =
   | 'rescuer.mark_en_route'
   | 'rescuer.complete_rescue'
   | 'rescuer.password_reset'
+  | 'rescuer.logout'
   | 'domestic_approver.login'
+  | 'domestic_approver.logout'
   | 'guest.page_view'
 
 export async function writeAuditLog(

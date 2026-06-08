@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 import { normalizeEmail } from '@/lib/admin'
+import { logLogout } from '@/lib/logAudit'
 import type { DomesticUser } from '@/lib/domestic-auth-api'
 
 interface DomesticAuthContextType {
@@ -52,8 +53,10 @@ export function DomesticAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
+    const current = approver
     setApprover(null)
     localStorage.removeItem(STORAGE_KEY)
+    if (current) logLogout(current.email, `${current.firstName} ${current.lastName}`.trim(), 'domestic_approver')
   }
 
   return (

@@ -2,6 +2,7 @@ import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { AuthUser } from '@/types/auth'
 import { normalizeEmail } from '@/lib/admin'
+import { logLogout } from '@/lib/logAudit'
 
 interface UserAuthContextType {
   isLoggedIn: boolean
@@ -62,8 +63,10 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
+    const current = user
     setUser(null)
     localStorage.removeItem(STORAGE_KEY)
+    if (current) logLogout(current.email, `${current.firstName} ${current.lastName}`.trim(), 'user')
   }
 
   return (
