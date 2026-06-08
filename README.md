@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # PWRRC — Palawan Wildlife Rescue & Reporting
 
 Web application for the Palawan Wildlife Rescue and Rehabilitation Center (PWRRC). The public site lets residents browse wildlife information, report domestic and wildlife incidents, and manage a personal account. The admin panel supports staff workflows for reports, users, content, and administrators.
@@ -373,4 +373,4 @@ Report security issues to project maintainers privately.
 Private project — see repository owner for terms.
 =======
 # ResQBridge
->>>>>>> 58ed73606c73f76167b121141a96bbc19276f6c2
+58ed73606c73f76167b121141a96bbc19276f6c2
