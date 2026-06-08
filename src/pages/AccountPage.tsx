@@ -363,8 +363,8 @@ async function handlePasswordChange(
 
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">
-            {t('account.newPassword')}
-          </label>
+  Email
+</label>
 
           <div className="relative">
             <Input
