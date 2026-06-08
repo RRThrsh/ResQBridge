@@ -249,6 +249,25 @@ export const getStats = query({
   },
 })
 
+export const getNavCounts = query({
+  args: { adminEmail: v.string() },
+  returns: v.object({ wildlifePending: v.number(), domesticPending: v.number() }),
+  handler: async (ctx, args) => {
+    await assertAdmin(ctx, args.adminEmail)
+    const reports = await ctx.db.query('reports').collect()
+    let wildlifePending = 0
+    let domesticPending = 0
+    for (const r of reports) {
+      const s = normalizeReportStatus(r.status)
+      if (s === 'pending' || s === 'accepted' || s === 'en_route') {
+        if (r.category === 'wildlife') wildlifePending++
+        else domesticPending++
+      }
+    }
+    return { wildlifePending, domesticPending }
+  },
+})
+
 const analyticsDaysValidator = v.optional(v.union(v.literal(7), v.literal(30), v.literal(90), v.null()))
 
 const reportAnalyticsSummaryValidator = v.object({

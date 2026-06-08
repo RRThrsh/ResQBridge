@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import {
   LayoutDashboard,
   Leaf,
@@ -39,6 +41,11 @@ export function AdminSidebar({ onNavigate }: Props) {
   const navigate = useNavigate()
   const { admin, logout } = useAdminAuth()
   const [signOutOpen, setSignOutOpen] = useState(false)
+
+  const counts = useQuery(
+    api.admin.getNavCounts,
+    admin ? { adminEmail: admin.email } : 'skip',
+  )
 
   function confirmSignOut() {
     logout()
@@ -84,7 +91,17 @@ export function AdminSidebar({ onNavigate }: Props) {
               }
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {label}
+              <span className="flex-1">{label}</span>
+              {(to === '/pwrcc/admin/reports/wildlife' && counts?.wildlifePending) ? (
+                <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {counts.wildlifePending > 99 ? '99+' : counts.wildlifePending}
+                </span>
+              ) : null}
+              {(to === '/pwrcc/admin/reports/domestic' && counts?.domesticPending) ? (
+                <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {counts.domesticPending > 99 ? '99+' : counts.domesticPending}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </nav>
