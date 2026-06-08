@@ -58,6 +58,8 @@ export function DomesticProfilePage() {
   const [saving, setSaving] = useState(false)
 
   const updateApproverMutation = useMutation(api.domestic.updateApprover)
+  
+  // Make sure your Convex backend has this mutation as added in the previous steps!
   const changeDomesticPassword = useMutation(api.domestic.changeDomesticPassword)
 
   if (!domesticApprover) {
@@ -101,13 +103,20 @@ export function DomesticProfilePage() {
     const isValidPhone = /^09\d{9}$/.test(contactPhone)
     if (!isValidPhone) return
 
+    // Only validate passwords if the user is trying to change them
     if (password) {
       if (!currentPassword) {
         setAuthError('Current password is required to set a new password.')
         return
       }
-      if (password !== confirmPassword) return
-      if (password.length < 8) return
+      if (password !== confirmPassword) {
+        setAuthError('Passwords do not match.')
+        return
+      }
+      if (password.length < 8) {
+        setAuthError('Password must be at least 8 characters.')
+        return
+      }
     }
 
     setSaving(true)
@@ -122,6 +131,7 @@ export function DomesticProfilePage() {
         })
       }
 
+      // Always update the profile details regardless of password changes
       await updateApproverMutation({
         adminEmail: domesticApprover!.email,
         targetEmail: domesticApprover!.email,
@@ -141,8 +151,7 @@ export function DomesticProfilePage() {
       setConfirmPassword('')
       setIsEditing(false)
     } catch (error: any) {
-      // Assuming your Convex mutation throws an error with a specific message
-      // when the current password does not match.
+      // Catch incorrect current password errors from Convex
       setAuthError(error.message || 'Incorrect current password or update failed.')
     } finally {
       setSaving(false)
@@ -273,6 +282,7 @@ export function DomesticProfilePage() {
                   required
                 />
               </div>
+              
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">
                   Contact number
@@ -302,7 +312,7 @@ export function DomesticProfilePage() {
               </div>
 
               {/* Password Section */}
-              <div className="mt-6 border-t pt-4">
+              <div className="mt-6 border-t border-border pt-4">
                 <h4 className="mb-4 text-sm font-medium">Change Password (Optional)</h4>
 
                 <div className="space-y-4">
