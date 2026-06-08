@@ -133,6 +133,7 @@ export function DomesticProfilePage() {
   }
 
   // --- FORM 2: Handle Password Save ---
+  // --- FORM 2: Handle Password Save ---
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault()
 
@@ -165,12 +166,18 @@ export function DomesticProfilePage() {
       setConfirmPassword('')
       setIsEditing(false)
       
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Could not change password'
-      )
+    } catch (error: any) {
+      // ConvexError passes its custom message in `error.data`, not `error.message`
+      const errorMessage = error?.data || error?.message || ''
+
+      if (typeof errorMessage === 'string' && errorMessage.includes('Incorrect current password')) {
+        toast.error('Incorrect current password. Please try again.')
+      } else if (typeof errorMessage === 'string' && errorMessage.includes('Server Error')) {
+        // Fallback just in case the backend hasn't fully synced the ConvexError update yet
+        toast.error('Incorrect current password. Please try again.')
+      } else {
+        toast.error(typeof errorMessage === 'string' ? errorMessage : 'Could not change password.')
+      }
     } finally {
       setSavingPassword(false)
     }
