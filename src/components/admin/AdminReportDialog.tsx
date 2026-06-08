@@ -288,243 +288,229 @@ export function AdminReportDialog({
             <div className="space-y-8">
               
               {/* WILDLIFE / DOMESTIC DETAILS */}
-{/* WILDLIFE / DOMESTIC DETAILS */}
-<section>
-  <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-    <CategoryIcon className="h-3.5 w-3.5" />
-    <span>
-      {activeReport.category === 'domestic'
-        ? 'Domestic Details'
-        : 'Wildlife Details'}
-    </span>
-  </div>
+              <section>
+                <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                  <CategoryIcon className="h-3.5 w-3.5" />
+                  <span>
+                    {activeReport.category === 'domestic'
+                      ? 'Domestic Details'
+                      : 'Wildlife Details'}
+                  </span>
+                </div>
 
-  <div className="rounded-2xl border border-border/10 bg-muted/30 p-5 space-y-5">
+                <div className="rounded-2xl border border-border/10 bg-muted/30 p-5 space-y-5">
 
-    {/* =========================
-        WILDLIFE REPORT
-    ========================= */}
-    {activeReport.category === 'wildlife' ? (
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Species
-          </div>
-          <div className="font-serif text-lg font-medium tracking-wide text-foreground">
-            {activeReport.animalName || 'N/A'}
-          </div>
-        </div>
+                  {/* =========================
+                      WILDLIFE REPORT
+                  ========================= */}
+                  {activeReport.category === 'wildlife' ? (
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Species
+                        </div>
+                        <div className="font-serif text-lg font-medium tracking-wide text-foreground">
+                          {activeReport.animalName || 'N/A'}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Date & time seen
-          </div>
-          <div className="font-medium text-foreground">
-            {formatDateTime(
-              activeReport.seenAt ?? activeReport.createdAt,
-            )}
-          </div>
-        </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Date & time seen
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {formatDateTime(
+                            activeReport.seenAt ?? activeReport.createdAt,
+                          )}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Quantity
-          </div>
-          <div className="font-medium text-foreground">
-            {activeReport.quantity ?? 1}
-          </div>
-        </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Quantity
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {activeReport.quantity ?? 1}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Condition / Behavior
-          </div>
-          <div className="font-medium text-primary bg-primary/10 inline-flex px-2 py-0.5 rounded text-sm">
-            {activeReport.behavior || 'N/A'}
-          </div>
-        </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Condition / Behavior
+                        </div>
+                        <div className="font-medium text-primary bg-primary/10 inline-flex px-2 py-0.5 rounded text-sm">
+                          {activeReport.behavior || 'N/A'}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Reported Size
-          </div>
-          <div className="font-medium capitalize text-foreground">
-            {activeReport.reportedSize || 'N/A'}
-          </div>
-        </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Reported Size
+                        </div>
+                        <div className="font-medium capitalize text-foreground">
+                          {activeReport.reportedSize || 'N/A'}
+                        </div>
+                      </div>
 
-        {activeReport.description && (
-          <div className="sm:col-span-2 pt-2 border-t border-border/10">
-            <div className="mb-1 text-xs text-muted-foreground">
-              Additional Details
-            </div>
-            <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
-              {activeReport.description}
-            </div>
-          </div>
-        )}
-      </div>
-    ) : activeReport.type === 'injured' ? (
+                      {activeReport.description && (
+                        <div className="sm:col-span-2 pt-2 border-t border-border/10">
+                          <div className="mb-1 text-xs text-muted-foreground">
+                            Additional Details
+                          </div>
+                          <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
+                            {activeReport.description}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : activeReport.type === 'injured' ? (
+                    /* =========================
+                       DOMESTIC INJURED
+                    ========================= */
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Species
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {activeReport.speciesId || 'N/A'}
+                        </div>
+                      </div>
 
-      /* =========================
-          DOMESTIC INJURED
-      ========================= */
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Report Type
+                        </div>
+                        <div className="font-medium capitalize text-foreground">
+                          {formatReportType(activeReport.type)}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Species
-          </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Nature of Injury
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {activeReport.condition || 'N/A'}
+                        </div>
+                      </div>
 
-          <div className="font-medium text-foreground">
-            {activeReport.speciesId || 'N/A'}
-          </div>
-        </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Severity
+                        </div>
+                        <div className="font-medium capitalize text-foreground">
+                          {activeReport.behavior || 'N/A'}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Animal Name
-          </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Current Condition
+                        </div>
+                        <div className="font-medium capitalize text-foreground">
+                          {activeReport.reportedSize || 'N/A'}
+                        </div>
+                      </div>
 
-          <div className="font-medium text-foreground">
-            {activeReport.animalName || 'N/A'}
-          </div>
-        </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Rescue Priority
+                        </div>
+                        <div className="font-medium capitalize text-foreground">
+                          {activeReport.color || 'N/A'}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Nature of Injury
-          </div>
+                      {activeReport.description && (
+                        <div className="sm:col-span-2 pt-2 border-t border-border/10">
+                          <div className="mb-1 text-xs text-muted-foreground">
+                            Additional Information
+                          </div>
+                          <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
+                            {activeReport.description}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* =========================
+                       DOMESTIC MISSING/FOUND/STRAY
+                    ========================= */
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Species
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {activeReport.speciesId || 'N/A'}
+                        </div>
+                      </div>
 
-          <div className="font-medium text-foreground">
-            {activeReport.condition || 'N/A'}
-          </div>
-        </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Report Type
+                        </div>
+                        <div className="font-medium capitalize text-foreground">
+                          {formatReportType(activeReport.type)}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Severity
-          </div>
+                      {/* Hides Pet Name if it's a Stray, changes label if Missing vs Found */}
+                      {activeReport.type !== 'stray' && (
+                        <div>
+                          <div className="mb-1 text-xs text-muted-foreground">
+                            {activeReport.type === 'missing' ? 'Pet Name' : 'Animal Name'}
+                          </div>
+                          <div className="font-medium text-foreground">
+                            {activeReport.animalName && !activeReport.animalName.includes('Unknown') 
+                              ? activeReport.animalName 
+                              : 'N/A'}
+                          </div>
+                        </div>
+                      )}
 
-          <div className="font-medium capitalize text-foreground">
-            {activeReport.behavior || 'N/A'}
-          </div>
-        </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Color / Markings
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {activeReport.color || 'N/A'}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Current Condition
-          </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Reported Size
+                        </div>
+                        <div className="font-medium capitalize text-foreground">
+                          {activeReport.reportedSize || 'N/A'}
+                        </div>
+                      </div>
 
-          <div className="font-medium capitalize text-foreground">
-            {activeReport.reportedSize || 'N/A'}
-          </div>
-        </div>
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Quantity
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {activeReport.quantity ?? 1}
+                        </div>
+                      </div>
 
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Rescue Priority
-          </div>
-
-          <div className="font-medium capitalize text-foreground">
-            {activeReport.color || 'N/A'}
-          </div>
-        </div>
-
-        {activeReport.description && (
-          <div className="sm:col-span-2 pt-2 border-t border-border/10">
-            <div className="mb-1 text-xs text-muted-foreground">
-              Additional Information
-            </div>
-
-            <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
-              {activeReport.description}
-            </div>
-          </div>
-        )}
-      </div>
-    ) : (
-
-      /* =========================
-          DOMESTIC MISSING/FOUND/STRAY
-      ========================= */
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Species
-          </div>
-
-          <div className="font-medium text-foreground">
-            {activeReport.speciesId || 'N/A'}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Pet Name
-          </div>
-
-          <div className="font-medium text-foreground">
-            {activeReport.animalName || 'N/A'}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Report Type
-          </div>
-
-          <div className="font-medium capitalize text-foreground">
-            {formatReportType(activeReport.type)}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Color / Markings
-          </div>
-
-          <div className="font-medium text-foreground">
-            {activeReport.color || 'N/A'}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Reported Size
-          </div>
-
-          <div className="font-medium capitalize text-foreground">
-            {activeReport.reportedSize || 'N/A'}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            Quantity
-          </div>
-
-          <div className="font-medium text-foreground">
-            {activeReport.quantity ?? 1}
-          </div>
-        </div>
-
-        {activeReport.description && (
-          <div className="sm:col-span-2 pt-2 border-t border-border/10">
-            <div className="mb-1 text-xs text-muted-foreground">
-              Additional Details
-            </div>
-
-            <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
-              {activeReport.description}
-            </div>
-          </div>
-        )}
-      </div>
-    )}
-  </div>
-</section>
+                      {activeReport.description && (
+                        <div className="sm:col-span-2 pt-2 border-t border-border/10">
+                          <div className="mb-1 text-xs text-muted-foreground">
+                            Additional Details
+                          </div>
+                          <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
+                            {activeReport.description}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </section>
 
               {/* LOCATION */}
               <section>
