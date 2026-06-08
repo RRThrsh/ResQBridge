@@ -36,6 +36,16 @@ const [
   setCurrentPassword,
 ] = useState('')
 
+const validatePassword = useQuery(
+  api.users.validateUserPassword,
+  currentPassword
+    ? {
+        email: normalizeEmail(user?.email ?? ''),
+        password: currentPassword,
+      }
+    : 'skip',
+)
+
 const [
   newPassword,
   setNewPassword,
@@ -113,6 +123,13 @@ async function handlePasswordChange(
   e: React.FormEvent,
 ) {
   e.preventDefault()
+<<<<<<< HEAD
+=======
+      if (!validatePassword) {
+  toast.error('Current password is incorrect')
+  return
+}
+>>>>>>> 6ea2468 (Initial commit)
 
   if (!user) return
 
