@@ -235,6 +235,7 @@ export const removeApprover = mutation({
 export const resetDomesticPassword = mutation({
   args: {
     email: v.string(),
+    currentPassword: v.string(), // Added this line
     newPassword: v.string(),
   },
 
@@ -257,6 +258,11 @@ export const resetDomesticPassword = mutation({
       throw new Error('Account not found.')
     }
 
+    // Added this check!
+    if (user.password !== args.currentPassword) {
+      throw new Error('Incorrect current password.')
+    }
+
     await ctx.db.patch(user._id, {
       password: args.newPassword,
     })
@@ -264,5 +270,3 @@ export const resetDomesticPassword = mutation({
     return null
   },
 })
-
-
