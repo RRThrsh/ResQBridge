@@ -39,6 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../ui/alert-dialog'
+
 const DEFAULT_MAP_LAT = 9.7393
 const DEFAULT_MAP_LNG = 118.7361
 
@@ -123,12 +124,12 @@ function formatPinLine(lat: number, lng: number, placename: string | null): stri
   return placename ? `${placename} · ${pair}` : pair
 }
 
-function ClickableMap({ 
-  coords, 
-  onMapClick 
-}: { 
-  coords: {lat: number, lng: number, source?: 'gps' | 'click'} | null, 
-  onMapClick: (lat: number, lng: number) => void 
+function ClickableMap({
+  coords,
+  onMapClick
+}: {
+  coords: {lat: number, lng: number, source?: 'gps' | 'click'} | null,
+  onMapClick: (lat: number, lng: number) => void
 }) {
   const map = useMap()
 
@@ -237,23 +238,53 @@ export function DomesticReportForm() {
     }
   }, [t, updateLocationData])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleValidationBeforeSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!user) {
       toast.error(t('reportFormWildlife.errorLoginRequired'))
       return
     }
-    if (!formData.species.trim() || !formData.location || !formData.description) {
-      toast.error(t('reportFormWildlife.errorRequiredFields'))
+
+    // 1. Check Global Fields
+    if (!formData.species.trim() || !formData.location || !formData.seenAt) {
+      toast.error(t('reportFormWildlife.errorRequiredFields') || 'Please fill in all required fields.')
       return
     }
 
-    // NEW FIX: Require the user to drop a pin on the map
+    // 2. Check Conditional Fields based on reportType
+    if (reportType === 'injured') {
+      if (
+        !formData.condition || 
+        !formData.behavior || 
+        !formData.reportedSize || 
+        !formData.description.trim() || 
+        !formData.color
+      ) {
+        toast.error(t('reportFormWildlife.errorRequiredFields') || 'Please fill in all required fields.')
+        return
+      }
+    } else {
+      // Missing, Found, Stray
+      if (!formData.color.trim() || !formData.reportedSize || !formData.description.trim()) {
+        toast.error(t('reportFormWildlife.errorRequiredFields') || 'Please fill in all required fields.')
+        return
+      }
+      
+      // Specifically Missing or Found
+      if ((reportType === 'missing' || reportType === 'found') && !formData.animalName.trim()) {
+        toast.error(t('reportFormWildlife.errorRequiredFields') || 'Please fill in all required fields.')
+        return
+      }
+    }
+
+    // 3. Map Pin Verification
     if (!coords) {
       toast.error(t('reportFormDomestic.errorMapPinRequired') || 'Please drop a pin on the map to provide an exact location.')
       return
     }
 
+    // 4. Photo Verification
     const photoError = validateReportPhotosForSubmit(photos)
     if (photoError) {
       toast.error(photoError)
@@ -265,8 +296,8 @@ export function DomesticReportForm() {
       return
     }
 
+    // 5. Contact Verification
     const contactPhone = formData.reporterPhone.trim()
-    
     if (!contactPhone) {
       toast.error(t('reportFormWildlife.errorContactRequired'))
       return
@@ -278,6 +309,11 @@ export function DomesticReportForm() {
       return
     }
 
+    // If everything is perfectly filled out, open confirmation modal
+    setConfirmOpen(true)
+  }
+
+  const executeSubmit = async () => {
     setLoading(true)
 
     try {
@@ -285,8 +321,11 @@ export function DomesticReportForm() {
         ? new Date(formData.seenAt).getTime()
         : Date.now()
 
+      const contactPhone = formData.reporterPhone.trim()
+      const cleanPhone = contactPhone.replace(/\D/g, '')
+
       await createReportMutation({
-        userEmail: user.email,
+        userEmail: user!.email,
         category: 'domestic',
         type: reportType,
         animalName:
@@ -304,9 +343,11 @@ export function DomesticReportForm() {
         reportedSize: formData.reportedSize.trim() || undefined,
         seenAt,
         photoStorageIds: photoStorageIdsForSubmit(photos),
-        latitude: coords.lat,
-        longitude: coords.lng,
+        latitude: coords!.lat,
+        longitude: coords!.lng,
       })
+      
+      setConfirmOpen(false)
       navigate('/report/success')
     } catch {
       toast.error(t('reportFormWildlife.errorSubmit'))
@@ -343,14 +384,7 @@ export function DomesticReportForm() {
         </TabsList>
       </Tabs>
 
-      <form
-  onSubmit={(e) => {
-    e.preventDefault()
-    setConfirmOpen(true)
-  }}
-  className="space-y-6"
->
-
+      <form onSubmit={handleValidationBeforeSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -368,7 +402,7 @@ export function DomesticReportForm() {
           {reportType !== 'stray' && reportType !== 'injured' && (
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {reportType === 'missing' ? t('reportFormDomestic.petNameLabel') : t('reportFormDomestic.nameLabel')}
+                {reportType === 'missing' ? t('reportFormDomestic.petNameLabel') : t('reportFormDomestic.nameLabel')} <span className="text-destructive">*</span>
               </label>
 
               <Input
@@ -381,17 +415,19 @@ export function DomesticReportForm() {
                 }
                 placeholder={t('reportFormDomestic.namePlaceholder')}
                 className="h-12 bg-background border-border rounded-xl"
+                required
               />
             </div>
           )}
         </div>
+        
         {reportType === 'injured' && (
           <div className="space-y-6">
 
             {/* Nature of Injury */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {t('reportFormDomestic.injuryLabel')}
+                {t('reportFormDomestic.injuryLabel')} <span className="text-destructive">*</span>
               </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -450,7 +486,7 @@ export function DomesticReportForm() {
             {/* Severity of Injury */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {t('reportFormDomestic.severityLabel')}
+                {t('reportFormDomestic.severityLabel')} <span className="text-destructive">*</span>
               </label>
 
               <Select
@@ -461,6 +497,7 @@ export function DomesticReportForm() {
                     behavior: value ?? '',
                   })
                 }
+                required
               >
                 <SelectTrigger className="h-12 rounded-xl border-border bg-background">
                   <SelectValue placeholder={t('reportFormDomestic.severityPlaceholder')} />
@@ -489,7 +526,7 @@ export function DomesticReportForm() {
             {/* Current Condition */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {t('reportFormDomestic.conditionLabel')}
+                {t('reportFormDomestic.conditionLabel')} <span className="text-destructive">*</span>
               </label>
 
               <Select
@@ -500,6 +537,7 @@ export function DomesticReportForm() {
                     reportedSize: value ?? '',
                   })
                 }
+                required
               >
                 <SelectTrigger className="h-12 rounded-xl border-border bg-background">
                   <SelectValue placeholder={t('reportFormDomestic.conditionPlaceholder')} />
@@ -532,7 +570,7 @@ export function DomesticReportForm() {
             {/* Additional Information */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {t('reportFormDomestic.additionalInfoLabel')}
+                {t('reportFormDomestic.additionalInfoLabel')} <span className="text-destructive">*</span>
               </label>
 
               <Textarea
@@ -545,17 +583,14 @@ export function DomesticReportForm() {
                 }
                 placeholder={t('reportFormDomestic.additionalInfoPlaceholder')}
                 className="min-h-[100px] rounded-xl border-border bg-background resize-none"
+                required
               />
-
-              <p className="text-xs text-muted-foreground">
-                {t('reportFormDomestic.notRequired')}
-              </p>
             </div>
 
             {/* Rescue Assistance Priority */}
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {t('reportFormDomestic.priorityLabel')}
+                {t('reportFormDomestic.priorityLabel')} <span className="text-destructive">*</span>
               </label>
 
               <Select
@@ -566,6 +601,7 @@ export function DomesticReportForm() {
                     color: value ?? '',
                   })
                 }
+                required
               >
                 <SelectTrigger className="h-12 rounded-xl border-border bg-background">
                   <SelectValue placeholder={t('reportFormDomestic.priorityPlaceholder')} />
@@ -597,7 +633,7 @@ export function DomesticReportForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {t('reportFormDomestic.colorLabel')}
+                {t('reportFormDomestic.colorLabel')} <span className="text-destructive">*</span>
               </label>
 
               <Input
@@ -610,6 +646,7 @@ export function DomesticReportForm() {
                 }
                 placeholder={t('reportFormDomestic.colorPlaceholder')}
                 className="h-12 bg-background border-border rounded-xl"
+                required
               />
             </div>
           </div>
@@ -675,23 +712,23 @@ export function DomesticReportForm() {
 
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {t('reportFormDomestic.dateLabel')}
+            {t('reportFormDomestic.dateLabel')} <span className="text-destructive">*</span>
           </label>
           <Input
             type="datetime-local"
             value={formData.seenAt}
             onChange={(e) => setFormData({ ...formData, seenAt: e.target.value })}
             className="h-12 bg-background border-border rounded-xl"
+            required
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
-
           {reportType !== 'injured' && (
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {t('reportFormDomestic.sizeLabel')}
+                {t('reportFormDomestic.sizeLabel')} <span className="text-destructive">*</span>
               </label>
 
               <Select
@@ -702,6 +739,7 @@ export function DomesticReportForm() {
                     reportedSize: value ?? '',
                   })
                 }
+                required
               >
                 <SelectTrigger className="h-12 bg-background border-border rounded-xl">
                   <SelectValue placeholder={t('reportFormDomestic.sizePlaceholder')} />
@@ -775,45 +813,42 @@ export function DomesticReportForm() {
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('reportFormDomestic.submitButton').replace('{type}', reportType)}
         </Button>
       </form>
+      
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-  <AlertDialogContent className="rounded-2xl">
-    <AlertDialogHeader>
-      <AlertDialogTitle className="text-xl font-bold">
-        Important Reminder
-      </AlertDialogTitle>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">
+              Important Reminder
+            </AlertDialogTitle>
 
-      <AlertDialogDescription className="space-y-3 pt-2 text-sm leading-relaxed text-muted-foreground">
-        <p>
-          Your domestic report will only be properly reviewed if
-          you answer calls from rescue staff or administrators.
-        </p>
+            <AlertDialogDescription className="space-y-3 pt-2 text-sm leading-relaxed text-muted-foreground">
+              <p>
+                Your domestic report will only be properly reviewed if
+                you answer calls from rescue staff or administrators.
+              </p>
 
-        <p>
-          Please make sure your contact number is active and reachable.
-        </p>
+              <p>
+                Please make sure your contact number is active and reachable.
+              </p>
 
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
-          Failure to answer verification calls may result in your
-          report being rejected.
-        </div>
-      </AlertDialogDescription>
-    </AlertDialogHeader>
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
+                Failure to answer verification calls may result in your
+                report being rejected.
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
 
-    <AlertDialogFooter>
-      <AlertDialogCancel>
-        Cancel
-      </AlertDialogCancel>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              Cancel
+            </AlertDialogCancel>
 
-      <AlertDialogAction
-        onClick={(e) => {
-          handleSubmit(e as unknown as React.FormEvent)
-        }}
-      >
-        Continue Submit
-      </AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
+            <AlertDialogAction onClick={executeSubmit}>
+              Continue Submit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
