@@ -978,6 +978,89 @@ async function handleApi(
     }
   }
 
+  if (req.method === 'POST' && pathname === '/api/auth/reset-password') {
+    try {
+      const body = await readJsonBody(req)
+      const email = String(body.email ?? '').trim().toLowerCase()
+      const newPassword = String(body.newPassword ?? '')
+
+      if (!email) { sendJson(res, 400, { error: 'Email is required.' }); return true }
+      if (newPassword.length < 8) { sendJson(res, 400, { error: 'Password must be at least 8 characters.' }); return true }
+
+      const convex = getConvexClientForOtp(options.otpEnv)
+      await convex.mutation(api.users.resetUserPassword as any, { email, newPassword })
+      sendJson(res, 200, { success: true })
+      return true
+    } catch (error) {
+      console.error('reset-password error:', error)
+      sendJson(res, 400, { error: error instanceof Error ? error.message : 'Reset failed' })
+      return true
+    }
+  }
+
+  if (req.method === 'POST' && pathname === '/api/log-guest') {
+    try {
+      const body = await readJsonBody(req)
+      const sessionId = String(body.sessionId ?? '').trim()
+      const page = String(body.page ?? '').trim()
+      const guestAction = String(body.action ?? 'guest.page_view').trim()
+      const referrer = String(body.referrer ?? '').trim()
+
+      if (!sessionId || !page) { sendJson(res, 400, { error: 'sessionId and page are required.' }); return true }
+
+      const convex = getConvexClientForOtp(options.otpEnv)
+      await convex.mutation(api.auditLogs.fromAction, {
+        action: guestAction,
+        actorEmail: sessionId,
+        actorName: `Guest (${page})`,
+        actorRole: 'guest',
+        targetType: 'page',
+        targetId: page,
+        details: JSON.stringify({ referrer, userAgent: req.headers['user-agent'] ?? '' }),
+        ipAddress: req.headers['x-forwarded-for'] as string | undefined ?? req.socket?.remoteAddress,
+      })
+      sendJson(res, 200, { success: true })
+      return true
+    } catch (error) {
+      console.error('log-guest error:', error)
+      sendJson(res, 400, { error: error instanceof Error ? error.message : 'Log failed' })
+      return true
+    }
+  }
+
+  if (req.method === 'POST' && pathname === '/api/log-event') {
+    try {
+      const body = await readJsonBody(req)
+      const action = String(body.action ?? '').trim()
+      const actorEmail = String(body.actorEmail ?? '').trim()
+      const actorName = String(body.actorName ?? '').trim()
+      const actorRole = String(body.actorRole ?? '').trim() as 'user' | 'admin' | 'rescuer' | 'domestic_approver' | 'guest'
+      const targetType = String(body.targetType ?? '').trim()
+      const targetId = String(body.targetId ?? '').trim()
+      const details = body.details ? JSON.stringify(body.details) : undefined
+
+      if (!action || !actorEmail) { sendJson(res, 400, { error: 'action and actorEmail are required.' }); return true }
+
+      const convex = getConvexClientForOtp(options.otpEnv)
+      await convex.mutation(api.auditLogs.fromAction, {
+        action,
+        actorEmail,
+        actorName: actorName || undefined,
+        actorRole,
+        targetType: targetType || undefined,
+        targetId: targetId || undefined,
+        details,
+        ipAddress: req.headers['x-forwarded-for'] as string | undefined ?? req.socket?.remoteAddress,
+      })
+      sendJson(res, 200, { success: true })
+      return true
+    } catch (error) {
+      console.error('log-event error:', error)
+      sendJson(res, 400, { error: error instanceof Error ? error.message : 'Log failed' })
+      return true
+    }
+  }
+
   return false
 }
 
