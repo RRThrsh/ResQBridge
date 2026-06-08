@@ -16,6 +16,7 @@ export const list = query({
     targetId: v.optional(v.string()),
     details: v.optional(v.string()),
     metadata: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
     createdAt: v.number(),
   })),
   handler: async (ctx, args) => {
@@ -35,11 +36,12 @@ export const fromAction = mutation({
     action: v.string(),
     actorEmail: v.string(),
     actorName: v.optional(v.string()),
-    actorRole: v.optional(v.union(v.literal('user'), v.literal('admin'), v.literal('rescuer'), v.literal('domestic_approver'))),
+    actorRole: v.optional(v.union(v.literal('user'), v.literal('admin'), v.literal('rescuer'), v.literal('domestic_approver'), v.literal('guest'))),
     targetType: v.optional(v.string()),
     targetId: v.optional(v.string()),
     details: v.optional(v.string()),
     metadata: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {

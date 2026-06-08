@@ -20,6 +20,7 @@ import { RescuerApp } from '@/pages/rescuer/RescuerApp'
 import { DomesticApp } from '@/pages/domestic/DomesticApp'
 import { Toaster } from '@/components/ui/sonner'
 import { useScrollToHash } from '@/hooks/useScrollToHash'
+import { useGuestLogger } from '@/hooks/useGuestLogger'
 
 function RefreshRateLimit({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
@@ -56,6 +57,7 @@ function RefreshRateLimit({ children }: { children: React.ReactNode }) {
 
 function RouteWrapper({ children }: { children: React.ReactNode }) {
   useScrollToHash()
+  useGuestLogger()
   return <>{children}</>
 }
 

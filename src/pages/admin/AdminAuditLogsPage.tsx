@@ -43,6 +43,7 @@ const ACTION_COLORS: Record<string, string> = {
   'rescuer.complete_rescue': '#88ff88',
   'rescuer.password_reset': '#ff8800',
   'domestic_approver.login': '#88aaff',
+  'guest.page_view': '#aaaaaa',
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -84,6 +85,7 @@ const ACTION_LABELS: Record<string, string> = {
   'rescuer.complete_rescue': 'RESCUE COMPLETED',
   'rescuer.password_reset': 'RESCUER PASSWORD RESET',
   'domestic_approver.login': 'APPROVER LOGIN',
+  'guest.page_view': 'GUEST PAGE VIEW',
 }
 
 function formatTimestamp(ts: number): string {
@@ -102,6 +104,7 @@ type AuditLogEntry = {
   targetId?: string
   details?: string
   metadata?: string
+  ipAddress?: string
   createdAt: number
 }
 
@@ -121,6 +124,7 @@ function buildLogObject(log: AuditLogEntry): Record<string, unknown> {
   if (log.actorRole) obj.role = log.actorRole
   if (log.targetType) obj.targetType = log.targetType
   if (log.targetId) obj.targetId = log.targetId
+  if (log.ipAddress) obj.ip = log.ipAddress
 
   if (log.details) {
     try {
@@ -196,11 +200,12 @@ export function AdminAuditLogsPage() {
               {/* Fixed Height Container */}
               <div ref={scrollRef} className="h-[650px] overflow-y-auto">
                 {/* Sticky Header */}
-                <div className="sticky top-0 z-20 grid grid-cols-[24px_240px_160px_120px_180px] border-b border-[#00ff8822] bg-[#0a0a0a] px-2 py-2 text-[10px] uppercase tracking-widest text-[#00ff8877] backdrop-blur">
+                <div className="sticky top-0 z-20 grid grid-cols-[24px_200px_120px_90px_120px_180px] border-b border-[#00ff8822] bg-[#0a0a0a] px-2 py-2 text-[10px] uppercase tracking-widest text-[#00ff8877] backdrop-blur">
                   <span />
                   <span>Action</span>
                   <span>Actor</span>
                   <span>Role</span>
+                  <span>IP</span>
                   <span className="text-right">Timestamp</span>
                 </div>
 
@@ -232,7 +237,7 @@ export function AdminAuditLogsPage() {
                       }
                       className="w-full text-left transition-colors hover:bg-[#ffffff05]"
                     >
-                      <div className="grid grid-cols-[24px_240px_160px_120px_180px] items-center px-2 py-2">
+                      <div className="grid grid-cols-[24px_200px_120px_90px_120px_180px] items-center px-2 py-2">
                         <span
                           className={`text-xs transition-transform ${
                             isExpanded
@@ -262,6 +267,10 @@ export function AdminAuditLogsPage() {
 
                         <span className="truncate text-xs text-[#666]">
                           {log.actorRole ?? '-'}
+                        </span>
+
+                        <span className="truncate text-[10px] text-[#555] font-mono">
+                          {log.ipAddress ?? '-'}
                         </span>
 
                         <span className="text-right text-[10px] text-[#555]">
