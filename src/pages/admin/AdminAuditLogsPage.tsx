@@ -171,8 +171,7 @@ export function AdminAuditLogsPage() {
   )
 
   const filteredLogs = useMemo(() => {
-    const reversed = logs?.slice().reverse()
-    return reversed?.filter(
+    return logs?.filter(
       (log) => roleFilter === 'all' || log.actorRole === roleFilter,
     )
   }, [logs, roleFilter])
@@ -184,7 +183,7 @@ export function AdminAuditLogsPage() {
 
   useEffect(() => {
     if (!scrollRef.current || !filteredLogs) return
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    scrollRef.current.scrollTop = 0
   }, [filteredLogs?.length])
 
   if (!admin) return null
