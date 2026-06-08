@@ -40,7 +40,16 @@ import { cn } from '@/lib/utils'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog.tsx'
 const DEFAULT_MAP_LAT = 9.7393
 const DEFAULT_MAP_LNG = 118.7361
 
@@ -156,6 +165,7 @@ export function WildlifeSightingForm() {
   const navigate = useNavigate()
   const { user } = useUserAuth()
   const { t } = useLanguage()
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const createReportMutation = useMutation(api.reports.create)
   const profile = useQuery(
     api.users.getProfile,
@@ -364,7 +374,13 @@ export function WildlifeSightingForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form
+  onSubmit={(e) => {
+    e.preventDefault()
+    setConfirmOpen(true)
+  }}
+  className="space-y-6"
+>
 
         {/* Species */}
         <div className="space-y-3">
@@ -597,15 +613,56 @@ export function WildlifeSightingForm() {
             {t('reportFormWildlife.warningText')}
           </p>
         </div>
+<Button
+  type="submit"
+  disabled={loading}
+  className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90"
+>
+  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('reportFormWildlife.submitButton')}
+</Button>
+</form>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90"
-        >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('reportFormWildlife.submitButton')}
-        </Button>
-      </form>
-    </div>
-  )
+<AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+  <AlertDialogContent className="rounded-2xl">
+    <AlertDialogHeader>
+      <AlertDialogTitle className="text-xl font-bold">
+        Important Reminder
+      </AlertDialogTitle>
+
+      <AlertDialogDescription className="space-y-3 pt-2 text-sm leading-relaxed text-muted-foreground">
+        <p>
+          Your wildlife report will only be accepted and reviewed properly
+          if you answer calls from the rescue team or administrators.
+        </p>
+
+        <p>
+          Please make sure your contact number is active and reachable.
+        </p>
+
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
+          Failure to answer verification calls may result in your report
+          being rejected.
+        </div>
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+
+    <AlertDialogFooter>
+      <AlertDialogCancel>
+        Cancel
+      </AlertDialogCancel>
+
+      <AlertDialogAction
+        onClick={(e) => {
+          handleSubmit(e as unknown as React.FormEvent)
+        }}
+      >
+        Continue Submit
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
+</div>
+
+)
 }
