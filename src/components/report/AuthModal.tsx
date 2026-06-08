@@ -334,6 +334,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
   )
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="p-6">
       <DialogTitle className="text-xl font-semibold mb-1">
         {mode === 'sign-in' ? t('auth.signIn') : t('auth.createAccount')}
@@ -440,17 +441,25 @@ function AuthForm({ onClose }: { onClose: () => void }) {
                   disabled={loading}
                   className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                 />
-                <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
-                  {t('auth.termsAgree')}{' '}
+                <div className="text-xs text-muted-foreground leading-relaxed select-none">
+                  <label htmlFor="terms" className="cursor-pointer">
+                    {t('auth.termsAgree')}{' '}
+                  </label>
                   <button
                     type="button"
-                    onClick={(e) => { e.preventDefault(); setTermsOpen(true) }}
-                    className="text-primary hover:underline inline font-semibold"
+                    onClick={() => setTermsOpen(true)}
+                    className="text-primary hover:underline inline font-semibold cursor-pointer"
                   >
                     {t('auth.termsLink')}
                   </button>{' '}
-                  {t('auth.privacyLink')}.
-                </label>
+                  <button
+                    type="button"
+                    onClick={() => setPrivacyOpen(true)}
+                    className="text-primary hover:underline inline font-semibold cursor-pointer"
+                  >
+                    {t('auth.privacyLink')}
+                  </button>.
+                </div>
               </div>
             </>
           )}
@@ -731,9 +740,10 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             </button>
           </p>
         </div>
-      ) : (
-        <>
-          <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+      ) : null}
+    </form>
+
+    <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogTitle>Terms of Service</DialogTitle>
           <div className="space-y-4 text-sm text-muted-foreground">
@@ -788,8 +798,6 @@ function AuthForm({ onClose }: { onClose: () => void }) {
           </div>
         </DialogContent>
       </Dialog>
-        </>
-      )}
-    </form>
+    </>
   )
 }
