@@ -125,39 +125,37 @@ function SectionGrid({ title, icon: Icon, iconBg, reports, empty, maxVisible = 6
 
   return (
     <section>
-      <div className="mb-4 flex items-center gap-3">
-        <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg', iconBg)}>
-          <Icon className="h-4 w-4" />
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg', iconBg)}>
+            <Icon className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>{title}</h2>
+            <p className="text-xs text-muted-foreground">{reports.length} accepted report{reports.length !== 1 ? 's' : ''}</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>{title}</h2>
-          <p className="text-xs text-muted-foreground">{reports.length} accepted report{reports.length !== 1 ? 's' : ''}</p>
-        </div>
+        {hasMore && (
+          <button
+            type="button"
+            onClick={onViewMore}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
+          >
+            View More
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
       {reports.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-14 text-center text-sm text-muted-foreground">
           {empty}
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-            {visible.map((report: any) => (
-              <ReportCard key={report._id} report={report} />
-            ))}
-          </div>
-          {hasMore && (
-            <div className="mt-4 flex justify-center">
-              <button
-                type="button"
-                onClick={onViewMore}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
-              >
-                View More ({reports.length - maxVisible} more)
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
-        </>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          {visible.map((report: any) => (
+            <ReportCard key={report._id} report={report} />
+          ))}
+        </div>
       )}
     </section>
   )
