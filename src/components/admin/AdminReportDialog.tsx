@@ -710,26 +710,3 @@ export function AdminReportDialog({
     </Dialog>
   )
 }
-
-        <DialogFooter className="shrink-0 border-t border-border/10 bg-background/90 px-6 py-4 backdrop-blur-md sm:justify-end">
-          <div className="flex w-full items-center justify-end gap-3 sm:w-auto">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="border-border/20 hover:bg-muted"
-              onClick={() => onOpenChange(false)}
-            >
-              {isView ? 'Close' : 'Cancel'}
-            </Button>
-            {!isView && (
-              <Button type="button" onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {saving ? 'Saving...' : 'Save changes'}
-              </Button>
-            )}
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
