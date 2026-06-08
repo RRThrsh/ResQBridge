@@ -43,6 +43,8 @@ export type AuditLogAction =
   | 'rescuer.logout'
   | 'domestic_approver.login'
   | 'domestic_approver.logout'
+  | 'domestic_approver.publish'
+  | 'domestic_approver.reject'
   | 'guest.page_view'
 
 export async function writeAuditLog(
