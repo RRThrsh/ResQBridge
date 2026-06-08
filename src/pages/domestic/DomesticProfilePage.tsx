@@ -3,6 +3,8 @@ import { api } from '../../../convex/_generated/api'
 import React, { useState } from 'react'
 
 import {
+  Eye,
+  EyeOff,
   Loader2,
   Mail,
   Pencil,
@@ -25,39 +27,38 @@ import { Input } from '@/components/ui/input'
 
 import { ThemeSetting } from '@/components/theme/ThemeSetting'
 
-
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 
 export function DomesticProfilePage() {
-  const {
-  domesticApprover,
-  updateApprover,
-} = useDomesticAuth()
+  const { domesticApprover, updateApprover } = useDomesticAuth()
 
   const [isEditing, setIsEditing] = useState(false)
 
   const [firstName, setFirstName] = useState(
     domesticApprover?.firstName ?? '',
   )
-
   const [lastName, setLastName] = useState(
     domesticApprover?.lastName ?? '',
   )
-const [contactPhone, setContactPhone] = useState(
-  domesticApprover?.contactPhone ?? '',
-)
+  const [contactPhone, setContactPhone] = useState(
+    domesticApprover?.contactPhone ?? '',
+  )
 
-const [password, setPassword] = useState('')
+  // Password States
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [authError, setAuthError] = useState('')
 
-const [confirmPassword, setConfirmPassword] = useState('')
+  // Visibility Toggles
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   const [saving, setSaving] = useState(false)
-  const updateApproverMutation = useMutation(
-  api.domestic.updateApprover,
-)
 
-const resetDomesticPassword = useMutation(
-  api.domestic.resetDomesticPassword,
-)
+  const updateApproverMutation = useMutation(api.domestic.updateApprover)
+  const resetDomesticPassword = useMutation(api.domestic.resetDomesticPassword)
 
   if (!domesticApprover) {
     return (
@@ -67,354 +68,392 @@ const resetDomesticPassword = useMutation(
     )
   }
 
-function startEditing() {
-  if (!domesticApprover) return
+  function startEditing() {
+    if (!domesticApprover) return
 
-  setFirstName(domesticApprover.firstName)
-  setLastName(domesticApprover.lastName)
-  setContactPhone(domesticApprover.contactPhone ?? '')
-  setPassword('')
-  setConfirmPassword('')
-  setIsEditing(true)
-}
-
-function cancelEditing() {
-  if (!domesticApprover) return
-
-  setFirstName(domesticApprover.firstName)
-  setLastName(domesticApprover.lastName)
-  setContactPhone(domesticApprover.contactPhone ?? '')
-  setPassword('')
-  setConfirmPassword('')
-  setIsEditing(false)
-}
-
-async function handleSave(e: React.FormEvent) {
-  e.preventDefault()
-
-  const isValidPhone =
-    /^09\d{9}$/.test(contactPhone)
-
-  if (!isValidPhone) {
-    return
+    setFirstName(domesticApprover.firstName)
+    setLastName(domesticApprover.lastName)
+    setContactPhone(domesticApprover.contactPhone ?? '')
+    setCurrentPassword('')
+    setPassword('')
+    setConfirmPassword('')
+    setAuthError('')
+    setIsEditing(true)
   }
 
-  if (
-    password &&
-    password !== confirmPassword
-  ) {
-    return
+  function cancelEditing() {
+    if (!domesticApprover) return
+
+    setFirstName(domesticApprover.firstName)
+    setLastName(domesticApprover.lastName)
+    setContactPhone(domesticApprover.contactPhone ?? '')
+    setCurrentPassword('')
+    setPassword('')
+    setConfirmPassword('')
+    setAuthError('')
+    setIsEditing(false)
   }
 
-  if (
-    password &&
-    password.length < 8
-  ) {
-    return
-  }
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    setAuthError('')
 
-  setSaving(true)
-
-  try {
-    await updateApproverMutation({
-      adminEmail: domesticApprover!.email,
-targetEmail: domesticApprover!.email,
-      firstName,
-      lastName,
-      contactPhone,
-    })
+    const isValidPhone = /^09\d{9}$/.test(contactPhone)
+    if (!isValidPhone) return
 
     if (password) {
-      await resetDomesticPassword({
-        email: domesticApprover!.email,
-        newPassword: password,
-      })
+      if (!currentPassword) {
+        setAuthError('Current password is required to set a new password.')
+        return
+      }
+      if (password !== confirmPassword) return
+      if (password.length < 8) return
     }
 
-    updateApprover({
-      firstName,
-      lastName,
-      contactPhone,
-    })
+    setSaving(true)
 
-    setPassword('')
-    setConfirmPassword('')  
+    try {
+      // If changing password, handle that first so we can catch auth errors early
+      if (password) {
+        await resetDomesticPassword({
+          email: domesticApprover!.email,
+          currentPassword, // Make sure your Convex backend expects this!
+          newPassword: password,
+        })
+      }
 
-    setIsEditing(false)
-  } finally {
-    setSaving(false)
+      await updateApproverMutation({
+        adminEmail: domesticApprover!.email,
+        targetEmail: domesticApprover!.email,
+        firstName,
+        lastName,
+        contactPhone,
+      })
+
+      updateApprover({
+        firstName,
+        lastName,
+        contactPhone,
+      })
+
+      setCurrentPassword('')
+      setPassword('')
+      setConfirmPassword('')
+      setIsEditing(false)
+    } catch (error: any) {
+      // Assuming your Convex mutation throws an error with a specific message
+      // when the current password does not match.
+      setAuthError(error.message || 'Incorrect current password or update failed.')
+    } finally {
+      setSaving(false)
+    }
   }
-}
 
   const initials = `${domesticApprover.firstName?.[0] ?? ''}${
     domesticApprover.lastName?.[0] ?? ''
   }`.toUpperCase()
 
   return (
-      <div className="space-y-6">
-        <Card className="border-border overflow-hidden">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-lg font-bold text-primary">
-              {initials || <UserCircle className="h-7 w-7" />}
-            </div>
+    <div className="space-y-6">
+      <Card className="border-border overflow-hidden">
+        <CardContent className="flex items-center gap-4 p-6">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-lg font-bold text-primary">
+            {initials || <UserCircle className="h-7 w-7" />}
+          </div>
 
-            <div className="min-w-0">
-              <p
-                className="font-semibold text-foreground"
-                style={{ fontFamily: 'var(--font-heading)' }}
-              >
-                {domesticApprover.firstName}{' '}
-                {domesticApprover.lastName}
-              </p>
-            
-              <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                {domesticApprover.email}
-              </p>
+          <div className="min-w-0">
+            <p
+              className="font-semibold text-foreground"
+              style={{ fontFamily: 'var(--font-heading)' }}
+            >
+              {domesticApprover.firstName} {domesticApprover.lastName}
+            </p>
 
-              <p className="mt-1 text-xs text-muted-foreground">
-                Domestic report approver
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            <p className="mt-0.5 truncate text-sm text-muted-foreground">
+              {domesticApprover.email}
+            </p>
 
-        <Card className="border-border">
-          <CardHeader>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Domestic report approver
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle
+            className="text-base"
+            style={{ fontFamily: 'var(--font-heading)' }}
+          >
+            Appearance
+          </CardTitle>
+
+          <CardDescription>
+            How the domestic dashboard looks on this device
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <ThemeSetting />
+        </CardContent>
+      </Card>
+
+      <Card className="border-border">
+        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+          <div className="space-y-1.5">
             <CardTitle
               className="text-base"
               style={{ fontFamily: 'var(--font-heading)' }}
             >
-              Appearance
+              Profile Details
             </CardTitle>
 
             <CardDescription>
-              How the domestic dashboard looks on this device
+              {isEditing
+                ? 'Update your domestic approver information.'
+                : 'Your domestic approver account information'}
             </CardDescription>
-          </CardHeader>
+          </div>
 
-          <CardContent>
-            <ThemeSetting />
-          </CardContent>
-        </Card>
+          {!isEditing ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={startEditing}
+              aria-label="Edit profile"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          ) : null}
+        </CardHeader>
 
-        <Card className="border-border">
-          <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-            <div className="space-y-1.5">
-              <CardTitle
-                className="text-base"
-                style={{ fontFamily: 'var(--font-heading)' }}
-              >
-                Profile Details
-              </CardTitle>
-
-              <CardDescription>
-                {isEditing
-                  ? 'Update your domestic approver information.'
-                  : 'Your domestic approver account information'}
-              </CardDescription>
-            </div>
-
-            {!isEditing ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={startEditing}
-                aria-label="Edit profile"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            ) : null}
-          </CardHeader>
-
-          <CardContent>
-            {isEditing ? (
-              <form onSubmit={handleSave} className="space-y-4">
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">
-                    Email
-                  </label>
-
-                  <Input
-                    value={domesticApprover.email}
-                    disabled
-                    className="bg-muted/40"
-                  />
+        <CardContent>
+          {isEditing ? (
+            <form onSubmit={handleSave} className="space-y-4">
+              {authError && (
+                <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 border border-red-200">
+                  {authError}
                 </div>
+              )}
 
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">
-                    First name
-                  </label>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  Email
+                </label>
 
-                  <Input
-                    value={firstName}
-                    onChange={(e) =>
-                      setFirstName(e.target.value)
+                <Input
+                  value={domesticApprover.email}
+                  disabled
+                  className="bg-muted/40"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  First name
+                </label>
+
+                <Input
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  Last name
+                </label>
+
+                <Input
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  Contact number
+                </label>
+
+                <Input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '')
+                    if (value.length <= 11) {
+                      setContactPhone(value)
                     }
-                    required
-                  />
+                  }}
+                  placeholder="09XXXXXXXXX"
+                  required
+                  minLength={11}
+                  maxLength={11}
+                />
+
+                {contactPhone.length > 0 &&
+                !/^09\d{9}$/.test(contactPhone) ? (
+                  <p className="mt-1 text-xs text-red-500">
+                    Contact number must be exactly 11 digits.
+                  </p>
+                ) : null}
+              </div>
+
+              {/* Password Section */}
+              <div className="mt-6 border-t pt-4">
+                <h4 className="mb-4 text-sm font-medium">Change Password (Optional)</h4>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">
+                      Current password
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type={showCurrentPassword ? 'text' : 'password'}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Required if setting a new password"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">
+                      New password
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Leave blank to keep current password"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">
+                      Confirm new password
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {password && confirmPassword && password !== confirmPassword ? (
+                      <p className="mt-1 text-xs text-red-500">
+                        Passwords do not match.
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={cancelEditing}
+                  disabled={saving}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  type="submit"
+                  disabled={
+                    saving ||
+                    contactPhone.length !== 11 ||
+                    (password !== '' && password !== confirmPassword) ||
+                    (password !== '' && currentPassword === '')
+                  }
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Save changes'
+                  )}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <dl className="grid gap-4 text-sm">
+              <div className="flex items-start gap-3">
+                <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
 
                 <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">
-                    Last name
-                  </label>
+                  <dt className="text-xs text-muted-foreground">Full name</dt>
 
-                  <Input
-                    value={lastName}
-                    onChange={(e) =>
-                      setLastName(e.target.value)
-                    }
-                    required
-                  />
+                  <dd className="font-medium">
+                    {domesticApprover.firstName} {domesticApprover.lastName}
+                  </dd>
                 </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+
                 <div>
-  <label className="mb-1 block text-xs text-muted-foreground">
-    Contact number
-  </label>
+                  <dt className="text-xs text-muted-foreground">Email</dt>
 
-  <Input
-    type="tel"
-    value={contactPhone}
-    onChange={(e) => {
-      const value = e.target.value.replace(/\D/g, '')
-      if (value.length <= 11) {
-        setContactPhone(value)
-      }
-    }}
-    placeholder="09XXXXXXXXX"
-    required
-    minLength={11}
-    maxLength={11}
-  />
-
-  {contactPhone.length > 0 && !/^09\d{9}$/.test(contactPhone) ? (
-    <p className="mt-1 text-xs text-red-500">
-      Contact number must be exactly 11 digits.
-    </p>
-  ) : null}
-</div>
-<div>
-  <label className="mb-1 block text-xs text-muted-foreground">
-    New password
-  </label>
-
-  <Input
-    type="password"
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-    placeholder="Leave blank to keep current password"
-  />
-</div>
-<div>
-  <label className="mb-1 block text-xs text-muted-foreground">
-    Confirm password
-  </label>
-
-  <Input
-    type="password"
-    value={confirmPassword}
-    onChange={(e) =>
-      setConfirmPassword(e.target.value)
-    }
-    placeholder="Confirm new password"
-  />
-
-  {password &&
-  confirmPassword &&
-  password !== confirmPassword ? (
-    <p className="mt-1 text-xs text-red-500">
-      Passwords do not match.
-    </p>
-  ) : null}
-</div>
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={cancelEditing}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </Button>
-
-                  <Button
-  type="submit"
-  disabled={
-    saving ||
-    contactPhone.length !== 11 ||
-    (password !== '' &&
-      password !== confirmPassword)
-  }
->
-                    {saving ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      'Save changes'
-                    )}
-                  </Button>
+                  <dd>{domesticApprover.email}</dd>
                 </div>
-              </form>
-            ) : (
-              <dl className="grid gap-4 text-sm">
-                <div className="flex items-start gap-3">
-                  <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              </div>
+              <div className="flex items-start gap-3">
+                <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
 
-                  <div>
-                    <dt className="text-xs text-muted-foreground">
-                      Full name
-                    </dt>
+                <div>
+                  <dt className="text-xs text-muted-foreground">
+                    Contact number
+                  </dt>
 
-                    <dd className="font-medium">
-                      {domesticApprover.firstName}{' '}
-                      {domesticApprover.lastName}
-                    </dd>
-                  </div>
+                  <dd>{domesticApprover.contactPhone || 'Not set'}</dd>
                 </div>
+              </div>
 
-                <div className="flex items-start gap-3">
-                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="flex items-start gap-3">
+                <Shield className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
 
-                  <div>
-                    <dt className="text-xs text-muted-foreground">
-                      Email
-                    </dt>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Role</dt>
 
-                    <dd>{domesticApprover.email}</dd>
-                  </div>
+                  <dd className="font-medium">Domestic Report Approver</dd>
                 </div>
-                <div className="flex items-start gap-3">
-  <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-
-  <div>
-    <dt className="text-xs text-muted-foreground">
-      Contact number
-    </dt>
-
-    <dd>
-      {domesticApprover.contactPhone || 'Not set'}
-    </dd>
-  </div>
-</div>
-
-                <div className="flex items-start gap-3">
-                  <Shield className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-
-                  <div>
-                    <dt className="text-xs text-muted-foreground">
-                      Role
-                    </dt>
-
-                    <dd className="font-medium">
-                      Domestic Report Approver
-                    </dd>
-                  </div>
-                </div>
-              </dl>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+            </dl>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }
