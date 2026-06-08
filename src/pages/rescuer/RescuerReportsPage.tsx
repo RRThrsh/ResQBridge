@@ -1,21 +1,38 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useQuery } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import {
+  AlertTriangle,
+  Bird,
   CheckCircle2,
   Clock,
   Loader2,
+  MapPin,
   PawPrint,
+  Phone,
   Sparkles,
+  Truck,
   ChevronLeft,
   ChevronRight,
   Eye,
+  X,
 } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
+import type { Id } from '../../../convex/_generated/dataModel'
 import { useRescuerAuth } from '@/context/RescuerAuthContext'
 import { normalizeEmail } from '@/lib/admin'
-import { rescuerReportToStored } from '@/lib/reports'
+import {
+  behaviorLabel,
+  formatReporterName,
+  isActiveDispatchStatus,
+  rescuerReportToStored,
+  type RescuerStoredReport,
+} from '@/lib/reports'
 import { formatDateTime } from '@/lib/dates'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { ReportPhotosGallery } from '@/components/report/ReportPhotosGallery'
+import { getReportPhotos } from '@/lib/reportPhotos'
+import { toast } from 'sonner'
 
 type Tab = 'active' | 'rescued' | 'rejected'
 
@@ -40,6 +57,269 @@ function StatusBadge({ status }: { status: string }) {
     <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium capitalize ${statusColors[status] || 'bg-muted text-muted-foreground'}`}>
       {statusLabels[status] || status.replace(/_/g, ' ')}
     </span>
+  )
+}
+
+function DetailRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className={`mt-0.5 font-medium whitespace-pre-wrap ${highlight ? 'text-primary' : ''}`}>{value}</dd>
+    </div>
+  )
+}
+
+function DetailModal({ report, onClose }: { report: RescuerStoredReport | null; onClose: () => void }) {
+  const { rescuer } = useRescuerAuth()
+  const [loading, setLoading] = useState(false)
+  const [confirmEnRoute, setConfirmEnRoute] = useState(false)
+  const [pendingOutcome, setPendingOutcome] = useState<'rescue_success' | 'rescue_failed' | null>(null)
+  const [statusBanner, setStatusBanner] = useState<string | null>(null)
+
+  const markEnRoute = useMutation(api.rescuers.markEnRoute)
+  const completeRescue = useMutation(api.rescuers.completeRescue)
+
+  if (!report) return null
+
+  const r = report
+  const photos = getReportPhotos(r)
+  const reporterName = formatReporterName(r.reporterFirstName, r.reporterLastName)
+  const canAct = isActiveDispatchStatus(r.status)
+  const mapQuery =
+    r.latitude && r.longitude
+      ? `${r.latitude},${r.longitude}`
+      : encodeURIComponent(r.location)
+
+  async function handleMarkEnRoute() {
+    if (!rescuer) return
+    setLoading(true)
+    try {
+      await markEnRoute({
+        rescuerEmail: normalizeEmail(rescuer.email),
+        reportId: r.id as Id<'reports'>,
+      })
+      setStatusBanner('Status updated — you are en route.')
+      toast.success('Team is en route')
+      setConfirmEnRoute(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update status')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleComplete(outcome: 'rescue_success' | 'rescue_failed') {
+    if (!rescuer) return
+    setLoading(true)
+    try {
+      await completeRescue({
+        rescuerEmail: normalizeEmail(rescuer.email),
+        reportId: r.id as Id<'reports'>,
+        outcome,
+      })
+      setStatusBanner('Rescue outcome recorded.')
+      toast.success(outcome === 'rescue_success' ? 'Rescue marked successful' : 'Rescue marked failed')
+      setPendingOutcome(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update status')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 pt-4 pb-4 backdrop-blur-sm" onClick={onClose}>
+        <div className="relative w-full max-w-2xl rounded-2xl bg-popover p-0 shadow-lg ring-1 ring-foreground/10 mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-border bg-popover px-6 py-4">
+            <div>
+              <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+                {report.animalName}
+              </h2>
+              <p className="text-xs text-muted-foreground">{report.reportNumber ?? report.id}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <StatusBadge status={report.status} />
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-6 p-6">
+            {statusBanner && (
+              <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                {statusBanner}
+              </div>
+            )}
+
+            {photos.length > 0 && (
+              <ReportPhotosGallery photos={photos} alt={report.animalName} variant="hero" />
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs text-muted-foreground font-medium">Reported Animal</span>
+                <p className="text-base font-bold text-foreground mt-0.5" style={{ fontFamily: 'var(--font-heading)' }}>
+                  {report.animalName}
+                </p>
+              </div>
+              <DetailRow label="Category" value={report.category === 'wildlife' ? 'Wildlife' : 'Domestic'} />
+              <DetailRow label="Type" value={report.type.replace(/-/g, ' ')} />
+              <DetailRow label="Date & Time Seen" value={formatDateTime(report.seenAt ?? report.createdAt)} />
+              <DetailRow label="Quantity" value={String(report.quantity ?? 1)} />
+              <DetailRow label="Size" value={report.reportedSize ?? 'Not provided'} />
+              <DetailRow
+                label="Condition / behavior"
+                value={
+                  behaviorLabel(report.behavior) !== 'Not provided'
+                    ? behaviorLabel(report.behavior)
+                    : report.condition
+                      ? report.condition.replace(/-/g, ' ')
+                      : 'Not provided'
+                }
+                highlight
+              />
+              {report.description && (
+                <div className="col-span-2">
+                  <DetailRow label="Additional Details" value={report.description} />
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest mb-2">Location</h4>
+              <DetailRow label="Address / Landmark" value={report.location} />
+              <div className="mt-3 w-full h-48 rounded-xl overflow-hidden border border-border bg-muted">
+                <iframe
+                  title="Map"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                />
+              </div>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted shadow-sm"
+              >
+                <MapPin className="h-4 w-4 text-primary" />
+                View on Google Maps
+              </a>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest mb-2">Reporter</h4>
+              <DetailRow label="Name" value={reporterName} />
+              <div>
+                <dt className="text-xs text-muted-foreground">Contact</dt>
+                <dd className="mt-1 font-medium">
+                  {report.reporterPhone ? (
+                    <a
+                      href={`tel:${report.reporterPhone.replace(/\s/g, '')}`}
+                      className="inline-flex items-center gap-2 text-primary hover:opacity-80"
+                    >
+                      {report.reporterPhone}
+                      <Phone className="h-4 w-4" />
+                    </a>
+                  ) : (
+                    'Not provided'
+                  )}
+                </dd>
+              </div>
+            </div>
+          </div>
+
+          {canAct && (
+            <div className="sticky bottom-0 rounded-b-2xl border-t border-border bg-popover px-6 py-4 flex flex-col gap-2">
+              {report.status === 'accepted' ? (
+                <Button
+                  type="button"
+                  className="h-12 w-full rounded-xl text-base font-semibold"
+                  disabled={loading}
+                  onClick={() => setConfirmEnRoute(true)}
+                >
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Truck className="mr-2 h-5 w-5" />
+                      Team is en route (OTW)
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    className="h-12 w-full rounded-xl bg-emerald-600 text-base font-semibold hover:bg-emerald-700"
+                    disabled={loading}
+                    onClick={() => setPendingOutcome('rescue_success')}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Bird className="mr-2 h-5 w-5" />
+                        Rescue successful
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-12 w-full rounded-xl border-destructive/40 text-base font-semibold text-destructive hover:bg-destructive/10"
+                    disabled={loading}
+                    onClick={() => setPendingOutcome('rescue_failed')}
+                  >
+                    <AlertTriangle className="mr-2 h-5 w-5" />
+                    Rescue failed
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ConfirmDialog
+        open={confirmEnRoute}
+        onOpenChange={setConfirmEnRoute}
+        title="Mark team en route?"
+        description="This notifies PWRCC that your team is on the way."
+        confirmLabel="Confirm en route"
+        loading={loading}
+        onConfirm={handleMarkEnRoute}
+      />
+      <ConfirmDialog
+        open={pendingOutcome === 'rescue_success'}
+        onOpenChange={(open) => !open && setPendingOutcome(null)}
+        title="Mark rescue successful?"
+        description="This will close the dispatch as a successful rescue."
+        confirmLabel="Rescue successful"
+        loading={loading}
+        onConfirm={() => handleComplete('rescue_success')}
+      />
+      <ConfirmDialog
+        open={pendingOutcome === 'rescue_failed'}
+        onOpenChange={(open) => !open && setPendingOutcome(null)}
+        title="Mark rescue failed?"
+        description="This will close the dispatch as unsuccessful."
+        confirmLabel="Rescue failed"
+        loading={loading}
+        onConfirm={() => handleComplete('rescue_failed')}
+      />
+    </>
   )
 }
 
@@ -113,6 +393,7 @@ export function RescuerReportsPage() {
   const { rescuer } = useRescuerAuth()
   const [tab, setTab] = useState<Tab>('active')
   const [page, setPage] = useState(1)
+  const [selectedReport, setSelectedReport] = useState<RescuerStoredReport | null>(null)
   const email = rescuer ? normalizeEmail(rescuer.email) : ''
 
   const activeRows = useQuery(
@@ -252,7 +533,7 @@ export function RescuerReportsPage() {
                       <tr
                         key={report.id}
                         className="border-b border-border transition-colors hover:bg-muted/30 cursor-pointer"
-                        onClick={() => window.location.href = `/pwrcc/rescuer/reports/${report.id}`}
+                        onClick={() => setSelectedReport(report)}
                       >
                         <td className="px-4 py-3 text-foreground font-mono text-[12px]">
                           {report.reportNumber || report.id.slice(-6).toUpperCase()}
@@ -266,14 +547,14 @@ export function RescuerReportsPage() {
                         <td className="px-4 py-3"><StatusBadge status={report.status} /></td>
                         <td className="px-4 py-3 text-muted-foreground text-[12px] whitespace-nowrap">{formatDateTime(report.createdAt)}</td>
                         <td className="px-4 py-3">
-                          <Link
-                            to={`/pwrcc/rescuer/reports/${report.id}`}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setSelectedReport(report) }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                             title="View details"
-                            onClick={(e) => e.stopPropagation()}
                           >
                             <Eye className="h-3.5 w-3.5" />
-                          </Link>
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -310,6 +591,11 @@ export function RescuerReportsPage() {
           )}
         </>
       )}
+
+      <DetailModal
+        report={selectedReport}
+        onClose={() => setSelectedReport(null)}
+      />
     </>
   )
 }
