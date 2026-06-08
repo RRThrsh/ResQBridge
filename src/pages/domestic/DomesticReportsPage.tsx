@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
-import { Loader2, PawPrint, Search } from 'lucide-react'
+import { ChevronRight, Loader2, PawPrint, Search, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
@@ -70,13 +70,59 @@ function ReportCard({ report }: { report: any }) {
   )
 }
 
-function SectionGrid({ title, icon: Icon, iconBg, reports, empty }: {
+function CategoryModal({ title, icon: Icon, iconBg, reports, open, onClose }: {
+  title: string
+  icon: typeof Search
+  iconBg: string
+  reports: any[]
+  open: boolean
+  onClose: () => void
+}) {
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 pt-8 pb-8 backdrop-blur-sm">
+      <div className="relative w-full max-w-6xl rounded-2xl bg-popover p-6 shadow-lg ring-1 ring-foreground/10 mx-4">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', iconBg)}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>{title}</h2>
+              <p className="text-xs text-muted-foreground">{reports.length} accepted report{reports.length !== 1 ? 's' : ''}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {reports.map((report: any) => (
+            <ReportCard key={report._id} report={report} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SectionGrid({ title, icon: Icon, iconBg, reports, empty, maxVisible = 6, onViewMore }: {
   title: string
   icon: typeof Search
   iconBg: string
   reports: any[]
   empty: string
+  maxVisible?: number
+  onViewMore?: () => void
 }) {
+  const hasMore = reports.length > maxVisible
+  const visible = hasMore ? reports.slice(0, maxVisible) : reports
+
   return (
     <section>
       <div className="mb-4 flex items-center gap-3">
@@ -93,11 +139,25 @@ function SectionGrid({ title, icon: Icon, iconBg, reports, empty }: {
           {empty}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-          {reports.map((report: any) => (
-            <ReportCard key={report._id} report={report} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {visible.map((report: any) => (
+              <ReportCard key={report._id} report={report} />
+            ))}
+          </div>
+          {hasMore && (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={onViewMore}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
+              >
+                View More ({reports.length - maxVisible} more)
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+        </>
       )}
     </section>
   )
@@ -105,6 +165,7 @@ function SectionGrid({ title, icon: Icon, iconBg, reports, empty }: {
 
 export function DomesticReportsPage() {
   const { domesticApprover } = useDomesticAuth()
+  const [modalCategory, setModalCategory] = useState<'missing' | 'found' | null>(null)
 
   // @ts-ignore
   const publishedRows = useQuery((api as any).domestic.listPublishedReports)
@@ -149,6 +210,7 @@ export function DomesticReportsPage() {
             iconBg="bg-rose-500/10 text-rose-500"
             reports={missing}
             empty="No accepted missing pet reports yet."
+            onViewMore={() => setModalCategory('missing')}
           />
 
           <SectionGrid
@@ -157,9 +219,28 @@ export function DomesticReportsPage() {
             iconBg="bg-emerald-500/10 text-emerald-500"
             reports={found}
             empty="No accepted found animal reports yet."
+            onViewMore={() => setModalCategory('found')}
           />
         </>
       )}
+
+      <CategoryModal
+        title="Missing"
+        icon={Search}
+        iconBg="bg-rose-500/10 text-rose-500"
+        reports={missing}
+        open={modalCategory === 'missing'}
+        onClose={() => setModalCategory(null)}
+      />
+
+      <CategoryModal
+        title="Found"
+        icon={PawPrint}
+        iconBg="bg-emerald-500/10 text-emerald-500"
+        reports={found}
+        open={modalCategory === 'found'}
+        onClose={() => setModalCategory(null)}
+      />
     </div>
   )
 }

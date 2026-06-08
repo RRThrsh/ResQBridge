@@ -19,7 +19,6 @@ import { useLanguage } from '@/context/LanguageContext'
 export function DomesticReports() {
   const { t } = useLanguage()
   const reports = useQuery(api.reports.listPublicDomestic)
-  console.log(reports)
   const [selectedReport, setSelectedReport] = useState<PublicDomesticReport | null>(null)
   const [timedOut, setTimedOut] = useState(false)
   const timedOutRef = useRef(false)
