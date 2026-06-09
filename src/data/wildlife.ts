@@ -23,16 +23,16 @@ export type Category = typeof categories[number]
 
 export const statusColors: Record<WildlifeSpecies['status'], string> = {
   'critically-endangered':
-    'bg-red-600/80 text-red-600 dark:bg-red-400/30 dark:text-red-400 border-red-500/30',
+    'bg-red-600/80 text-red-200 dark:bg-red-200/50 dark:text-red-600 border-red-200/50',
 
   endangered:
-    'bg-orange-600/80 text-orange-600 dark:bg-orange-400/30 dark:text-orange-400 border-orange-500/30',
+    'bg-orange-600/80 text-orange-200 dark:bg-orange-200/50 dark:text-orange-600 border-orange-200/50',
 
   vulnerable:
-    'bg-yellow-600/80 text-yellow-600 dark:bg-yellow-400/30 dark:text-yellow-400 border-yellow-500/30',
+    'bg-yellow-600/80 text-yellow-200 dark:bg-yellow-200/50 dark:text-yellow-600 border-yellow-200/50',
 
   protected:
-    'bg-emerald-600/80 text-emerald-600 dark:bg-emerald-400/30 dark:text-emerald-400 border-emerald-500/30',
+    'bg-emerald-600/80 text-emerald-200 dark:bg-emerald-200/50 dark:text-emerald-600 border-emerald-200/50',
 }
 
 export const statusLabels: Record<WildlifeSpecies['status'], string> = {
