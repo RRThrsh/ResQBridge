@@ -22,7 +22,7 @@ import { ReportPhotosGallery } from '@/components/report/ReportPhotosGallery'
 import { getReportPhotos } from '@/lib/reportPhotos'
 import { toast } from 'sonner'
 
-const PAGE_SIZE = 15
+const PAGE_SIZE = 10
 
 const typeLabels: Record<string, string> = {
   missing: 'Missing',
@@ -251,8 +251,23 @@ export function DomesticReportsPage() {
   const [page, setPage] = useState(1)
   const [selectedReport, setSelectedReport] = useState<any>(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<string>('all')
 
   const allReports = useQuery(api.domestic.listAllDomesticReports)
+
+  function handleFilterChange(value: string) {
+    setStatusFilter(value)
+    setPage(1)
+  }
+
+  const filteredReports = useMemo(
+    () => {
+      const reports = allReports ?? []
+      if (statusFilter === 'all') return reports
+      return reports.filter((r) => r.status === statusFilter)
+    },
+    [allReports, statusFilter],
+  )
 
   const publishReport = useMutation(api.domestic.publishReport)
   const rejectReport = useMutation(api.domestic.rejectReport)
@@ -269,11 +284,11 @@ export function DomesticReportsPage() {
     [allReports],
   )
 
-  const totalPages = Math.max(1, Math.ceil((allReports ?? []).length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(filteredReports.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
   const paginatedReports = useMemo(
-    () => (allReports ?? []).slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
-    [allReports, safePage],
+    () => filteredReports.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [filteredReports, safePage],
   )
 
   async function handleApprove(reportId: Id<'reports'>) {
@@ -359,6 +374,22 @@ export function DomesticReportsPage() {
             <p className="text-xs text-muted-foreground">Total Approved</p>
           </div>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {filteredReports.length} of {allReports.length} report{(allReports.length !== 1) ? 's' : ''}
+        </p>
+        <select
+          value={statusFilter}
+          onChange={(e) => handleFilterChange(e.target.value)}
+          className="h-9 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+        >
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="published">Published</option>
+          <option value="rejected">Rejected</option>
+        </select>
       </div>
 
       {allReports.length === 0 ? (
@@ -451,7 +482,7 @@ export function DomesticReportsPage() {
           {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-border px-4 py-3">
               <p className="text-xs text-muted-foreground order-2 sm:order-1">
-                Page {safePage} of {totalPages} ({allReports.length} total)
+                {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredReports.length)} of {filteredReports.length}
               </p>
               <div className="flex gap-1 order-1 sm:order-2">
                 <button
