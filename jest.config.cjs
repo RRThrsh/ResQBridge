@@ -11,6 +11,8 @@ module.exports = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^\\.\\/convex\\/_generated\\/api$': '<rootDir>/tests/__mocks__/convex-api.ts',
     '^.*/convex/_generated/api$': '<rootDir>/tests/__mocks__/convex-generated-api.ts',
+    '^.*/convex/_generated/dataModel$': '<rootDir>/tests/__mocks__/convex-dataModel.ts',
+    '^.*/convex/_generated/server$': '<rootDir>/tests/__mocks__/convex-server.ts',
     '^convex/browser$': '<rootDir>/tests/__mocks__/convex-browser.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
