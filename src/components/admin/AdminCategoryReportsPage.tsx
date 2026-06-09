@@ -223,7 +223,6 @@ export function AdminReportDetailView({
 
           <dl className="space-y-3">
             <DetailRow label="Date & time seen" value={formatDateTime(report.createdAt)} />
-            <DetailRow label="Quantity" value={String(report.quantity ?? 1)} />
             <DetailRow label="Size" value={report.reportedSize ?? 'Not provided'} />
             <DetailRow
               label="Condition / behavior"
