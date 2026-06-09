@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
-import { Calendar, Clock, Loader2, MapPin, Pencil, Phone, Trash2 } from 'lucide-react'
+import { Activity, AlertTriangle, Calendar, Clock, Flag, Heart, Layers, Loader2, MapPin, Palette, Pencil, Phone, PlusCircle, Ruler, Tag, Trash2 } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
@@ -26,7 +26,6 @@ import {
   DOMESTIC_REPORT_TYPES,
   WILDLIFE_BEHAVIORS,
   WILDLIFE_BEHAVIOR_OTHER,
-  WILDLIFE_CONDITIONS,
   formatReportType,
   isTerminalStatus,
   statusLabel,
@@ -34,7 +33,6 @@ import {
   wildlifeBehaviorSelectValue,
   type StoredReport,
 } from '@/lib/reports'
-import { ReportContactField } from '@/components/report/ReportContactField'
 import { ReportPhotoField } from '@/components/report/ReportPhotoField'
 import { ReportPhotosGallery } from '@/components/report/ReportPhotosGallery'
 import { formatDateTime } from '@/lib/dates'
@@ -398,38 +396,17 @@ export function ReportDetailDialog({
                       />
                     </Field>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Field label={t('reportDetail.fieldQuantity')}>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={draft.quantity}
-                        onChange={(e) =>
-                          setDraft({ ...draft, quantity: Number(e.target.value) || 1 })
-                        }
-                        className="h-11 rounded-xl bg-background"
-                      />
-                    </Field>
-                    <Field label={t('reportDetail.fieldCondition')}>
-                      <Select
-                        value={draft.condition || undefined}
-                        onValueChange={(val) =>
-                          setDraft({ ...draft, condition: val ?? '' })
-                        }
-                      >
-                        <SelectTrigger className="h-11 rounded-xl bg-background">
-                          <SelectValue placeholder={t('reportDetail.conditionPlaceholder')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {WILDLIFE_CONDITIONS.map((c) => (
-                            <SelectItem key={c.value} value={c.value}>
-                              {c.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </div>
+                  <Field label={t('reportDetail.fieldQuantity')}>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={draft.quantity}
+                      onChange={(e) =>
+                        setDraft({ ...draft, quantity: Number(e.target.value) || 1 })
+                      }
+                      className="h-11 rounded-xl bg-background"
+                    />
+                  </Field>
                 </>
               )}
 
@@ -466,14 +443,15 @@ export function ReportDetailDialog({
               </Field>
 
               <Field label={t('reportDetail.fieldReporterPhone')}>
-                <ReportContactField
-                  userEmail={userEmail}
+                <Input
+                  type="tel"
                   value={draft.reporterPhone}
-                  onChange={(val) => {
-                    let cleaned = val.replace(/\D/g, '')
+                  onChange={(e) => {
+                    let cleaned = e.target.value.replace(/\D/g, '')
                     if (cleaned.length > 11) cleaned = cleaned.slice(0, 11)
                     setDraft({ ...draft, reporterPhone: cleaned })
                   }}
+                  className="h-11 rounded-xl bg-background"
                 />
               </Field>
 
@@ -542,7 +520,7 @@ export function ReportDetailDialog({
               </div>
 
               {report.speciesId && (
-                <InfoRow icon={<span className="text-xs font-bold text-primary">#</span>} label={t('reportDetail.viewSpecies')}>
+                <InfoRow icon={<Tag className="h-4 w-4 text-primary" />} label={t('reportDetail.viewSpecies')}>
                   {report.speciesId}
                 </InfoRow>
               )}
@@ -561,22 +539,22 @@ export function ReportDetailDialog({
               {report.category === 'domestic' && report.type === 'injured' && (
                 <>
                   {report.condition && (
-                    <InfoRow icon={<span className="text-xs font-bold text-primary">+</span>} label={t('reportDetail.viewInjuries')}>
+                    <InfoRow icon={<PlusCircle className="h-4 w-4 text-primary" />} label={t('reportDetail.viewInjuries')}>
                       {report.condition}
                     </InfoRow>
                   )}
                   {report.behavior && (
-                    <InfoRow icon={<span className="text-xs font-bold text-primary">!</span>} label={t('reportDetail.viewSeverity')}>
+                    <InfoRow icon={<AlertTriangle className="h-4 w-4 text-primary" />} label={t('reportDetail.viewSeverity')}>
                       {report.behavior}
                     </InfoRow>
                   )}
                   {report.reportedSize && (
-                    <InfoRow icon={<span className="text-xs font-bold text-primary">~</span>} label="Condition">
+                    <InfoRow icon={<Heart className="h-4 w-4 text-primary" />} label="Condition">
                       {report.reportedSize}
                     </InfoRow>
                   )}
                   {report.color && (
-                    <InfoRow icon={<span className="text-xs font-bold text-primary">*</span>} label={t('reportDetail.viewPriority')}>
+                    <InfoRow icon={<Flag className="h-4 w-4 text-primary" />} label={t('reportDetail.viewPriority')}>
                       {report.color}
                     </InfoRow>
                   )}
@@ -584,7 +562,7 @@ export function ReportDetailDialog({
               )}
 
               {report.category === 'domestic' && report.type !== 'injured' && report.color && (
-                <InfoRow icon={<span className="text-xs font-bold text-primary">#</span>} label={t('reportDetail.viewColor')}>
+                <InfoRow icon={<Palette className="h-4 w-4 text-primary" />} label={t('reportDetail.viewColor')}>
                   {report.color}
                 </InfoRow>
               )}
@@ -592,12 +570,12 @@ export function ReportDetailDialog({
               {report.category === 'wildlife' && (
                 <>
                   {report.behavior && (
-                    <InfoRow icon={<span className="text-xs font-bold text-primary">~</span>} label={t('reportDetail.viewBehavior')}>
+                    <InfoRow icon={<Activity className="h-4 w-4 text-primary" />} label={t('reportDetail.viewBehavior')}>
                       {wildlifeBehaviorDisplayText(report.behavior)}
                     </InfoRow>
                   )}
                   {report.quantity != null && (
-                    <InfoRow icon={<span className="text-xs font-bold text-primary">x</span>} label={t('reportDetail.viewQuantity')}>
+                    <InfoRow icon={<Layers className="h-4 w-4 text-primary" />} label={t('reportDetail.viewQuantity')}>
                       {String(report.quantity)}
                     </InfoRow>
                   )}
@@ -605,7 +583,7 @@ export function ReportDetailDialog({
               )}
 
               {report.reportedSize && report.type !== 'injured' && (
-                <InfoRow icon={<span className="text-xs font-bold text-primary">#</span>} label={t('reportDetail.viewSize')}>
+                <InfoRow icon={<Ruler className="h-4 w-4 text-primary" />} label={t('reportDetail.viewSize')}>
                   {report.reportedSize}
                 </InfoRow>
               )}
