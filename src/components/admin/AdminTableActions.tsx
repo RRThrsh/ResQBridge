@@ -1,9 +1,11 @@
 import {
+  Check,
   Eye,
   MoreHorizontal,
   Pencil,
   Trash2,
   UserPlus,
+  X,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -22,9 +24,13 @@ export type AdminRowAction =
 type Props = {
   onAction: (action: AdminRowAction) => void
   onAssign?: () => void
+  onApprove?: () => void
+  onReject?: () => void
   disableDelete?: boolean
   disableEdit?: boolean
   showAssign?: boolean
+  showApprove?: boolean
+  showReject?: boolean
   viewOnly?: boolean
   className?: string
 }
@@ -32,9 +38,13 @@ type Props = {
 export function AdminTableActions({
   onAction,
   onAssign,
+  onApprove,
+  onReject,
   disableDelete = false,
   disableEdit = false,
   showAssign = false,
+  showApprove = false,
+  showReject = false,
   viewOnly = false,
   className,
 }: Props) {
@@ -65,7 +75,26 @@ export function AdminTableActions({
       >
         <MoreHorizontal className="h-4 w-4" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="bottom" className="w-40">
+      <DropdownMenuContent align="end" side="bottom" className="w-44">
+        {showApprove && onApprove ? (
+          <DropdownMenuItem
+            className="cursor-pointer text-emerald-600 focus:text-emerald-600"
+            onClick={onApprove}
+          >
+            <Check className="h-4 w-4" />
+            Accept
+          </DropdownMenuItem>
+        ) : null}
+        {showReject && onReject ? (
+          <DropdownMenuItem
+            className="cursor-pointer text-red-600 focus:text-red-600"
+            onClick={onReject}
+          >
+            <X className="h-4 w-4" />
+            Reject
+          </DropdownMenuItem>
+        ) : null}
+        {(showApprove || showReject) ? <DropdownMenuSeparator /> : null}
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => onAction('view')}
@@ -82,16 +111,18 @@ export function AdminTableActions({
             Assign rescuer
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuSeparator />
-{!disableEdit && (
-  <DropdownMenuItem
-    className="cursor-pointer"
-    onClick={() => onAction('edit')}
-  >
-    <Pencil className="h-4 w-4" />
-    Edit
-  </DropdownMenuItem>
-)}
+        {!disableEdit && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => onAction('edit')}
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuItem
           variant="destructive"
           className="cursor-pointer"
