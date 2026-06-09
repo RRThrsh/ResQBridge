@@ -24,14 +24,14 @@ const navItems = [
   { to: '/pwrcc/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/pwrcc/admin/reports/wildlife', label: 'Wildlife reports', icon: Leaf },
   { to: '/pwrcc/admin/reports/domestic', label: 'Domestic reports', icon: PawPrint },
-  { to: '/pwrcc/admin/users', label: 'Users', icon: Users },
   { to: '/pwrcc/admin/wildlife', label: 'Wildlife Guide', icon: Leaf },
+  { to: '/pwrcc/admin/domestic-approvers', label: 'Domestic Approvers', icon: Home },
   { to: '/pwrcc/admin/news', label: 'News & Events', icon: Newspaper },
   { to: '/pwrcc/admin/rescuers', label: 'Rescuers', icon: Truck },
-  { to: '/pwrcc/admin/domestic-approvers', label: 'Domestic Approvers', icon: Home },
-  { to: '/pwrcc/admin/audit-logs', label: 'Audit Logs', icon: ScrollText },
-  { to: '/pwrcc/admin/config', label: 'App Config', icon: Settings },
+  { to: '/pwrcc/admin/users', label: 'Users', icon: Users },
   { to: '/pwrcc/admin/admins', label: 'Admins', icon: Shield },
+  { to: '/pwrcc/admin/config', label: 'App Config', icon: Settings },
+  { to: '/pwrcc/admin/audit-logs', label: 'Audit Logs', icon: ScrollText },
   { to: '/pwrcc/admin/profile', label: 'My profile', icon: UserCircle },
 ] as const
 
