@@ -364,7 +364,7 @@ export const en: Dict = {
 
   // Domestic Report Detail Dialog
   'domesticDetail.description': 'Description',
-  'domesticDetail.color': 'Color / Appearance',
+  'domesticDetail.color': 'Color / Markings',
   'domesticDetail.notSpecified': 'Not specified',
   'domesticDetail.status': 'Status',
   'domesticDetail.location': 'Location',
@@ -952,7 +952,7 @@ export const fil: Dict = {
 
   // Domestic Report Detail Dialog
   'domesticDetail.description': 'Paglalarawan',
-  'domesticDetail.color': 'Kulay / Hitsura',
+  'domesticDetail.color': 'Kulay / Marka',
   'domesticDetail.notSpecified': 'Hindi tinukoy',
   'domesticDetail.status': 'Katayuan',
   'domesticDetail.location': 'Lokasyon',

@@ -257,7 +257,6 @@ const convexItem = {
                     <SelectItem value="bird">Bird</SelectItem>
                     <SelectItem value="reptile">Reptile</SelectItem>
                     <SelectItem value="amphibian">Amphibian</SelectItem>
-                    <SelectItem value="marine">Marine</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

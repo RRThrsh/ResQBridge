@@ -82,13 +82,16 @@ function ReportCard({ report, onClick }: { report: PublicDomesticReport; onClick
   )
 }
 
-function ViewAllModal({ reports, open, onClose, onReportClick }: {
+function ViewAllModal({ reports, type, open, onClose, onReportClick }: {
   reports: PublicDomesticReport[]
+  type: string
   open: boolean
   onClose: () => void
   onReportClick: (report: PublicDomesticReport) => void
 }) {
   if (!open) return null
+
+  const heading = type === 'missing' ? 'Missing Reports' : type === 'found' ? 'Found Reports' : 'Approved Reports'
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 pt-8 pb-8 backdrop-blur-sm">
@@ -96,9 +99,9 @@ function ViewAllModal({ reports, open, onClose, onReportClick }: {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-              Approved Reports
+              {heading}
             </h2>
-            <p className="text-xs text-muted-foreground">{reports.length} approved report{reports.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-muted-foreground">{reports.length} report{reports.length !== 1 ? 's' : ''}</p>
           </div>
           <button
             type="button"
@@ -121,7 +124,7 @@ function ViewAllModal({ reports, open, onClose, onReportClick }: {
 export function DomesticReports() {
   const { t } = useLanguage()
   const [selectedReport, setSelectedReport] = useState<PublicDomesticReport | null>(null)
-  const [viewAllOpen, setViewAllOpen] = useState(false)
+  const [viewAllType, setViewAllType] = useState<'missing' | 'found' | null>(null)
   const [timedOut, setTimedOut] = useState(false)
   const timedOutRef = useRef(false)
 
@@ -196,10 +199,10 @@ export function DomesticReports() {
                   <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
                     Missing
                   </h3>
-                  {reports && reports.length > 0 && (
+                  {missing.length > 3 && (
                     <button
                       type="button"
-                      onClick={() => setViewAllOpen(true)}
+                      onClick={() => setViewAllType('missing')}
                       className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition-opacity"
                     >
                       View More
@@ -221,10 +224,10 @@ export function DomesticReports() {
                   <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
                     Found
                   </h3>
-                  {reports && reports.length > 0 && (
+                  {found.length > 3 && (
                     <button
                       type="button"
-                      onClick={() => setViewAllOpen(true)}
+                      onClick={() => setViewAllType('found')}
                       className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition-opacity"
                     >
                       View More
@@ -241,10 +244,11 @@ export function DomesticReports() {
             )}
 
             <ViewAllModal
-              reports={reports ?? []}
-              open={viewAllOpen}
-              onClose={() => setViewAllOpen(false)}
-              onReportClick={(r) => { setSelectedReport(r); setViewAllOpen(false) }}
+              reports={viewAllType === 'missing' ? missing : viewAllType === 'found' ? found : []}
+              type={viewAllType ?? 'missing'}
+              open={viewAllType !== null}
+              onClose={() => setViewAllType(null)}
+              onReportClick={(r) => { setSelectedReport(r); setViewAllType(null) }}
             />
           </>
         )}
