@@ -54,7 +54,7 @@ export function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
       'fixed inset-x-0 top-0 z-50 transition-all duration-300',
       scrolled
         ? 'bg-background/95 backdrop-blur-md border-b border-border shadow-sm'
-        : 'bg-transparent'
+        : 'bg-background/0'
     )}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="flex h-14 items-center justify-between gap-6">
