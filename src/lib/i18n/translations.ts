@@ -371,7 +371,7 @@ export const en: Dict = {
   'domesticDetail.dateReported': 'Date & time seen',
   'domesticDetail.contactNumber': 'Contact number',
   'domesticDetail.helpTitle': 'Help resolve this report',
-  'domesticDetail.helpText': 'If you have information about this animal, contact the reporter using the phone number above when available.',
+  'domesticDetail.helpText': 'If you have information about this animal, contact the reporter using the phone number above.',
   'domesticDetail.callReporter': 'Call reporter',
 
   // Report Type Card
@@ -959,7 +959,7 @@ export const fil: Dict = {
   'domesticDetail.dateReported': 'Petsa at oras na nakita',
   'domesticDetail.contactNumber': 'Contact number',
   'domesticDetail.helpTitle': 'Tulungang malutas ang ulat na ito',
-  'domesticDetail.helpText': 'Kung mayroon kang impormasyon tungkol sa hayop na ito, kontakin ang reporter gamit ang numero ng telepono sa itaas kapag available.',
+  'domesticDetail.helpText': 'Kung mayroon kang impormasyon tungkol sa hayop na ito, kontakin ang reporter gamit ang numero ng telepono sa itaas.',
   'domesticDetail.callReporter': 'Tawagan ang reporter',
 
   // Report Type Card
