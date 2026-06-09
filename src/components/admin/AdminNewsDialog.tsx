@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { AdminImageUploadField } from '@/components/admin/AdminImageUploadField'
 import { Badge } from '@/components/ui/badge'
 import {
   Select,
@@ -37,9 +38,8 @@ type Props = {
 }
 
 function emptyNewsItem(type: NewsEvent['type'] = 'news'): NewsEvent {
-  const prefix = type === 'event' ? 'ev' : 'nw'
   return {
-    id: `${prefix}-${Date.now()}`,
+    id: '',
     type,
     title: '',
     excerpt: '',
@@ -242,13 +242,11 @@ export function AdminNewsDialog({
                 onChange={(e) => setDraft((d) => d && { ...d, date: e.target.value })}
               />
             </div>
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Image URL</label>
-              <Input
-                value={draft.image}
-                onChange={(e) => setDraft((d) => d && { ...d, image: e.target.value })}
-              />
-            </div>
+            <AdminImageUploadField
+              value={draft.image}
+              onChange={(url) => setDraft((d) => d && { ...d, image: url })}
+              label="Image"
+            />
             <div>
               <label className="mb-1 block text-xs text-muted-foreground">Excerpt</label>
               <Textarea
