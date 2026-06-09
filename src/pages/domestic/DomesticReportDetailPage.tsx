@@ -93,6 +93,12 @@ export function DomesticReportDetailPage() {
     reporterProfile?.contactPhone ||
     reporterProfile?.phone
 
+  const reportColor = (() => {
+    if (report.color?.trim()) return report.color.trim()
+    const match = report.description?.match(/^Color\/markings:\s*(.+?)(?:\n\n|$)/)
+    return match?.[1]?.trim()
+  })()
+
   const mapQuery =
     report.latitude && report.longitude
       ? `${report.latitude},${report.longitude}`
@@ -225,7 +231,7 @@ export function DomesticReportDetailPage() {
             {report.type === 'missing' && (
               <>
                 {report.animalName && <DetailRow label="Pet Name" value={report.animalName} />}
-                {report.color && <DetailRow label="Color / Markings" value={report.color} />}
+                {reportColor && <DetailRow label="Color / Markings" value={reportColor} />}
                 {report.reportedSize && <DetailRow label="Size" value={report.reportedSize} className="capitalize" />}
                 {report.description && <DetailRow label="Details" value={report.description} />}
               </>
@@ -234,7 +240,7 @@ export function DomesticReportDetailPage() {
             {report.type === 'found' && (
               <>
                 {report.animalName && <DetailRow label="Name" value={report.animalName} />}
-                {report.color && <DetailRow label="Color / Markings" value={report.color} />}
+                {reportColor && <DetailRow label="Color / Markings" value={reportColor} />}
                 {report.reportedSize && <DetailRow label="Size" value={report.reportedSize} className="capitalize" />}
                 {report.description && <DetailRow label="Details" value={report.description} />}
               </>
@@ -242,7 +248,7 @@ export function DomesticReportDetailPage() {
 
             {report.type === 'stray' && (
               <>
-                {report.color && <DetailRow label="Color / Markings" value={report.color} />}
+                {reportColor && <DetailRow label="Color / Markings" value={reportColor} />}
                 {report.reportedSize && <DetailRow label="Size" value={report.reportedSize} className="capitalize" />}
                 {report.description && <DetailRow label="Details" value={report.description} />}
               </>
@@ -253,7 +259,7 @@ export function DomesticReportDetailPage() {
                 {report.condition && <DetailRow label="Nature of Injury" value={report.condition} highlight />}
                 {report.behavior && <DetailRow label="Severity of Injury" value={report.behavior} highlight className="capitalize" />}
                 {report.reportedSize && <DetailRow label="Current Condition" value={report.reportedSize} className="capitalize" />}
-                {report.color && <DetailRow label="Color / Markings" value={report.color} />}
+                {reportColor && <DetailRow label="Color / Markings" value={reportColor} />}
                 {report.description && <DetailRow label="Additional Information" value={report.description} />}
               </>
             )}
