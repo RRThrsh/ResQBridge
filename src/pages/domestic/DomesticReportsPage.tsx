@@ -17,7 +17,7 @@ import type { Id } from '../../../convex/_generated/dataModel'
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 import { formatDateTime } from '@/lib/dates'
 import { Button } from '@/components/ui/button'
-import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { ReportPhotosGallery } from '@/components/report/ReportPhotosGallery'
 import { getReportPhotos } from '@/lib/reportPhotos'
 import { toast } from 'sonner'
@@ -204,21 +204,41 @@ function DetailModal({ report, open, onClose, onApprove, onReject, loading }: De
         </div>
       </div>
 
-      <ConfirmDialog
+      <DoubleConfirmation
         open={confirmApprove}
         onOpenChange={setConfirmApprove}
-        title="Approve and Publish?"
-        description="This will make the domestic report visible on the public feed."
-        confirmLabel="Publish Report"
+        step1={{
+          title: "Approve and Publish?",
+          description: "Are you sure you want to proceed?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm publishing",
+          description: "This will make the domestic report visible on the public feed.",
+          confirmLabel: "Publish Report",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="default"
         loading={loading}
         onConfirm={() => { onApprove(report._id); setConfirmApprove(false) }}
       />
-      <ConfirmDialog
+      <DoubleConfirmation
         open={confirmReject}
         onOpenChange={setConfirmReject}
-        title="Reject Report?"
-        description="This will decline the report and it will not be shown to the public."
-        confirmLabel="Reject Report"
+        step1={{
+          title: "Reject Report?",
+          description: "Are you sure you want to reject this report?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm rejection",
+          description: "This will decline the report and it will not be shown to the public.",
+          confirmLabel: "Reject Report",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         loading={loading}
         onConfirm={() => { onReject(report._id); setConfirmReject(false) }}
       />
@@ -465,16 +485,24 @@ export function DomesticReportsPage() {
         loading={actionLoading}
       />
 
-      <ConfirmDialog
+      <DoubleConfirmation
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
-        title="Delete report?"
-        description={
-          deleteTarget
+        step1={{
+          title: "Delete report?",
+          description: "Are you sure you want to delete this report?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm deletion",
+          description: deleteTarget
             ? `Permanently remove the report for "${deleteTarget.animalName || 'Unknown'}"? This cannot be undone.`
-            : ''
-        }
-        confirmLabel="Delete"
+            : '',
+          confirmLabel: "Delete",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         loading={deleting}
         onConfirm={() => deleteTarget && handleDelete(deleteTarget._id)}
       />

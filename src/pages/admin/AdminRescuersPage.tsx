@@ -7,7 +7,7 @@ import {
   AdminRescuerDialog,
   type RescuerTableRow,
 } from '@/components/admin/AdminRescuerDialog'
-import { AdminConfirmDialog } from '@/components/admin/AdminConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { AdminTableActions, type AdminRowAction } from '@/components/admin/AdminTableActions'
 import { AdminTableActionsCell, AdminTableCell } from '@/components/admin/AdminTableCell'
 import { AdminTablePaginationBar } from '@/components/admin/AdminTablePagination'
@@ -173,15 +173,24 @@ export function AdminRescuersPage() {
         onOpenChange={setDialogOpen}
       />
 
-      <AdminConfirmDialog
+      <DoubleConfirmation
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title="Remove rescuer?"
-        description={
-          deleteTarget
+        step1={{
+          title: "Remove rescuer?",
+          description: "Are you sure you want to remove this rescuer?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm removal",
+          description: deleteTarget
             ? `Remove rescuer access for ${deleteTarget.email}? They will no longer be able to sign in.`
-            : ''
-        }
+            : '',
+          confirmLabel: "Remove",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         loading={deleting}
         onConfirm={confirmDelete}
       />

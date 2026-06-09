@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { Loader2, Plus, Search } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
-import { AdminConfirmDialog } from '@/components/admin/AdminConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { AdminTableActions, type AdminRowAction } from '@/components/admin/AdminTableActions'
 import { AdminTableActionsCell, AdminTableCell } from '@/components/admin/AdminTableCell'
 import { AdminTablePaginationBar } from '@/components/admin/AdminTablePagination'
@@ -175,15 +175,24 @@ export function AdminWildlifePage() {
         onOpenChange={setDialogOpen}
       />
 
-      <AdminConfirmDialog
+      <DoubleConfirmation
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title="Delete species?"
-        description={
-          deleteTarget
+        step1={{
+          title: "Delete species?",
+          description: "Are you sure you want to delete this species?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm deletion",
+          description: deleteTarget
             ? `Remove "${deleteTarget.commonName}" from the wildlife guide? This cannot be undone.`
-            : ''
-        }
+            : '',
+          confirmLabel: "Delete",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         loading={deleting}
         onConfirm={confirmDelete}
       />

@@ -1,5 +1,4 @@
 import {
-  Check,
   Eye,
   MoreHorizontal,
   Pencil,
@@ -24,12 +23,10 @@ export type AdminRowAction =
 type Props = {
   onAction: (action: AdminRowAction) => void
   onAssign?: () => void
-  onApprove?: () => void
   onReject?: () => void
   disableDelete?: boolean
   disableEdit?: boolean
   showAssign?: boolean
-  showApprove?: boolean
   showReject?: boolean
   viewOnly?: boolean
   className?: string
@@ -38,12 +35,10 @@ type Props = {
 export function AdminTableActions({
   onAction,
   onAssign,
-  onApprove,
   onReject,
   disableDelete = false,
   disableEdit = false,
   showAssign = false,
-  showApprove = false,
   showReject = false,
   viewOnly = false,
   className,
@@ -76,15 +71,6 @@ export function AdminTableActions({
         <MoreHorizontal className="h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="bottom" className="w-44">
-        {showApprove && onApprove ? (
-          <DropdownMenuItem
-            className="cursor-pointer text-emerald-600 focus:text-emerald-600"
-            onClick={onApprove}
-          >
-            <Check className="h-4 w-4" />
-            Accept
-          </DropdownMenuItem>
-        ) : null}
         {showReject && onReject ? (
           <DropdownMenuItem
             className="cursor-pointer text-red-600 focus:text-red-600"
@@ -94,7 +80,7 @@ export function AdminTableActions({
             Reject
           </DropdownMenuItem>
         ) : null}
-        {(showApprove || showReject) ? <DropdownMenuSeparator /> : null}
+        {showReject ? <DropdownMenuSeparator /> : null}
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => onAction('view')}
@@ -108,7 +94,7 @@ export function AdminTableActions({
             onClick={onAssign}
           >
             <UserPlus className="h-4 w-4" />
-            Assign rescuer
+            Assign
           </DropdownMenuItem>
         ) : null}
         {!disableEdit && (

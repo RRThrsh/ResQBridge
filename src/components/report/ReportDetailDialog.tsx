@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { Activity, AlertTriangle, Calendar, Clock, Flag, Heart, Layers, Loader2, MapPin, Palette, Pencil, Phone, PlusCircle, Ruler, Tag, Trash2 } from 'lucide-react'
-import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import {
@@ -664,12 +664,22 @@ export function ReportDetailDialog({
         </div>
       </DialogContent>
 
-      <ConfirmDialog
+      <DoubleConfirmation
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
-        title={t('reportDetail.confirmTitle')}
-        description={t('reportDetail.confirmDesc')}
-        confirmLabel={t('reportDetail.confirmLabel')}
+        step1={{
+          title: t('reportDetail.confirmTitle'),
+          description: "Are you sure you want to proceed?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm deletion",
+          description: t('reportDetail.confirmDesc'),
+          confirmLabel: t('reportDetail.confirmLabel'),
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         loading={saving}
         onConfirm={handleDelete}
       />

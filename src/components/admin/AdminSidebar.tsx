@@ -16,7 +16,7 @@ import {
   Home,
   ScrollText,
 } from 'lucide-react'
-import { AdminConfirmDialog } from '@/components/admin/AdminConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { cn } from '@/lib/utils'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 
@@ -129,11 +129,22 @@ export function AdminSidebar({ onNavigate }: Props) {
         </div>
       </aside>
 
-      <AdminConfirmDialog
+      <DoubleConfirmation
         open={signOutOpen}
         onOpenChange={setSignOutOpen}
-        title="Sign out?"
-        description="You will leave the admin panel and return to the public ResQBridge website. You can sign in again anytime."
+        step1={{
+          title: "Sign out?",
+          description: "Are you sure you want to sign out?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm sign out",
+          description: "You will leave the admin panel and return to the public ResQBridge website. You can sign in again anytime.",
+          confirmLabel: "Sign out",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         onConfirm={confirmSignOut}
       />
     </>

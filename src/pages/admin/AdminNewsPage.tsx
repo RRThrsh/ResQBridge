@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { Loader2, Plus, Search } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
-import { AdminConfirmDialog } from '@/components/admin/AdminConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { AdminNewsDialog } from '@/components/admin/AdminNewsDialog'
 import { AdminTableActions, type AdminRowAction } from '@/components/admin/AdminTableActions'
 import { AdminTableActionsCell, AdminTableCell } from '@/components/admin/AdminTableCell'
@@ -170,15 +170,24 @@ export function AdminNewsPage() {
         onOpenChange={setDialogOpen}
       />
 
-      <AdminConfirmDialog
+      <DoubleConfirmation
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title="Delete item?"
-        description={
-          deleteTarget
+        step1={{
+          title: "Delete item?",
+          description: "Are you sure you want to delete this item?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm deletion",
+          description: deleteTarget
             ? `Remove "${deleteTarget.title}" from the site? This cannot be undone.`
-            : ''
-        }
+            : '',
+          confirmLabel: "Delete",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         loading={deleting}
         onConfirm={confirmDelete}
       />

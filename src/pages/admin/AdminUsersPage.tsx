@@ -3,7 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { Loader2, Search } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import type { Doc, Id } from '../../../convex/_generated/dataModel'
-import { AdminConfirmDialog } from '@/components/admin/AdminConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { AdminTableActions, type AdminRowAction } from '@/components/admin/AdminTableActions'
 import { AdminTableActionsCell, AdminTableCell } from '@/components/admin/AdminTableCell'
 import { AdminTablePaginationBar } from '@/components/admin/AdminTablePagination'
@@ -159,15 +159,24 @@ export function AdminUsersPage() {
         onOpenChange={setDialogOpen}
       />
 
-      <AdminConfirmDialog
+      <DoubleConfirmation
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title="Delete user?"
-        description={
-          deleteTarget
+        step1={{
+          title: "Delete user?",
+          description: "Are you sure you want to delete this user?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm deletion",
+          description: deleteTarget
             ? `This will permanently delete ${deleteTarget.email} and all reports they submitted. This cannot be undone.`
-            : ''
-        }
+            : '',
+          confirmLabel: "Delete",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         loading={deleting}
         onConfirm={confirmDelete}
       />

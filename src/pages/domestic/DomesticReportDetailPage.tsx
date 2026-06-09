@@ -14,7 +14,7 @@ import {
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 
-import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { ReportPhotosGallery } from '@/components/report/ReportPhotosGallery'
 import { RescuerDetailSection } from '@/components/rescuer/RescuerDetailSection'
 import { DomesticLayout } from '@/components/domestic/DomesticLayout'
@@ -122,12 +122,14 @@ export function DomesticReportDetailPage() {
 
         await publishReport({
           reportId: report._id,
+          approverEmail: domesticApprover.email,
         })
 
         toast.success('Report published to public feed.')
       } else {
         await rejectReport({
           reportId: report._id,
+          approverEmail: domesticApprover.email,
         })
 
         toast.success('Report rejected.')
@@ -337,23 +339,42 @@ export function DomesticReportDetailPage() {
         </RescuerDetailSection>
       </div>
 
-      <ConfirmDialog
+      <DoubleConfirmation
         open={confirmApprove}
         onOpenChange={setConfirmApprove}
-        title="Approve and Publish?"
-        description="This will make the domestic report visible on the public feed."
-        confirmLabel="Publish Report"
+        step1={{
+          title: "Approve and Publish?",
+          description: "Are you sure you want to proceed?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm publishing",
+          description: "This will make the domestic report visible on the public feed.",
+          confirmLabel: "Publish Report",
+          cancelLabel: "Cancel",
+        }}
         confirmVariant="default"
         loading={loading}
         onConfirm={() => handleStatusChange('published')}
       />
 
-      <ConfirmDialog
+      <DoubleConfirmation
         open={confirmReject}
         onOpenChange={setConfirmReject}
-        title="Reject Report?"
-        description="This will decline the report and it will not be shown to the public."
-        confirmLabel="Reject Report"
+        step1={{
+          title: "Reject Report?",
+          description: "Are you sure you want to reject this report?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm rejection",
+          description: "This will decline the report and it will not be shown to the public.",
+          confirmLabel: "Reject Report",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         loading={loading}
         onConfirm={() => handleStatusChange('rejected')}
       />
