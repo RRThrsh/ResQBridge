@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import {
@@ -89,13 +89,29 @@ function ViewAllModal({ reports, type, open, onClose, onReportClick }: {
   onClose: () => void
   onReportClick: (report: PublicDomesticReport) => void
 }) {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose()
+  }, [onClose])
+
+  useEffect(() => {
+    if (!open) return
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open, handleKeyDown])
+
   if (!open) return null
 
   const heading = type === 'missing' ? 'Missing Reports' : type === 'found' ? 'Found Reports' : 'Approved Reports'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 pt-8 pb-8 backdrop-blur-sm">
-      <div className="relative w-full max-w-5xl rounded-2xl bg-popover p-6 shadow-lg ring-1 ring-foreground/10 mx-4">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 pt-8 pb-8 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-5xl rounded-2xl bg-popover p-6 shadow-lg ring-1 ring-foreground/10 mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
@@ -111,7 +127,7 @@ function ViewAllModal({ reports, type, open, onClose, onReportClick }: {
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {reports.map((report) => (
             <ReportCard key={report.id} report={report} onClick={() => onReportClick(report)} />
           ))}

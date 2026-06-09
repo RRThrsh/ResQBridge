@@ -79,7 +79,7 @@ export async function toPublicDomesticReport(
   ctx: QueryCtx,
   doc: Doc<'reports'>,
 ): Promise<PublicDomesticReport> {
-  const { color, body } = parseDomesticDescription(doc.description)
+  const { body } = parseDomesticDescription(doc.description)
   const images = await resolveReportPhotoUrls(ctx, doc)
   const type = normalizeDomesticType(doc.type)
 
@@ -88,7 +88,7 @@ export async function toPublicDomesticReport(
     type,
     animalName: doc.animalName,
     species: doc.speciesId?.trim() || 'Unknown',
-    color,
+    color: doc.color?.trim() || '',
     location: doc.location,
     description: body || doc.description?.trim() || 'No additional details provided.',
     contactNumber: doc.reporterPhone?.trim() || undefined,

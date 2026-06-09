@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 
@@ -47,6 +47,7 @@ export function ReportPhotosGallery({
   }
 
   const [heroIndex, setHeroIndex] = useState(0)
+  const heroTouchRef = useRef({ startX: 0, startY: 0 })
 
   if (variant === 'card') {
     return (
@@ -115,7 +116,23 @@ export function ReportPhotosGallery({
   return (
     <>
       <div className={className}>
-        <div className="relative overflow-hidden rounded-2xl border border-border ring-1 ring-foreground/5">
+        <div
+          className="relative overflow-hidden rounded-2xl border border-border ring-1 ring-foreground/5"
+          onTouchStart={(e) => {
+            heroTouchRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY }
+          }}
+          onTouchEnd={(e) => {
+            const dx = e.changedTouches[0].clientX - heroTouchRef.current.startX
+            const dy = e.changedTouches[0].clientY - heroTouchRef.current.startY
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+              if (dx > 0) {
+                setHeroIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1))
+              } else {
+                setHeroIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1))
+              }
+            }
+          }}
+        >
           <button
             type="button"
             onClick={() => openAt(heroIndex)}
@@ -223,14 +240,22 @@ function PhotoLightbox({
   t: (key: string) => string
 }) {
   const [mounted, setMounted] = useState(false)
+  const touchRef = useRef({ startX: 0, startY: 0 })
 
   useEffect(() => {
     setMounted(true)
     document.body.style.overflow = 'hidden'
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft') onPrev()
+      if (e.key === 'ArrowRight') onNext()
+    }
+    document.addEventListener('keydown', handleKey)
     return () => {
       document.body.style.overflow = ''
+      document.removeEventListener('keydown', handleKey)
     }
-  }, [])
+  }, [onClose, onPrev, onNext])
 
   if (!mounted) return null
 
@@ -240,6 +265,17 @@ function PhotoLightbox({
       role="dialog"
       aria-modal="true"
       aria-label={t('reportPhotos.expandedLabel')}
+      onTouchStart={(e) => {
+        touchRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY }
+      }}
+      onTouchEnd={(e) => {
+        const dx = e.changedTouches[0].clientX - touchRef.current.startX
+        const dy = e.changedTouches[0].clientY - touchRef.current.startY
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+          if (dx > 0) onPrev()
+          else onNext()
+        }
+      }}
     >
       <button
         type="button"
@@ -247,11 +283,19 @@ function PhotoLightbox({
         onClick={onClose}
         aria-label={t('reportPhotos.closeLabel')}
       />
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onClose() }}
+        className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow hover:bg-background transition-colors"
+        aria-label={t('reportPhotos.closeLabel')}
+      >
+        <X className="h-5 w-5" />
+      </button>
       {photos.length > 1 ? (
         <>
           <button
             type="button"
-            className="absolute left-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow"
+            className="absolute left-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow hover:bg-background transition-colors"
             onClick={(e) => {
               e.stopPropagation()
               onPrev()
@@ -262,7 +306,7 @@ function PhotoLightbox({
           </button>
           <button
             type="button"
-            className="absolute right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow"
+            className="absolute right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow hover:bg-background transition-colors"
             onClick={(e) => {
               e.stopPropagation()
               onNext()
