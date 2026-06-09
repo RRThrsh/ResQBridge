@@ -224,7 +224,7 @@ function AuthForm({ onClose }: { onClose: () => void }) {
       setLoading(false)
       submittingRef.current = false
     }
-  }, [identifier, mode, firstName, lastName, password, confirmPassword, acceptedTerms])
+  }, [identifier, mode, firstName, lastName, password, confirmPassword, acceptedTerms, login, onClose])
 
   const handleResendOtp = useCallback(async () => {
     if (countdown > 0 || submittingRef.current) return
@@ -420,20 +420,22 @@ function AuthForm({ onClose }: { onClose: () => void }) {
             <>
               <div className="relative">
                 <label className="block text-sm font-medium mb-1.5">{t('auth.confirmPassword')}</label>
-                <Input
-                  placeholder={t('auth.confirmPasswordPlaceholder')}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={loading}
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                />
+                  <Input
+                    placeholder={t('auth.confirmPasswordPlaceholder')}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={loading}
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    className="pr-10"
+                  />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
                 >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
 
