@@ -139,7 +139,6 @@ function DetailModal({ report, open, onClose, onApprove, onReject, loading }: De
                 <DetailRow label="Animal Name" value={report.animalName} />
               )}
               <DetailRow label="Date & Time Seen" value={formatDateTime(getSeenAt(report))} />
-              <DetailRow label="Quantity" value={String(report.quantity ?? 1)} />
               {report.color && <DetailRow label="Color / Markings" value={report.color} />}
               {report.reportedSize && <DetailRow label="Reported Size" value={report.reportedSize} />}
               {report.condition && <DetailRow label="Condition" value={report.condition} />}

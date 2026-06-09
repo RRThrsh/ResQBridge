@@ -172,7 +172,7 @@ function DetailModal({ report, onClose }: { report: RescuerStoredReport | null; 
               <DetailRow label="Category" value={report.category === 'wildlife' ? 'Wildlife' : 'Domestic'} />
               <DetailRow label="Type" value={report.type.replace(/-/g, ' ')} />
               <DetailRow label="Date & Time Seen" value={formatDateTime(report.seenAt ?? report.createdAt)} />
-              <DetailRow label="Quantity" value={String(report.quantity ?? 1)} />
+              {report.category === 'wildlife' && <DetailRow label="Quantity" value={String(report.quantity ?? 1)} />}
               <DetailRow label="Size" value={report.reportedSize ?? 'Not provided'} />
               <DetailRow
                 label="Condition / behavior"
