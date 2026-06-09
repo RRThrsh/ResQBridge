@@ -6,6 +6,7 @@ import {
   MAX_IMAGE_FILE_BYTES,
   validateImageFile,
 } from '@/lib/imageUpload'
+import { compressImage } from '@/lib/compressImage'
 import { toast } from 'sonner'
 
 type Props = {
@@ -52,6 +53,8 @@ export function AdminImageUploadField({
     try {
       setUploading(true)
 
+      const compressed = await compressImage(file)
+
       // Generate upload URL
       const uploadUrl = await generateUploadUrl()
 
@@ -59,9 +62,9 @@ export function AdminImageUploadField({
       const response = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': file.type,
+          'Content-Type': compressed.type,
         },
-        body: file,
+        body: compressed,
       })
 
       if (!response.ok) {
