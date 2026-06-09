@@ -371,7 +371,7 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
   const rejectReport = useMutation(api.admin.rejectReport)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<
-    'all' | 'pending' | 'accepted' | 'en_route' | 'completed'
+    'all' | 'pending' | 'accepted' | 'en_route' | 'completed' | 'rejected'
   >('all')
   const [selected, setSelected] = useState<AdminStoredReport | null>(null)
   const [dialogMode, setDialogMode] = useState<'view' | 'edit'>('view')
@@ -405,6 +405,10 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
       if (!isDomestic && statusFilter !== 'all') {
         if (statusFilter === 'completed') {
           if (report.status !== 'rescue_success' && report.status !== 'rescue_failed') {
+            return false
+          }
+        } else if (statusFilter === 'rejected') {
+          if (report.status !== 'rejected') {
             return false
           }
         } else if (report.status !== statusFilter) {
@@ -529,6 +533,7 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
                 ['pending', 'Pending'],
                 ['accepted', 'Assign'],
                 ['en_route', 'En route'],
+                ['rejected', 'Rejected'],
                 ['completed', 'Completed'],
               ] as const
             ).map(([value, label]) => (
