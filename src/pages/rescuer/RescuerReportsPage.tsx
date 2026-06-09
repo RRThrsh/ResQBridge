@@ -29,7 +29,7 @@ import {
 } from '@/lib/reports'
 import { formatDateTime } from '@/lib/dates'
 import { Button } from '@/components/ui/button'
-import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { ReportPhotosGallery } from '@/components/report/ReportPhotosGallery'
 import { getReportPhotos } from '@/lib/reportPhotos'
 import { toast } from 'sonner'
@@ -292,30 +292,60 @@ function DetailModal({ report, onClose }: { report: RescuerStoredReport | null; 
         </div>
       </div>
 
-      <ConfirmDialog
+      <DoubleConfirmation
         open={confirmEnRoute}
         onOpenChange={setConfirmEnRoute}
-        title="Mark team en route?"
-        description="This notifies PWRCC that your team is on the way."
-        confirmLabel="Confirm en route"
+        step1={{
+          title: "Mark team en route?",
+          description: "Are you sure you want to proceed?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm en route",
+          description: "This notifies PWRCC that your team is on the way.",
+          confirmLabel: "Confirm en route",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="default"
         loading={loading}
         onConfirm={handleMarkEnRoute}
       />
-      <ConfirmDialog
+      <DoubleConfirmation
         open={pendingOutcome === 'rescue_success'}
         onOpenChange={(open) => !open && setPendingOutcome(null)}
-        title="Mark rescue successful?"
-        description="This will close the dispatch as a successful rescue."
-        confirmLabel="Rescue successful"
+        step1={{
+          title: "Mark rescue successful?",
+          description: "Are you sure you want to mark the rescue as successful?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm successful rescue",
+          description: "This will close the dispatch as a successful rescue.",
+          confirmLabel: "Rescue successful",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="default"
         loading={loading}
         onConfirm={() => handleComplete('rescue_success')}
       />
-      <ConfirmDialog
+      <DoubleConfirmation
         open={pendingOutcome === 'rescue_failed'}
         onOpenChange={(open) => !open && setPendingOutcome(null)}
-        title="Mark rescue failed?"
-        description="This will close the dispatch as unsuccessful."
-        confirmLabel="Rescue failed"
+        step1={{
+          title: "Mark rescue failed?",
+          description: "Are you sure you want to mark the rescue as failed?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: "Confirm failed rescue",
+          description: "This will close the dispatch as unsuccessful.",
+          confirmLabel: "Rescue failed",
+          cancelLabel: "Cancel",
+        }}
+        confirmVariant="destructive"
         loading={loading}
         onConfirm={() => handleComplete('rescue_failed')}
       />

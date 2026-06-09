@@ -17,7 +17,7 @@ import {
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { AdminAssignRescuerDialog } from '@/components/admin/AdminAssignRescuerDialog'
-import { AdminConfirmDialog } from '@/components/admin/AdminConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { AdminReportDialog } from '@/components/admin/AdminReportDialog'
 import { AdminTableActions, type AdminRowAction } from '@/components/admin/AdminTableActions'
 import { AdminTableActionsCell, AdminTableCell } from '@/components/admin/AdminTableCell'
@@ -368,7 +368,6 @@ function domesticTypeLabel(type: string) {
 export function AdminCategoryReportsPage({ category }: { category: ReportCategory }) {
   const { admin } = useAdminAuth()
   const deleteReport = useMutation(api.admin.deleteReport)
-  const acceptReport = useMutation(api.admin.acceptReport)
   const rejectReport = useMutation(api.admin.rejectReport)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<
@@ -382,12 +381,8 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
   const [deleteTarget, setDeleteTarget] = useState<AdminStoredReport | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [acceptTarget, setAcceptTarget] = useState<AdminStoredReport | null>(null)
-  const [acceptOpen, setAcceptOpen] = useState(false)
-  const [accepting, setAccepting] = useState(false)
   const [rejectTarget, setRejectTarget] = useState<AdminStoredReport | null>(null)
   const [rejectOpen, setRejectOpen] = useState(false)
-  const [rejecting, setRejecting] = useState(false)
 
   const rows = useQuery(
     api.admin.listReports,
@@ -461,27 +456,8 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
     setAssignOpen(true)
   }
 
-  async function confirmAccept() {
-    if (!admin || !acceptTarget) return
-    setAccepting(true)
-    try {
-      await acceptReport({
-        adminEmail: normalizeEmail(admin.email),
-        reportId: acceptTarget.id as Id<'reports'>,
-      })
-      toast.success('Report accepted')
-      setAcceptOpen(false)
-      setAcceptTarget(null)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not accept report')
-    } finally {
-      setAccepting(false)
-    }
-  }
-
   async function confirmReject() {
     if (!admin || !rejectTarget) return
-    setRejecting(true)
     try {
       await rejectReport({
         adminEmail: normalizeEmail(admin.email),
@@ -492,8 +468,6 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
       setRejectTarget(null)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not reject report')
-    } finally {
-      setRejecting(false)
     }
   }
 
@@ -664,13 +638,8 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
                               report.status !== 'en_route' &&
                               canAdminAssignRescuer(report.status)
                             }
-                            showApprove={!isDomestic && report.status === 'pending'}
                             showReject={!isDomestic && report.status === 'pending'}
                             onAssign={() => openAssignDialog(report)}
-                            onApprove={() => {
-                              setAcceptTarget(report)
-                              setAcceptOpen(true)
-                            }}
                             onReject={() => {
                               setRejectTarget(report)
                               setRejectOpen(true)
@@ -717,47 +686,48 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
             onOpenChange={setAssignOpen}
           />
 
-          <AdminConfirmDialog
-            open={acceptOpen}
-            onOpenChange={(open) => {
-              setAcceptOpen(open)
-              if (!open) setAcceptTarget(null)
-            }}
-            title="Accept report?"
-            description={
-              acceptTarget
-                ? `This will accept the report for "${acceptTarget.animalName}" and change its status to accepted.`
-                : ''
-            }
-            loading={accepting}
-            onConfirm={confirmAccept}
-          />
-
-          <AdminConfirmDialog
+          <DoubleConfirmation
             open={rejectOpen}
             onOpenChange={(open) => {
               setRejectOpen(open)
               if (!open) setRejectTarget(null)
             }}
-            title="Reject report?"
-            description={
-              rejectTarget
+            step1={{
+              title: "Reject report?",
+              description: "Are you sure you want to reject this report?",
+              confirmLabel: "Continue",
+              cancelLabel: "Back",
+            }}
+            step2={{
+              title: "Confirm rejection",
+              description: rejectTarget
                 ? `This will reject the report for "${rejectTarget.animalName}". This action cannot be undone.`
-                : ''
-            }
-            loading={rejecting}
+                : '',
+              confirmLabel: "Reject",
+              cancelLabel: "Cancel",
+            }}
+            confirmVariant="destructive"
             onConfirm={confirmReject}
           />
 
-          <AdminConfirmDialog
+          <DoubleConfirmation
             open={deleteOpen}
             onOpenChange={setDeleteOpen}
-            title="Delete report?"
-            description={
-              deleteTarget
+            step1={{
+              title: "Delete report?",
+              description: "Are you sure you want to delete this report?",
+              confirmLabel: "Continue",
+              cancelLabel: "Back",
+            }}
+            step2={{
+              title: "Confirm deletion",
+              description: deleteTarget
                 ? `This will permanently delete the report for "${deleteTarget.animalName}". This action cannot be undone.`
-                : ''
-            }
+                : '',
+              confirmLabel: "Delete",
+              cancelLabel: "Cancel",
+            }}
+            confirmVariant="destructive"
             loading={deleting}
             onConfirm={confirmDelete}
           />

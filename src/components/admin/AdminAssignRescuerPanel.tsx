@@ -4,7 +4,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { Loader2, UserPlus } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
-import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { DoubleConfirmation } from '@/components/DoubleConfirmation'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -157,12 +157,18 @@ export function AdminAssignRescuerPanel({
         </Button>
       </div>
 
-      <ConfirmDialog
+      <DoubleConfirmation
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title={isPending ? 'Accept and assign report?' : 'Assign rescuer to report?'}
-        description={
-          rescuerEmail
+        step1={{
+          title: isPending ? 'Accept and assign report?' : 'Assign rescuer to report?',
+          description: "Are you sure you want to proceed?",
+          confirmLabel: "Continue",
+          cancelLabel: "Back",
+        }}
+        step2={{
+          title: isPending ? 'Confirm acceptance' : 'Confirm assignment',
+          description: rescuerEmail
             ? isPending
               ? `Accept this report and assign it to ${selectedLabel}? They will see it in their active assignments.`
               : `Assign this report to ${selectedLabel}? ${
@@ -170,9 +176,10 @@ export function AdminAssignRescuerPanel({
                     ? `This replaces ${report.assignedRescuerName}.`
                     : 'They will see it in their active assignments.'
                 }`
-            : 'Select a rescuer before confirming.'
-        }
-        confirmLabel={isPending ? 'Accept & assign' : 'Assign'}
+            : 'Select a rescuer before confirming.',
+          confirmLabel: isPending ? 'Accept & assign' : 'Assign',
+          cancelLabel: "Cancel",
+        }}
         confirmVariant="default"
         loading={saving}
         onConfirm={handleAssign}

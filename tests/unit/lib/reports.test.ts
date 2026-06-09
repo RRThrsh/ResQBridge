@@ -7,6 +7,7 @@ import {
   normalizeClientReportStatus,
   resolveWildlifeBehavior,
   statusLabel,
+  statusTone,
   wildlifeBehaviorDisplayText,
   wildlifeBehaviorLabelForValue,
   wildlifeBehaviorSelectValue,
@@ -57,9 +58,10 @@ describe('reports lib', () => {
     ])
   })
 
-  it('docToStored normalizes legacy statuses', () => {
+  it('docToStored normalizes statuses', () => {
     expect(docToStored(mockReport({ status: 'open' })).status).toBe('pending')
     expect(docToStored(mockReport({ status: 'resolved' })).status).toBe('rescue_success')
+    expect(docToStored(mockReport({ status: 'rejected' })).status).toBe('rejected')
   })
 
   it('adminReportToStored includes reporter fields', () => {
@@ -80,6 +82,7 @@ describe('reports lib', () => {
   it('statusLabel maps dispatch statuses', () => {
     expect(statusLabel('pending')).toBe('Under Review')
     expect(statusLabel('accepted')).toBe('Accepted')
+    expect(statusLabel('rejected')).toBe('Rejected')
     expect(statusLabel('en_route')).toBe('En Route')
     expect(statusLabel('rescue_success')).toBe('Rescue Successful')
     expect(statusLabel('rescue_failed')).toBe('Rescue Failed')
@@ -88,6 +91,13 @@ describe('reports lib', () => {
   it('normalizeClientReportStatus maps legacy values', () => {
     expect(normalizeClientReportStatus('open')).toBe('pending')
     expect(normalizeClientReportStatus('resolved')).toBe('rescue_success')
+    expect(normalizeClientReportStatus('rejected')).toBe('rejected')
+  })
+
+  it('statusTone provides styling for rejected status', () => {
+    const tone = statusTone('rejected')
+    expect(tone.badge).toContain('destructive')
+    expect(tone.dot).toContain('destructive')
   })
 
   it('resolveWildlifeBehavior returns the full display text', () => {
