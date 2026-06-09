@@ -34,12 +34,11 @@ export function DomesticReportDetailPage() {
   const [confirmApprove, setConfirmApprove] = useState(false)
   const [confirmReject, setConfirmReject] = useState(false)
 
+  // @ts-ignore
+  const publishReport = useMutation((api as any).domestic.publishReport)
 
-// @ts-ignore
-const publishReport = useMutation((api as any).domestic.publishReport)
-
-// @ts-ignore
-const rejectReport = useMutation((api as any).domestic.rejectReport)
+  // @ts-ignore
+  const rejectReport = useMutation((api as any).domestic.rejectReport)
 
   // @ts-ignore
   const row = useQuery(
@@ -100,60 +99,46 @@ const rejectReport = useMutation((api as any).domestic.rejectReport)
       : encodeURIComponent(report.location || 'Unknown location')
 
   const canAct =
-  report.status === 'pending' &&
-  (
-    report.type === 'missing' ||
-    report.type === 'found'
-  )
+    report.status === 'pending' &&
+    (report.type === 'missing' || report.type === 'found')
 
-async function handleStatusChange(
-  newStatus: 'published' | 'rejected',
-) {
-  if (!domesticApprover || !report) return
+  async function handleStatusChange(newStatus: 'published' | 'rejected') {
+    if (!domesticApprover || !report) return
 
-  setLoading(true)
+    setLoading(true)
 
-  try {
-    if (newStatus === 'published') {
-      if (
-        report.type !== 'missing' &&
-        report.type !== 'found'
-      ) {
-        toast.error(
-          'Only missing and found reports can be published.',
-        )
-        return
+    try {
+      if (newStatus === 'published') {
+        if (report.type !== 'missing' && report.type !== 'found') {
+          toast.error('Only missing and found reports can be published.')
+          return
+        }
+
+        await publishReport({
+          reportId: report._id,
+        })
+
+        toast.success('Report published to public feed.')
+      } else {
+        await rejectReport({
+          reportId: report._id,
+        })
+
+        toast.success('Report rejected.')
       }
 
-      await publishReport({
-        reportId: report._id,
-      })
-
-      toast.success(
-        'Report published to public feed.',
+      setConfirmApprove(false)
+      setConfirmReject(false)
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Could not update report status'
       )
-    } else {
-      await rejectReport({
-        reportId: report._id,
-      })
-
-      toast.success(
-        'Report rejected.',
-      )
+    } finally {
+      setLoading(false)
     }
-
-    setConfirmApprove(false)
-    setConfirmReject(false)
-  } catch (error) {
-    toast.error(
-      error instanceof Error
-        ? error.message
-        : 'Could not update report status',
-    )
-  } finally {
-    setLoading(false)
   }
-}
 
   const actionFooter = canAct ? (
     <div className="mx-auto max-w-2xl space-y-2 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 flex gap-2">
@@ -187,30 +172,25 @@ async function handleStatusChange(
   ) : undefined
 
   return (
-
-  <DomesticLayout
-  title={
-    report.type === 'missing'
-      ? 'Missing Pet'
-      : report.type === 'found'
-      ? 'Found Animal'
-      : report.type === 'stray'
-      ? 'Stray Animal'
-      : report.type === 'injured'
-      ? 'Injured Animal'
-      : 'Domestic Report'
-  }
-  subtitle={report.reportNumber ?? undefined}
-  backTo="/pwrcc/domestic"
-  footer={actionFooter}
->
+    <DomesticLayout
+      title={
+        report.type === 'missing'
+          ? 'Missing Pet'
+          : report.type === 'found'
+          ? 'Found Animal'
+          : report.type === 'stray'
+          ? 'Stray Animal'
+          : report.type === 'injured'
+          ? 'Injured Animal'
+          : 'Domestic Report'
+      }
+      subtitle={report.reportNumber ?? undefined}
+      backTo="/pwrcc/domestic"
+      footer={actionFooter}
+    >
       <div className="space-y-6 pb-2">
-
         <div className="text-center">
-          <RescuerStatusBadge
-            status={report.status as any}
-            className="mb-4"
-          />
+          <RescuerStatusBadge status={report.status as any} className="mb-4" />
 
           <p className="text-xs font-mono text-muted-foreground">
             {report.reportNumber ?? report._id}
@@ -220,18 +200,13 @@ async function handleStatusChange(
         {getReportPhotos(report).length > 0 ? (
           <ReportPhotosGallery
             photos={getReportPhotos(report)}
-            alt={report.animalName}
+            alt={report.animalName || 'Report Image'}
             variant="hero"
           />
         ) : null}
 
-        <RescuerDetailSection
-          title="Domestic Report Details"
-          icon={CheckCircle2}
-        >
-
+        <RescuerDetailSection title="Domestic Report Details" icon={CheckCircle2}>
           <dl className="space-y-3">
-
             <DetailRow
               label="Date & time seen"
               value={formatDateTime(report.seenAt ?? report._creationTime)}
@@ -240,97 +215,50 @@ async function handleStatusChange(
             <DetailRow
               label="Report Type"
               value={report.type || report.animalType || 'Not specified'}
+              className="capitalize"
             />
 
-            <DetailRow
-              label="Species"
-              value={report.speciesId || 'Not specified'}
-            />
+            <DetailRow label="Species" value={report.speciesId || 'Not specified'} />
 
-            <DetailRow
-              label="Quantity"
-              value={String(report.quantity ?? 1)}
-            />
-
-            {(report.type === 'missing' || report.type === 'found') && (
-              <DetailRow
-                label="Animal Name"
-                value={report.animalName || 'Not specified'}
-              />
-            )}
-
-            {report.type === 'injured' ? (
+            {/* Render conditional fields mapping exactly to the Domestic Form structure */}
+            
+            {report.type === 'missing' && (
               <>
-
-                {report.condition ? (
-                  <DetailRow
-                    label="Nature of Injury"
-                    value={report.condition}
-                    highlight
-                  />
-                ) : null}
-
-                {report.behavior ? (
-                  <DetailRow
-                    label="Severity of Injury"
-                    value={report.behavior}
-                    highlight
-                  />
-                ) : null}
-
-                {report.reportedSize ? (
-                  <DetailRow
-                    label="Animal Current Condition"
-                    value={report.reportedSize}
-                  />
-                ) : null}
-
-                {report.color ? (
-                  <DetailRow
-                    label="Rescue Assistance Priority"
-                    value={report.color}
-                  />
-                ) : null}
-
-                {report.description ? (
-                  <DetailRow
-                    label="Additional Information"
-                    value={report.description}
-                  />
-                ) : null}
-
-              </>
-            ) : (
-              <>
-
-                {report.color ? (
-                  <DetailRow
-                    label="Color / Markings"
-                    value={report.color}
-                  />
-                ) : null}
-
-                {report.reportedSize ? (
-                  <DetailRow
-                    label="Reported Size"
-                    value={report.reportedSize}
-                  />
-                ) : null}
-
-                {report.description ? (
-                  <DetailRow
-                    label="Description & Details"
-                    value={report.description}
-                  />
-                ) : null}
-
+                {report.animalName && <DetailRow label="Pet Name" value={report.animalName} />}
+                {report.color && <DetailRow label="Color / Markings" value={report.color} />}
+                {report.reportedSize && <DetailRow label="Size" value={report.reportedSize} className="capitalize" />}
+                {report.description && <DetailRow label="Details" value={report.description} />}
               </>
             )}
 
-            <DetailRow
-              label="Location"
-              value={report.location || 'Not provided'}
-            />
+            {report.type === 'found' && (
+              <>
+                {report.animalName && <DetailRow label="Name" value={report.animalName} />}
+                {report.color && <DetailRow label="Color / Markings" value={report.color} />}
+                {report.reportedSize && <DetailRow label="Size" value={report.reportedSize} className="capitalize" />}
+                {report.description && <DetailRow label="Details" value={report.description} />}
+              </>
+            )}
+
+            {report.type === 'stray' && (
+              <>
+                {report.color && <DetailRow label="Color / Markings" value={report.color} />}
+                {report.reportedSize && <DetailRow label="Size" value={report.reportedSize} className="capitalize" />}
+                {report.description && <DetailRow label="Details" value={report.description} />}
+              </>
+            )}
+
+            {report.type === 'injured' && (
+              <>
+                {report.condition && <DetailRow label="Nature of Injury" value={report.condition} highlight />}
+                {report.behavior && <DetailRow label="Severity of Injury" value={report.behavior} highlight className="capitalize" />}
+                {report.reportedSize && <DetailRow label="Current Condition" value={report.reportedSize} className="capitalize" />}
+                {report.color && <DetailRow label="Color / Markings" value={report.color} />}
+                {report.description && <DetailRow label="Additional Information" value={report.description} />}
+              </>
+            )}
+
+            <DetailRow label="Location" value={report.location || 'Not provided'} />
 
             {report.latitude && report.longitude ? (
               <DetailRow
@@ -338,9 +266,7 @@ async function handleStatusChange(
                 value={`${report.latitude}, ${report.longitude}`}
               />
             ) : null}
-
           </dl>
-
         </RescuerDetailSection>
 
         <RescuerDetailSection title="Location" icon={MapPin}>
@@ -382,16 +308,10 @@ async function handleStatusChange(
 
         <RescuerDetailSection title="Reporter" icon={User}>
           <dl className="space-y-3">
-
-            <DetailRow
-              label="Name"
-              value={reporterName}
-            />
+            <DetailRow label="Name" value={reporterName} />
 
             <div>
-              <dt className="text-xs text-muted-foreground">
-                Contact
-              </dt>
+              <dt className="text-xs text-muted-foreground">Contact</dt>
 
               <dd className="mt-1 font-medium">
                 {finalPhone ? (
@@ -407,10 +327,8 @@ async function handleStatusChange(
                 )}
               </dd>
             </div>
-
           </dl>
         </RescuerDetailSection>
-
       </div>
 
       <ConfirmDialog
@@ -433,7 +351,6 @@ async function handleStatusChange(
         loading={loading}
         onConfirm={() => handleStatusChange('rejected')}
       />
-
     </DomesticLayout>
   )
 }
@@ -442,21 +359,21 @@ function DetailRow({
   label,
   value,
   highlight,
+  className,
 }: {
   label: string
   value: string
   highlight?: boolean
+  className?: string
 }) {
   return (
     <div>
-      <dt className="text-xs text-muted-foreground">
-        {label}
-      </dt>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
 
       <dd
         className={`mt-0.5 font-medium whitespace-pre-wrap ${
           highlight ? 'text-primary' : ''
-        }`}
+        } ${className || ''}`}
       >
         {value}
       </dd>
