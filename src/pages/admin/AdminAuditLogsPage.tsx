@@ -200,18 +200,6 @@ export function AdminAuditLogsPage() {
       }}
     >
       <div className="rounded-lg border border-[#00ff8844] bg-[#0a0a0a] p-4 sm:p-6">
-        {/* Header */}
-        <pre
-          className="mb-6 text-xs leading-tight text-[#00ff88] sm:text-sm"
-          style={{
-            textShadow: '0 0 8px rgba(0,255,136,0.3)',
-          }}
-        >
-{`  ╔══════════════════════════════════════╗
-  ║  🐱  AUDIT LOG TERMINAL  v1.0  🐱  ║
-  ╚══════════════════════════════════════╝
-`}
-        </pre>
 
         {/* Role filter */}
         <div className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#00ff8877]">
