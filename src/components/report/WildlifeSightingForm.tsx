@@ -5,6 +5,7 @@ import {
   Crosshair,
   Loader2,
   MapPin,
+  Info,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -348,31 +349,33 @@ export function WildlifeSightingForm() {
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6 sm:p-8">
+      
+      {/* Important Note Matched to Domestic Design */}
+      <div className="mb-8 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/10 p-4 text-sm text-muted-foreground">
+        <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <p>
+          <strong className="font-semibold text-foreground">
+            {t('reportFormWildlife.reminder')}
+          </strong>{' '}
+          {t('reportFormWildlife.reminderText1')}{' '}
+          <strong className="font-semibold text-foreground">
+            {t('reportFormWildlife.reminderText2')}
+          </strong>{' '}
+          {t('reportFormWildlife.reminderText3')}{' '}
+          <strong className="font-semibold text-foreground">
+            {t('reportFormWildlife.reminderText4')}
+          </strong>{' '}
+          {t('reportFormWildlife.reminderText5')}
+          <span className="block mt-3 text-muted-foreground font-normal">
+            {t('reportFormWildlife.reminderText6')}
+          </span>
+        </p>
+      </div>
+
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
           {t('reportFormWildlife.title')}
         </h2>
-        <div className="space-y-4">
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-            <p className="text-sm leading-relaxed text-foreground">
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                {t('reportFormWildlife.reminder')}
-              </span>{' '}
-              {t('reportFormWildlife.reminderText1')}{' '}
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                {t('reportFormWildlife.reminderText2')}
-              </span>{' '}
-              {t('reportFormWildlife.reminderText3')}{' '}
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                {t('reportFormWildlife.reminderText4')}
-              </span>{' '}
-              {t('reportFormWildlife.reminderText5')}
-              <span className="block mt-3 text-muted-foreground font-normal">
-                {t('reportFormWildlife.reminderText6')}
-              </span>
-            </p>
-          </div>
-        </div>
       </div>
 
       <form onSubmit={handleValidationBeforeSubmit} className="space-y-6">
