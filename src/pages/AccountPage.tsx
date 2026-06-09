@@ -36,6 +36,16 @@ const [
   setCurrentPassword,
 ] = useState('')
 
+const validatePassword = useQuery(
+  api.users.validateUserPassword,
+  currentPassword
+    ? {
+        email: normalizeEmail(user?.email ?? ''),
+        password: currentPassword,
+      }
+    : 'skip',
+)
+
 const [
   newPassword,
   setNewPassword,
@@ -114,6 +124,11 @@ async function handlePasswordChange(
 ) {
   e.preventDefault()
 
+
+if (!validatePassword) {
+  toast.error('Current password is incorrect')
+  return
+}
   if (!user) return
 
   if (

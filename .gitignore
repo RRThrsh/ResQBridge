@@ -69,3 +69,9 @@ skills-lock.json
 
 # Convex generated types
 convex/_generated/
+<<<<<<< HEAD
+=======
+
+.vercel
+.env*
+>>>>>>> 6ea2468 (Initial commit)
