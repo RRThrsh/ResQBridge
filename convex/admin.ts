@@ -359,6 +359,7 @@ export const updateReport = mutation({
     description: v.optional(v.string()), type: v.string(), condition: v.optional(v.string()),color: v.optional(v.string()),
     behavior: v.optional(v.string()), seenAt: v.optional(v.number()), quantity: v.optional(v.number()),
     reportedSize: v.optional(v.string()), reporterPhone: v.optional(v.string()),
+    speciesId: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -370,6 +371,7 @@ export const updateReport = mutation({
       animalName: args.animalName.trim(),color: args.color?.trim() || undefined, location: args.location.trim(), description: args.description?.trim() || undefined,
       type: args.type, condition: args.condition || undefined, behavior: args.behavior || undefined,
       seenAt: args.seenAt, quantity: args.quantity, reportedSize: args.reportedSize?.trim() || undefined, reporterPhone: args.reporterPhone?.trim() || undefined,
+      speciesId: args.speciesId?.trim() || undefined,
     })
 
     await writeAuditLog(ctx, {
