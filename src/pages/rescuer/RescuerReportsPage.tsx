@@ -34,7 +34,7 @@ import { ReportPhotosGallery } from '@/components/report/ReportPhotosGallery'
 import { getReportPhotos } from '@/lib/reportPhotos'
 import { toast } from 'sonner'
 
-type Tab = 'active' | 'rescued' | 'rejected'
+type Tab = 'active' | 'rescued' | 'failed'
 
 const PAGE_SIZE = 15
 
@@ -406,7 +406,7 @@ function EmptyState({ tab }: { tab: Tab }) {
           ? 'No active dispatches'
           : tab === 'rescued'
             ? 'No rescued animals yet'
-            : 'No rejected reports'}
+            : 'No failed reports'}
       </h3>
       <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
         {tab === 'active'
@@ -448,13 +448,13 @@ export function RescuerReportsPage() {
     () => completed.filter((r) => r.status === 'rescue_success'),
     [completed],
   )
-  const rejected = useMemo(
+  const failed = useMemo(
     () => completed.filter((r) => r.status === 'rescue_failed'),
     [completed],
   )
 
   const loading = activeRows === undefined || completedRows === undefined
-  const list = tab === 'active' ? active : tab === 'rescued' ? rescued : rejected
+  const list = tab === 'active' ? active : tab === 'rescued' ? rescued : failed
 
   const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -500,11 +500,11 @@ export function RescuerReportsPage() {
               onClick={() => { setTab('rescued'); setPage(1) }}
             />
             <StatCard
-              label="Rejected"
-              value={rejected.length}
+              label="Failed"
+              value={failed.length}
               icon={PawPrint}
-              active={tab === 'rejected'}
-              onClick={() => { setTab('rejected'); setPage(1) }}
+              active={tab === 'failed'}
+              onClick={() => { setTab('failed'); setPage(1) }}
             />
           </div>
 
@@ -514,7 +514,7 @@ export function RescuerReportsPage() {
                 [
                   ['active', 'Active'],
                   ['rescued', 'Rescued'],
-                  ['rejected', 'Rejected'],
+                  ['failed', 'Failed'],
                 ] as const
               ).map(([value, label]) => (
                 <button
@@ -533,7 +533,7 @@ export function RescuerReportsPage() {
                       ? active.length
                       : value === 'rescued'
                         ? rescued.length
-                        : rejected.length})
+                        : failed.length})
                   </span>
                 </button>
               ))}
@@ -551,7 +551,6 @@ export function RescuerReportsPage() {
                       <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Report #</th>
                       <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Animal</th>
                       <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Species</th>
                       <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Location</th>
                       <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                       <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
@@ -572,7 +571,6 @@ export function RescuerReportsPage() {
                           {report.animalName}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground capitalize">{report.type}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{report.speciesId || '—'}</td>
                         <td className="px-4 py-3 text-muted-foreground max-w-[160px] truncate">{report.location}</td>
                         <td className="px-4 py-3"><StatusBadge status={report.status} /></td>
                         <td className="px-4 py-3 text-muted-foreground text-[12px] whitespace-nowrap">{formatDateTime(report.createdAt)}</td>
