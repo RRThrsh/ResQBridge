@@ -1,6 +1,12 @@
 import { useRef, useState } from 'react'
-import { Moon, Sun, Sunset, Leaf, Utensils, MapPin, ShieldAlert, Globe, AlertTriangle } from 'lucide-react'
-import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet'
+import { Moon, Sun, Sunset, Leaf, Utensils, MapPin, ShieldAlert, Globe, AlertTriangle, X } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { type WildlifeSpecies, statusColors, statusLabels } from '@/data/wildlife'
@@ -57,37 +63,35 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
   if (!species) return null
 
   const { Icon: ActiveIcon, label: activeLabel, color: activeColor } = activeTimeIcons[species.activeTime]
-const hideScrollbarStyles = `
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-`
 
-return (
-  <>
-    <style>{hideScrollbarStyles}</style>
+  return (
+    <Dialog open={!!species} onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl p-0 gap-0">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{species.commonName}</DialogTitle>
+          <DialogDescription>{species.scientificName}</DialogDescription>
+        </DialogHeader>
 
-    <Sheet open={!!species} onOpenChange={onClose}>
-<SheetContent
-  side="right"
-  className="w-full sm:w-[520px] bg-background border-l border-border p-0 overflow-y-auto scrollbar-hide"
-  style={{
-    scrollbarWidth: 'none',
-    msOverflowStyle: 'none',
-  }}
->
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
         {/* Hero image */}
-<div
-  className="relative bg-muted flex justify-center select-none"
-  style={{ touchAction: 'pan-y' }}
-  onTouchStart={handleTouchStart}
-  onTouchEnd={handleTouchEnd}
->
-  <img
-    src={species.images?.[selectedImage]}
-    alt={species.commonName}
-    className="w-full h-[500px] object-contain bg-black/5"
-  />
+        <div
+          className="relative bg-muted flex justify-center select-none"
+          style={{ touchAction: 'pan-y' }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <img
+            src={species.images?.[selectedImage]}
+            alt={species.commonName}
+            className="w-full h-[300px] sm:h-[400px] object-contain bg-black/5"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
           {/* Status badge */}
@@ -100,7 +104,7 @@ return (
           {/* Name overlay */}
           <div className="absolute bottom-4 left-6 right-6">
             <h2
-              className="text-foreground text-3xl font-black leading-tight"
+              className="text-foreground text-2xl sm:text-3xl font-black leading-tight"
               style={{ fontFamily: 'var(--font-heading)' }}
             >
               {species.commonName}
@@ -110,43 +114,41 @@ return (
             )}
             <p className="text-muted-foreground text-xs italic mt-0.5">{species.scientificName}</p>
           </div>
-</div>
+        </div>
 
-{/* Image Gallery */}
-<div
-  className="flex gap-2 overflow-x-auto overflow-y-hidden p-4 bg-card border-b border-border snap-x snap-mandatory touch-pan-x"
-  style={{
-    WebkitOverflowScrolling: 'touch',
-    touchAction: 'pan-x',
-    scrollbarWidth: 'none',
-    msOverflowStyle: 'none',
-  }}
-  onTouchStart={(e) => e.stopPropagation()}
->
-  {species.images?.map((img, index) => (
-    <button
-      key={index}
-      onClick={() => setSelectedImage(index)}
-      className={`shrink-0 snap-center rounded-lg overflow-hidden border-2 transition-all ${
-        selectedImage === index
-          ? 'border-primary'
-          : 'border-border'
-      }`}
-    >
-      <img
-        src={img}
-        alt={`${species.commonName}-${index}`}
-        className="w-16 h-16 object-cover select-none pointer-events-none"
-      />
-    </button>
-  ))}
-</div>
+        {/* Image Gallery */}
+        {species.images && species.images.length > 1 && (
+          <div
+            className="flex gap-2 overflow-x-auto overflow-y-hidden p-4 bg-card border-b border-border snap-x snap-mandatory touch-pan-x"
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-x',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
+            {species.images?.map((img, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedImage(index)}
+                className={`shrink-0 snap-center rounded-lg overflow-hidden border-2 transition-all ${
+                  selectedImage === index
+                    ? 'border-primary'
+                    : 'border-border'
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`${species.commonName}-${index}`}
+                  className="w-16 h-16 object-cover select-none pointer-events-none"
+                />
+              </button>
+            ))}
+          </div>
+        )}
 
-<SheetHeader className="px-6 pt-6 pb-0 sr-only">
-          <span>{species.commonName}</span>
-        </SheetHeader>
-
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-4 sm:px-6 py-6 space-y-6">
           {/* Quick stats row */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-card border border-border rounded-xl p-3 text-center">
@@ -238,8 +240,7 @@ return (
             ))}
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
-    </>
+      </DialogContent>
+    </Dialog>
   )
 }
