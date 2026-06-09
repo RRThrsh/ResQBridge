@@ -5,6 +5,8 @@ module.exports = {
   roots: ['<rootDir>/tests'],
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   moduleNameMapper: {
+    '^@/lib/auth-api-base$': '<rootDir>/tests/__mocks__/auth-api-base.ts',
+    '^@/lib/logAudit$': '<rootDir>/tests/__mocks__/logAudit.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^\\.\\/convex\\/_generated\\/api$': '<rootDir>/tests/__mocks__/convex-api.ts',
