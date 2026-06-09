@@ -630,28 +630,28 @@ export function DomesticReportForm() {
 
           </div>
         )}
-        {reportType !== 'injured' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {t('reportFormDomestic.colorLabel')} <span className="text-destructive">*</span>
-              </label>
 
-              <Input
-                value={formData.color}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    color: e.target.value,
-                  })
-                }
-                placeholder={t('reportFormDomestic.colorPlaceholder')}
-                className="h-12 bg-background border-border rounded-xl"
-                required
-              />
-            </div>
+        {/* Color field - Rendered unconditionally for all report types */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              {t('reportFormDomestic.colorLabel')} <span className="text-destructive">*</span>
+            </label>
+
+            <Input
+              value={formData.color}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  color: e.target.value,
+                })
+              }
+              placeholder={t('reportFormDomestic.colorPlaceholder')}
+              className="h-12 bg-background border-border rounded-xl"
+              required
+            />
           </div>
-        )}
+        </div>
 
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
