@@ -127,162 +127,160 @@ export function AdminNewsDialog({
     }
   }
 
+  const imageUrl = !isCreate ? (displayItem?.image || draft.image) : draft.image
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {isCreate ? 'Add news or event' : isView ? 'View item' : 'Edit item'}
-          </DialogTitle>
-          <DialogDescription className="capitalize">
-            {isCreate ? 'Published on the public site after saving' : draft.type}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {isCreate ? 'Add news or event' : isView ? 'View item' : 'Edit item'}
+            </DialogTitle>
+            <DialogDescription className="capitalize">
+              {isCreate ? 'Published on the public site after saving' : draft.type}
+            </DialogDescription>
+          </DialogHeader>
 
-{!isCreate && displayItem?.image ? (
-  <>
-    <button
-      type="button"
-      onClick={() => setPreviewOpen(true)}
-      className="w-full"
-    >
-      <img
-        src={displayItem.image}
-        alt={displayItem.title}
-        className="max-h-40 w-full rounded-lg border border-border object-cover transition-transform duration-200 hover:scale-[1.01]"
-      />
-    </button>
+          {imageUrl ? (
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(true)}
+              className="w-full"
+            >
+              <img
+                src={imageUrl}
+                alt={draft.title}
+                className="max-h-40 w-full rounded-lg border border-border object-cover transition-transform duration-200 hover:scale-[1.01]"
+              />
+            </button>
+          ) : null}
 
-{previewOpen && (
-  <div
-    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
-    onClick={() =>
-      setPreviewOpen(false)
-    }
-  >
-    <img
-      src={displayItem.image}
-      alt={displayItem.title}
-      className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
-      onClick={(e) =>
-        e.stopPropagation()
-      }
-    />
-  </div>
-)}
-  </>
-) : null}
-
-        {isView && displayItem ? (
-          <dl className="grid gap-3 text-sm">
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="capitalize">
-                {displayItem.type}
-              </Badge>
-              <Badge variant="secondary">{displayItem.category}</Badge>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Title</dt>
-              <dd className="font-medium">{displayItem.title}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Date</dt>
-              <dd>{formatDate(displayItem.date)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Excerpt</dt>
-              <dd className="text-muted-foreground">{displayItem.excerpt}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Body</dt>
-              <dd className="text-muted-foreground">{displayItem.body}</dd>
-            </div>
-          </dl>
-        ) : (
-          <div className="grid gap-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Type</label>
-                <Select
-                  value={draft.type}
-                  onValueChange={(value) => {
-                    if (!value) return
-                    setDraft((d) => (d ? { ...d, type: value } : d))
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="news">News</SelectItem>
-                    <SelectItem value="event">Event</SelectItem>
-                  </SelectContent>
-                </Select>
+          {isView && draft ? (
+            <dl className="grid gap-3 text-sm">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="capitalize">
+                  {draft.type}
+                </Badge>
+                <Badge variant="secondary">{draft.category}</Badge>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Category</label>
+                <dt className="text-xs text-muted-foreground">Title</dt>
+                <dd className="font-medium">{draft.title}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Date</dt>
+                <dd>{formatDate(draft.date)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Excerpt</dt>
+                <dd className="text-muted-foreground">{draft.excerpt}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Body</dt>
+                <dd className="text-muted-foreground">{draft.body}</dd>
+              </div>
+            </dl>
+          ) : (
+            <div className="grid gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Type</label>
+                  <Select
+                    value={draft.type}
+                    onValueChange={(value) => {
+                      if (!value) return
+                      setDraft((d) => (d ? { ...d, type: value } : d))
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="news">News</SelectItem>
+                      <SelectItem value="event">Event</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Category</label>
+                  <Input
+                    value={draft.category}
+                    onChange={(e) => setDraft((d) => d && { ...d, category: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">Title</label>
                 <Input
-                  value={draft.category}
-                  onChange={(e) => setDraft((d) => d && { ...d, category: e.target.value })}
+                  value={draft.title}
+                  onChange={(e) => setDraft((d) => d && { ...d, title: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">Date</label>
+                <Input
+                  type="date"
+                  value={draft.date}
+                  onChange={(e) => setDraft((d) => d && { ...d, date: e.target.value })}
+                />
+              </div>
+              <AdminImageUploadField
+                value={draft.image}
+                onChange={(url) => setDraft((d) => d && { ...d, image: url })}
+                label="Image"
+              />
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">Excerpt</label>
+                <Textarea
+                  value={draft.excerpt}
+                  onChange={(e) => setDraft((d) => d && { ...d, excerpt: e.target.value })}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">Body</label>
+                <Textarea
+                  value={draft.body}
+                  onChange={(e) => setDraft((d) => d && { ...d, body: e.target.value })}
+                  rows={4}
                 />
               </div>
             </div>
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Title</label>
-              <Input
-                value={draft.title}
-                onChange={(e) => setDraft((d) => d && { ...d, title: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Date</label>
-              <Input
-                type="date"
-                value={draft.date}
-                onChange={(e) => setDraft((d) => d && { ...d, date: e.target.value })}
-              />
-            </div>
-            <AdminImageUploadField
-              value={draft.image}
-              onChange={(url) => setDraft((d) => d && { ...d, image: url })}
-              label="Image"
-            />
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Excerpt</label>
-              <Textarea
-                value={draft.excerpt}
-                onChange={(e) => setDraft((d) => d && { ...d, excerpt: e.target.value })}
-                rows={2}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Body</label>
-              <Textarea
-                value={draft.body}
-                onChange={(e) => setDraft((d) => d && { ...d, body: e.target.value })}
-                rows={4}
-              />
-            </div>
-          </div>
-        )}
+          )}
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            {isView ? 'Close' : 'Cancel'}
-          </Button>
-          {!isView ? (
-            <Button type="button" onClick={handleSave} disabled={saving}>
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isCreate ? (
-                'Create'
-              ) : (
-                'Save changes'
-              )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              {isView ? 'Close' : 'Cancel'}
             </Button>
-          ) : null}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {!isView ? (
+              <Button type="button" onClick={handleSave} disabled={saving}>
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isCreate ? (
+                  'Create'
+                ) : (
+                  'Save changes'
+                )}
+              </Button>
+            ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {previewOpen && imageUrl ? (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <img
+            src={imageUrl}
+            alt={draft.title}
+            className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      ) : null}
+    </>
   )
 }
