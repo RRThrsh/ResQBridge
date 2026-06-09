@@ -1,5 +1,4 @@
-
-# PWRRC — Palawan Wildlife Rescue & Reporting
+# PWRRC — Palawan Wildlife Rescue & Reporting Center
 
 Web application for the Palawan Wildlife Rescue and Rehabilitation Center (PWRRC). The public site lets residents browse wildlife information, report domestic and wildlife incidents, and manage a personal account. The admin panel supports staff workflows for reports, users, content, and administrators.
 
@@ -34,7 +33,7 @@ Built with **React 19**, **Vite**, **TypeScript**, **Tailwind CSS**, and **Conve
 | **Home** | Landing dashboard with venue hours, domestic reports feed, news/events, and about content |
 | **Wildlife guide** | Searchable species catalog with filters and detail modals |
 | **Report** | Submit domestic (missing, found, stray, injured) or wildlife sighting reports (login required) |
-| **My reports** | View and manage the signed-in user’s submissions |
+| **My reports** | View and manage the signed-in user's submissions |
 | **Account** | View-first profile with edit mode (name only; email is sign-in identity) |
 
 ### Admin panel (`/pwrcc/admin`)
@@ -169,7 +168,7 @@ Variables follow a strict **client vs server** split. Never prefix secrets with 
 |----------|--------|---------|
 | `VITE_CONVEX_URL` | Client | Convex deployment URL (public by design) |
 | `OTP_INTERNAL_SECRET` | Server + Convex | Shared secret between Vite OTP API and Convex OTP mutations |
-| `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM`, … | Server only | SMTP for dev/preview OTP mail (`vite-api-plugin`) |
+| `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM`, ... | Server only | SMTP for dev/preview OTP mail (`vite-api-plugin`) |
 
 Optional SMTP overrides: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_SECURE`, `EMAIL_FROM_NAME`, `EMAIL_FORCE_IPV4`.
 
@@ -207,7 +206,7 @@ The build fails fast if a `VITE_*` key looks like a secret (see `src/lib/server-
 | `/` | Dashboard (home) |
 | `/wildlife` | Wildlife guide |
 | `/report` | Submit a report |
-| `/my-reports` | User’s reports |
+| `/my-reports` | User's reports |
 | `/account` | User profile |
 | `/report/success` | Post-submit confirmation |
 
@@ -258,11 +257,11 @@ The build fails fast if a `VITE_*` key looks like a secret (see `src/lib/server-
 
 ### Main modules
 
-- **`admin.ts`** — Admin auth, profile, stats, report/user/admin management
-- **`users.ts`** — Registration, profile read/update
-- **`reports.ts`** — Create/list/update/delete reports
-- **`content.ts`** — Wildlife and news content seeding and CRUD
-- **`otp.ts`** — Internal-secret-gated verification code storage
+- **`admin.ts`** -- Admin auth, profile, stats, report/user/admin management
+- **`users.ts`** -- Registration, profile read/update
+- **`reports.ts`** -- Create/list/update/delete reports
+- **`content.ts`** -- Wildlife and news content seeding and CRUD
+- **`otp.ts`** -- Internal-secret-gated verification code storage
 
 When changing Convex code, read `convex/_generated/ai/guidelines.md` for project-specific API rules.
 
@@ -343,7 +342,7 @@ npm run preview   # optional local check of dist/
 
 Output is in `dist/`. Only `VITE_*` variables are embedded in the client bundle.
 
-**Email OTP in production:** Sign-in and sign-up call Convex HTTP routes on your deployment’s `.convex.site` URL (derived from `VITE_CONVEX_URL`). Configure these on your Convex deployment (same values as local `.env`):
+**Email OTP in production:** Sign-in and sign-up call Convex HTTP routes on your deployment's `.convex.site` URL (derived from `VITE_CONVEX_URL`). Configure these on your Convex deployment (same values as local `.env`):
 
 ```bash
 npx convex env set OTP_INTERNAL_SECRET "<same-as-local>"
@@ -370,7 +369,4 @@ Report security issues to project maintainers privately.
 
 ## License
 
-Private project — see repository owner for terms.
-=======
-# ResQBridge
-58ed73606c73f76167b121141a96bbc19276f6c2
+Private project -- see repository owner for terms.

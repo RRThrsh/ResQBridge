@@ -258,6 +258,69 @@ export const resetDomesticPassword = mutation({
   },
 })
 
+export const listAllDomesticReports = query({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db
+      .query('reports')
+      .filter((q) => q.eq(q.field('category'), 'domestic'))
+      .order('desc')
+      .collect()
+
+    return await Promise.all(
+      rows.map((row) => withResolvedReportPhotos(ctx, row))
+    )
+  },
+})
+
+export const publishReport = mutation({
+  args: {
+    reportId: v.id('reports'),
+    approverEmail: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const report = await ctx.db.get(args.reportId)
+    if (!report) throw new Error('Report not found.')
+    if (report.category !== 'domestic') throw new Error('Not a domestic report.')
+    if (report.status !== 'pending') throw new Error('Only pending reports can be published.')
+
+    await ctx.db.patch(args.reportId, { status: 'published' })
+
+    await writeAuditLog(ctx, {
+      action: 'domestic_approver.publish',
+      actorEmail: args.approverEmail,
+      actorRole: 'domestic_approver',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ type: report.type, animalName: report.animalName }),
+    })
+  },
+})
+
+export const rejectReport = mutation({
+  args: {
+    reportId: v.id('reports'),
+    approverEmail: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const report = await ctx.db.get(args.reportId)
+    if (!report) throw new Error('Report not found.')
+    if (report.category !== 'domestic') throw new Error('Not a domestic report.')
+    if (report.status !== 'pending') throw new Error('Only pending reports can be rejected.')
+
+    await ctx.db.patch(args.reportId, { status: 'rejected' })
+
+    await writeAuditLog(ctx, {
+      action: 'domestic_approver.reject',
+      actorEmail: args.approverEmail,
+      actorRole: 'domestic_approver',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ type: report.type, animalName: report.animalName }),
+    })
+  },
+})
+
 // 2. NEW mutation for the Profile Page (Requires currentPassword)
 export const changeDomesticPassword = mutation({
   args: {
