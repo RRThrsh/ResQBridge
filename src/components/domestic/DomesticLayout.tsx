@@ -4,6 +4,7 @@ import { ArrowLeft, Home, LogOut, UserCircle } from 'lucide-react'
 
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { NotificationBell } from '@/components/domestic/NotificationBell'
 
 import { useDomesticAuth } from '@/context/DomesticAuthContext'
 import { cn } from '@/lib/utils'
@@ -93,6 +94,8 @@ export function DomesticLayout({
             ) : null}
 
             <ThemeToggle size="sm" />
+
+            <NotificationBell />
 
             <button
               type="button"
