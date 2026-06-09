@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { Loader2, MapPin, Search, User, Phone, Bird, PawPrint } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
@@ -63,11 +63,6 @@ export function AdminReportDialog({
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [mainPhotoIdx, setMainPhotoIdx] = useState(0)
 
-  // Reset gallery view when report changes
-  useEffect(() => {
-    setMainPhotoIdx(0)
-  }, [report?.id])
-
   if (!open && previewImage) {
     setPreviewImage(null)
   }
@@ -82,6 +77,9 @@ export function AdminReportDialog({
     reporterPhone: '',
     quantity: '',
     reportedSize: '',
+    speciesId: '',
+    color: '',
+    seenAt: '',
   })
 
   const isView = readOnly || mode === 'view'
@@ -110,6 +108,9 @@ export function AdminReportDialog({
         reporterPhone: report.reporterPhone ?? '',
         quantity: report.quantity != null ? String(report.quantity) : '',
         reportedSize: report.reportedSize ?? '',
+        speciesId: report.speciesId ?? '',
+        color: report.color ?? '',
+        seenAt: report.seenAt ? new Date(report.seenAt).toISOString().slice(0, 16) : '',
       })
     }
   }
@@ -134,7 +135,9 @@ export function AdminReportDialog({
         reporterPhone: draft.reporterPhone || undefined,
         quantity: draft.quantity ? Number(draft.quantity) : undefined,
         reportedSize: draft.reportedSize || undefined,
-        seenAt: activeReport.seenAt,
+        seenAt: draft.seenAt ? new Date(draft.seenAt).getTime() : undefined,
+        speciesId: draft.speciesId || undefined,
+        color: draft.color || undefined,
       })
       toast.success('Report updated')
       onOpenChange(false)
@@ -422,6 +425,15 @@ export function AdminReportDialog({
                         </div>
                       </div>
 
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Date & time seen
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {formatDateTime(activeReport.seenAt ?? activeReport.createdAt)}
+                        </div>
+                      </div>
+
                       {activeReport.description && (
                         <div className="sm:col-span-2 pt-2 border-t border-border/10">
                           <div className="mb-1 text-xs text-muted-foreground">
@@ -494,6 +506,15 @@ export function AdminReportDialog({
                         </div>
                         <div className="font-medium text-foreground">
                           {activeReport.quantity ?? 1}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="mb-1 text-xs text-muted-foreground">
+                          Date & time seen
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {formatDateTime(activeReport.seenAt ?? activeReport.createdAt)}
                         </div>
                       </div>
 
@@ -582,93 +603,263 @@ export function AdminReportDialog({
           ) : (
             // EDIT FORM
             <div className="grid gap-5 rounded-2xl border border-border/10 bg-muted/30 p-5">
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Animal name</label>
-                <Input
-                  className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
-                  value={draft.animalName}
-                  onChange={(e) => setDraft((d) => ({ ...d, animalName: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Location</label>
-                <Input
-                  className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
-                  value={draft.location}
-                  onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Description</label>
-                <Textarea
-                  className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary resize-none"
-                  value={draft.description}
-                  onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
-                  rows={4}
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reporter phone</label>
-                <Input
-                  className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
-                  value={draft.reporterPhone}
-                  onChange={(e) => setDraft((d) => ({ ...d, reporterPhone: e.target.value }))}
-                />
-              </div>
-
-              {activeReport.category === 'domestic' ? (
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Report type</label>
-                  <Select
-                    value={draft.type}
-                    onValueChange={(value) => value && setDraft((d) => ({ ...d, type: value }))}
-                  >
-                    <SelectTrigger className="border-border/20 bg-background/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="border-border/20 bg-background">
-                      {DOMESTIC_REPORT_TYPES.map((item) => (
-                        <SelectItem key={item.value} value={item.value}>
-                          {item.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                // CHANGED TO grid-cols-2 since we only have two inputs now
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* UPDATED LABEL AND PLACEHOLDER */}
+              {activeReport.category === 'wildlife' ? (
+                <>
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Condition / Behavior</label>
-                    <Select
-                      value={draft.behavior || ''}
-                      onValueChange={(value) => value && setDraft((d) => ({ ...d, behavior: value }))}
-                    >
-                      <SelectTrigger className="border-border/20 bg-background/50">
-                        <SelectValue placeholder="Select condition / behavior" />
-                      </SelectTrigger>
-                      <SelectContent className="border-border/20 bg-background">
-                        {WILDLIFE_BEHAVIORS.map((item) => (
-                          <SelectItem key={item.value} value={item.value}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* REPORTED SIZE REMAINS HERE */}
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reported Size</label>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Species</label>
                     <Input
                       className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
-                      value={draft.reportedSize}
-                      onChange={(e) => setDraft((d) => ({ ...d, reportedSize: e.target.value }))}
-                      placeholder="e.g. Small, 2ft"
+                      value={draft.animalName}
+                      onChange={(e) => setDraft((d) => ({ ...d, animalName: e.target.value }))}
                     />
                   </div>
-                </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Location</label>
+                    <Input
+                      className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                      value={draft.location}
+                      onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Description</label>
+                    <Textarea
+                      className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary resize-none"
+                      value={draft.description}
+                      onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+                      rows={4}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reporter phone</label>
+                    <Input
+                      className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                      value={draft.reporterPhone}
+                      onChange={(e) => setDraft((d) => ({ ...d, reporterPhone: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Condition / Behavior</label>
+                      <Select
+                        value={draft.behavior || ''}
+                        onValueChange={(value) => value && setDraft((d) => ({ ...d, behavior: value }))}
+                      >
+                        <SelectTrigger className="border-border/20 bg-background/50">
+                          <SelectValue placeholder="Select condition / behavior" />
+                        </SelectTrigger>
+                        <SelectContent className="border-border/20 bg-background">
+                          {WILDLIFE_BEHAVIORS.map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reported Size</label>
+                      <Input
+                        className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                        value={draft.reportedSize}
+                        onChange={(e) => setDraft((d) => ({ ...d, reportedSize: e.target.value }))}
+                        placeholder="e.g. Small, 2ft"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Species</label>
+                      <Input
+                        className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                        value={draft.speciesId}
+                        onChange={(e) => setDraft((d) => ({ ...d, speciesId: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Report type</label>
+                      <Select
+                        value={draft.type}
+                        onValueChange={(value) => value && setDraft((d) => ({ ...d, type: value }))}
+                      >
+                        <SelectTrigger className="border-border/20 bg-background/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-border/20 bg-background">
+                          {DOMESTIC_REPORT_TYPES.map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {draft.type !== 'stray' && (
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                        {draft.type === 'missing' ? 'Pet name' : 'Animal name'}
+                      </label>
+                      <Input
+                        className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                        value={draft.animalName}
+                        onChange={(e) => setDraft((d) => ({ ...d, animalName: e.target.value }))}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Location</label>
+                    <Input
+                      className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                      value={draft.location}
+                      onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Description</label>
+                    <Textarea
+                      className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary resize-none"
+                      value={draft.description}
+                      onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reporter phone</label>
+                      <Input
+                        className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                        value={draft.reporterPhone}
+                        onChange={(e) => setDraft((d) => ({ ...d, reporterPhone: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Quantity</label>
+                      <Input
+                        type="number"
+                        min={1}
+                        className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                        value={draft.quantity}
+                        onChange={(e) => setDraft((d) => ({ ...d, quantity: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Date & time seen</label>
+                      <Input
+                        type="datetime-local"
+                        className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                        value={draft.seenAt}
+                        onChange={(e) => setDraft((d) => ({ ...d, seenAt: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {draft.type === 'injured' ? (
+                    <>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Nature of Injury</label>
+                        <Input
+                          className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                          value={draft.condition}
+                          onChange={(e) => setDraft((d) => ({ ...d, condition: e.target.value }))}
+                          placeholder="e.g. Open wound, broken bone"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Severity</label>
+                          <Select
+                            value={draft.behavior || ''}
+                            onValueChange={(value) => value && setDraft((d) => ({ ...d, behavior: value }))}
+                          >
+                            <SelectTrigger className="border-border/20 bg-background/50">
+                              <SelectValue placeholder="Select severity" />
+                            </SelectTrigger>
+                            <SelectContent className="border-border/20 bg-background">
+                              <SelectItem value="critical">Critical</SelectItem>
+                              <SelectItem value="urgent">Urgent</SelectItem>
+                              <SelectItem value="moderate">Moderate</SelectItem>
+                              <SelectItem value="minor">Minor</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Current Condition</label>
+                          <Select
+                            value={draft.reportedSize || ''}
+                            onValueChange={(value) => value && setDraft((d) => ({ ...d, reportedSize: value }))}
+                          >
+                            <SelectTrigger className="border-border/20 bg-background/50">
+                              <SelectValue placeholder="Select condition" />
+                            </SelectTrigger>
+                            <SelectContent className="border-border/20 bg-background">
+                              <SelectItem value="alert">Alert</SelectItem>
+                              <SelectItem value="frightened">Frightened</SelectItem>
+                              <SelectItem value="weak">Weak</SelectItem>
+                              <SelectItem value="unable">Unable to stand</SelectItem>
+                              <SelectItem value="unconscious">Unconscious</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Rescue Priority</label>
+                        <Select
+                          value={draft.color || ''}
+                          onValueChange={(value) => value && setDraft((d) => ({ ...d, color: value }))}
+                        >
+                          <SelectTrigger className="border-border/20 bg-background/50">
+                            <SelectValue placeholder="Select priority" />
+                          </SelectTrigger>
+                          <SelectContent className="border-border/20 bg-background">
+                            <SelectItem value="critical">Critical</SelectItem>
+                            <SelectItem value="urgent">Urgent</SelectItem>
+                            <SelectItem value="moderate">Moderate</SelectItem>
+                            <SelectItem value="low">Low</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Color / Markings</label>
+                        <Input
+                          className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                          value={draft.color}
+                          onChange={(e) => setDraft((d) => ({ ...d, color: e.target.value }))}
+                          placeholder="e.g. Brown with white spots"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reported Size</label>
+                        <Select
+                          value={draft.reportedSize || ''}
+                          onValueChange={(value) => value && setDraft((d) => ({ ...d, reportedSize: value }))}
+                        >
+                          <SelectTrigger className="border-border/20 bg-background/50">
+                            <SelectValue placeholder="Select size" />
+                          </SelectTrigger>
+                          <SelectContent className="border-border/20 bg-background">
+                            <SelectItem value="small">Small</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="large">Large</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
