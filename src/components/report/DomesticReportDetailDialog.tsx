@@ -1,4 +1,4 @@
-import { MapPin, Clock, Phone, AlertTriangle } from 'lucide-react'
+import { MapPin, Clock, Phone, AlertTriangle, ExternalLink } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -114,11 +114,20 @@ export function DomesticReportDetailDialog({
               <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
                 <MapPin className="h-4 w-4 text-primary" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-foreground">{t('domesticDetail.location')}</p>
                 <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">
                   {report.location}
                 </p>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(report.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition-opacity"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Get Directions
+                </a>
               </div>
             </div>
 
@@ -151,9 +160,9 @@ export function DomesticReportDetailDialog({
 
           <Separator />
 
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex gap-3 items-start">
-            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-            <div>
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex gap-3">
+            <AlertTriangle className="mt-0.5 w-5 h-5 text-amber-500 shrink-0" />
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-amber-500 mb-1">
                 {t('domesticDetail.helpTitle')}
               </p>
