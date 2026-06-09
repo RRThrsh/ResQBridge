@@ -106,16 +106,16 @@ function DetailModal({ report, open, onClose, onApprove, onReject, loading }: De
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 pt-4 pb-4 backdrop-blur-sm" onClick={onClose}>
-        <div className="relative w-full max-w-2xl rounded-2xl bg-popover p-0 shadow-lg ring-1 ring-foreground/10 mx-4" onClick={(e) => e.stopPropagation()}>
-          <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-border bg-popover px-6 py-4">
-            <div>
-              <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 pt-2 pb-2 sm:pt-4 sm:pb-4 backdrop-blur-sm" onClick={onClose}>
+        <div className="relative w-full max-w-2xl rounded-2xl bg-popover p-0 shadow-lg ring-1 ring-foreground/10 mx-2 sm:mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-border bg-popover px-4 py-3 sm:px-6 sm:py-4">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base sm:text-lg font-bold text-foreground truncate" style={{ fontFamily: 'var(--font-heading)' }}>
                 {report.animalName || 'Domestic Report'}
               </h2>
-              <p className="text-xs text-muted-foreground">{report.reportNumber ?? report._id}</p>
+              <p className="text-xs text-muted-foreground truncate">{report.reportNumber ?? report._id}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0 ml-2">
               <StatusBadge status={report.status} />
               <button
                 type="button"
@@ -127,12 +127,12 @@ function DetailModal({ report, open, onClose, onApprove, onReject, loading }: De
             </div>
           </div>
 
-          <div className="space-y-6 p-6">
+          <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {photos.length > 0 && (
               <ReportPhotosGallery photos={photos} alt={report.animalName} variant="hero" />
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <DetailRow label="Report Type" value={typeLabels[report.type] || report.type} />
               <DetailRow label="Status" value={report.status.replace(/_/g, ' ')} />
               <DetailRow label="Species" value={getSpecies(report)} />
@@ -148,25 +148,25 @@ function DetailModal({ report, open, onClose, onApprove, onReject, loading }: De
 
             {report.description && (
               <div>
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest mb-2">Description</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{report.description}</p>
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest mb-1.5 sm:mb-2">Description</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{report.description}</p>
               </div>
             )}
 
-            <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest mb-2">Reporter</h4>
+            <div className="rounded-xl border border-border bg-card p-3 sm:p-4 space-y-1.5 sm:space-y-2">
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest mb-1.5 sm:mb-2">Reporter</h4>
               <DetailRow label="Name" value={reporterName} />
               <DetailRow label="Contact" value={contact} />
               <DetailRow label="Email" value={report.userEmail || '—'} />
             </div>
 
-            <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest mb-2">Location</h4>
+            <div className="rounded-xl border border-border bg-card p-3 sm:p-4 space-y-1.5 sm:space-y-2">
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-widest mb-1.5 sm:mb-2">Location</h4>
               <DetailRow label="Address / Landmark" value={report.location || 'Unknown location'} />
               {report.latitude && report.longitude && (
                 <DetailRow label="GPS Coordinates" value={`${report.latitude}, ${report.longitude}`} />
               )}
-              <div className="mt-3 w-full h-48 rounded-xl overflow-hidden border border-border bg-muted">
+              <div className="mt-3 w-full h-40 sm:h-48 rounded-xl overflow-hidden border border-border bg-muted">
                 <iframe
                   title="Map"
                   width="100%"
@@ -182,10 +182,10 @@ function DetailModal({ report, open, onClose, onApprove, onReject, loading }: De
           </div>
 
           {canAct && (
-            <div className="sticky bottom-0 rounded-b-2xl border-t border-border bg-popover px-6 py-4 flex gap-3">
+            <div className="sticky bottom-0 rounded-b-2xl border-t border-border bg-popover px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Button
                 variant="outline"
-                className="flex-1 h-11 rounded-xl border-destructive/40 text-sm font-semibold text-destructive hover:bg-destructive/10"
+                className="flex-1 h-11 rounded-xl border-destructive/40 text-sm font-semibold text-destructive hover:bg-destructive/10 order-2 sm:order-1"
                 disabled={loading}
                 onClick={() => setConfirmReject(true)}
               >
@@ -193,7 +193,7 @@ function DetailModal({ report, open, onClose, onApprove, onReject, loading }: De
                 Reject
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl bg-emerald-600 text-sm font-semibold hover:bg-emerald-700 text-white"
+                className="flex-1 h-11 rounded-xl bg-emerald-600 text-sm font-semibold hover:bg-emerald-700 text-white order-1 sm:order-2"
                 disabled={loading}
                 onClick={() => setConfirmApprove(true)}
               >
@@ -429,11 +429,11 @@ export function DomesticReportsPage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-border px-4 py-3">
-              <p className="text-xs text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-border px-4 py-3">
+              <p className="text-xs text-muted-foreground order-2 sm:order-1">
                 Page {safePage} of {totalPages} ({allReports.length} total)
               </p>
-              <div className="flex gap-1">
+              <div className="flex gap-1 order-1 sm:order-2">
                 <button
                   type="button"
                   disabled={safePage <= 1}
