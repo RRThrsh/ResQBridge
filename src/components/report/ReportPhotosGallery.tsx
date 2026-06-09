@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
@@ -183,9 +184,21 @@ function PhotoLightbox({
   onNext: () => void
   t: (key: string) => string
 }) {
-  return (
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
+  if (!mounted) return null
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
       role="dialog"
       aria-modal="true"
       aria-label={t('reportPhotos.expandedLabel')}
@@ -231,6 +244,7 @@ function PhotoLightbox({
         className="relative z-[1] max-h-full max-w-full object-contain"
         onClick={(e) => e.stopPropagation()}
       />
-    </div>
+    </div>,
+    document.body,
   )
 }
