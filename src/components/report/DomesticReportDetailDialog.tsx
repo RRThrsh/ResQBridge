@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ReportPhotosGallery } from '@/components/report/ReportPhotosGallery'
-import { formatDateWithWeekday } from '@/lib/dates'
+import { formatDateTimeWithWeekday } from '@/lib/dates'
 import {
   publicStatusLabels,
   reportTypeColors,
@@ -138,7 +138,7 @@ export function DomesticReportDetailDialog({
               <div>
                 <p className="text-xs font-semibold text-foreground">{t('domesticDetail.dateReported')}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  {formatDateWithWeekday(report.createdAt)}
+                  {formatDateTimeWithWeekday(report.createdAt)}
                 </p>
               </div>
             </div>

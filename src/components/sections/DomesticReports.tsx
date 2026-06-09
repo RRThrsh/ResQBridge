@@ -14,7 +14,7 @@ import {
 import { api } from '../../../convex/_generated/api'
 import { Card, CardContent } from '@/components/ui/card'
 import { RevealOnScroll } from '@/components/RevealOnScroll'
-import { formatMonthDay } from '@/lib/dates'
+import { formatDateTime } from '@/lib/dates'
 import {
   reportTypeLabels,
   reportTypeOverlayBase,
@@ -74,7 +74,7 @@ function ReportCard({ report, onClick }: { report: PublicDomesticReport; onClick
           </span>
           <span className="flex items-center gap-1 text-[11px] text-muted-foreground ml-auto">
             <Clock className="h-3 w-3 text-primary/60" />
-            {formatMonthDay(report.createdAt)}
+            {formatDateTime(report.createdAt)}
           </span>
         </div>
       </CardContent>
@@ -215,7 +215,7 @@ export function DomesticReports() {
                   <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
                     Missing
                   </h3>
-                  {missing.length > 3 && (
+                  {missing.length > 4 && (
                     <button
                       type="button"
                       onClick={() => setViewAllType('missing')}
@@ -227,7 +227,7 @@ export function DomesticReports() {
                   )}
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {missing.map((r) => (
+                  {missing.slice(0, 4).map((r) => (
                     <ReportCard key={r.id} report={r} onClick={() => setSelectedReport(r)} />
                   ))}
                 </div>
@@ -240,7 +240,7 @@ export function DomesticReports() {
                   <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
                     Found
                   </h3>
-                  {found.length > 3 && (
+                  {found.length > 4 && (
                     <button
                       type="button"
                       onClick={() => setViewAllType('found')}
@@ -252,7 +252,7 @@ export function DomesticReports() {
                   )}
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {found.map((r) => (
+                  {found.slice(0, 4).map((r) => (
                     <ReportCard key={r.id} report={r} onClick={() => setSelectedReport(r)} />
                   ))}
                 </div>
