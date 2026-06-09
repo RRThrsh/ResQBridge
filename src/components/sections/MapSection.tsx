@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { MapPin, Clock, Phone, Info, Navigation } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { RevealOnScroll } from '@/components/RevealOnScroll'
 import { Button } from '@/components/ui/button'
 import { VenueHoursStatusBadge } from '@/components/sections/VenueHoursStatusBadge'
 import { useVenueHoursStatus } from '@/hooks/useVenueHoursStatus'
@@ -86,7 +87,8 @@ export function MapSection() {
 
   return (
     <section id="map" className="py-24 bg-card border-y border-border">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <RevealOnScroll>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
 
         {/* Header */}
         <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -204,6 +206,7 @@ export function MapSection() {
           </div>
         </div>
       </div>
+      </RevealOnScroll>
     </section>
   )
 }

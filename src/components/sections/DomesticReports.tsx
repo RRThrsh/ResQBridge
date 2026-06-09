@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardContent } from '@/components/ui/card'
+import { RevealOnScroll } from '@/components/RevealOnScroll'
 import { formatMonthDay } from '@/lib/dates'
 import {
   reportTypeLabels,
@@ -148,7 +149,8 @@ export function DomesticReports() {
 
   return (
     <section id="domestic" className="py-24">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <RevealOnScroll>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-10 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-primary">{t('domesticSection.eyebrow')}</p>
@@ -252,6 +254,7 @@ export function DomesticReports() {
           onClose={() => setSelectedReport(null)}
         />
       </div>
+      </RevealOnScroll>
     </section>
   )
 }

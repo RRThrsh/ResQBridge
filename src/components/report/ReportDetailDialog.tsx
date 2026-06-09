@@ -96,7 +96,7 @@ export function ReportDetailDialog({
         description: report.description ?? '',
         type: report.type,
         condition: report.condition ?? '',
-        speciesId: report.speciesId ?? '',
+        speciesId: report.speciesId || (report.category === 'wildlife' ? report.animalName : ''),
         color: report.color ?? '',
         behavior: behaviorValue || report.behavior || '',
         behaviorOther: behaviorValue === WILDLIFE_BEHAVIOR_OTHER ? wildlifeBehaviorDisplayText(report.behavior) : '',
@@ -156,10 +156,12 @@ export function ReportDetailDialog({
 
     setSaving(true)
     try {
+      const animalName = report.category === 'wildlife' ? draft.speciesId || draft.animalName : draft.animalName
+
       await updateReport({
         reportId: report.id as Id<'reports'>,
         userEmail,
-        animalName: draft.animalName,
+        animalName,
         location: draft.location,
         description: draft.description || undefined,
         type: draft.type,
@@ -268,16 +270,18 @@ export function ReportDetailDialog({
                   />
                 </Field>
 
-                <Field label={t('reportDetail.fieldAnimalName')}>
-                  <Input
-                    value={draft.animalName}
-                    onChange={(e) =>
-                      setDraft({ ...draft, animalName: e.target.value })
-                    }
-                    className="h-11 rounded-xl bg-background"
-                    required
-                  />
-                </Field>
+                {report.category === 'domestic' && (
+                  <Field label={t('reportDetail.fieldAnimalName')}>
+                    <Input
+                      value={draft.animalName}
+                      onChange={(e) =>
+                        setDraft({ ...draft, animalName: e.target.value })
+                      }
+                      className="h-11 rounded-xl bg-background"
+                      required
+                    />
+                  </Field>
+                )}
               </div>
 
               {report.category === 'domestic' && (
@@ -519,9 +523,9 @@ export function ReportDetailDialog({
                 ) : null}
               </div>
 
-              {report.speciesId && (
+              {(report.speciesId || report.animalName) && (
                 <InfoRow icon={<Tag className="h-4 w-4 text-primary" />} label={t('reportDetail.viewSpecies')}>
-                  {report.speciesId}
+                  {report.speciesId || report.animalName}
                 </InfoRow>
               )}
 
