@@ -29,6 +29,24 @@ import {
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+
+// Guard: ensure stale _leaflet_id never blocks map re-initialization.
+// React 19 StrictMode + callback refs can leave _leaflet_id on the container
+// after the simulated unmount cleans up the map, causing Leaflet to throw
+// "Map container is already initialized" on remount.
+if (!(L as any).__containerPatched) {
+  const origInitContainer = (L.Map.prototype as any)._initContainer
+  ;(L.Map.prototype as any)._initContainer = function (id: any) {
+    const container = L.DomUtil.get(id)
+    if (container && (container as any)._leaflet_id) {
+      ;(container as any).innerHTML = ''
+      delete (container as any)._leaflet_id
+    }
+    return origInitContainer.call(this, id)
+  }
+  ;(L as any).__containerPatched = true
+}
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -399,7 +417,53 @@ export function DomesticReportForm() {
             />
           </div>
 
-          {reportType !== 'stray' && reportType !== 'injured' && (
+          {reportType === 'stray' ? (
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                {t('reportFormDomestic.sizeLabel')} <span className="text-destructive">*</span>
+              </label>
+
+              <Select
+                value={formData.reportedSize}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    reportedSize: value ?? '',
+                  })
+                }
+                required
+              >
+                <SelectTrigger className="h-12 bg-background border-border rounded-xl">
+                  <SelectValue placeholder={t('reportFormDomestic.sizePlaceholder')} />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="small">{t('reportFormDomestic.sizeSmall')}</SelectItem>
+                  <SelectItem value="medium">{t('reportFormDomestic.sizeMedium')}</SelectItem>
+                  <SelectItem value="large">{t('reportFormDomestic.sizeLarge')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          ) : reportType === 'injured' ? (
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                {t('reportFormDomestic.colorLabel')} <span className="text-destructive">*</span>
+              </label>
+
+              <Input
+                value={formData.color}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    color: e.target.value,
+                  })
+                }
+                placeholder={t('reportFormDomestic.colorPlaceholder')}
+                className="h-12 bg-background border-border rounded-xl"
+                required
+              />
+            </div>
+          ) : (
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 {reportType === 'missing' ? t('reportFormDomestic.petNameLabel') : t('reportFormDomestic.nameLabel')}
@@ -421,9 +485,73 @@ export function DomesticReportForm() {
             </div>
           )}
         </div>
+
+        {reportType !== 'injured' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+          <div className={cn('space-y-3', reportType === 'stray' && 'sm:col-span-2')}>
+            <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              {t('reportFormDomestic.colorLabel')} <span className="text-destructive">*</span>
+            </label>
+
+            <Input
+              value={formData.color}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  color: e.target.value,
+                })
+              }
+              placeholder={t('reportFormDomestic.colorPlaceholder')}
+              className="h-12 bg-background border-border rounded-xl"
+              required
+            />
+          </div>
+
+          {reportType !== 'stray' && (
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                {t('reportFormDomestic.sizeLabel')} <span className="text-destructive">*</span>
+              </label>
+
+              <Select
+                value={formData.reportedSize}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    reportedSize: value ?? '',
+                  })
+                }
+                required
+              >
+                <SelectTrigger className="h-12 bg-background border-border rounded-xl">
+                  <SelectValue placeholder={t('reportFormDomestic.sizePlaceholder')} />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="small">{t('reportFormDomestic.sizeSmall')}</SelectItem>
+                  <SelectItem value="medium">{t('reportFormDomestic.sizeMedium')}</SelectItem>
+                  <SelectItem value="large">{t('reportFormDomestic.sizeLarge')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+        </div>
+        )}
         
         {reportType === 'injured' && (
           <div className="space-y-6">
+
+            {/* ── Injury Details ── */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border/50" />
+              </div>
+              <div className="relative flex justify-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                <span className="bg-card px-3">Injury Details</span>
+              </div>
+            </div>
 
             {/* Nature of Injury */}
             <div className="space-y-3">
@@ -631,25 +759,13 @@ export function DomesticReportForm() {
           </div>
         )}
 
-        {/* Color field - Rendered unconditionally for all report types */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {t('reportFormDomestic.colorLabel')} <span className="text-destructive">*</span>
-            </label>
-
-            <Input
-              value={formData.color}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  color: e.target.value,
-                })
-              }
-              placeholder={t('reportFormDomestic.colorPlaceholder')}
-              className="h-12 bg-background border-border rounded-xl"
-              required
-            />
+        {/* ── Location & Date ── */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/50" />
+          </div>
+          <div className="relative flex justify-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="bg-card px-3">Location &amp; Date</span>
           </div>
         </div>
 
@@ -666,7 +782,7 @@ export function DomesticReportForm() {
                 value={formData.location}
                 readOnly
                 placeholder={t('reportFormDomestic.locationPlaceholder')}
-                className="pl-10 h-12 bg-background border-border rounded-xl pr-3 cursor-not-allowed opacity-80"
+                className="pl-10 h-12 bg-background border-border rounded-xl pr-3"
                 required
               />
             </div>
@@ -690,6 +806,7 @@ export function DomesticReportForm() {
             'overflow-hidden rounded-xl border border-border bg-muted/30 relative z-0 h-[260px]',
           )}>
             <MapContainer
+              key="domestic-map"
               center={coords ? [coords.lat, coords.lng] : [DEFAULT_MAP_LAT, DEFAULT_MAP_LNG]}
               zoom={13}
               scrollWheelZoom={true}
@@ -724,52 +841,15 @@ export function DomesticReportForm() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
-          {reportType !== 'injured' && (
-            <div className="space-y-3">
-              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                {t('reportFormDomestic.sizeLabel')} <span className="text-destructive">*</span>
-              </label>
-
-              <Select
-                value={formData.reportedSize}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    reportedSize: value ?? '',
-                  })
-                }
-                required
-              >
-                <SelectTrigger className="h-12 bg-background border-border rounded-xl">
-                  <SelectValue placeholder={t('reportFormDomestic.sizePlaceholder')} />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="small">{t('reportFormDomestic.sizeSmall')}</SelectItem>
-                  <SelectItem value="medium">{t('reportFormDomestic.sizeMedium')}</SelectItem>
-                  <SelectItem value="large">{t('reportFormDomestic.sizeLarge')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
+        {/* ── Description & Media ── */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/50" />
+          </div>
+          <div className="relative flex justify-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="bg-card px-3">Description &amp; Media</span>
+          </div>
         </div>
-
-        {user ? (
-          <ReportContactField
-            userEmail={user.email}
-            value={formData.reporterPhone}
-            onChange={(val) => {
-              let cleaned = val.replace(/\D/g, '')
-              if (cleaned.length > 11) {
-                cleaned = cleaned.slice(0, 11)
-              }
-              setFormData({ ...formData, reporterPhone: cleaned })
-            }}
-          />
-        ) : null}
 
         {reportType !== 'injured' && (
           <div className="space-y-3">
@@ -798,6 +878,30 @@ export function DomesticReportForm() {
           </label>
           <ReportPhotoField value={photos} onChange={setPhotos} />
         </div>
+
+        {/* ── Contact & Submit ── */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/50" />
+          </div>
+          <div className="relative flex justify-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="bg-card px-3">Contact &amp; Submit</span>
+          </div>
+        </div>
+
+        {user ? (
+          <ReportContactField
+            userEmail={user.email}
+            value={formData.reporterPhone}
+            onChange={(val) => {
+              let cleaned = val.replace(/\D/g, '')
+              if (cleaned.length > 11) {
+                cleaned = cleaned.slice(0, 11)
+              }
+              setFormData({ ...formData, reporterPhone: cleaned })
+            }}
+          />
+        ) : null}
 
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex gap-3 items-start">
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
@@ -853,3 +957,4 @@ export function DomesticReportForm() {
     </div>
   )
 }
+

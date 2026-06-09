@@ -40,6 +40,24 @@ import { cn } from '@/lib/utils'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+
+// Guard: ensure stale _leaflet_id never blocks map re-initialization.
+// React 19 StrictMode + callback refs can leave _leaflet_id on the container
+// after the simulated unmount cleans up the map, causing Leaflet to throw
+// "Map container is already initialized" on remount.
+if (!(L as any).__containerPatched) {
+  const origInitContainer = (L.Map.prototype as any)._initContainer
+  ;(L.Map.prototype as any)._initContainer = function (id: any) {
+    const container = L.DomUtil.get(id)
+    if (container && (container as any)._leaflet_id) {
+      ;(container as any).innerHTML = ''
+      delete (container as any)._leaflet_id
+    }
+    return origInitContainer.call(this, id)
+  }
+  ;(L as any).__containerPatched = true
+}
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -380,7 +398,16 @@ export function WildlifeSightingForm() {
 
       <form onSubmit={handleValidationBeforeSubmit} className="space-y-6">
 
-        {/* Species */}
+        {/* ── Animal Details ── */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/50" />
+          </div>
+          <div className="relative flex justify-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="bg-card px-3">Animal Details</span>
+          </div>
+        </div>
+
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {t('reportFormWildlife.speciesLabel')} <span className="text-destructive">*</span>
@@ -394,82 +421,6 @@ export function WildlifeSightingForm() {
               })
             }
             placeholder={t('reportFormWildlife.speciesPlaceholder')}
-            className="h-12 bg-background border-border rounded-xl"
-            required
-          />
-        </div>
-
-        {/* Location */}
-        <div className="space-y-3">
-          <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {t('reportFormWildlife.locationLabel')} <span className="text-destructive">*</span>
-          </label>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-            <div className="relative flex-1 min-w-0">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <Input
-                value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
-                placeholder={t('reportFormWildlife.locationPlaceholder')}
-                className="pl-10 h-12 bg-background border-border rounded-xl pr-3 cursor-not-allowed opacity-80"
-                required
-                readOnly
-              />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={fetchCurrentLocation}
-              disabled={locFetching}
-              className="h-12 shrink-0 px-4 rounded-xl border-border bg-background sm:w-auto"
-            >
-              {locFetching ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Crosshair className="mr-2 h-4 w-4" />
-              )}
-              {t('reportFormWildlife.currentLocation')}
-            </Button>
-          </div>
-
-          <div className={cn(
-            'overflow-hidden rounded-xl border border-border bg-muted/30 relative z-0 h-[260px]',
-          )}>
-            <MapContainer
-              center={coords ? [coords.lat, coords.lng] : [DEFAULT_MAP_LAT, DEFAULT_MAP_LNG]}
-              zoom={13}
-              scrollWheelZoom={true}
-              style={{ height: '100%', width: '100%', zIndex: 0 }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <ClickableMap 
-                coords={coords} 
-                onMapClick={(lat, lng) => updateLocationData(lat, lng, 'click')} 
-              />
-            </MapContainer>
-          </div>
-          
-          <p className="text-[11px] text-muted-foreground">
-            {t('reportFormWildlife.mapHelper')}
-          </p>
-        </div>
-
-        {/* Date & time seen */}
-        <div className="space-y-3">
-          <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {t('reportFormWildlife.dateLabel')} <span className="text-destructive">*</span>
-          </label>
-          <Input
-            type="datetime-local"
-            value={formData.seenAt}
-            onChange={(e) => setFormData({ ...formData, seenAt: e.target.value })}
             className="h-12 bg-background border-border rounded-xl"
             required
           />
@@ -570,21 +521,101 @@ export function WildlifeSightingForm() {
           ) : null}
         </div>
 
-        {user ? (
-          <ReportContactField
-            userEmail={user.email}
-            value={formData.reporterPhone}
-            onChange={(val) => {
-              let cleaned = val.replace(/\D/g, '')
-              if (cleaned.length > 11) {
-                cleaned = cleaned.slice(0, 11)
-              }
-              setFormData({ ...formData, reporterPhone: cleaned })
-            }}
-          />
-        ) : null}
+        {/* ── Date & Location ── */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/50" />
+          </div>
+          <div className="relative flex justify-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="bg-card px-3">Date &amp; Location</span>
+          </div>
+        </div>
 
-        {/* Description */}
+        <div className="space-y-3">
+          <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            {t('reportFormWildlife.dateLabel')} <span className="text-destructive">*</span>
+          </label>
+          <Input
+            type="datetime-local"
+            value={formData.seenAt}
+            onChange={(e) => setFormData({ ...formData, seenAt: e.target.value })}
+            className="h-12 bg-background border-border rounded-xl"
+            required
+          />
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            {t('reportFormWildlife.locationLabel')} <span className="text-destructive">*</span>
+          </label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <div className="relative flex-1 min-w-0">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Input
+                value={formData.location}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
+                placeholder={t('reportFormWildlife.locationPlaceholder')}
+                className="pl-10 h-12 bg-background border-border rounded-xl pr-3"
+                required
+                readOnly
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={fetchCurrentLocation}
+              disabled={locFetching}
+              className="h-12 shrink-0 px-4 rounded-xl border-border bg-background sm:w-auto"
+            >
+              {locFetching ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Crosshair className="mr-2 h-4 w-4" />
+              )}
+              {t('reportFormWildlife.currentLocation')}
+            </Button>
+          </div>
+
+          <div className={cn(
+            'overflow-hidden rounded-xl border border-border bg-muted/30 relative z-0 h-[260px]',
+          )}>
+            <MapContainer
+              key="wildlife-map"
+              center={coords ? [coords.lat, coords.lng] : [DEFAULT_MAP_LAT, DEFAULT_MAP_LNG]}
+              zoom={13}
+              scrollWheelZoom={true}
+              style={{ height: '100%', width: '100%', zIndex: 0 }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <ClickableMap 
+                coords={coords} 
+                onMapClick={(lat, lng) => updateLocationData(lat, lng, 'click')} 
+              />
+            </MapContainer>
+          </div>
+          
+          <p className="text-[11px] text-muted-foreground">
+            {t('reportFormWildlife.mapHelper')}
+          </p>
+        </div>
+
+        {/* ── Description & Media ── */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/50" />
+          </div>
+          <div className="relative flex justify-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="bg-card px-3">Description &amp; Media</span>
+          </div>
+        </div>
+
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {t('reportFormWildlife.detailsLabel')} <span className="text-destructive">*</span>
@@ -606,6 +637,30 @@ export function WildlifeSightingForm() {
           </label>
           <ReportPhotoField value={photos} onChange={setPhotos} />
         </div>
+
+        {/* ── Contact & Submit ── */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/50" />
+          </div>
+          <div className="relative flex justify-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="bg-card px-3">Contact &amp; Submit</span>
+          </div>
+        </div>
+
+        {user ? (
+          <ReportContactField
+            userEmail={user.email}
+            value={formData.reporterPhone}
+            onChange={(val) => {
+              let cleaned = val.replace(/\D/g, '')
+              if (cleaned.length > 11) {
+                cleaned = cleaned.slice(0, 11)
+              }
+              setFormData({ ...formData, reporterPhone: cleaned })
+            }}
+          />
+        ) : null}
 
         {/* Warning */}
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex gap-3 items-start">

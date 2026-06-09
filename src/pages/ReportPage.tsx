@@ -7,6 +7,7 @@ import { WildlifeSightingForm } from '@/components/report/WildlifeSightingForm'
 import { DomesticReportForm } from '@/components/report/DomesticReportForm'
 import { useUserAuth } from '@/context/UserAuthContext'
 import { useLanguage } from '@/context/LanguageContext'
+import { cn } from '@/lib/utils'
 
 type ReportType = 'wildlife' | 'domestic' | null
 
@@ -14,9 +15,13 @@ export function ReportPage({ onLoginRequest }: { onLoginRequest: () => void }) {
   const { isLoggedIn } = useUserAuth()
   const { t } = useLanguage()
   const [reportType, setReportType] = useState<ReportType>(null)
+  const [lazyWildlife, setLazyWildlife] = useState(false)
+  const [lazyDomestic, setLazyDomestic] = useState(false)
 
   function selectReportType(type: Exclude<ReportType, null>) {
     setReportType(type)
+    if (type === 'wildlife') setLazyWildlife(true)
+    if (type === 'domestic') setLazyDomestic(true)
     if (!isLoggedIn) {
       onLoginRequest()
     }
@@ -130,15 +135,15 @@ export function ReportPage({ onLoginRequest }: { onLoginRequest: () => void }) {
           </div>
         )}
 
-        {/* Render Forms */}
-        {reportType === 'wildlife' && isLoggedIn && (
-          <div className="animate-fade-in">
+        {/* Render Forms — once mounted, stay mounted (just hidden) to keep MapContainer alive */}
+        {lazyWildlife && isLoggedIn && (
+          <div className={cn('animate-fade-in', reportType !== 'wildlife' && 'hidden')}>
             <WildlifeSightingForm />
           </div>
         )}
 
-        {reportType === 'domestic' && isLoggedIn && (
-          <div className="animate-fade-in">
+        {lazyDomestic && isLoggedIn && (
+          <div className={cn('animate-fade-in', reportType !== 'domestic' && 'hidden')}>
             <DomesticReportForm />
           </div>
         )}

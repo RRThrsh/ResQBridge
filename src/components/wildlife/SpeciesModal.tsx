@@ -11,7 +11,6 @@ const categoryEmojis: Record<string, string> = {
   bird: '🦅',
   reptile: '🦎',
   amphibian: '🐸',
-  marine: '🐢',
 }
 
 interface SpeciesModalProps {

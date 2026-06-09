@@ -3,7 +3,7 @@ export interface WildlifeSpecies {
   commonName: string
   localName: string
   scientificName: string
-  category: 'mammal' | 'bird' | 'reptile' | 'amphibian' | 'marine'
+  category: 'mammal' | 'bird' | 'reptile' | 'amphibian'
   status: 'critically-endangered' | 'endangered' | 'vulnerable' | 'protected'
   habitat: string
   diet: string
@@ -18,7 +18,7 @@ export interface WildlifeSpecies {
 // Emptied out so it relies completely on Admin/Database input.
 export const wildlifeSpecies: WildlifeSpecies[] = []
 
-export const categories = ['All', 'mammal', 'bird', 'reptile', 'amphibian', 'marine'] as const
+export const categories = ['All', 'mammal', 'bird', 'reptile', 'amphibian'] as const
 export type Category = typeof categories[number]
 
 export const statusColors: Record<WildlifeSpecies['status'], string> = {
