@@ -39,10 +39,14 @@ export const alertAdmin = internalAction({
     reportId: v.id('reports'),
     species: v.string(),
     location: v.string(),
+    category: v.optional(v.string()),
   },
 
   handler: async (_ctx, args) => {
     console.log('ALERT ADMIN TRIGGERED')
+
+    const isDomestic = args.category === 'domestic'
+    const label = isDomestic ? 'Domestic' : 'Wildlife'
 
     try {
       // =========================
@@ -50,8 +54,6 @@ export const alertAdmin = internalAction({
       // =========================
       
       // HARDCODED ADMIN EMAIL
-      // Replace this string with the actual admin email you want to use.
-      // You can add more emails to the array if needed: ['admin1@email.com', 'admin2@email.com']
       const adminEmails = ['resqbridge.official@gmail.com'] 
 
       console.log('ADMIN EMAILS:', adminEmails)
@@ -60,10 +62,10 @@ export const alertAdmin = internalAction({
         from: `"${config.fromName}" <${config.fromAddress}>`,
         to: adminEmails,
 
-        subject: 'PWRCC Wildlife Report Alert',
+        subject: `PWRCC ${label} Report Alert`,
 
         text: `
-New Wildlife Report Submitted
+New ${label} Report Submitted
 
 Animal: ${args.species}
 Location: ${args.location}
@@ -73,7 +75,7 @@ https://res-q-bridge-omega.vercel.app/
 `,
 
         html: `
-    <h2>New Wildlife Report Submitted</h2>
+    <h2>New ${label} Report Submitted</h2>
     <p><strong>Animal:</strong> ${args.species}</p>
     <p><strong>Location:</strong> ${args.location}</p>
     <p>Please check now.</p>

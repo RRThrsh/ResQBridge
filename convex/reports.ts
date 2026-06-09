@@ -190,17 +190,16 @@ export const create = mutation({
       details: JSON.stringify({ category: args.category, type: args.type, animalName: args.animalName.trim(), location: args.location.trim() }),
     })
 
-    if (args.category === 'wildlife') {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.notifications.alertAdmin,
-        {
-          reportId,
-          species: args.animalName,
-          location: args.location,
-        }
-      )
-    }
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.alertAdmin,
+      {
+        reportId,
+        species: args.animalName,
+        location: args.location,
+        category: args.category,
+      }
+    )
     return reportId
   },
 })
