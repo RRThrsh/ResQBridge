@@ -40,8 +40,9 @@ export function DomesticReportDetailDialog({
   return (
     <Dialog open={!!report} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="flex max-h-[min(90vh,720px)] max-w-lg flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <div className="min-h-0 flex-1 overflow-y-auto">
         {photos.length > 0 ? (
-          <div className="relative shrink-0">
+          <div className="relative">
             <ReportPhotosGallery photos={photos} alt={report.animalName} variant="hero" />
             <div className="absolute top-4 left-4 z-10">
               <span
@@ -56,7 +57,7 @@ export function DomesticReportDetailDialog({
             </div>
           </div>
         ) : (
-          <div className="relative h-40 shrink-0 bg-muted px-6 pt-6">
+          <div className="relative h-40 bg-muted px-6 pt-6">
             <Badge
               className={`${reportTypeColors[report.type]} border-0 font-medium px-2.5 py-1`}
             >
@@ -65,7 +66,7 @@ export function DomesticReportDetailDialog({
           </div>
         )}
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="p-6 space-y-6">
           <div>
             <DialogTitle
               className="text-2xl font-black text-foreground leading-none mb-1"
@@ -174,6 +175,7 @@ export function DomesticReportDetailDialog({
               {t('domesticDetail.callReporter')}
             </a>
           ) : null}
+        </div>
         </div>
       </DialogContent>
     </Dialog>
