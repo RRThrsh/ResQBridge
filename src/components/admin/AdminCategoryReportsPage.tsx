@@ -527,7 +527,7 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
               [
                 ['all', 'All'],
                 ['pending', 'Pending'],
-                ['accepted', 'Accepted'],
+                ['accepted', 'Assign'],
                 ['en_route', 'En route'],
                 ['completed', 'Completed'],
               ] as const
