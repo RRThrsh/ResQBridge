@@ -67,8 +67,8 @@ skills-lock.json
 .netlify/
 
 
-# Convex generated types
-convex/_generated/
+# Convex generated types — committed for CI test resolution
+# convex/_generated/
 <<<<<<< HEAD
 =======
 
