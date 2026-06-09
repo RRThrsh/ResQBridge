@@ -46,6 +46,8 @@ export function ReportPhotosGallery({
     })
   }
 
+  const [heroIndex, setHeroIndex] = useState(0)
+
   if (variant === 'card') {
     return (
       <>
@@ -113,30 +115,66 @@ export function ReportPhotosGallery({
   return (
     <>
       <div className={className}>
-        <button
-          type="button"
-          onClick={() => openAt(0)}
-          className="relative block w-full overflow-hidden rounded-2xl border border-border ring-1 ring-foreground/5"
-        >
-          <img
-            src={photos[0]}
-            alt={alt}
-            className="aspect-[4/3] w-full object-cover"
-          />
+        <div className="relative overflow-hidden rounded-2xl border border-border ring-1 ring-foreground/5">
+          <button
+            type="button"
+            onClick={() => openAt(heroIndex)}
+            className="block w-full"
+          >
+            <img
+              src={photos[heroIndex]}
+              alt={`${alt} ${heroIndex + 1}`}
+              className="aspect-[4/3] w-full object-cover"
+            />
+          </button>
           {photos.length > 1 ? (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setHeroIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1))
+                }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-foreground shadow hover:bg-background transition-colors"
+                aria-label={t('reportPhotos.prevLabel')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setHeroIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1))
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-foreground shadow hover:bg-background transition-colors"
+                aria-label={t('reportPhotos.nextLabel')}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <span className="absolute right-3 top-3 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground shadow-sm">
+                {heroIndex + 1} / {photos.length}
+              </span>
+            </>
+          ) : (
             <span className="absolute right-3 top-3 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground shadow-sm">
-              {photos.length} {t('reportPhotos.label')}
+              1 / 1
             </span>
-          ) : null}
-        </button>
+          )}
+        </div>
         {photos.length > 1 ? (
           <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
             {photos.map((photo, index) => (
               <button
                 key={`${index}-${photo.slice(0, 16)}`}
                 type="button"
-                onClick={() => openAt(index)}
-                className="shrink-0 overflow-hidden rounded-lg border border-border"
+                onClick={() => {
+                  setHeroIndex(index)
+                  openAt(index)
+                }}
+                className={cn(
+                  'shrink-0 overflow-hidden rounded-lg border transition-colors',
+                  index === heroIndex ? 'border-primary ring-1 ring-primary' : 'border-border',
+                )}
               >
                 <img
                   src={photo}
