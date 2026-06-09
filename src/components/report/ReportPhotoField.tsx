@@ -5,11 +5,7 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import {
   MAX_REPORT_PHOTOS,
-  MAX_REPORT_PHOTOS_TOTAL_BYTES,
   REPORT_PHOTO_ACCEPT,
-  formatPhotoSizeMb,
-  remainingPhotoBudgetBytes,
-  sumPhotoBytes,
   type ReportPhotoItem,
 } from '@/lib/reportPhotos'
 import { compressImage } from '@/lib/compressImage'
@@ -51,9 +47,9 @@ export function ReportPhotoField({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const generateUploadUrl = useMutation(api.reportPhotoStorage.generateUploadUrl)
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState<{ loaded: number; total: number } | null>(null)
   const blobUrlsRef = useRef<Set<string>>(new Set())
 
-  const currentTotalBytes = sumPhotoBytes(value.map((item) => item.sizeBytes))
   const canAddMore = value.length < maxPhotos
 
   useEffect(() => {
@@ -80,6 +76,12 @@ export function ReportPhotoField({
     return json.storageId
   }
 
+  function formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     e.target.value = ''
@@ -92,37 +94,25 @@ export function ReportPhotoField({
     }
 
     const toAdd = files.slice(0, remaining)
-    if (files.length > remaining) {
-      const skipped = files.length - remaining
-      if (value.length === 0 && files.length > maxPhotos) {
-        toast.message(t('reportPhoto.errorTooMany').replace('{total}', String(files.length)).replace('{max}', String(maxPhotos)))
-      } else {
-        toast.message(t('reportPhoto.errorSomeSkipped').replace('{remaining}', String(remaining)).replace('{skipped}', String(skipped)).replace('{max}', String(maxPhotos)))
-      }
-    }
 
     const accepted: File[] = []
-    let runningTotal = currentTotalBytes
-
+    let totalBytes = 0
     for (const file of toAdd) {
       if (!file.type.startsWith('image/')) {
         toast.error(t('reportPhoto.errorInvalidType').replace('{name}', file.name))
         continue
       }
-      if (runningTotal + file.size > MAX_REPORT_PHOTOS_TOTAL_BYTES) {
-        const remainingMb = formatPhotoSizeMb(remainingPhotoBudgetBytes(runningTotal))
-        toast.error(t('reportPhoto.errorBudget').replace('{name}', file.name).replace('{remaining}', remainingMb))
-        continue
-      }
       accepted.push(file)
-      runningTotal += file.size
+      totalBytes += file.size
     }
 
     if (accepted.length === 0) return
 
     setUploading(true)
+    setProgress({ loaded: 0, total: totalBytes })
     const next = [...value]
     let added = 0
+    let uploadedBytes = 0
 
     try {
       for (const file of accepted) {
@@ -131,6 +121,8 @@ export function ReportPhotoField({
           const storageId = await uploadToStorage(compressed)
           const previewUrl = URL.createObjectURL(compressed)
           blobUrlsRef.current.add(previewUrl)
+          uploadedBytes += compressed.size
+          setProgress({ loaded: uploadedBytes, total: totalBytes })
           next.push({
             key: storageId,
             storageId,
@@ -143,6 +135,8 @@ export function ReportPhotoField({
             toast.error(`Could not read ${file.name}`)
             continue
           }
+          uploadedBytes += compressed.size
+          setProgress({ loaded: uploadedBytes, total: totalBytes })
           next.push({
             key: `legacy-${Date.now()}-${added}`,
             previewUrl: dataUrl,
@@ -161,6 +155,7 @@ export function ReportPhotoField({
       toast.error(t('reportPhoto.errorUpload'))
     } finally {
       setUploading(false)
+      setProgress(null)
     }
   }
 
@@ -171,11 +166,6 @@ export function ReportPhotoField({
     }
     onChange(value.filter((_, i) => i !== index))
   }
-
-  const usageLabel =
-    currentTotalBytes > 0
-      ? `${formatPhotoSizeMb(currentTotalBytes)} / 50 MB`
-      : `0 / 50 MB`
 
   return (
     <div className="space-y-3">
@@ -215,29 +205,41 @@ export function ReportPhotoField({
         </div>
       ) : null}
 
-      {canAddMore ? (
+      {uploading && progress ? (
+        <div className="rounded-xl border-2 border-dashed border-border p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
+            <p className="text-sm text-foreground">{t('reportPhoto.uploading')}</p>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${Math.min((progress.loaded / progress.total) * 100, 100)}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {formatBytes(progress.loaded)} / {formatBytes(progress.total)}
+          </p>
+        </div>
+      ) : canAddMore ? (
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
           className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-border p-6 text-center transition-colors hover:bg-accent/40 disabled:opacity-60"
         >
-          {uploading ? (
-            <Loader2 className="mx-auto mb-2 h-7 w-7 animate-spin text-muted-foreground" />
-          ) : value.length === 0 ? (
+          {value.length === 0 ? (
             <Camera className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
           ) : (
             <Plus className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
           )}
           <p className="mb-1 text-sm font-medium text-foreground">
-            {uploading
-              ? t('reportPhoto.uploading')
-              : value.length === 0
-                ? t('reportPhoto.clickToUpload')
-                : t('reportPhoto.addMore')}
+            {value.length === 0
+              ? t('reportPhoto.clickToUpload')
+              : t('reportPhoto.addMore')}
           </p>
           <p className="text-xs text-muted-foreground">
-            {t('reportPhoto.helper').replace('{max}', String(maxPhotos)).replace('{count}', String(value.length)).replace('{usage}', usageLabel)}
+            {t('reportPhoto.helper').replace('{max}', String(maxPhotos)).replace('{count}', String(value.length))}
           </p>
         </button>
       ) : null}
