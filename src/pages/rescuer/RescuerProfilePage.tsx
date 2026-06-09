@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import {
+  Eye,
+  EyeOff,
   Loader2,
   Mail,
   Pencil,
   Phone,
   Shield,
   User,
-  
 } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { ThemeSetting } from '@/components/theme/ThemeSetting'
@@ -35,16 +36,25 @@ const changePassword = useMutation(
   const [contactPhone, setContactPhone] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const [newPassword, setNewPassword] =
-  useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-const [confirmPassword, setConfirmPassword] =
-  useState('')
+  const contactPhoneError = contactPhone.length > 0 && !/^09\d{9}$/.test(contactPhone)
+  const passwordTooShort = newPassword.length > 0 && newPassword.length < 8
+  const passwordMismatch = newPassword.length > 0 && confirmPassword.length > 0 && newPassword !== confirmPassword
+  const hasPasswordError = passwordTooShort || passwordMismatch
+
   function startEditing() {
     if (!profile) return
     setFirstName(profile.firstName)
     setLastName(profile.lastName)
     setContactPhone(profile.contactPhone)
+    setNewPassword('')
+    setConfirmPassword('')
+    setShowNewPassword(false)
+    setShowConfirmPassword(false)
     setIsEditing(true)
   }
 
@@ -53,29 +63,19 @@ const [confirmPassword, setConfirmPassword] =
     setFirstName(profile.firstName)
     setLastName(profile.lastName)
     setContactPhone(profile.contactPhone)
+    setNewPassword('')
+    setConfirmPassword('')
+    setShowNewPassword(false)
+    setShowConfirmPassword(false)
     setIsEditing(false)
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!rescuer) return
-if (
-  newPassword &&
-  newPassword !== confirmPassword
-) {
-  toast.error('Passwords do not match')
-  return
-}
 
-if (
-  newPassword &&
-  newPassword.length < 8
-) {
-  toast.error(
-    'Password must be at least 8 characters',
-  )
-  return
-}
+    if (hasPasswordError) return
+
     setSaving(true)
     try {
       const updated = await updateProfile({
@@ -89,16 +89,14 @@ if (
         lastName: updated.lastName,
       })
       if (newPassword) {
-  await changePassword({
-    email: normalizeEmail(
-      rescuer.email,
-    ),
-    newPassword,
-  })
-}
+        await changePassword({
+          email: normalizeEmail(rescuer.email),
+          newPassword,
+        })
+      }
       toast.success('Profile updated')
       setNewPassword('')
-setConfirmPassword('')
+      setConfirmPassword('')
       setIsEditing(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update profile')
@@ -207,92 +205,113 @@ setConfirmPassword('')
                   required
                 />
               </div>
-<div>
-  <label className="mb-1 block text-xs text-muted-foreground">Last name</label>
-  <Input
-    value={lastName}
-    onChange={(e) => setLastName(e.target.value)}
-    required
-  />
-</div>
-  <div>
-  <label className="mb-1 block text-xs text-muted-foreground">
-    Contact number
-  </label>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">Last name</label>
+                <Input
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  Contact number
+                </label>
+                <Input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '')
+                    if (value.length <= 11) {
+                      setContactPhone(value)
+                    }
+                  }}
+                  placeholder="09XXXXXXXXX"
+                  required
+                  aria-invalid={contactPhoneError || undefined}
+                />
+                {contactPhoneError ? (
+                  <p className="mt-1 text-xs text-red-500">
+                    Enter a valid 11-digit PH number.
+                  </p>
+                ) : null}
+              </div>
 
-  <Input
-    type="tel"
-    value={contactPhone}
-    onChange={(e) => {
-      const value =
-        e.target.value.replace(/\D/g, '')
+              <hr className="border-border" />
 
-      if (value.length <= 11) {
-        setContactPhone(value)
-      }
-    }}
-    placeholder="09XXXXXXXXX"
-    required
-  />
+              <div>
+                <p className="text-xs font-semibold text-foreground">
+                  Change password
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Leave both blank to keep your current password.
+                </p>
+              </div>
 
-  {contactPhone.length > 0 &&
-  !/^09\d{9}$/.test(contactPhone) ? (
-    <p className="mt-1 text-xs text-red-500">
-      Enter a valid 11-digit PH number.
-    </p>
-  ) : null}
-</div>
-        <div>
-          <label className="mb-1 block text-xs text-muted-foreground">
-            New password
-          </label>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  New password
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    autoComplete="new-password"
+                    aria-invalid={passwordTooShort || undefined}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {passwordTooShort ? (
+                  <p className="mt-1 text-xs text-red-500">
+                    Password must be at least 8 characters.
+                  </p>
+                ) : null}
+              </div>
 
-          <Input
-            type="password"
-            value={newPassword}
-            onChange={(e) =>
-              setNewPassword(e.target.value)
-            }
-            placeholder="Leave blank to keep current password"
-          />
-
-          {newPassword &&
-          newPassword.length < 8 ? (
-            <p className="mt-1 text-xs text-red-500">
-              Password must be at least 8 characters.
-            </p>
-          ) : null}
-        </div>
-
-        <div>
-          <label className="mb-1 block text-xs text-muted-foreground">
-            Confirm password
-          </label>
-
-          <Input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) =>
-              setConfirmPassword(
-                e.target.value,
-              )
-            }
-            placeholder="Confirm new password"
-          />
-
-          {newPassword &&
-          confirmPassword &&
-          newPassword !== confirmPassword ? (
-            <p className="mt-1 text-xs text-red-500">
-              Passwords do not match.
-            </p>
-          ) : null}
-        </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">
+                  Confirm password
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    autoComplete="off"
+                    aria-invalid={passwordMismatch || undefined}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {passwordMismatch ? (
+                  <p className="mt-1 text-xs text-red-500">
+                    Passwords do not match.
+                  </p>
+                ) : null}
+              </div>
               <div className="flex gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={cancelEditing} disabled={saving}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={saving}>
+                <Button type="submit" disabled={saving || hasPasswordError}>
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save changes'}
                 </Button>
               </div>

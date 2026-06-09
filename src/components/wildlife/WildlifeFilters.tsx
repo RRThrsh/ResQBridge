@@ -25,7 +25,6 @@ export function WildlifeFilters({
       bird: t('wildlifeFilters.bird'),
       reptile: t('wildlifeFilters.reptile'),
       amphibian: t('wildlifeFilters.amphibian'),
-      marine: t('wildlifeFilters.marine'),
     }
     return labels[cat]
   }
