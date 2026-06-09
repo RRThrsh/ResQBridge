@@ -310,15 +310,6 @@ export function AdminReportDialog({
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                       <div>
                         <div className="mb-1 text-xs text-muted-foreground">
-                          Species
-                        </div>
-                        <div className="font-serif text-lg font-medium tracking-wide text-foreground">
-                          {activeReport.animalName || 'N/A'}
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="mb-1 text-xs text-muted-foreground">
                           Date & time seen
                         </div>
                         <div className="font-medium text-foreground">
@@ -731,37 +722,23 @@ export function AdminReportDialog({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reporter phone</label>
-                      <Input
-                        className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
-                        value={draft.reporterPhone}
-                        onChange={(e) => setDraft((d) => ({ ...d, reporterPhone: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Quantity</label>
-                      <Input
-                        type="number"
-                        min={1}
-                        className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
-                        value={draft.quantity}
-                        onChange={(e) => setDraft((d) => ({ ...d, quantity: e.target.value }))}
-                      />
-                    </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Reporter phone</label>
+                    <Input
+                      className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                      value={draft.reporterPhone}
+                      onChange={(e) => setDraft((d) => ({ ...d, reporterPhone: e.target.value }))}
+                    />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Date & time seen</label>
-                      <Input
-                        type="datetime-local"
-                        className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
-                        value={draft.seenAt}
-                        onChange={(e) => setDraft((d) => ({ ...d, seenAt: e.target.value }))}
-                      />
-                    </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Date & time seen</label>
+                    <Input
+                      type="datetime-local"
+                      className="border-border/20 bg-background/50 text-foreground transition focus-visible:border-primary"
+                      value={draft.seenAt}
+                      onChange={(e) => setDraft((d) => ({ ...d, seenAt: e.target.value }))}
+                    />
                   </div>
 
                   {draft.type === 'injured' ? (
