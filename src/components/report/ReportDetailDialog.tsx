@@ -270,16 +270,18 @@ export function ReportDetailDialog({
                   />
                 </Field>
 
-                <Field label={t('reportDetail.fieldAnimalName')}>
-                  <Input
-                    value={draft.animalName}
-                    onChange={(e) =>
-                      setDraft({ ...draft, animalName: e.target.value })
-                    }
-                    className="h-11 rounded-xl bg-background"
-                    required
-                  />
-                </Field>
+                {report.category === 'domestic' && (
+                  <Field label={t('reportDetail.fieldAnimalName')}>
+                    <Input
+                      value={draft.animalName}
+                      onChange={(e) =>
+                        setDraft({ ...draft, animalName: e.target.value })
+                      }
+                      className="h-11 rounded-xl bg-background"
+                      required
+                    />
+                  </Field>
+                )}
               </div>
 
               {report.category === 'domestic' && (
