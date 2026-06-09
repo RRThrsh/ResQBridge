@@ -142,7 +142,7 @@ export function AdminNewsDialog({
             </DialogDescription>
           </DialogHeader>
 
-          {imageUrl ? (
+          {isView && imageUrl ? (
             <button
               type="button"
               onClick={() => setPreviewOpen(true)}
