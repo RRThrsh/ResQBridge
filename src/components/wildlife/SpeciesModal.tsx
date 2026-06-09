@@ -66,7 +66,7 @@ export function SpeciesModal({ species, onClose }: SpeciesModalProps) {
 
   return (
     <Dialog open={!!species} onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl p-0 gap-0">
+      <DialogContent showCloseButton={false} className="max-h-[90vh] overflow-y-auto sm:max-w-2xl p-0 gap-0">
         <DialogHeader className="sr-only">
           <DialogTitle>{species.commonName}</DialogTitle>
           <DialogDescription>{species.scientificName}</DialogDescription>
