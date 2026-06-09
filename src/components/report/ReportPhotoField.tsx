@@ -12,6 +12,7 @@ import {
   sumPhotoBytes,
   type ReportPhotoItem,
 } from '@/lib/reportPhotos'
+import { compressImage } from '@/lib/compressImage'
 import { useLanguage } from '@/context/LanguageContext'
 import { toast } from 'sonner'
 
@@ -125,18 +126,19 @@ export function ReportPhotoField({
 
     try {
       for (const file of accepted) {
+        const compressed = await compressImage(file)
         if (useStorageUpload) {
-          const storageId = await uploadToStorage(file)
-          const previewUrl = URL.createObjectURL(file)
+          const storageId = await uploadToStorage(compressed)
+          const previewUrl = URL.createObjectURL(compressed)
           blobUrlsRef.current.add(previewUrl)
           next.push({
             key: storageId,
             storageId,
             previewUrl,
-            sizeBytes: file.size,
+            sizeBytes: compressed.size,
           })
         } else {
-          const dataUrl = await readImageFile(file)
+          const dataUrl = await readImageFile(compressed)
           if (!dataUrl) {
             toast.error(`Could not read ${file.name}`)
             continue
@@ -144,7 +146,7 @@ export function ReportPhotoField({
           next.push({
             key: `legacy-${Date.now()}-${added}`,
             previewUrl: dataUrl,
-            sizeBytes: file.size,
+            sizeBytes: compressed.size,
             legacyDataUrl: dataUrl,
           })
         }
