@@ -68,7 +68,7 @@ export function AdminAssignRescuerPanel({
         rescuerEmail,
       })
       toast.success(
-        isPending ? 'Report accepted and assigned' : 'Rescuer assigned to report',
+        'Rescuer assigned to report',
       )
       setConfirmOpen(false)
       onAssigned?.()
@@ -118,18 +118,18 @@ export function AdminAssignRescuerPanel({
             <UserPlus className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div>
               <p className="text-sm font-medium text-foreground">
-                {isPending ? 'Accept & assign rescuer' : 'Assign rescuer'}
+                {'Assign rescuer'}
               </p>
               <p className="text-xs text-muted-foreground">
                 {isPending
-                  ? 'Accepts this report and sends it to the rescuer’s dashboard.'
+                  ? 'Assigns a rescuer to handle this report.'
                   : `Status: ${statusLabel(report.status)}. Change who is handling this rescue.`}
               </p>
             </div>
           </div>
         ) : (
           <p className="text-sm font-medium">
-            {isPending ? 'Accept & assign rescuer' : 'Assign rescuer'}
+            {'Assign rescuer'}
           </p>
         )}
 
@@ -153,7 +153,7 @@ export function AdminAssignRescuerPanel({
           disabled={saving || !rescuerEmail}
           onClick={() => setConfirmOpen(true)}
         >
-          {isPending ? 'Accept & assign' : report.assignedRescuerEmail ? 'Reassign rescuer' : 'Assign rescuer'}
+          {report.assignedRescuerEmail ? 'Reassign rescuer' : 'Assign rescuer'}
         </Button>
       </div>
 
@@ -161,23 +161,23 @@ export function AdminAssignRescuerPanel({
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         step1={{
-          title: isPending ? 'Accept and assign report?' : 'Assign rescuer to report?',
+          title: 'Assign rescuer to report?',
           description: "Are you sure you want to proceed?",
           confirmLabel: "Continue",
           cancelLabel: "Back",
         }}
         step2={{
-          title: isPending ? 'Confirm acceptance' : 'Confirm assignment',
+          title: 'Confirm assignment',
           description: rescuerEmail
             ? isPending
-              ? `Accept this report and assign it to ${selectedLabel}? They will see it in their active assignments.`
+              ? `Assign this report to ${selectedLabel}? They will see it in their active assignments.`
               : `Assign this report to ${selectedLabel}? ${
                   report.assignedRescuerName
                     ? `This replaces ${report.assignedRescuerName}.`
                     : 'They will see it in their active assignments.'
                 }`
             : 'Select a rescuer before confirming.',
-          confirmLabel: isPending ? 'Accept & assign' : 'Assign',
+          confirmLabel: 'Assign',
           cancelLabel: "Cancel",
         }}
         confirmVariant="default"

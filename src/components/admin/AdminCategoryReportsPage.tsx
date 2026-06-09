@@ -179,7 +179,7 @@ export function AdminReportDetailView({
             }
             className="mb-4 px-3 py-1 text-sm uppercase tracking-wider"
           >
-            {statusLabel(report.status)}
+            {report.status === 'accepted' ? 'Assign' : statusLabel(report.status)}
           </Badge>
           <p className="text-xs font-mono text-muted-foreground">
             {report.reportNumber ?? report.id}
@@ -623,7 +623,7 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
                           }
                           className="shrink-0 whitespace-nowrap"
                         >
-                          {statusLabel(report.status)}
+            {report.status === 'accepted' ? 'Assign' : statusLabel(report.status)}
                         </Badge>
                       </AdminTableCell>
                       <AdminTableCell className="text-muted-foreground" title={dateLine}>
