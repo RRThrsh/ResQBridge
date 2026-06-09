@@ -5,6 +5,7 @@ import {
   Check,
   X,
   Eye,
+  Trash2,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -235,6 +236,9 @@ export function DomesticReportsPage() {
 
   const publishReport = useMutation(api.domestic.publishReport)
   const rejectReport = useMutation(api.domestic.rejectReport)
+  const deleteDomesticReport = useMutation(api.domestic.deleteDomesticReport)
+  const [deleteTarget, setDeleteTarget] = useState<any>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const pendingCount = useMemo(
     () => (allReports ?? []).filter((r) => r.status === 'pending').length,
@@ -277,6 +281,21 @@ export function DomesticReportsPage() {
       toast.error(error instanceof Error ? error.message : 'Could not reject report')
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  async function handleDelete(reportId: Id<'reports'>) {
+    if (!domesticApprover) return
+    setDeleting(true)
+    try {
+      await deleteDomesticReport({ reportId, approverEmail: domesticApprover.email })
+      toast.success('Report deleted')
+      setDeleteTarget(null)
+      if (selectedReport?._id === reportId) setSelectedReport(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not delete report')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -363,35 +382,45 @@ export function DomesticReportsPage() {
                     <td className="px-4 py-3"><StatusBadge status={report.status} /></td>
                     <td className="px-4 py-3 text-muted-foreground text-[12px]">{formatDateTime(report.createdAt || report._creationTime)}</td>
                     <td className="px-4 py-3">
-                      {report.status === 'pending' ? (
-                        <div className="flex gap-1">
+                      <div className="flex gap-1">
+                        {report.status === 'pending' ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setSelectedReport(report) }}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/30 transition-colors"
+                              title="Approve"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setSelectedReport(report) }}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-red-500/10 hover:text-red-600 hover:border-red-500/30 transition-colors"
+                              title="Reject"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </>
+                        ) : (
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setSelectedReport(report) }}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/30 transition-colors"
-                            title="Approve"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            title="View"
                           >
-                            <Check className="h-3.5 w-3.5" />
+                            <Eye className="h-3.5 w-3.5" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setSelectedReport(report) }}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-red-500/10 hover:text-red-600 hover:border-red-500/30 transition-colors"
-                            title="Reject"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ) : (
+                        )}
                         <button
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); setSelectedReport(report) }}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                          title="View"
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(report) }}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-red-500/10 hover:text-red-600 hover:border-red-500/30 transition-colors"
+                          title="Delete"
                         >
-                          <Eye className="h-3.5 w-3.5" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -434,6 +463,20 @@ export function DomesticReportsPage() {
         onApprove={handleApprove}
         onReject={handleReject}
         loading={actionLoading}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+        title="Delete report?"
+        description={
+          deleteTarget
+            ? `Permanently remove the report for "${deleteTarget.animalName || 'Unknown'}"? This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget._id)}
       />
     </div>
   )

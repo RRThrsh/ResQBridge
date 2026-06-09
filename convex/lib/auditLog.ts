@@ -45,6 +45,7 @@ export type AuditLogAction =
   | 'domestic_approver.logout'
   | 'domestic_approver.publish'
   | 'domestic_approver.reject'
+  | 'domestic_approver.delete'
   | 'guest.page_view'
 
 export async function writeAuditLog(

@@ -321,6 +321,29 @@ export const rejectReport = mutation({
   },
 })
 
+export const deleteDomesticReport = mutation({
+  args: {
+    reportId: v.id('reports'),
+    approverEmail: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const report = await ctx.db.get(args.reportId)
+    if (!report) throw new Error('Report not found.')
+    if (report.category !== 'domestic') throw new Error('Not a domestic report.')
+
+    await ctx.db.delete(args.reportId)
+
+    await writeAuditLog(ctx, {
+      action: 'domestic_approver.delete',
+      actorEmail: args.approverEmail,
+      actorRole: 'domestic_approver',
+      targetType: 'report',
+      targetId: args.reportId,
+      details: JSON.stringify({ type: report.type, animalName: report.animalName }),
+    })
+  },
+})
+
 // 2. NEW mutation for the Profile Page (Requires currentPassword)
 export const changeDomesticPassword = mutation({
   args: {
