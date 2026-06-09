@@ -2,10 +2,6 @@ import { useRef, useState } from 'react'
 import { useMutation } from 'convex/react'
 import { Camera, Loader2, X } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
-import {
-  MAX_IMAGE_FILE_BYTES,
-  validateImageFile,
-} from '@/lib/imageUpload'
 import { compressImage } from '@/lib/compressImage'
 import { toast } from 'sonner'
 
@@ -33,6 +29,13 @@ export function AdminImageUploadField({
   )
 
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState<{ loaded: number; total: number } | null>(null)
+
+  function formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
 
   async function handleFileChange(
     e: React.ChangeEvent<HTMLInputElement>,
@@ -43,17 +46,18 @@ export function AdminImageUploadField({
 
     if (!file) return
 
-    const validationError = validateImageFile(file)
-
-    if (validationError) {
-      toast.error(validationError)
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file.')
       return
     }
 
     try {
       setUploading(true)
+      setProgress({ loaded: 0, total: file.size })
 
       const compressed = await compressImage(file)
+
+      setProgress({ loaded: compressed.size, total: file.size })
 
       // Generate upload URL
       const uploadUrl = await generateUploadUrl()
@@ -85,6 +89,7 @@ export function AdminImageUploadField({
       toast.error('Could not upload image')
     } finally {
       setUploading(false)
+      setProgress(null)
     }
   }
 
@@ -122,30 +127,40 @@ export function AdminImageUploadField({
         </div>
       ) : null}
 
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={uploading}
-        className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-border p-6 text-center transition-colors hover:bg-accent/40 disabled:opacity-60"
-      >
-        {uploading ? (
-          <Loader2 className="mx-auto mb-2 h-7 w-7 animate-spin text-muted-foreground" />
-        ) : (
+      {uploading && progress ? (
+        <div className="rounded-xl border-2 border-dashed border-border p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
+            <p className="text-sm text-foreground">Uploading image...</p>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${Math.min((progress.loaded / progress.total) * 100, 100)}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {formatBytes(progress.loaded)} / {formatBytes(progress.total)}
+          </p>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-border p-6 text-center transition-colors hover:bg-accent/40 disabled:opacity-60"
+        >
           <Camera className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
-        )}
 
-        <p className="mb-1 text-sm font-medium text-foreground">
-          {uploading
-            ? 'Uploading image...'
-            : value
-              ? 'Replace image'
-              : 'Click to upload image'}
-        </p>
+          <p className="mb-1 text-sm font-medium text-foreground">
+            {value ? 'Replace image' : 'Click to upload image'}
+          </p>
 
-        <p className="text-xs text-muted-foreground">
-          JPG, PNG, WebP up to {MAX_IMAGE_FILE_BYTES / 1024 / 1024} MB
-        </p>
-      </button>
+          <p className="text-xs text-muted-foreground">
+            JPG, PNG, WebP
+          </p>
+        </button>
+      )}
     </div>
   )
 }
