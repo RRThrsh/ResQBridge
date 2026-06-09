@@ -47,6 +47,18 @@ export function formatMonthDay(value: string | number | Date): string {
   })
 }
 
+/** e.g. Monday, January 15, 2026, 3:30 PM */
+export function formatDateTimeWithWeekday(value: string | number | Date): string {
+  return parseDate(value).toLocaleString(LOCALE, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
 /** e.g. January 15, 2026, 3:30 PM */
 export function formatDateTime(value: string | number | Date): string {
   return parseDate(value).toLocaleString(LOCALE, {
