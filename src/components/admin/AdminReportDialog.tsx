@@ -133,7 +133,7 @@ export function AdminReportDialog({
         condition: draft.condition || undefined,
         behavior: draft.behavior || undefined,
         reporterPhone: draft.reporterPhone || undefined,
-        quantity: draft.quantity ? Number(draft.quantity) : undefined,
+        quantity: activeReport.category === 'wildlife' ? (draft.quantity ? Number(draft.quantity) : undefined) : undefined,
         reportedSize: draft.reportedSize || undefined,
         seenAt: draft.seenAt ? new Date(draft.seenAt).getTime() : undefined,
         speciesId: draft.speciesId || undefined,
@@ -488,15 +488,6 @@ export function AdminReportDialog({
                         </div>
                         <div className="font-medium capitalize text-foreground">
                           {activeReport.reportedSize || 'N/A'}
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="mb-1 text-xs text-muted-foreground">
-                          Quantity
-                        </div>
-                        <div className="font-medium text-foreground">
-                          {activeReport.quantity ?? 1}
                         </div>
                       </div>
 

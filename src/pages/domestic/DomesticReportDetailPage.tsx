@@ -247,11 +247,6 @@ async function handleStatusChange(
               value={report.speciesId || 'Not specified'}
             />
 
-            <DetailRow
-              label="Quantity"
-              value={String(report.quantity ?? 1)}
-            />
-
             {(report.type === 'missing' || report.type === 'found') && (
               <DetailRow
                 label="Animal Name"
