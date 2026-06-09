@@ -368,6 +368,8 @@ function domesticTypeLabel(type: string) {
 export function AdminCategoryReportsPage({ category }: { category: ReportCategory }) {
   const { admin } = useAdminAuth()
   const deleteReport = useMutation(api.admin.deleteReport)
+  const acceptReport = useMutation(api.admin.acceptReport)
+  const rejectReport = useMutation(api.admin.rejectReport)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'pending' | 'accepted' | 'en_route' | 'completed'
@@ -380,6 +382,12 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
   const [deleteTarget, setDeleteTarget] = useState<AdminStoredReport | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [acceptTarget, setAcceptTarget] = useState<AdminStoredReport | null>(null)
+  const [acceptOpen, setAcceptOpen] = useState(false)
+  const [accepting, setAccepting] = useState(false)
+  const [rejectTarget, setRejectTarget] = useState<AdminStoredReport | null>(null)
+  const [rejectOpen, setRejectOpen] = useState(false)
+  const [rejecting, setRejecting] = useState(false)
 
   const rows = useQuery(
     api.admin.listReports,
@@ -451,6 +459,42 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
   function openAssignDialog(report: AdminStoredReport) {
     setAssignTarget(report)
     setAssignOpen(true)
+  }
+
+  async function confirmAccept() {
+    if (!admin || !acceptTarget) return
+    setAccepting(true)
+    try {
+      await acceptReport({
+        adminEmail: normalizeEmail(admin.email),
+        reportId: acceptTarget.id as Id<'reports'>,
+      })
+      toast.success('Report accepted')
+      setAcceptOpen(false)
+      setAcceptTarget(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not accept report')
+    } finally {
+      setAccepting(false)
+    }
+  }
+
+  async function confirmReject() {
+    if (!admin || !rejectTarget) return
+    setRejecting(true)
+    try {
+      await rejectReport({
+        adminEmail: normalizeEmail(admin.email),
+        reportId: rejectTarget.id as Id<'reports'>,
+      })
+      toast.success('Report rejected')
+      setRejectOpen(false)
+      setRejectTarget(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not reject report')
+    } finally {
+      setRejecting(false)
+    }
   }
 
   async function confirmDelete() {
@@ -620,17 +664,29 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
                               report.status !== 'en_route' &&
                               canAdminAssignRescuer(report.status)
                             }
+                            showApprove={!isDomestic && report.status === 'pending'}
+                            showReject={!isDomestic && report.status === 'pending'}
                             onAssign={() => openAssignDialog(report)}
+                            onApprove={() => {
+                              setAcceptTarget(report)
+                              setAcceptOpen(true)
+                            }}
+                            onReject={() => {
+                              setRejectTarget(report)
+                              setRejectOpen(true)
+                            }}
                             onAction={(action) => handleAction(report, action)}
                           />
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadPdf(report)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                            aria-label="Download PDF"
-                          >
-                            <FileDown className="h-4 w-4" />
-                          </button>
+                          {!isDomestic && (
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadPdf(report)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                              aria-label="Download PDF"
+                            >
+                              <FileDown className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </AdminTableActionsCell>
                     </tr>
@@ -659,6 +715,38 @@ export function AdminCategoryReportsPage({ category }: { category: ReportCategor
             adminEmail={admin.email}
             open={assignOpen}
             onOpenChange={setAssignOpen}
+          />
+
+          <AdminConfirmDialog
+            open={acceptOpen}
+            onOpenChange={(open) => {
+              setAcceptOpen(open)
+              if (!open) setAcceptTarget(null)
+            }}
+            title="Accept report?"
+            description={
+              acceptTarget
+                ? `This will accept the report for "${acceptTarget.animalName}" and change its status to accepted.`
+                : ''
+            }
+            loading={accepting}
+            onConfirm={confirmAccept}
+          />
+
+          <AdminConfirmDialog
+            open={rejectOpen}
+            onOpenChange={(open) => {
+              setRejectOpen(open)
+              if (!open) setRejectTarget(null)
+            }}
+            title="Reject report?"
+            description={
+              rejectTarget
+                ? `This will reject the report for "${rejectTarget.animalName}". This action cannot be undone.`
+                : ''
+            }
+            loading={rejecting}
+            onConfirm={confirmReject}
           />
 
           <AdminConfirmDialog

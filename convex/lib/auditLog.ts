@@ -21,6 +21,8 @@ export type AuditLogAction =
   | 'admin.report.view'
   | 'admin.report.update'
   | 'admin.report.delete'
+  | 'admin.report.accept'
+  | 'admin.report.reject'
   | 'admin.report.assign_rescuer'
   | 'admin.report.reassign'
   | 'admin.rescuer.add'
