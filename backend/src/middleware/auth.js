@@ -26,4 +26,14 @@ function authorize(...roles) {
   };
 }
 
-module.exports = { authenticate, authorize };
+function checkOwnership(getResourceOwnerId) {
+  return (req, res, next) => {
+    const ownerId = getResourceOwnerId(req);
+    if (req.user.uuid !== ownerId) {
+      return res.status(403).json({ message: "Forbidden. You do not own this resource." });
+    }
+    next();
+  };
+}
+
+module.exports = { authenticate, authorize, checkOwnership };
