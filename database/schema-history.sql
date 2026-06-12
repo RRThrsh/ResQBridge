@@ -1,6 +1,16 @@
 -- Schema created: 2026-06-12
 -- Source: backend/convex/schema.ts
 
+CREATE TABLE otps (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    otp VARCHAR(6) NOT NULL,
+    expiresAt BIGINT NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    _creationTime BIGINT NOT NULL,
+    INDEX by_email (email)
+);
+
 CREATE TABLE users (
     uuid VARCHAR(36) PRIMARY KEY,
     firstName VARCHAR(255) NOT NULL,

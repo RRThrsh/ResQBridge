@@ -1,9 +1,13 @@
 const express = require("express");
 const { body } = require("express-validator");
 const router = express.Router();
-const { register, login } = require("../controllers/authController");
+const { sendOtpHandler, register, login } = require("../controllers/authController");
 const { validate } = require("../middleware/validate");
 const { asyncHandler } = require("../middleware/errorHandler");
+
+const sendOtpRules = [
+  body("email").isEmail().withMessage("Valid email is required.").normalizeEmail(),
+];
 
 const registerRules = [
   body("firstName").trim().notEmpty().withMessage("First name is required."),
@@ -19,6 +23,10 @@ const registerRules = [
     }
     return true;
   }),
+  body("otp")
+    .notEmpty()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("Valid 6-digit OTP is required."),
 ];
 
 const loginRules = [
@@ -26,6 +34,7 @@ const loginRules = [
   body("password").notEmpty().withMessage("Password is required."),
 ];
 
+router.post("/send-otp", sendOtpRules, validate, asyncHandler(sendOtpHandler));
 router.post("/register", registerRules, validate, asyncHandler(register));
 router.post("/login", loginRules, validate, asyncHandler(login));
 
