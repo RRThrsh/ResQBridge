@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { Button, Modal, Badge } from '../components/ui'
 import { GoogleMap, Marker, useLoadScript, Circle, Polyline } from '@react-google-maps/api'
+import { useLocationContext } from '../context/LocationContext.jsx'
 
 const slides = [
   {
@@ -29,26 +31,7 @@ const stats = [
   { label: 'Rescues', value: '12K+' },
   { label: 'Teams', value: '500+' },
   { label: 'Countries', value: '30+' },
-  { label: 'Response Time', value: '&lt;5m' },
-]
-
-const features = [
-  {
-    title: 'Real-time Alerts',
-    desc: 'Instant notifications when disasters strike, so rescue teams can mobilize without delay.',
-  },
-  {
-    title: 'Team Coordination',
-    desc: 'Centralized command hub for assigning roles, tracking progress, and sharing intel.',
-  },
-  {
-    title: 'Resource Mapping',
-    desc: 'Live map of available shelters, hospitals, supplies, and transportation routes.',
-  },
-  {
-    title: 'Victim Tracking',
-    desc: 'End-to-end visibility from rescue to recovery, ensuring no one is left behind.',
-  },
+              { label: 'Response Time', value: '<5m' },
 ]
 
 const categories = [
@@ -86,78 +69,13 @@ const mapOptions = {
   fullscreenControl: true,
 }
 
-function haversineDistance(coords1, coords2) {
-  const R = 6371
-  const dLat = ((coords2.lat - coords1.lat) * Math.PI) / 180
-  const dLng = ((coords2.lng - coords1.lng) * Math.PI) / 180
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((coords1.lat * Math.PI) / 180) *
-      Math.cos((coords2.lat * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
 function Location() {
-  const [userPos, setUserPos] = useState(null)
-  const [locError, setLocError] = useState(null)
-  const [distance, setDistance] = useState(null)
-  const [routePath, setRoutePath] = useState(null)
-  const [routeInfo, setRouteInfo] = useState(null)
-  const [routeLoading, setRouteLoading] = useState(false)
-  const watchId = useRef(null)
-  const routeFetched = useRef(false)
+  const { userPos, locError, distance, routePath, routeInfo, routeLoading } = useLocationContext()
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: apiKey,
   })
-
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setLocError('Geolocation not supported')
-      return
-    }
-    watchId.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-        setUserPos(coords)
-        setDistance(haversineDistance(coords, CENTER))
-        setLocError(null)
-        if (!routeFetched.current) fetchRoute(coords)
-      },
-      (err) => {
-        setLocError('Enable location services to calculate distance')
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    )
-    return () => {
-      if (watchId.current) navigator.geolocation.clearWatch(watchId.current)
-    }
-  }, [])
-
-  async function fetchRoute(origin) {
-    setRouteLoading(true)
-    try {
-      const res = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${CENTER.lng},${CENTER.lat}?overview=full&geometries=geojson&steps=false`,
-      )
-      const data = await res.json()
-      if (data.code === 'Ok' && data.routes[0]) {
-        const coords = data.routes[0].geometry.coordinates.map(([lng, lat]) => ({ lat, lng }))
-        setRoutePath(coords)
-        setRouteInfo({
-          distance: data.routes[0].distance,
-          duration: data.routes[0].duration,
-        })
-        routeFetched.current = true
-      }
-    } catch {
-      // silently fail — map still works
-    } finally {
-      setRouteLoading(false)
-    }
-  }
 
   function isOpen() {
     const now = new Date()
@@ -405,6 +323,146 @@ function CommunityBoard() {
   )
 }
 
+const newsItems = [
+  { date: 'Jun 8, 2026', title: 'Rescue Center Reaches 12K Milestone', category: 'Milestone', desc: 'The center has successfully rescued and rehabilitated over 12,000 animals since opening its doors in 2015.' },
+  { date: 'May 22, 2026', title: 'New Mangrove Nursery Established', category: 'Conservation', desc: 'A partnership with local communities has planted 3,000 mangrove seedlings along Puerto Princesa coastline.' },
+  { date: 'Apr 14, 2026', title: 'Hawkbill Turtle Release at Tubbataha', category: 'Release', desc: 'After six months of rehabilitation, a juvenile hawksbill turtle was released back into the protected reef.' },
+]
+
+const events = [
+  { date: 'Jul 15, 2026', title: 'Wildlife First-Responder Training', location: 'Rescue Center Auditorium', desc: 'A hands-on workshop covering basic wildlife handling, emergency triage, and safe transport techniques.' },
+  { date: 'Aug 5, 2026', title: 'Coastal Clean-Up Drive', location: 'Sabang Beach', desc: 'Join volunteers for a morning of coastal cleanup followed by a short seminar on marine debris impact.' },
+  { date: 'Sep 12, 2026', title: 'Community Appreciation Day', location: 'Rescue Center Grounds', desc: 'Open house with guided tours, wildlife exhibits, kids activities, and a chance to meet the rescue team.' },
+]
+
+function NewsEvents() {
+  return (
+    <section className="border-t border-gray-100 px-6 py-16 sm:px-8 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">News &amp; Events</h2>
+        <p className="mt-2 text-sm text-gray-400">
+          Stay updated on rescues, releases, and upcoming community activities.
+        </p>
+
+        <div className="mt-8 grid gap-8 lg:grid-cols-2">
+          <div>
+            <h3 className="text-sm font-semibold tracking-wide text-gray-500 uppercase">Latest News</h3>
+            <div className="mt-4 space-y-4">
+              {newsItems.map((item) => (
+                <div key={item.title} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="whitespace-nowrap rounded bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700 uppercase tracking-wide">{item.category}</span>
+                    <span className="text-xs text-gray-400">{item.date}</span>
+                  </div>
+                  <h4 className="mt-2 text-sm font-medium text-gray-900">{item.title}</h4>
+                  <p className="mt-1 text-xs leading-relaxed text-gray-500">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold tracking-wide text-gray-500 uppercase">Upcoming Events</h3>
+            <div className="mt-4 space-y-4">
+              {events.map((ev) => (
+                <div key={ev.title} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5">
+                      <span className="text-xs font-bold text-green-700 uppercase">{ev.date.split(' ')[0]}</span>
+                      <span className="text-[10px] text-gray-500">{ev.date.split(',')[0].replace(ev.date.split(' ')[0], '').trim()}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-gray-900">{ev.title}</h4>
+                      <p className="text-xs text-gray-400">{ev.location}</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-gray-500">{ev.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Contact() {
+  return (
+    <section className="border-t border-gray-100 px-6 py-16 sm:px-8 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">Contact Us</h2>
+        <p className="mt-2 text-sm text-gray-400">
+          Reach out for rescues, inquiries, or to lend a hand.
+        </p>
+
+        <div className="mt-8 grid gap-10 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+              <p className="text-xs font-semibold tracking-wide text-red-600 uppercase">Emergency Hotline</p>
+              <p className="mt-2 text-2xl font-bold text-red-700">+63 (48) 123-4567</p>
+              <p className="mt-1 text-sm text-red-500">Available 24/7 for wildlife emergencies</p>
+            </div>
+
+            <div className="mt-6 space-y-5 text-sm">
+              <div>
+                <p className="font-medium text-gray-700">Non-Emergency</p>
+                <p className="mt-0.5 text-gray-500">+63 (48) 434-1234</p>
+              </div>
+              <div>
+                <p className="font-medium text-gray-700">Email</p>
+                <p className="mt-0.5 text-gray-500">rescue@palawanwildlife.org</p>
+              </div>
+              <div>
+                <p className="font-medium text-gray-700">Follow Us</p>
+                <div className="mt-1.5 flex gap-3">
+                  {['Facebook', 'Instagram', 'Twitter'].map((s) => (
+                    <span key={s} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-500 transition hover:border-gray-300 hover:text-gray-700">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs italic text-gray-400">
+                We respond to non-emergency messages within 24 hours.
+              </p>
+            </div>
+          </div>
+
+          <div className="lg:col-span-3">
+            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Name</label>
+                  <input type="text" className="mt-1 w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500" placeholder="Your name" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input type="email" className="mt-1 w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500" placeholder="you@example.com" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Subject</label>
+                <select className="mt-1 w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500">
+                  <option>Report an Animal</option>
+                  <option>Volunteer</option>
+                  <option>Donation</option>
+                  <option>General Inquiry</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Message</label>
+                <textarea rows={4} className="mt-1 w-full resize-y rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500" placeholder="Tell us how we can help..." />
+              </div>
+              <Button type="submit" className="w-full sm:w-auto">Send Message</Button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function Carousel() {
   const [current, setCurrent] = useState(0)
 
@@ -491,7 +549,7 @@ export default function Landing() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:justify-center lg:justify-start">
               <Button size="lg" className="w-full sm:w-auto">Report an Animal</Button>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">Wildlife Guide</Button>
+              <Link to="/wildlife-guide"><Button variant="outline" size="lg" className="w-full sm:w-auto">Wildlife Guide</Button></Link>
             </div>
           </div>
           <div className="relative hidden h-72 lg:block lg:h-[28rem]">
@@ -518,53 +576,83 @@ export default function Landing() {
 
       <Location />
 
-      <section className="border-t border-gray-100 px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl">
-          <div className="mx-auto mb-20 grid max-w-lg grid-cols-2 gap-y-10 sm:grid-cols-4 sm:gap-y-0">
+      <NewsEvents />
+
+      <section className="border-t border-gray-100 px-6 py-16 sm:px-8 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-16 grid grid-cols-2 gap-y-10 sm:grid-cols-4">
             {[
               { label: 'Rescues', value: '12K+' },
               { label: 'Teams', value: '500+' },
               { label: 'Countries', value: '30+' },
-              { label: 'Response Time', value: '&lt;5m' },
+              { label: 'Response Time', value: '<5m' },
             ].map((stat) => (
-              <div key={stat.label} className="text-center">
+              <div key={stat.label}>
                 <p className="text-3xl font-light text-gray-900">{stat.value}</p>
-                <p className="mt-1 text-sm text-gray-400">{stat.label}</p>
+                <p className="mt-2 text-sm text-gray-400">{stat.label}</p>
               </div>
             ))}
           </div>
 
-          <h2 className="text-center text-2xl font-light text-gray-900 sm:text-3xl">
+          <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">
             Everything you need to respond faster
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-center text-sm text-gray-400">
+          <p className="mt-2 max-w-xl text-sm text-gray-400">
             From first alert to final recovery, ResQBridge gives your team the tools to act decisively.
           </p>
-          <div className="mt-14 grid gap-px overflow-hidden rounded-xl border border-gray-200 bg-gray-200 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((f) => (
-              <div key={f.title} className="bg-white p-8">
-                <h3 className="text-base font-medium text-gray-900">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray-400">{f.desc}</p>
-              </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-8">
+              <h3 className="text-base font-medium text-gray-900">Real-time Alerts</h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-400">Instant notifications when disasters strike, so rescue teams can mobilize without delay.</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-8">
+              <h3 className="text-base font-medium text-gray-900">Team Coordination</h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-400">Centralized command hub for assigning roles, tracking progress, and sharing intel.</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-8">
+              <h3 className="text-base font-medium text-gray-900">Resource Mapping</h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-400">Live map of available shelters, hospitals, supplies, and transportation routes.</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-8">
+              <h3 className="text-base font-medium text-gray-900">Victim Tracking</h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-400">End-to-end visibility from rescue to recovery, ensuring no one is left behind.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-gray-100 px-6 py-16 sm:px-8 lg:px-8">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">FAQ</h2>
+          <p className="mt-2 text-sm text-gray-400">
+            Common questions about wildlife rescue and our platform.
+          </p>
+
+          <div className="mt-10 space-y-4">
+            {[
+              { q: 'How do I report a wildlife emergency?', a: 'Call our 24/7 hotline at +63 (48) 123-4567 or use the Report an Animal button on our homepage. Provide the location, species if known, and a description of the animal\'s condition.' },
+              { q: 'What should I do if I find an injured animal?', a: 'Keep your distance, observe from a safe spot, and call our rescue hotline immediately. Do not attempt to feed, touch, or move the animal unless instructed by our team.' },
+              { q: 'Can I volunteer at the rescue center?', a: 'Yes. We welcome volunteers for animal care, clean-up drives, and community education programs. Fill out the Contact form and select Volunteer as the subject.' },
+              { q: 'How are donated funds used?', a: 'Donations go directly toward veterinary supplies, animal feed, facility maintenance, and community conservation programs. We publish annual transparency reports.' },
+              { q: 'Do you accept drop-off donations?', a: 'Yes. In-kind donations like animal feed, cleaning materials, and office supplies can be dropped off during operating hours (Mon–Sun, 8 AM – 5 PM) at our Irawan center.' },
+            ].map((faq) => (
+              <details key={faq.q} className="group rounded-xl border border-gray-200 bg-white shadow-sm">
+                <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-medium text-gray-900 transition hover:text-green-700">
+                  {faq.q}
+                  <svg className="h-4 w-4 shrink-0 text-gray-400 transition group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="border-t border-gray-100 px-5 pb-4 pt-3 text-sm leading-relaxed text-gray-500">
+                  {faq.a}
+                </p>
+              </details>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="border-t border-gray-100 px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-xl text-center">
-          <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">
-            Ready to bridge the gap?
-          </h2>
-          <p className="mt-4 text-sm text-gray-400">
-            Join hundreds of rescue organizations already using ResQBridge.
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <Button size="lg">Start Free Trial</Button>
-            <Button variant="outline" size="lg">Talk to Sales</Button>
-          </div>
-        </div>
-      </section>
+      <Contact />
     </>
   )
 }
