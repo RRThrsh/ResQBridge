@@ -1,4 +1,5 @@
 const express = require("express");
+const authRoutes = require("./routes/auth");
 
 const app = express();
 
@@ -7,6 +8,11 @@ const app = express();
 //============================================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+//============================================================
+// Routes
+//============================================================
+app.use("/api/auth", authRoutes);
 
 //============================================================
 // Home Route
