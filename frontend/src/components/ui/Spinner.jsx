@@ -7,7 +7,7 @@ const sizes = {
 export default function Spinner({ size = 'md', className = '' }) {
   return (
     <div
-      className={`animate-spin rounded-full border-gray-300 border-t-blue-600 ${sizes[size]} ${className}`}
+      className={`animate-spin rounded-full border-gray-300 border-t-green-600 ${sizes[size]} ${className}`}
       role="status"
       aria-label="Loading"
     />

@@ -13,7 +13,7 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <a href="/" className="text-xl font-bold text-blue-600">
+        <a href="/" className="text-xl font-bold text-green-600">
           ResQBridge
         </a>
 
@@ -22,7 +22,7 @@ export default function Navbar() {
             <a
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-gray-600 transition-colors hover:text-blue-600"
+              className="text-sm font-medium text-gray-600 transition-colors hover:text-green-600"
             >
               {link.label}
             </a>
@@ -53,7 +53,7 @@ export default function Navbar() {
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className="block px-4 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-blue-600"
+              className="block px-4 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-green-600"
             >
               {link.label}
             </a>

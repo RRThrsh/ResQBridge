@@ -19,7 +19,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
-            <a href="/" className="text-xl font-bold text-blue-600">
+            <a href="/" className="text-xl font-bold text-green-600">
               ResQBridge
             </a>
             <p className="mt-2 text-sm text-gray-500">
@@ -34,7 +34,7 @@ export default function Footer() {
                   <li key={link}>
                     <a
                       href="#"
-                      className="text-sm text-gray-500 transition-colors hover:text-blue-600"
+                      className="text-sm text-gray-500 transition-colors hover:text-green-600"
                     >
                       {link}
                     </a>

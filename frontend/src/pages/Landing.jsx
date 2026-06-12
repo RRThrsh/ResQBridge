@@ -42,16 +42,16 @@ const features = [
 export default function Landing() {
   return (
     <>
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 px-4 py-24 text-white sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden bg-gradient-to-br from-green-600 to-green-800 px-4 py-24 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <h1 className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
             Connect. Coordinate. Rescue.
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-blue-100 sm:text-xl">
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-green-100 sm:text-xl">
             The platform that bridges rescue teams, resources, and survivors during critical moments.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
+            <Button size="lg" className="bg-white text-green-700 hover:bg-green-50">
               Get Started
             </Button>
             <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
@@ -71,7 +71,7 @@ export default function Landing() {
             { label: 'Response Time', value: '<5m' },
           ].map((stat) => (
             <div key={stat.label} className="text-center first:pl-0 last:pr-0">
-              <p className="text-2xl font-bold text-blue-600">{stat.value}</p>
+              <p className="text-2xl font-bold text-green-600">{stat.value}</p>
               <p className="mt-1 text-sm text-gray-500">{stat.label}</p>
             </div>
           ))}
@@ -90,7 +90,7 @@ export default function Landing() {
                 key={f.title}
                 className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="mb-4 inline-flex rounded-lg bg-blue-50 p-3 text-blue-600">
+                <div className="mb-4 inline-flex rounded-lg bg-green-50 p-3 text-green-600">
                   {f.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">{f.title}</h3>
@@ -101,16 +101,16 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="bg-blue-600 px-4 py-20 sm:px-6 lg:px-8">
+      <section className="bg-green-600 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-3xl font-bold text-white sm:text-4xl">
             Ready to bridge the gap?
           </h2>
-          <p className="mt-4 text-lg text-blue-100">
+          <p className="mt-4 text-lg text-green-100">
             Join hundreds of rescue organizations already using ResQBridge.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
+            <Button size="lg" className="bg-white text-green-700 hover:bg-green-50">
               Start Free Trial
             </Button>
             <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">

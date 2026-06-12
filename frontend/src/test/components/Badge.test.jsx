@@ -14,7 +14,7 @@ describe('Badge', () => {
 
   it('applies primary variant', () => {
     render(<Badge variant="primary">Primary</Badge>)
-    expect(screen.getByText('Primary').className).toMatch(/bg-blue-100/)
+    expect(screen.getByText('Primary').className).toMatch(/bg-green-100/)
   })
 
   it('applies success variant', () => {
