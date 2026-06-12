@@ -1,44 +1,32 @@
 const express = require("express");
+const helmet = require("helmet");
+const cors = require("cors");
+const morgan = require("morgan");
 const authRoutes = require("./routes/auth");
+const { errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
 
-//============================================================
-// Middleware
-//============================================================
+app.use(helmet());
+app.use(cors());
+app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//============================================================
-// Routes
-//============================================================
+app.get("/", (req, res) => {
+    res.json({ message: "ResQBridge API is running" });
+});
+
+app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "OK" });
+});
+
 app.use("/api/auth", authRoutes);
 
-//============================================================
-// Home Route
-//============================================================
-app.get("/", (req, res) => {
-    res.json({
-        message: "Portfolio API is running"
-    });
+app.use((_req, res) => {
+    res.status(404).json({ message: "Route not found" });
 });
 
-//============================================================
-// Health Check
-//============================================================
-app.get("/health", (req, res) => {
-    res.status(200).json({
-        status: "OK"
-    });
-});
-
-//============================================================
-// 404 Handler
-//============================================================
-app.use((req, res) => {
-    res.status(404).json({
-        message: "Route not found"
-    });
-});
+app.use(errorHandler);
 
 module.exports = app;

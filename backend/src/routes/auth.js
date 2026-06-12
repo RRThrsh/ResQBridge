@@ -1,8 +1,32 @@
 const express = require("express");
+const { body } = require("express-validator");
 const router = express.Router();
 const { register, login } = require("../controllers/authController");
+const { validate } = require("../middleware/validate");
+const { asyncHandler } = require("../middleware/errorHandler");
 
-router.post("/register", register);
-router.post("/login", login);
+const registerRules = [
+  body("firstName").trim().notEmpty().withMessage("First name is required."),
+  body("lastName").trim().notEmpty().withMessage("Last name is required."),
+  body("phoneNumber").trim().notEmpty().withMessage("Phone number is required."),
+  body("email").isEmail().withMessage("Valid email is required.").normalizeEmail(),
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters."),
+  body("confirmPassword").custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error("Passwords do not match.");
+    }
+    return true;
+  }),
+];
+
+const loginRules = [
+  body("email").isEmail().withMessage("Valid email is required.").normalizeEmail(),
+  body("password").notEmpty().withMessage("Password is required."),
+];
+
+router.post("/register", registerRules, validate, asyncHandler(register));
+router.post("/login", loginRules, validate, asyncHandler(login));
 
 module.exports = router;
