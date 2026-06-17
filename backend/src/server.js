@@ -1,0 +1,11 @@
+const dotenv = require("dotenv");
+dotenv.config();
+dotenv.config({ path: ".env.local", override: true });
+
+const app = require("./app");
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
