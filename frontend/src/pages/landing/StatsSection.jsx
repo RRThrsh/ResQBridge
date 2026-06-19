@@ -1,14 +1,9 @@
-export default function StatsSection() {
+export default function StatsSection({ stats }) {
   return (
     <section className="border-t border-gray-100 px-6 py-16 sm:px-8 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-16 grid grid-cols-2 gap-y-10 sm:grid-cols-4">
-          {[
-            { label: 'Rescues', value: '12K+' },
-            { label: 'Teams', value: '500+' },
-            { label: 'Countries', value: '30+' },
-            { label: 'Response Time', value: '<5m' },
-          ].map((stat) => (
+          {stats.map((stat) => (
             <div key={stat.label}>
               <p className="text-3xl font-light text-gray-900">{stat.value}</p>
               <p className="mt-2 text-sm text-gray-400">{stat.label}</p>

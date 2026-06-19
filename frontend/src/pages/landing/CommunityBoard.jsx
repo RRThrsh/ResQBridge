@@ -21,22 +21,22 @@ const mockReports = {
     { id: 9, species: 'Green Sea Turtle', location: 'El Nido', date: '2026-06-07', status: 'In Care', desc: 'Found stranded on beach, minor injuries to front flipper.' },
     { id: 10, species: 'Tabon Scrubfowl', location: 'Roxas', date: '2026-06-04', status: 'Released', desc: 'Disoriented juvenile, released after successful feeding.' },
     { id: 11, species: 'Fishing Cat', location: 'Aborlan', date: '2026-06-01', status: 'In Care', desc: 'Caught in snare, undergoing treatment for leg wound.' },
-    { id: 12, species: 'Reticulated Python', location: 'Brooke\'s Point', date: '2026-05-30', status: 'Released', desc: 'Removed from poultry farm, released into protected forest.' },
+    { id: 12, species: 'Reticulated Python', location: "Brooke's Point", date: '2026-05-30', status: 'Released', desc: 'Removed from poultry farm, released into protected forest.' },
     { id: 13, species: 'Wild Boar Piglet', location: 'Quezon', date: '2026-05-27', status: 'In Care', desc: 'Orphaned piglet, being bottle-fed at the center.' },
     { id: 14, species: 'Hornbill', location: 'San Vicente', date: '2026-05-24', status: 'Released', desc: 'Flew into window, stunned but unharmed. Released after recovery.' },
   ],
 }
 
-export default function CommunityBoard() {
+export default function CommunityBoard({ title, subtitle }) {
   const [modalTab, setModalTab] = useState(null)
 
   return (
     <section className="border-t border-gray-100 px-6 py-16 sm:px-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div>
-          <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">Community Board</h2>
+          <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">{title}</h2>
           <p className="mt-2 text-sm text-gray-400">
-            Recent wildlife reports from across Palawan.
+            {subtitle}
           </p>
         </div>
 

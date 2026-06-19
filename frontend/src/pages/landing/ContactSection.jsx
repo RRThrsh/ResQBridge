@@ -1,6 +1,6 @@
 import { Button } from '../../components/ui'
 
-export default function ContactSection() {
+export default function ContactSection({ contact }) {
   return (
     <section className="border-t border-gray-100 px-6 py-16 sm:px-8 lg:px-8">
       <div className="mx-auto max-w-6xl">
@@ -13,18 +13,18 @@ export default function ContactSection() {
           <div className="lg:col-span-2">
             <div className="rounded-xl border border-red-200 bg-red-50 p-6">
               <p className="text-xs font-semibold tracking-wide text-red-600 uppercase">Emergency Hotline</p>
-              <p className="mt-2 text-2xl font-bold text-red-700">+63 (48) 123-4567</p>
+              <p className="mt-2 text-2xl font-bold text-red-700">{contact.emergencyHotline}</p>
               <p className="mt-1 text-sm text-red-500">Available 24/7 for wildlife emergencies</p>
             </div>
 
             <div className="mt-6 space-y-5 text-sm">
               <div>
                 <p className="font-medium text-gray-700">Non-Emergency</p>
-                <p className="mt-0.5 text-gray-500">+63 (48) 434-1234</p>
+                <p className="mt-0.5 text-gray-500">{contact.phone}</p>
               </div>
               <div>
                 <p className="font-medium text-gray-700">Email</p>
-                <p className="mt-0.5 text-gray-500">rescue@palawanwildlife.org</p>
+                <p className="mt-0.5 text-gray-500">{contact.email}</p>
               </div>
               <div>
                 <p className="font-medium text-gray-700">Follow Us</p>

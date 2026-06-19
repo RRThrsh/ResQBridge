@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Button } from '../../components/ui'
 
-export default function HeroSection() {
+export default function HeroSection({ badge, title, description }) {
   return (
     <section className="relative flex min-h-screen items-center overflow-hidden px-6 py-12 sm:px-8 lg:px-8">
       <div className="absolute inset-0 -z-10">
@@ -12,14 +12,13 @@ export default function HeroSection() {
       <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-2 lg:gap-12">
         <div className="text-center lg:text-left">
           <span className="inline-block max-w-full rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-medium tracking-wide text-emerald-700 uppercase sm:px-4 sm:py-1.5 sm:text-xs">
-            Palawan Wildlife Rescue &amp; Conservation Center
+            {badge}
           </span>
           <h1 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-gray-900 sm:mt-6 sm:text-5xl lg:text-6xl">
-            Helping Animals,{' '}
-            <span className="text-green-700">Protecting Nature</span>
+            {title}
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-gray-500 sm:mt-6 sm:text-base sm:leading-relaxed lg:text-lg">
-            Submit reports for wildlife sightings, stray animals, rescue emergencies, and animal welfare concerns across Palawan communities.
+            {description}
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:justify-center lg:justify-start">
             <Button size="lg" className="w-full sm:w-auto">Report an Animal</Button>

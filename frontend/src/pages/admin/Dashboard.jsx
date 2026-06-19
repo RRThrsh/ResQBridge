@@ -404,8 +404,8 @@ function DashboardTab({ stats, dashData, chartPeriod, onChartPeriodChange, userN
                 </svg>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-900">Guest Visits</h3>
-                <p className="text-xs text-gray-400">Landing page traffic over time</p>
+                <h3 className="text-sm font-semibold text-gray-900">Unique Visitors</h3>
+                <p className="text-xs text-gray-400">Unique IPs per period on the landing page</p>
               </div>
             </div>
             <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-0.5">

@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { GoogleMap, Marker, useLoadScript, Circle, Polyline } from '@react-google-maps/api'
 import { useLocationContext } from '../../context/LocationContext.jsx'
 
-const CENTER = { lat: 9.799447, lng: 118.693766 }
 const mapOptions = {
   disableDefaultUI: false,
   zoomControl: true,
@@ -11,7 +10,7 @@ const mapOptions = {
   fullscreenControl: true,
 }
 
-export default function Location() {
+export default function Location({ title, subtitle, center }) {
   const { userPos, locError, distance, routePath, routeInfo, routeLoading, requestLocation } = useLocationContext()
 
   useEffect(() => { requestLocation() }, [requestLocation])
@@ -32,9 +31,9 @@ export default function Location() {
   return (
     <section className="border-t border-gray-100 px-6 py-16 sm:px-8 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">Location</h2>
+        <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">{title}</h2>
         <p className="mt-2 text-sm text-gray-400">
-          Visit us at our rescue center in Palawan.
+          {subtitle}
         </p>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-5">
@@ -151,11 +150,11 @@ export default function Location() {
                 )}
                 <GoogleMap
                   mapContainerStyle={{ width: '100%', height: '420px', minHeight: '300px' }}
-                  center={userPos || CENTER}
+                  center={userPos || center}
                   zoom={userPos ? 13 : 11}
                   options={mapOptions}
                 >
-                  <Marker position={CENTER} title="Palawan Wildlife Rescue Center" />
+                  <Marker position={center} title="Palawan Wildlife Rescue Center" />
                   {routePath && (
                     <Polyline
                       path={routePath}

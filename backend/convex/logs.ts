@@ -83,6 +83,7 @@ export const getLogStats = query({
 
     const ipCounts = new Map<string, number>();
     const eventCounts = new Map<string, number>();
+    const sectionDurations = new Map<string, { total: number; count: number }>();
     let totalDuration = 0;
     let durationCount = 0;
 
@@ -93,11 +94,26 @@ export const getLogStats = query({
         totalDuration += log.sessionDuration;
         durationCount++;
       }
+      if (log.section && log.sessionDuration != null) {
+        const prev = sectionDurations.get(log.section) ?? { total: 0, count: 0 };
+        prev.total += log.sessionDuration;
+        prev.count++;
+        sectionDurations.set(log.section, prev);
+      }
     }
 
     const ipEntries = Array.from(ipCounts.entries())
       .map(([ip, count]) => ({ ip, count }))
       .sort((a, b) => b.count - a.count);
+
+    const sectionEntries = Array.from(sectionDurations.entries())
+      .map(([section, { total, count }]) => ({
+        section,
+        totalDuration: total,
+        avgDuration: Math.round(total / count),
+        visits: count,
+      }))
+      .sort((a, b) => b.totalDuration - a.totalDuration);
 
     return {
       totalLogs: all.length,
@@ -105,6 +121,7 @@ export const getLogStats = query({
       avgDuration: durationCount > 0 ? Math.round(totalDuration / durationCount) : 0,
       ipBreakdown: ipEntries,
       eventBreakdown: Object.fromEntries(eventCounts),
+      sectionBreakdown: sectionEntries,
     };
   },
 });
@@ -136,6 +153,10 @@ export const getDashboardData = query({
     const weeklyMap = new Map<string, number>();
     const monthlyMap = new Map<string, number>();
     const yearlyMap = new Map<string, number>();
+    const dailySeen = new Set<string>();
+    const weeklySeen = new Set<string>();
+    const monthlySeen = new Set<string>();
+    const yearlySeen = new Set<string>();
 
     let rescuerCount = 0;
     let rescuerWeek = 0;
@@ -157,10 +178,26 @@ export const getDashboardData = query({
       const weekKey = weekStart.toISOString().slice(0, 10);
 
       if (log.eventType === "guest") {
-        dailyMap.set(dayKey, (dailyMap.get(dayKey) ?? 0) + 1);
-        weeklyMap.set(weekKey, (weeklyMap.get(weekKey) ?? 0) + 1);
-        monthlyMap.set(monthKey, (monthlyMap.get(monthKey) ?? 0) + 1);
-        yearlyMap.set(yearKey, (yearlyMap.get(yearKey) ?? 0) + 1);
+        const dayTag = `${dayKey}:${log.ipAddress}`;
+        if (!dailySeen.has(dayTag)) {
+          dailySeen.add(dayTag);
+          dailyMap.set(dayKey, (dailyMap.get(dayKey) ?? 0) + 1);
+        }
+        const weekTag = `${weekKey}:${log.ipAddress}`;
+        if (!weeklySeen.has(weekTag)) {
+          weeklySeen.add(weekTag);
+          weeklyMap.set(weekKey, (weeklyMap.get(weekKey) ?? 0) + 1);
+        }
+        const monthTag = `${monthKey}:${log.ipAddress}`;
+        if (!monthlySeen.has(monthTag)) {
+          monthlySeen.add(monthTag);
+          monthlyMap.set(monthKey, (monthlyMap.get(monthKey) ?? 0) + 1);
+        }
+        const yearTag = `${yearKey}:${log.ipAddress}`;
+        if (!yearlySeen.has(yearTag)) {
+          yearlySeen.add(yearTag);
+          yearlyMap.set(yearKey, (yearlyMap.get(yearKey) ?? 0) + 1);
+        }
       }
 
       if (log.eventType?.includes("rescuer")) {

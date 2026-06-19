@@ -106,21 +106,44 @@ export default function Monitoring() {
           <h3 className="text-sm font-semibold text-gray-900">Session Analytics</h3>
           <div className="mt-4 grid grid-cols-2 gap-4">
             <div className="rounded-lg bg-gray-50 px-4 py-3">
-              <p className="text-xs text-gray-500">Total Logs</p>
+              <p className="text-xs text-gray-500">Total Log Events</p>
               <p className="mt-1 text-2xl font-bold text-gray-900">{stats?.totalLogs || 0}</p>
             </div>
             <div className="rounded-lg bg-gray-50 px-4 py-3">
-              <p className="text-xs text-gray-500">Unique Visitors</p>
+              <p className="text-xs text-gray-500">Unique Visitors (All-time)</p>
               <p className="mt-1 text-2xl font-bold text-gray-900">{stats?.uniqueIPs || 0}</p>
             </div>
             <div className="rounded-lg bg-gray-50 px-4 py-3">
-              <p className="text-xs text-gray-500">Avg Session</p>
+              <p className="text-xs text-gray-500">Avg Session Duration</p>
               <p className="mt-1 text-2xl font-bold text-gray-900">{formatDuration(stats?.avgDuration)}</p>
             </div>
             <div className="rounded-lg bg-gray-50 px-4 py-3">
-              <p className="text-xs text-gray-500">Total Users</p>
+              <p className="text-xs text-gray-500">Registered Users</p>
               <p className="mt-1 text-2xl font-bold text-gray-900">{userStats?.totalUsers || 0}</p>
             </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <h3 className="text-sm font-semibold text-gray-900">Section Engagement</h3>
+          <div className="mt-4 space-y-2">
+            {stats?.sectionBreakdown?.length ? (
+              stats.sectionBreakdown.map(({ section, totalDuration, avgDuration, visits }, i) => (
+                <div key={section} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="w-5 text-center text-xs text-gray-400">{i + 1}</span>
+                    <span className="capitalize text-gray-700">{section.replace(/-/g, ' ')}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs text-gray-500">{visits}x</span>
+                    <span className="w-16 text-right font-mono text-xs text-gray-600">{formatDuration(totalDuration)}</span>
+                    <span className="w-16 text-right font-mono text-xs text-gray-400">avg {formatDuration(avgDuration)}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="py-4 text-center text-sm text-gray-400">No section engagement data yet.</p>
+            )}
           </div>
         </div>
 
