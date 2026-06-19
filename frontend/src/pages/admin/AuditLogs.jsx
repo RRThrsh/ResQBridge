@@ -141,7 +141,7 @@ export default function AuditLogs() {
 
   useEffect(() => {
     fetchLogs()
-    const interval = setInterval(fetchLogs, 1000)
+    const interval = setInterval(fetchLogs, 5000)
     return () => clearInterval(interval)
   }, [fetchLogs])
 
@@ -236,7 +236,7 @@ export default function AuditLogs() {
 
       <div className="mt-3 flex items-center justify-between text-xs text-gray-500 font-mono">
         <span>{logs.length} entries displayed · {totalLogs.toLocaleString()} total</span>
-        <span>auto-refresh · 1s</span>
+        <span>auto-refresh · 5s</span>
       </div>
     </div>
   )
