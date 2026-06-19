@@ -14,7 +14,7 @@ export default function Carousel({ slides }) {
   const next = useCallback(() => setCurrent((c) => (c === slides.length - 1 ? 0 : c + 1)), [slides.length])
 
   useEffect(() => {
-    const timer = setInterval(next, 5000)
+    const timer = setInterval(next, 6000)
     return () => clearInterval(timer)
   }, [next])
 
@@ -25,13 +25,22 @@ export default function Carousel({ slides }) {
 
   return (
     <section className="relative overflow-hidden px-6 py-16 sm:px-8 lg:px-8">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-7xl">
         <div className="relative isolate overflow-hidden rounded-2xl">
-          <div className={`absolute inset-0 bg-gradient-to-br ${bg} transition-all duration-700`} />
-          <div className="absolute inset-0 bg-black/20" />
-          <div className="relative z-10 flex flex-col items-center px-6 py-20 text-center text-white sm:px-12 lg:px-20">
-            <h3 className="text-2xl font-bold sm:text-3xl">{slide.title}</h3>
-            <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/80 sm:text-base">
+          {slide.image ? (
+            <div className="absolute inset-0 transition-all duration-700">
+              <img src={slide.image} alt="" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-black/40" />
+            </div>
+          ) : (
+            <>
+              <div className={`absolute inset-0 bg-gradient-to-br ${bg} transition-all duration-700`} />
+              <div className="absolute inset-0 bg-black/20" />
+            </>
+          )}
+          <div className="relative z-10 flex flex-col items-center px-6 py-44 text-center text-white sm:px-12 lg:px-20">
+            <h3 className="text-2xl font-bold sm:text-4xl lg:text-5xl">{slide.title}</h3>
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base lg:text-lg">
               {slide.desc}
             </p>
           </div>

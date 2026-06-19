@@ -36,4 +36,7 @@ router.put("/config", superOnly, asyncHandler(updateConfig));
 router.get("/landing-config", superOnly, asyncHandler(getLandingConfig));
 router.put("/landing-config", superOnly, asyncHandler(updateLandingConfig));
 
+const { upload, uploadImage } = require("../controllers/uploadController");
+router.post("/upload", superOnly, upload.single("image"), asyncHandler(uploadImage));
+
 module.exports = router;

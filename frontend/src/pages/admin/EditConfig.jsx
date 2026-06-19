@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { admin as adminApi } from '../../services/api'
 
 const API_BASE = '/api/v1'
+const UPLOAD_URL = `${API_BASE}/admin/upload`
 
 export default function EditConfig({ section }) {
   const [config, setConfig] = useState(null)
@@ -10,6 +11,7 @@ export default function EditConfig({ section }) {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState(null)
   const [dirty, setDirty] = useState(false)
+  const [uploading, setUploading] = useState(null) // { index, progress } or null
 
   async function fetchConfig() {
     try {
@@ -86,7 +88,7 @@ export default function EditConfig({ section }) {
   function addCarouselSlide() {
     setConfig((prev) => {
       const copy = structuredClone(prev)
-      copy.carousel.push({ title: '', desc: '' })
+      copy.carousel.push({ title: '', desc: '', image: '' })
       return copy
     })
     setDirty(true)
@@ -99,6 +101,32 @@ export default function EditConfig({ section }) {
       return copy
     })
     setDirty(true)
+  }
+
+  function handleCarouselImageUpload(index, file) {
+    const formData = new FormData()
+    formData.append('image', file)
+    const xhr = new XMLHttpRequest()
+    setUploading({ index, progress: 0 })
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100)
+        setUploading({ index, progress: pct })
+      }
+    }
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const data = JSON.parse(xhr.responseText)
+        updateCarouselSlide(index, 'image', data.url)
+      } else {
+        try { const d = JSON.parse(xhr.responseText); alert(d.message) } catch { alert('Upload failed') }
+      }
+      setUploading(null)
+    }
+    xhr.onerror = () => { alert('Upload failed'); setUploading(null) }
+    xhr.open('POST', UPLOAD_URL)
+    xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`)
+    xhr.send(formData)
   }
 
   function updateNewsItem(index, field, value) {
@@ -405,6 +433,33 @@ export default function EditConfig({ section }) {
                       placeholder="Slide description"
                       className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
                     />
+                    <div className="flex items-center gap-3">
+                      {uploading?.index === i ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-20 overflow-hidden rounded-full bg-gray-200">
+                            <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${uploading.progress}%` }} />
+                          </div>
+                          <span className="text-[10px] text-gray-500">{uploading.progress}%</span>
+                        </div>
+                      ) : slide.image ? (
+                        <div className="relative h-14 w-24 overflow-hidden rounded-lg border border-gray-200">
+                          <img src={slide.image} alt="" className="h-full w-full object-cover" />
+                          <button
+                            onClick={() => updateCarouselSlide(i, 'image', '')}
+                            className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white"
+                          >×</button>
+                        </div>
+                      ) : (
+                        <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-500 transition-colors hover:bg-gray-50">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Add Image
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCarouselImageUpload(i, f); e.target.value = '' }} />
+                        </label>
+                      )}
+                      <span className="text-[10px] text-gray-400">Max 1920px, compressed</span>
+                    </div>
                   </div>
                   <button
                     onClick={() => removeCarouselSlide(i)}

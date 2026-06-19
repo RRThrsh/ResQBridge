@@ -55,10 +55,10 @@ const LANDING_DEFAULTS = {
     { q: "Do you accept drop-off donations?", a: "Yes. In-kind donations can be dropped off during operating hours at our Irawan center." },
   ],
   carousel: [
-    { title: "Wildlife Rescue", desc: "Responding to injured and stranded animals across Palawan's forests and coastlines." },
-    { title: "Community Education", desc: "Teaching local communities about wildlife protection and sustainable coexistence." },
-    { title: "Habitat Conservation", desc: "Preserving critical habitats for Palawan's endemic and endangered species." },
-    { title: "Marine Protection", desc: "Safeguarding sea turtles, dugongs, and coral reefs through active patrols." },
+    { title: "Wildlife Rescue", desc: "Responding to injured and stranded animals across Palawan's forests and coastlines.", image: "" },
+    { title: "Community Education", desc: "Teaching local communities about wildlife protection and sustainable coexistence.", image: "" },
+    { title: "Habitat Conservation", desc: "Preserving critical habitats for Palawan's endemic and endangered species.", image: "" },
+    { title: "Marine Protection", desc: "Safeguarding sea turtles, dugongs, and coral reefs through active patrols.", image: "" },
   ],
   communityBoard: {
     title: "Community Board",
