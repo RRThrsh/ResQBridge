@@ -45,6 +45,19 @@ const updateUserRole = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
+  if (role === "superadmin") {
+    const allUsers = await convexClient.query(anyApi.users.getAllUsers);
+    const superadminCount = allUsers.filter((u) => u.role === "superadmin").length;
+
+    if (superadminCount >= 1 && user.role !== "superadmin") {
+      return res.status(400).json({ message: "A superadmin already exists. Only one superadmin is allowed." });
+    }
+  }
+
+  if (req.user.role !== "superadmin" && uuid === req.user.uuid) {
+    return res.status(403).json({ message: "You cannot change your own role." });
+  }
+
   await convexClient.mutation(anyApi.users.updateUserRole, { uuid, role });
 
   res.json({ message: "User role updated successfully." });

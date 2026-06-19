@@ -9,28 +9,31 @@ const { getLogs, getLogStats, getLogsByIP, deleteOldLogs } = require("../control
 const { getDashboardData } = require("../controllers/dashboardController");
 const { getConfig, updateConfig, getLandingConfig, updateLandingConfig } = require("../controllers/configController");
 
-router.use(authenticate, authorize("superadmin"));
+router.use(authenticate);
 
-router.get("/dashboard", asyncHandler(getDashboardData));
+const adminOnly = authorize("superadmin", "admin");
+const superOnly = authorize("superadmin");
 
-router.get("/users", asyncHandler(getUsers));
-router.get("/users/:uuid", asyncHandler(getUser));
-router.get("/stats", asyncHandler(getStats));
+router.get("/dashboard", superOnly, asyncHandler(getDashboardData));
+
+router.get("/users", adminOnly, asyncHandler(getUsers));
+router.get("/users/:uuid", adminOnly, asyncHandler(getUser));
+router.get("/stats", adminOnly, asyncHandler(getStats));
 
 const updateRoleRules = [
   body("role").trim().notEmpty().withMessage("Role is required."),
 ];
-router.patch("/users/:uuid/role", updateRoleRules, validate, asyncHandler(updateUserRole));
+router.patch("/users/:uuid/role", adminOnly, updateRoleRules, validate, asyncHandler(updateUserRole));
 
-router.get("/logs", asyncHandler(getLogs));
-router.get("/logs/stats", asyncHandler(getLogStats));
-router.get("/logs/ip/:ip", asyncHandler(getLogsByIP));
-router.post("/logs/cleanup", asyncHandler(deleteOldLogs));
+router.get("/logs", superOnly, asyncHandler(getLogs));
+router.get("/logs/stats", superOnly, asyncHandler(getLogStats));
+router.get("/logs/ip/:ip", superOnly, asyncHandler(getLogsByIP));
+router.post("/logs/cleanup", superOnly, asyncHandler(deleteOldLogs));
 
-router.get("/config", asyncHandler(getConfig));
-router.put("/config", asyncHandler(updateConfig));
+router.get("/config", superOnly, asyncHandler(getConfig));
+router.put("/config", superOnly, asyncHandler(updateConfig));
 
-router.get("/landing-config", asyncHandler(getLandingConfig));
-router.put("/landing-config", asyncHandler(updateLandingConfig));
+router.get("/landing-config", superOnly, asyncHandler(getLandingConfig));
+router.put("/landing-config", superOnly, asyncHandler(updateLandingConfig));
 
 module.exports = router;

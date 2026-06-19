@@ -12,13 +12,13 @@ function getClientIP(req) {
 async function logEvent({ req, userId, eventType, section, metadata, sessionDuration }) {
   try {
     await convexClient.mutation(anyApi.logs.insertLog, {
-      userId: userId || null,
+      userId: userId || undefined,
       eventType,
-      section: section || null,
+      section: section || undefined,
       ipAddress: getClientIP(req),
-      userAgent: req?.headers?.["user-agent"] || null,
-      metadata: metadata ? JSON.stringify(metadata) : null,
-      sessionDuration: sessionDuration || null,
+      userAgent: req?.headers?.["user-agent"] || undefined,
+      metadata: metadata ? JSON.stringify(metadata) : undefined,
+      sessionDuration: sessionDuration || undefined,
     });
   } catch (err) {
     console.error("[AuditLog] Failed to insert log:", err.message);

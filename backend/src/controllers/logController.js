@@ -43,13 +43,13 @@ const trackGuest = async (req, res) => {
   const { section, duration, eventType } = req.body;
 
   await convexClient.mutation(anyApi.logs.insertLog, {
-    userId: req.user?.uuid || null,
+    userId: req.user?.uuid || undefined,
     eventType: eventType || "guest",
     section: section || "unknown",
     ipAddress: req.ip,
-    userAgent: req.headers["user-agent"] || null,
-    metadata: null,
-    sessionDuration: duration || null,
+    userAgent: req.headers["user-agent"] || undefined,
+    metadata: undefined,
+    sessionDuration: duration || undefined,
   });
 
   res.json({ message: "Logged." });

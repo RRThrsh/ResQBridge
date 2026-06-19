@@ -85,7 +85,8 @@ export default function Dashboard() {
     try {
       setUpdating(uuid)
       await adminApi.updateUserRole(uuid, newRole)
-      setUsers((prev) => prev.map((u) => (u.uuid === uuid ? { ...u, role: newRole } : u)))
+      const usersRes = await adminApi.getUsers()
+      setUsers(usersRes.users)
       const statsRes = await adminApi.getStats()
       setStats(statsRes.stats)
     } catch (err) {
@@ -488,6 +489,15 @@ function DashboardTab({ stats, dashData, chartPeriod, onChartPeriodChange, userN
 }
 
 function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh }) {
+  const [openDropdown, setOpenDropdown] = useState(null)
+
+  const roles = [
+    { value: 'user', label: 'User' },
+    { value: 'rescuer', label: 'Rescuer' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'superadmin', label: 'Superadmin' },
+  ]
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -503,7 +513,7 @@ function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh })
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-gray-100">
           <thead>
             <tr className="bg-gray-50/50">
@@ -515,40 +525,82 @@ function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh })
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {users.map((u) => (
-              <tr key={u.uuid} className="transition-colors hover:bg-gray-50/50">
-                <td className="whitespace-nowrap px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-600 text-xs font-bold text-white shadow-sm">
-                      {u.firstName?.[0]}{u.lastName?.[0]}
+            {users.map((u) => {
+              const isOwn = currentUserUuid === u.uuid
+              const isUpdating = updating === u.uuid
+              const isOpen = openDropdown === u.uuid
+              return (
+                <tr key={u.uuid} className="transition-colors hover:bg-gray-50/50">
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-600 text-xs font-bold text-white shadow-sm">
+                        {u.firstName?.[0]}{u.lastName?.[0]}
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">{u.firstName} {u.lastName}</span>
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{u.firstName} {u.lastName}</span>
-                  </div>
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{u.email}</td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{u.phoneNumber}</td>
-                <td className="whitespace-nowrap px-6 py-4">
-                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${roleBadge[u.role] || 'bg-gray-100 text-gray-800'}`}>
-                    {roleLabels[u.role] || u.role}
-                  </span>
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-right">
-                  <select
-                    value={u.role}
-                    disabled={updating === u.uuid || currentUserUuid === u.uuid}
-                    onChange={(e) => onRoleChange(u.uuid, e.target.value)}
-                    className={`rounded-lg border border-gray-200 px-3 py-1.5 text-sm shadow-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20 ${
-                      updating === u.uuid ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-gray-300'
-                    } ${currentUserUuid === u.uuid ? 'cursor-not-allowed opacity-40' : ''}`}
-                  >
-                    <option value="user">User</option>
-                    <option value="rescuer">Rescuer</option>
-                    <option value="admin">Admin</option>
-                    <option value="superadmin">Superadmin</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{u.email}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{u.phoneNumber}</td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${roleBadge[u.role] || 'bg-gray-100 text-gray-800'}`}>
+                      {roleLabels[u.role] || u.role}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-right">
+                    <div className="relative flex items-center justify-end">
+                      {isUpdating && (
+                        <svg className="mr-2 h-4 w-4 animate-spin text-green-600" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                      )}
+                      <button
+                        disabled={isOwn || isUpdating}
+                        onClick={() => setOpenDropdown(isOpen ? null : u.uuid)}
+                        className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {isOwn ? 'You' : 'Change Role'}
+                        <svg className={`h-3.5 w-3.5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {isOpen && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)} />
+                          <div className="absolute right-0 top-full z-20 mt-1 w-40 origin-top-right rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                            {roles.map((r) => {
+                              const isActive = u.role === r.value
+                              return (
+                                <button
+                                  key={r.value}
+                                  disabled={isActive || isUpdating}
+                                  onClick={() => {
+                                    setOpenDropdown(null)
+                                    if (!isActive) onRoleChange(u.uuid, r.value)
+                                  }}
+                                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                                    isActive
+                                      ? 'bg-green-50 font-medium text-green-700'
+                                      : 'text-gray-700 hover:bg-gray-50'
+                                  } disabled:cursor-not-allowed disabled:opacity-50`}
+                                >
+                                  {isActive && (
+                                    <svg className="h-3.5 w-3.5 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                  <span className={isActive ? '' : 'ml-5'}>{r.label}</span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
             {users.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-400">No users found.</td>
