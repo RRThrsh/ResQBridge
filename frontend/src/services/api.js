@@ -68,6 +68,7 @@ export const admin = {
     const query = qs.toString()
     return request(`/admin/logs${query ? `?${query}` : ''}`)
   },
+  getDashboardData: () => request('/admin/dashboard'),
   getLogStats: () => request('/admin/logs/stats'),
   getLogsByIP: (ip) => request(`/admin/logs/ip/${ip}`),
   cleanupLogs: (retentionDays) =>

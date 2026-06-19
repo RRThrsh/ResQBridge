@@ -6,9 +6,12 @@ const { validate } = require("../middleware/validate");
 const { asyncHandler } = require("../middleware/errorHandler");
 const { getUsers, getUser, updateUserRole, getStats } = require("../controllers/adminController");
 const { getLogs, getLogStats, getLogsByIP, deleteOldLogs } = require("../controllers/logController");
+const { getDashboardData } = require("../controllers/dashboardController");
 const { getConfig, updateConfig, getLandingConfig, updateLandingConfig } = require("../controllers/configController");
 
 router.use(authenticate, authorize("superadmin"));
+
+router.get("/dashboard", asyncHandler(getDashboardData));
 
 router.get("/users", asyncHandler(getUsers));
 router.get("/users/:uuid", asyncHandler(getUser));
