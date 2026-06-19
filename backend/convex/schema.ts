@@ -21,7 +21,6 @@ export default defineSchema({
       v.literal("superadmin"),
       v.literal("admin"),
       v.literal("rescuer"),
-      v.literal("user"),
     ),
   })
     .index("by_email", ["email"])

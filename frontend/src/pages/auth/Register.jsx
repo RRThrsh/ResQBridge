@@ -1,13 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Modal from '../../components/ui/Modal.jsx'
 import { auth } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 
+const API_BASE = '/api/v1'
+
 export default function Register() {
   const [showTerms, setShowTerms] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [agreed, setAgreed] = useState(false)
+  const [otpEnabled, setOtpEnabled] = useState(true)
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -28,15 +31,27 @@ export default function Register() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    fetch(`${API_BASE}/landing-config`)
+      .then((r) => r.json())
+      .then((d) => setOtpEnabled(d.otpEnabled))
+      .catch(() => {})
+  }, [])
+
   async function handleSendOtp() {
     if (!email) return
     setOtpLoading(true)
     setError('')
     setOtpMessage('')
     try {
-      await auth.sendOtp(email)
-      setOtpSent(true)
-      setOtpMessage('OTP sent to your email.')
+      const data = await auth.sendOtp(email)
+      if (data.otpRequired === false) {
+        setOtpEnabled(false)
+        setOtpMessage('OTP is disabled. You can register directly.')
+      } else {
+        setOtpSent(true)
+        setOtpMessage('OTP sent to your email.')
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -69,7 +84,7 @@ export default function Register() {
         otp,
       })
       login(data.token, data.user)
-      navigate('/')
+      navigate('/rescuer/dashboard')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -143,18 +158,20 @@ export default function Register() {
                   placeholder="you@example.com"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={otpLoading || !email}
-                  className="rounded-lg bg-green-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-800 disabled:opacity-50"
-                >
-                  {otpLoading ? 'Sending...' : otpSent ? 'Resend' : 'Send OTP'}
-                </button>
+                {otpEnabled && (
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={otpLoading || !email}
+                    className="rounded-lg bg-green-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-800 disabled:opacity-50"
+                  >
+                    {otpLoading ? 'Sending...' : otpSent ? 'Resend' : 'Send OTP'}
+                  </button>
+                )}
               </div>
             </div>
 
-            {otpSent && (
+            {otpSent && otpEnabled && (
               <div>
                 <label className="block text-sm font-medium text-gray-700">OTP Code</label>
                 <input

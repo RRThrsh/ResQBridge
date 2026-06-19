@@ -25,8 +25,8 @@ const registerRules = [
     return true;
   }),
   body("otp")
+    .optional({ values: "falsy" })
     .trim()
-    .notEmpty()
     .isLength({ min: 6, max: 6 })
     .withMessage("Valid 6-digit OTP is required."),
 ];

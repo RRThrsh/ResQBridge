@@ -13,14 +13,12 @@ const roleBadge = {
   superadmin: 'bg-red-100 text-red-800',
   admin: 'bg-blue-100 text-blue-800',
   rescuer: 'bg-amber-100 text-amber-800',
-  user: 'bg-gray-100 text-gray-800',
 }
 
 const roleLabels = {
   superadmin: 'Superadmin',
   admin: 'Admin',
   rescuer: 'Rescuer',
-  user: 'User',
 }
 
 const sidebarLinks = [
@@ -567,7 +565,6 @@ function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh })
   const [openDropdown, setOpenDropdown] = useState(null)
 
   const roles = [
-    { value: 'user', label: 'User' },
     { value: 'rescuer', label: 'Rescuer' },
     { value: 'admin', label: 'Admin' },
     { value: 'superadmin', label: 'Superadmin' },

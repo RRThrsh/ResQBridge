@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { Link, useLocation } from 'react-router-dom'
 
 const links = [
   { label: 'Home', href: '/' },
+  { label: 'Report', href: '/report' },
   { label: 'About', href: '/about' },
   { label: 'Wildlife Guide', href: '/wildlife-guide' },
 ]
@@ -11,17 +11,10 @@ const links = [
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
-  const { user, isAuthenticated, logout } = useAuth()
-  const navigate = useNavigate()
 
   function isActive(href) {
     if (href === '/') return pathname === '/'
     return pathname.startsWith(href)
-  }
-
-  function handleLogout() {
-    logout()
-    navigate('/')
   }
 
   return (
@@ -45,17 +38,6 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {isAuthenticated && user?.role !== 'superadmin' && user?.role !== 'admin' && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">{user?.firstName} {user?.lastName}</span>
-              <button
-                onClick={handleLogout}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-              >
-                Logout
-              </button>
-            </div>
-          )}
         </div>
 
         <button
@@ -89,19 +71,6 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {isAuthenticated && user?.role !== 'superadmin' && user?.role !== 'admin' && (
-            <>
-              <div className="border-t border-gray-100 px-4 py-3 text-sm text-gray-600">
-                {user?.firstName} {user?.lastName}
-              </div>
-              <button
-                onClick={() => { handleLogout(); setOpen(false) }}
-                className="block w-full border-t border-gray-100 px-4 py-3 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-              >
-                Logout
-              </button>
-            </>
-          )}
         </div>
       )}
     </nav>

@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const hpp = require("hpp");
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
+const reportRoutes = require("./routes/report");
 const { globalLimiter, authLimiter } = require("./middleware/rateLimiter");
 const { errorHandler, asyncHandler } = require("./middleware/errorHandler");
 const { logEvent } = require("./middleware/logAudit");
@@ -63,6 +64,7 @@ app.post("/api/v1/log/logout", async (req, res) => {
 
 app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/report", reportRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });

@@ -13,6 +13,8 @@ import NotFound from './pages/errors/NotFound.jsx'
 import ServerError from './pages/errors/ServerError.jsx'
 import RateLimited from './pages/errors/RateLimited.jsx'
 import AdminDashboard from './pages/admin/Dashboard.jsx'
+import RescuerDashboard from './pages/rescuer/Dashboard.jsx'
+import Report from './pages/landing/Report.jsx'
 
 function PublicShell({ children }) {
   return (
@@ -33,12 +35,14 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/about" element={<PublicShell><About /></PublicShell>} />
             <Route path="/wildlife-guide" element={<PublicShell><WildlifeGuide /></PublicShell>} />
+            <Route path="/report" element={<PublicShell><Report /></PublicShell>} />
             <Route path="/v1/login" element={<Login />} />
             <Route path="/v1/register" element={<Register />} />
             <Route path="/v1/forgot-password" element={<ForgotPassword />} />
             <Route path="/error" element={<ServerError />} />
             <Route path="/rate-limited" element={<RateLimited />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/rescuer/dashboard" element={<RescuerDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </LocationProvider>

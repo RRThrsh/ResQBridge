@@ -21,7 +21,7 @@ export default function HeroSection({ badge, title, description }) {
             {description}
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:justify-center lg:justify-start">
-            <Button size="lg" className="w-full sm:w-auto">Report an Animal</Button>
+            <Link to="/report"><Button size="lg" className="w-full sm:w-auto">Report an Animal</Button></Link>
             <Link to="/wildlife-guide"><Button variant="outline" size="lg" className="w-full sm:w-auto">Wildlife Guide</Button></Link>
           </div>
         </div>

@@ -109,7 +109,9 @@ const getLandingConfig = async (_req, res) => {
     newsEvents: { ...LANDING_DEFAULTS.newsEvents, ...(stored.newsEvents || {}) },
   };
 
-  res.json({ config: merged, defaults: LANDING_DEFAULTS, maintenanceMode: maintenanceMode === "true", maintenanceEndTime });
+  const otpEnabled = await convexClient.query(anyApi.config.getConfigValue, { key: "otpEnabled" });
+
+  res.json({ config: merged, defaults: LANDING_DEFAULTS, maintenanceMode: maintenanceMode === "true", maintenanceEndTime, otpEnabled: otpEnabled !== "false" });
 };
 
 const updateLandingConfig = async (req, res) => {

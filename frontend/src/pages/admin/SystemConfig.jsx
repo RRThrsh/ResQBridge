@@ -7,6 +7,7 @@ export default function SystemConfig() {
   const [saving, setSaving] = useState(false)
   const [shutdownMode, setShutdownMode] = useState(false)
   const [endTime, setEndTime] = useState('')
+  const [otpEnabled, setOtpEnabled] = useState(true)
   const [message, setMessage] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -17,6 +18,7 @@ export default function SystemConfig() {
         setConfig(res.config || {})
         setLogRetention(res.config?.logRetentionDays || '30')
         setShutdownMode(res.config?.maintenanceMode === 'true')
+        setOtpEnabled(res.config?.otpEnabled !== 'false')
         const saved = res.config?.maintenanceEndTime
         if (saved) {
           const d = new Date(saved)
@@ -208,6 +210,48 @@ export default function SystemConfig() {
             <p className="mt-1 text-xs text-amber-700">
               Toggling this will put the site into maintenance mode. All visitors will see a maintenance notice instead of the landing page.
             </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <h3 className="text-base font-semibold text-gray-900">Registration</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Control whether OTP verification is required during registration.
+          </p>
+
+          <div className="mt-6 flex items-center justify-between rounded-lg border border-gray-200 p-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">OTP Verification</p>
+              <p className="mt-0.5 text-xs text-gray-500">
+                {otpEnabled
+                  ? 'Users must verify their email via OTP to register.'
+                  : 'Users can register without email verification.'}
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  setSaving(true)
+                  setMessage(null)
+                  const newVal = (!otpEnabled).toString()
+                  await adminApi.updateConfig('otpEnabled', newVal)
+                  setOtpEnabled(!otpEnabled)
+                  setMessage({ type: 'success', text: `OTP verification ${!otpEnabled ? 'disabled' : 'enabled'}.` })
+                } catch (err) {
+                  setMessage({ type: 'error', text: err.message || 'Failed to update.' })
+                } finally {
+                  setSaving(false)
+                }
+              }}
+              disabled={saving}
+              className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                otpEnabled
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              {otpEnabled ? 'Disable OTP' : 'Enable OTP'}
+            </button>
           </div>
         </div>
 

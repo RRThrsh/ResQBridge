@@ -36,7 +36,7 @@ const updateUserRole = async (req, res) => {
   const { uuid } = req.params;
   const { role } = req.body;
 
-  const validRoles = ["superadmin", "admin", "rescuer", "user"];
+  const validRoles = ["superadmin", "admin", "rescuer"];
   if (!validRoles.includes(role)) {
     return res.status(400).json({ message: `Invalid role. Must be one of: ${validRoles.join(", ")}` });
   }

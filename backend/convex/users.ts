@@ -13,7 +13,6 @@ export const createUser = mutation({
       v.literal("superadmin"),
       v.literal("admin"),
       v.literal("rescuer"),
-      v.literal("user"),
     ),
   },
   handler: async (ctx, args) => {
@@ -63,7 +62,6 @@ export const updateUserRole = mutation({
       v.literal("superadmin"),
       v.literal("admin"),
       v.literal("rescuer"),
-      v.literal("user"),
     ),
   },
   handler: async (ctx, args) => {

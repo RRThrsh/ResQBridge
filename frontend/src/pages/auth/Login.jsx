@@ -20,8 +20,10 @@ export default function Login() {
     try {
       const data = await auth.login(email.trim(), password)
       login(data.token, data.user)
-      const isAdmin = data.user.role === 'superadmin' || data.user.role === 'admin'
-      navigate(isAdmin ? '/admin/dashboard' : '/')
+      const role = data.user.role
+      if (role === 'superadmin' || role === 'admin') navigate('/admin/dashboard')
+      else if (role === 'rescuer') navigate('/rescuer/dashboard')
+      else navigate('/')
     } catch (err) {
       const msg = err.errors?.length
         ? err.errors.map((e) => e.message).join(', ')
