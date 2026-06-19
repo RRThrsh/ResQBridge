@@ -74,7 +74,7 @@ export default function Permissions() {
       .finally(() => setLoading(false))
   }, [])
 
-  const visibleRoles = roleDefinitions.filter((r) => r.name !== 'Admin' || hasAdmin)
+  const visibleRoles = roleDefinitions.filter((r) => r.name !== 'Superadmin' && (r.name !== 'Admin' || hasAdmin))
 
   return (
     <div>
