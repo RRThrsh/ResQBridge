@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { AppError } = require("../middleware/errorHandler");
-const { sendOtp } = require("../services/email");
+const { sendOtp, sendPasswordReset } = require("../services/email");
 
 const sendOtpHandler = async (req, res) => {
   const { email } = req.body;
@@ -97,4 +97,23 @@ const login = async (req, res) => {
   });
 };
 
-module.exports = { sendOtpHandler, register, login };
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await convexClient.query(anyApi.users.getUserByEmail, { email });
+  if (!user) {
+    throw new AppError("No account found with that email.", 404);
+  }
+
+  const resetToken = jwt.sign(
+    { uuid: user.uuid, email: user.email, type: "password-reset" },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" },
+  );
+
+  await sendPasswordReset(email, resetToken);
+
+  res.json({ message: "Password reset link sent to your email." });
+};
+
+module.exports = { sendOtpHandler, register, login, forgotPassword };

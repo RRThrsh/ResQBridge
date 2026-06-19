@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const router = express.Router();
-const { sendOtpHandler, register, login } = require("../controllers/authController");
+const { sendOtpHandler, register, login, forgotPassword } = require("../controllers/authController");
 const { validate } = require("../middleware/validate");
 const { asyncHandler } = require("../middleware/errorHandler");
 
@@ -37,5 +37,11 @@ const loginRules = [
 router.post("/send-otp", sendOtpRules, validate, asyncHandler(sendOtpHandler));
 router.post("/register", registerRules, validate, asyncHandler(register));
 router.post("/login", loginRules, validate, asyncHandler(login));
+
+const forgotPasswordRules = [
+  body("email").isEmail().withMessage("Valid email is required.").normalizeEmail(),
+];
+
+router.post("/forgot-password", forgotPasswordRules, validate, asyncHandler(forgotPassword));
 
 module.exports = router;

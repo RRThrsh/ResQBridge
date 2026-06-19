@@ -20,7 +20,6 @@ export default defineSchema({
     role: v.union(
       v.literal("superadmin"),
       v.literal("admin"),
-      v.literal("domestic"),
       v.literal("rescuer"),
       v.literal("user"),
     ),

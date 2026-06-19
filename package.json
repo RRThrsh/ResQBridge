@@ -4,6 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "concurrently -n frontend,backend -c cyan,green \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "build": "npm run build --prefix frontend",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/resqbridgeofficial-cpu/ResQBridge/issues"
   },
-  "homepage": "https://github.com/resqbridgeofficial-cpu/ResQBridge#readme"
+  "homepage": "https://github.com/resqbridgeofficial-cpu/ResQBridge#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
 }

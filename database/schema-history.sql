@@ -18,7 +18,7 @@ CREATE TABLE users (
     phoneNumber VARCHAR(20) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('superadmin', 'admin', 'domestic', 'rescuer', 'user') NOT NULL DEFAULT 'user',
+    role ENUM('superadmin', 'admin', 'rescuer', 'user') NOT NULL DEFAULT 'user',
     _creationTime BIGINT NOT NULL,
     INDEX by_email (email),
     INDEX by_uuid (uuid)
