@@ -6,6 +6,7 @@ export default function SystemConfig() {
   const [logRetention, setLogRetention] = useState('30')
   const [saving, setSaving] = useState(false)
   const [shutdownMode, setShutdownMode] = useState(false)
+  const [endTime, setEndTime] = useState('')
   const [message, setMessage] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -16,6 +17,12 @@ export default function SystemConfig() {
         setConfig(res.config || {})
         setLogRetention(res.config?.logRetentionDays || '30')
         setShutdownMode(res.config?.maintenanceMode === 'true')
+        const saved = res.config?.maintenanceEndTime
+        if (saved) {
+          const d = new Date(saved)
+          const pad = (n) => String(n).padStart(2, '0')
+          setEndTime(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`)
+        }
       } catch { /* silent */ }
       finally { setLoading(false) }
     }
@@ -162,6 +169,39 @@ export default function SystemConfig() {
               {shutdownMode ? 'Disable' : 'Shutdown'}
             </button>
           </div>
+
+          {shutdownMode && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Back by
+              </label>
+              <input
+                type="datetime-local"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              />
+              <button
+                onClick={async () => {
+                  try {
+                    setSaving(true)
+                    setMessage(null)
+                    const iso = new Date(endTime).toISOString()
+                    await adminApi.updateConfig('maintenanceEndTime', iso)
+                    setMessage({ type: 'success', text: 'Maintenance end time saved.' })
+                  } catch (err) {
+                    setMessage({ type: 'error', text: err.message || 'Failed to save.' })
+                  } finally {
+                    setSaving(false)
+                  }
+                }}
+                disabled={saving || !endTime}
+                className="mt-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+              >
+                Save Time
+              </button>
+            </div>
+          )}
 
           <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
             <p className="text-xs font-medium text-amber-800">Shutdown Button</p>

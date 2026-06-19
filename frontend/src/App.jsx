@@ -30,7 +30,7 @@ function App() {
       <AuthProvider>
         <LocationProvider>
           <Routes>
-            <Route path="/" element={<PublicShell><Landing /></PublicShell>} />
+            <Route path="/" element={<Landing />} />
             <Route path="/about" element={<PublicShell><About /></PublicShell>} />
             <Route path="/wildlife-guide" element={<PublicShell><WildlifeGuide /></PublicShell>} />
             <Route path="/v1/login" element={<Login />} />

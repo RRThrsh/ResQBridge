@@ -90,6 +90,14 @@ const getLandingConfig = async (_req, res) => {
   let stored = {};
   try { stored = raw ? JSON.parse(raw) : {}; } catch { stored = {}; }
 
+  let maintenanceMode = await convexClient.query(anyApi.config.getConfigValue, { key: "maintenanceMode" });
+  const maintenanceEndTime = await convexClient.query(anyApi.config.getConfigValue, { key: "maintenanceEndTime" });
+
+  if (maintenanceMode === "true" && maintenanceEndTime && new Date(maintenanceEndTime) < new Date()) {
+    await convexClient.mutation(anyApi.config.upsertConfig, { key: "maintenanceMode", value: "false" });
+    maintenanceMode = "false";
+  }
+
   const merged = {
     hero: { ...LANDING_DEFAULTS.hero, ...(stored.hero || {}) },
     stats: stored.stats || LANDING_DEFAULTS.stats,
@@ -101,7 +109,7 @@ const getLandingConfig = async (_req, res) => {
     newsEvents: { ...LANDING_DEFAULTS.newsEvents, ...(stored.newsEvents || {}) },
   };
 
-  res.json({ config: merged, defaults: LANDING_DEFAULTS });
+  res.json({ config: merged, defaults: LANDING_DEFAULTS, maintenanceMode: maintenanceMode === "true", maintenanceEndTime });
 };
 
 const updateLandingConfig = async (req, res) => {

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import Navbar from '../../components/layout/Navbar'
+import Footer from '../../components/layout/Footer'
 import { SessionProvider } from '../../context/SessionContext'
 import SectionTracker from './SectionTracker'
 import HeroSection from './HeroSection'
@@ -9,6 +11,7 @@ import NewsEvents from './NewsEvents'
 import StatsSection from './StatsSection'
 import FAQSection from './FAQSection'
 import ContactSection from './ContactSection'
+import Maintenance from './Maintenance'
 
 const API_BASE = '/api/v1'
 
@@ -49,42 +52,61 @@ const FALLBACK_CONFIG = {
 
 export default function Landing() {
   const [landingConfig, setLandingConfig] = useState(null)
+  const [maintenanceMode, setMaintenanceMode] = useState(false)
+  const [maintenanceEndTime, setMaintenanceEndTime] = useState('')
 
-  useEffect(() => {
+  const fetchConfig = () =>
     fetch(`${API_BASE}/landing-config`)
       .then((r) => r.json())
-      .then((d) => setLandingConfig(d.config))
+      .then((d) => {
+        setLandingConfig(d.config)
+        setMaintenanceMode(d.maintenanceMode)
+        setMaintenanceEndTime(d.maintenanceEndTime || '')
+      })
       .catch(() => {})
+
+  useEffect(() => {
+    fetchConfig()
+    const id = setInterval(fetchConfig, 30000)
+    return () => clearInterval(id)
   }, [])
+
+  if (maintenanceMode) return <Maintenance endTime={maintenanceEndTime} />
 
   const cfg = landingConfig || FALLBACK_CONFIG
 
   return (
-    <SessionProvider>
-      <SectionTracker name="hero">
-        <HeroSection badge={cfg.hero.badge} title={cfg.hero.title} description={cfg.hero.description} />
-      </SectionTracker>
-      <SectionTracker name="carousel">
-        <Carousel slides={cfg.carousel} />
-      </SectionTracker>
-      <SectionTracker name="community-board">
-        <CommunityBoard title={cfg.communityBoard.title} subtitle={cfg.communityBoard.subtitle} />
-      </SectionTracker>
-      <SectionTracker name="location">
-        <Location title={cfg.location.title} subtitle={cfg.location.subtitle} center={cfg.location.center} />
-      </SectionTracker>
-      <SectionTracker name="news-events">
-        <NewsEvents title={cfg.newsEvents.title} subtitle={cfg.newsEvents.subtitle} news={cfg.newsEvents.news} events={cfg.newsEvents.events} />
-      </SectionTracker>
-      <SectionTracker name="stats">
-        <StatsSection stats={cfg.stats} />
-      </SectionTracker>
-      <SectionTracker name="faq">
-        <FAQSection faq={cfg.faq} />
-      </SectionTracker>
-      <SectionTracker name="contact">
-        <ContactSection contact={cfg.contact} />
-      </SectionTracker>
-    </SessionProvider>
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <SessionProvider>
+          <SectionTracker name="hero">
+            <HeroSection badge={cfg.hero.badge} title={cfg.hero.title} description={cfg.hero.description} />
+          </SectionTracker>
+          <SectionTracker name="carousel">
+            <Carousel slides={cfg.carousel} />
+          </SectionTracker>
+          <SectionTracker name="community-board">
+            <CommunityBoard title={cfg.communityBoard.title} subtitle={cfg.communityBoard.subtitle} />
+          </SectionTracker>
+          <SectionTracker name="location">
+            <Location title={cfg.location.title} subtitle={cfg.location.subtitle} center={cfg.location.center} />
+          </SectionTracker>
+          <SectionTracker name="news-events">
+            <NewsEvents title={cfg.newsEvents.title} subtitle={cfg.newsEvents.subtitle} news={cfg.newsEvents.news} events={cfg.newsEvents.events} />
+          </SectionTracker>
+          <SectionTracker name="stats">
+            <StatsSection stats={cfg.stats} />
+          </SectionTracker>
+          <SectionTracker name="faq">
+            <FAQSection faq={cfg.faq} />
+          </SectionTracker>
+          <SectionTracker name="contact">
+            <ContactSection contact={cfg.contact} />
+          </SectionTracker>
+        </SessionProvider>
+      </main>
+      <Footer />
+    </div>
   )
 }
