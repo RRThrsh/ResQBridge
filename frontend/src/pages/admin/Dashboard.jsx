@@ -47,6 +47,7 @@ export default function Dashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [editSection, setEditSection] = useState(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [users, setUsers] = useState([])
   const [stats, setStats] = useState(null)
@@ -106,10 +107,11 @@ export default function Dashboard() {
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((c) => !c)}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(key, section) => { setActiveTab(key); setEditSection(section || null) }}
         user={user}
         logout={logout}
         navigate={navigate}
+        editSection={editSection}
       />
 
       <main className="flex flex-1 flex-col overflow-hidden">
@@ -156,7 +158,7 @@ export default function Dashboard() {
             {activeTab === 'audit' && <AuditLogs />}
             {activeTab === 'permissions' && <Permissions />}
             {activeTab === 'monitoring' && <Monitoring />}
-            {activeTab === 'editConfig' && <EditConfig />}
+            {activeTab === 'editConfig' && <EditConfig section={editSection} />}
             {activeTab === 'config' && <SystemConfig />}
           </FadeIn>
         </div>
@@ -182,7 +184,20 @@ function FadeIn({ children }) {
   )
 }
 
-function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, navigate }) {
+const configSubLinks = [
+  { key: 'hero', label: 'Hero' },
+  { key: 'stats', label: 'Stats' },
+  { key: 'contact', label: 'Contact' },
+  { key: 'faq', label: 'FAQ' },
+  { key: 'carousel', label: 'Carousel' },
+  { key: 'communityBoard', label: 'Community Board' },
+  { key: 'location', label: 'Location' },
+  { key: 'newsEvents', label: 'News & Events' },
+]
+
+function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, navigate, editSection }) {
+  const [expanded, setExpanded] = useState('')
+
   return (
     <aside className={`relative flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
       collapsed ? 'w-16' : 'w-64'
@@ -204,6 +219,64 @@ function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, na
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
         {sidebarLinks.map((link) => {
           const isActive = activeTab === link.key
+          const isExpanded = expanded === link.key
+          if (link.key === 'editConfig') {
+            return (
+              <div key={link.key}>
+                <button
+                  onClick={() => {
+                    if (collapsed) { onTabChange(link.key); return }
+                    setExpanded(isExpanded ? '' : link.key)
+                    onTabChange(link.key)
+                  }}
+                  className={`group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-green-50 text-green-700'
+                      : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                  title={collapsed ? link.label : undefined}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-green-600" />
+                  )}
+                  <svg className={`h-5 w-5 shrink-0 transition-colors ${
+                    isActive ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-600'
+                  }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={link.icon} />
+                  </svg>
+                  {!collapsed && <span className="flex-1 truncate text-left">{link.label}</span>}
+                  {!collapsed && (
+                    <svg className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </button>
+                {!collapsed && isExpanded && (
+                  <div className="ml-6 mt-0.5 space-y-0.5 border-l border-gray-200 pl-2">
+                    {configSubLinks.map((sub) => {
+                      const isSubActive = editSection === sub.key
+                      return (
+                        <button
+                          key={sub.key}
+                          onClick={() => onTabChange('editConfig', sub.key)}
+                          className={`flex w-full items-center rounded-lg px-3 py-2 text-sm transition-colors ${
+                            isSubActive
+                              ? 'bg-green-50 font-medium text-green-700'
+                              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                          }`}
+                        >
+                          {isSubActive && (
+                            <span className="mr-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-600" />
+                          )}
+                          {sub.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
           return (
             <button
               key={link.key}
