@@ -8,7 +8,10 @@
  * @module
  */
 
+import type * as config from "../config.js";
+import type * as logs from "../logs.js";
 import type * as otp from "../otp.js";
+import type * as reports from "../reports.js";
 import type * as users from "../users.js";
 
 import type {
@@ -18,7 +21,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  config: typeof config;
+  logs: typeof logs;
   otp: typeof otp;
+  reports: typeof reports;
   users: typeof users;
 }>;
 

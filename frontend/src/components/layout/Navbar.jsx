@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 
 const links = [
   { label: 'Home', href: '/' },
+  { label: 'Report', href: '/report' },
   { label: 'About', href: '/about' },
   { label: 'Wildlife Guide', href: '/wildlife-guide' },
 ]
@@ -37,12 +38,6 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link
-            to="/login"
-            className="rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-800"
-          >
-            Login
-          </Link>
         </div>
 
         <button
@@ -76,13 +71,6 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link
-            to="/login"
-            onClick={() => setOpen(false)}
-            className="block border-t border-gray-100 px-4 py-3 text-sm font-medium text-green-700 transition-colors hover:bg-green-50"
-          >
-            Login
-          </Link>
         </div>
       )}
     </nav>

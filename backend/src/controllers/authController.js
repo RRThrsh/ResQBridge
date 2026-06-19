@@ -4,13 +4,20 @@ const { v4: uuidv4 } = require("uuid");
 const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { AppError } = require("../middleware/errorHandler");
-const { sendOtp } = require("../services/email");
+const { sendOtp, sendPasswordReset } = require("../services/email");
+const { logEvent } = require("../middleware/logAudit");
 
 const sendOtpHandler = async (req, res) => {
-  const { email } = req.body;
+  const email = req.body.email.trim().toLowerCase();
+
+  const otpEnabled = await convexClient.query(anyApi.config.getConfigValue, { key: "otpEnabled" });
+  if (otpEnabled === "false") {
+    return res.json({ message: "Registration is open — no OTP required.", otpRequired: false });
+  }
 
   const existingUser = await convexClient.query(anyApi.users.getUserByEmail, { email });
   if (existingUser) {
+    await logEvent({ req, eventType: "login_attempt", metadata: { email, reason: "already_registered" } });
     throw new AppError("Email already registered.", 409);
   }
 
@@ -20,20 +27,28 @@ const sendOtpHandler = async (req, res) => {
   await convexClient.mutation(anyApi.otp.createOtp, { email, otp: code, expiresAt });
   await sendOtp(email, code);
 
-  res.json({ message: "OTP sent to your email." });
+  await logEvent({ req, eventType: "login_attempt", metadata: { email, action: "otp_sent" } });
+
+  res.json({ message: "OTP sent to your email.", otpRequired: true });
 };
 
 const register = async (req, res) => {
-  const { firstName, lastName, phoneNumber, email, password, otp } = req.body;
-
-  const valid = await convexClient.query(anyApi.otp.getValidOtp, { email, otp });
-  if (!valid) {
-    throw new AppError("Invalid or expired OTP.", 400);
-  }
+  const { firstName, lastName, phoneNumber, password, otp } = req.body;
+  const email = req.body.email.trim().toLowerCase();
 
   const existingUser = await convexClient.query(anyApi.users.getUserByEmail, { email });
   if (existingUser) {
     throw new AppError("Email already registered.", 409);
+  }
+
+  const otpEnabled = await convexClient.query(anyApi.config.getConfigValue, { key: "otpEnabled" });
+  if (otpEnabled !== "false") {
+    if (!otp) throw new AppError("OTP is required.", 400);
+    const valid = await convexClient.query(anyApi.otp.getValidOtp, { email, otp });
+    if (!valid) {
+      throw new AppError("Invalid or expired OTP.", 400);
+    }
+    await convexClient.mutation(anyApi.otp.markOtpUsed, { id: valid._id });
   }
 
   const salt = await bcrypt.genSalt(10);
@@ -47,34 +62,49 @@ const register = async (req, res) => {
     phoneNumber,
     email,
     password: hashedPassword,
-    role: "user",
+    role: "rescuer",
   });
 
-  await convexClient.mutation(anyApi.otp.markOtpUsed, { id: valid._id });
-
   const token = jwt.sign(
-    { uuid: userUuid, email, role: "user" },
+    { uuid: userUuid, email, role: "rescuer" },
     process.env.JWT_SECRET,
     { expiresIn: "7d" },
   );
 
+  await logEvent({ req, userId: userUuid, eventType: "register", metadata: { email, role: "rescuer" } });
+
   res.status(201).json({
     message: "User registered successfully.",
     token,
-    user: { uuid: userUuid, firstName, lastName, email, role: "user" },
+    user: { uuid: userUuid, firstName, lastName, email, role: "rescuer" },
   });
 };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  const trimmedEmail = email.trim();
 
-  const user = await convexClient.query(anyApi.users.getUserByEmail, { email });
+  console.log(`[LOGIN] email="${trimmedEmail}" lower="${trimmedEmail.toLowerCase()}"`);
+
+  let user = await convexClient.query(anyApi.users.getUserByEmail, { email: trimmedEmail });
+  console.log(`[LOGIN] exact match: ${user ? 'FOUND' : 'NOT FOUND'}`);
+
   if (!user) {
+    user = await convexClient.query(anyApi.users.getUserByEmail, { email: trimmedEmail.toLowerCase() });
+    console.log(`[LOGIN] lower match: ${user ? 'FOUND' : 'NOT FOUND'}`);
+  }
+
+  if (!user) {
+    console.log(`[LOGIN] user NOT FOUND for "${trimmedEmail}"`);
+    await logEvent({ req, eventType: "login_attempt", metadata: { email: trimmedEmail, reason: "user_not_found" } });
     throw new AppError("Invalid email or password.", 401);
   }
 
+  console.log(`[LOGIN] user FOUND: uuid=${user.uuid} role=${user.role} storedEmail="${user.email}"`);
+
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
+    await logEvent({ req, eventType: "login_attempt", metadata: { email: trimmedEmail, reason: "wrong_password" } });
     throw new AppError("Invalid email or password.", 401);
   }
 
@@ -83,6 +113,8 @@ const login = async (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: "7d" },
   );
+
+  await logEvent({ req, userId: user.uuid, eventType: "login", metadata: { email: user.email, role: user.role } });
 
   res.json({
     message: "Login successful.",
@@ -97,4 +129,25 @@ const login = async (req, res) => {
   });
 };
 
-module.exports = { sendOtpHandler, register, login };
+const forgotPassword = async (req, res) => {
+  const email = req.body.email.trim().toLowerCase();
+
+  const user = await convexClient.query(anyApi.users.getUserByEmail, { email });
+  if (!user) {
+    throw new AppError("No account found with that email.", 404);
+  }
+
+  const resetToken = jwt.sign(
+    { uuid: user.uuid, email: user.email, type: "password-reset" },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" },
+  );
+
+  await sendPasswordReset(email, resetToken);
+
+  await logEvent({ req, userId: user.uuid, eventType: "password_reset", metadata: { email } });
+
+  res.json({ message: "Password reset link sent to your email." });
+};
+
+module.exports = { sendOtpHandler, register, login, forgotPassword };
