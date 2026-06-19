@@ -23,3 +23,30 @@ CREATE TABLE users (
     INDEX by_email (email),
     INDEX by_uuid (uuid)
 );
+
+-- Added: 2026-06-19
+-- Audit log for all user transactions
+
+CREATE TABLE logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(36),
+    eventType VARCHAR(50) NOT NULL,
+    section VARCHAR(255),
+    ipAddress VARCHAR(45) NOT NULL,
+    userAgent VARCHAR(500),
+    metadata JSON,
+    sessionDuration INT,
+    createdAt BIGINT NOT NULL,
+    INDEX by_eventType (eventType),
+    INDEX by_ipAddress (ipAddress),
+    INDEX by_createdAt (createdAt)
+);
+
+-- Application configuration key-value store
+
+CREATE TABLE config (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `key` VARCHAR(255) NOT NULL UNIQUE,
+    `value` TEXT NOT NULL,
+    INDEX by_key (`key`)
+);

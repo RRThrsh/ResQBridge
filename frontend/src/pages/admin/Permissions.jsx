@@ -1,4 +1,7 @@
-const roles = [
+import { useState, useEffect } from 'react'
+import { admin as adminApi } from '../../services/api'
+
+const roleDefinitions = [
   {
     name: 'Superadmin',
     color: 'red',
@@ -58,6 +61,21 @@ const colorClasses = {
 }
 
 export default function Permissions() {
+  const [hasAdmin, setHasAdmin] = useState(true)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    adminApi.getUsers()
+      .then((res) => {
+        const admins = (res.users || []).filter((u) => u.role === 'admin')
+        setHasAdmin(admins.length > 0)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const visibleRoles = roleDefinitions.filter((r) => r.name !== 'Admin' || hasAdmin)
+
   return (
     <div>
       <div className="mb-6">
@@ -67,8 +85,16 @@ export default function Permissions() {
         </p>
       </div>
 
+      {!loading && !hasAdmin && (
+        <div className="mb-6 rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-8 text-center">
+          <p className="text-sm text-gray-500">
+            No admin users yet. Promote a user to admin role to grant administrative access.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
-        {roles.map((role) => (
+        {visibleRoles.map((role) => (
           <div key={role.name} className={`rounded-xl border ${colorClasses[role.color]} p-6`}>
             <div className="flex items-center gap-3">
               <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${role.badge}`}>
