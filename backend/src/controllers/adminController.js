@@ -1,5 +1,6 @@
 const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
+const { logEvent } = require("../middleware/logAudit");
 
 const getUsers = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
@@ -59,6 +60,8 @@ const updateUserRole = async (req, res) => {
   }
 
   await convexClient.mutation(anyApi.users.updateUserRole, { uuid, role });
+
+  await logEvent({ req, userId: req.user.uuid, eventType: "role_change", metadata: { targetUuid: uuid, oldRole: user.role, newRole: role } });
 
   res.json({ message: "User role updated successfully." });
 };

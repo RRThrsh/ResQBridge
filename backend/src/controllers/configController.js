@@ -1,5 +1,6 @@
 const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
+const { logEvent } = require("../middleware/logAudit");
 
 const getConfig = async (_req, res) => {
   const config = await convexClient.query(anyApi.config.getConfig);
@@ -14,6 +15,9 @@ const updateConfig = async (req, res) => {
   }
 
   await convexClient.mutation(anyApi.config.upsertConfig, { key, value });
+
+  await logEvent({ req, userId: req.user.uuid, eventType: "config_update", metadata: { key, value: value.slice(0, 200) } });
+
   res.json({ message: "Config updated.", config: { [key]: value } });
 };
 
@@ -73,6 +77,8 @@ const updateLandingConfig = async (req, res) => {
     key: "landingContent",
     value: JSON.stringify(payload),
   });
+
+  await logEvent({ req, userId: req.user.uuid, eventType: "landing_update", metadata: { sections: Object.keys(payload).join(", ") } });
 
   res.json({ message: "Landing page content updated." });
 };

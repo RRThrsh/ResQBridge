@@ -137,6 +137,8 @@ const forgotPassword = async (req, res) => {
 
   await sendPasswordReset(email, resetToken);
 
+  await logEvent({ req, userId: user.uuid, eventType: "password_reset", metadata: { email } });
+
   res.json({ message: "Password reset link sent to your email." });
 };
 
