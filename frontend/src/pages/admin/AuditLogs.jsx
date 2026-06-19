@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { admin as adminApi } from '../../services/api'
 
 const EVENT_CONFIG = {
@@ -113,80 +113,52 @@ function LogRow({ log }) {
   )
 }
 
-const EVENT_FILTERS = [
-  { value: '', label: 'All Events' },
-  { value: 'login', label: 'Login' },
-  { value: 'login_attempt', label: 'Login Attempt' },
-  { value: 'logout', label: 'Logout' },
-  { value: 'register', label: 'Register' },
-  { value: 'guest', label: 'Guest Visit' },
-  { value: 'password_reset', label: 'Password Reset' },
-  { value: 'role_change', label: 'Role Change' },
-  { value: 'config_update', label: 'Config Update' },
-  { value: 'landing_update', label: 'Landing Update' },
-]
-
 export default function AuditLogs() {
   const [logs, setLogs] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [filterEvent, setFilterEvent] = useState('')
-  const [autoRefresh, setAutoRefresh] = useState(true)
+  const scrollBottomRef = useRef(null)
+
+  const displayedLogs = [...logs].reverse()
+
+  const scrollToBottom = useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    })
+  }, [])
 
   const fetchLogs = useCallback(async () => {
     try {
-      const opts = { limit: 500 }
-      if (filterEvent) opts.eventType = filterEvent
       const [logRes, statRes] = await Promise.all([
-        adminApi.getLogs(opts),
+        adminApi.getLogs({ limit: 500 }),
         adminApi.getLogStats(),
       ])
       setLogs(logRes.items || [])
       setStats(statRes.stats)
     } catch { /* silent */ }
     finally { setLoading(false) }
-  }, [filterEvent])
+  }, [])
 
   useEffect(() => {
     fetchLogs()
+    const interval = setInterval(fetchLogs, 1000)
+    return () => clearInterval(interval)
   }, [fetchLogs])
 
   useEffect(() => {
-    if (!autoRefresh) return
-    const interval = setInterval(fetchLogs, 10000)
-    return () => clearInterval(interval)
-  }, [autoRefresh, fetchLogs])
+    if (logs.length) scrollToBottom()
+  }, [logs, scrollToBottom])
 
   const eventBreakdown = stats?.eventBreakdown || {}
   const totalLogs = stats?.totalLogs || 0
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Complete transaction trail — every action logged with IP, user, and metadata.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={filterEvent}
-            onChange={(e) => setFilterEvent(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
-          >
-            {EVENT_FILTERS.map((f) => (
-              <option key={f.value} value={f.value}>{f.label}</option>
-            ))}
-          </select>
-          <label className="flex items-center gap-2 text-sm text-gray-500">
-            <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} className="rounded border-gray-300 text-green-600 focus:ring-green-500" />
-            Auto-refresh
-          </label>
-          <button onClick={fetchLogs} className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-            Refresh
-          </button>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Complete transaction trail — every action logged with IP, user, and metadata.
+        </p>
       </div>
 
       {stats && (
@@ -221,19 +193,14 @@ export default function AuditLogs() {
           {Object.entries(eventBreakdown).sort((a, b) => b[1] - a[1]).map(([type, count]) => {
             const cfg = EVENT_CONFIG[type] || { color: 'text-gray-500', bg: 'bg-gray-100' }
             return (
-              <button
+              <div
                 key={type}
-                onClick={() => setFilterEvent(filterEvent === type ? '' : type)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                  filterEvent === type
-                    ? 'ring-2 ring-green-500 ring-offset-1 ' + cfg.bg.replace('/10', '/20')
-                    : cfg.bg + ' hover:opacity-80'
-                } ${cfg.color}`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${cfg.bg} ${cfg.color}`}
               >
                 <span>{cfg.icon || '?'}</span>
                 <span>{type.replace(/_/g, ' ')}</span>
                 <span className="ml-0.5 opacity-60">{count}</span>
-              </button>
+              </div>
             )
           })}
         </div>
@@ -251,24 +218,25 @@ export default function AuditLogs() {
           <span className="w-4" />
         </div>
 
-        <div className="max-h-[600px] overflow-y-auto">
+        <div className="max-h-[65dvh] overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-20 text-sm text-gray-600 font-mono">
               Loading transaction log...
             </div>
-          ) : logs.length === 0 ? (
+          ) : displayedLogs.length === 0 ? (
             <div className="flex items-center justify-center py-20 text-sm text-gray-600 font-mono">
               No entries found.
             </div>
           ) : (
-            logs.map((log) => <LogRow key={log._id} log={log} />)
+            displayedLogs.map((log) => <LogRow key={log._id} log={log} />)
           )}
+          <div ref={scrollBottomRef} />
         </div>
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs text-gray-500 font-mono">
         <span>{logs.length} entries displayed · {totalLogs.toLocaleString()} total</span>
-        <span>tailing {autoRefresh ? 'active' : 'paused'}</span>
+        <span>auto-refresh · 1s</span>
       </div>
     </div>
   )

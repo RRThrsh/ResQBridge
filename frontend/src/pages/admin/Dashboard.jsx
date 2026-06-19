@@ -450,11 +450,11 @@ function DashboardTab({ stats, dashData, chartPeriod, onChartPeriodChange, userN
           <h3 className="text-sm font-semibold text-gray-900">Recent Activity</h3>
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500">{(dashData?.recentLogs || []).length} events</span>
         </div>
-        <div className="divide-y divide-gray-100">
+        <div className="h-[420px] divide-y divide-gray-100 overflow-y-auto">
           {(dashData?.recentLogs || []).length === 0 ? (
             <p className="px-6 py-10 text-center text-sm text-gray-400">No recent activity recorded.</p>
           ) : (
-            dashData?.recentLogs?.slice(0, 8).map((log) => (
+            dashData?.recentLogs?.slice(0, 50).map((log) => (
               <div key={log._id} className="flex items-center gap-4 px-6 py-3.5 text-sm transition-colors hover:bg-gray-50/50">
                 <span className={`flex h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white ${
                   log.eventType === 'guest' ? 'bg-purple-500' :
@@ -462,6 +462,7 @@ function DashboardTab({ stats, dashData, chartPeriod, onChartPeriodChange, userN
                   log.eventType === 'login_attempt' ? 'bg-amber-500' :
                   log.eventType === 'logout' ? 'bg-red-500' :
                   log.eventType === 'register' ? 'bg-blue-500' :
+                  log.eventType === 'role_change' ? 'bg-orange-500' :
                   'bg-gray-300'
                 }`} />
                 <span className="w-28 shrink-0 font-mono text-xs text-gray-400">
@@ -473,6 +474,7 @@ function DashboardTab({ stats, dashData, chartPeriod, onChartPeriodChange, userN
                   log.eventType === 'login_attempt' ? 'bg-amber-50 text-amber-700' :
                   log.eventType === 'logout' ? 'bg-red-50 text-red-700' :
                   log.eventType === 'register' ? 'bg-blue-50 text-blue-700' :
+                  log.eventType === 'role_change' ? 'bg-orange-50 text-orange-700' :
                   'bg-gray-100 text-gray-600'
                 }`}>
                   {log.eventType?.replace(/_/g, ' ')}
