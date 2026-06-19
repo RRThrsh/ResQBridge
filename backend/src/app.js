@@ -4,6 +4,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const hpp = require("hpp");
 const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/admin");
 const { globalLimiter, authLimiter } = require("./middleware/rateLimiter");
 const { errorHandler } = require("./middleware/errorHandler");
 
@@ -28,6 +29,7 @@ app.get("/api/v1/health", (_req, res) => {
 });
 
 app.use("/api/v1/auth", authLimiter, authRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });

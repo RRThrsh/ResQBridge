@@ -7,7 +7,7 @@ const { AppError } = require("../middleware/errorHandler");
 const { sendOtp, sendPasswordReset } = require("../services/email");
 
 const sendOtpHandler = async (req, res) => {
-  const { email } = req.body;
+  const email = req.body.email.trim().toLowerCase();
 
   const existingUser = await convexClient.query(anyApi.users.getUserByEmail, { email });
   if (existingUser) {
@@ -24,7 +24,8 @@ const sendOtpHandler = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  const { firstName, lastName, phoneNumber, email, password, otp } = req.body;
+  const { firstName, lastName, phoneNumber, password, otp } = req.body;
+  const email = req.body.email.trim().toLowerCase();
 
   const valid = await convexClient.query(anyApi.otp.getValidOtp, { email, otp });
   if (!valid) {
@@ -67,11 +68,24 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  const trimmedEmail = email.trim();
 
-  const user = await convexClient.query(anyApi.users.getUserByEmail, { email });
+  console.log(`[LOGIN] email="${trimmedEmail}" lower="${trimmedEmail.toLowerCase()}"`);
+
+  let user = await convexClient.query(anyApi.users.getUserByEmail, { email: trimmedEmail });
+  console.log(`[LOGIN] exact match: ${user ? 'FOUND' : 'NOT FOUND'}`);
+
   if (!user) {
+    user = await convexClient.query(anyApi.users.getUserByEmail, { email: trimmedEmail.toLowerCase() });
+    console.log(`[LOGIN] lower match: ${user ? 'FOUND' : 'NOT FOUND'}`);
+  }
+
+  if (!user) {
+    console.log(`[LOGIN] user NOT FOUND for "${trimmedEmail}"`);
     throw new AppError("Invalid email or password.", 401);
   }
+
+  console.log(`[LOGIN] user FOUND: uuid=${user.uuid} role=${user.role} storedEmail="${user.email}"`);
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
@@ -98,7 +112,7 @@ const login = async (req, res) => {
 };
 
 const forgotPassword = async (req, res) => {
-  const { email } = req.body;
+  const email = req.body.email.trim().toLowerCase();
 
   const user = await convexClient.query(anyApi.users.getUserByEmail, { email });
   if (!user) {

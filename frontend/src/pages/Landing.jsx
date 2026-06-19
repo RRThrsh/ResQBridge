@@ -70,7 +70,9 @@ const mapOptions = {
 }
 
 function Location() {
-  const { userPos, locError, distance, routePath, routeInfo, routeLoading } = useLocationContext()
+  const { userPos, locError, distance, routePath, routeInfo, routeLoading, requestLocation } = useLocationContext()
+
+  useEffect(() => { requestLocation() }, [requestLocation])
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
   const { isLoaded, loadError } = useLoadScript({

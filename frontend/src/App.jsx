@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { LocationProvider } from './context/LocationContext.jsx'
 import Navbar from './components/layout/Navbar.jsx'
@@ -12,30 +12,14 @@ import ForgotPassword from './pages/auth/ForgotPassword.jsx'
 import NotFound from './pages/errors/NotFound.jsx'
 import ServerError from './pages/errors/ServerError.jsx'
 import RateLimited from './pages/errors/RateLimited.jsx'
+import AdminDashboard from './pages/admin/Dashboard.jsx'
 
-const layoutPaths = ['/', '/about', '/wildlife-guide']
-
-function AppLayout() {
-  const { pathname } = useLocation()
-  const showLayout = layoutPaths.includes(pathname)
-
+function PublicShell({ children }) {
   return (
     <div className="flex min-h-screen flex-col">
-      {showLayout && <Navbar />}
-      <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/wildlife-guide" element={<WildlifeGuide />} />
-          <Route path="/v1/login" element={<Login />} />
-          <Route path="/v1/register" element={<Register />} />
-          <Route path="/v1/forgot-password" element={<ForgotPassword />} />
-          <Route path="/error" element={<ServerError />} />
-          <Route path="/rate-limited" element={<RateLimited />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-      {showLayout && <Footer />}
+      <Navbar />
+      <main className="flex-1">{children}</main>
+      <Footer />
     </div>
   )
 }
@@ -45,7 +29,18 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <LocationProvider>
-          <AppLayout />
+          <Routes>
+            <Route path="/" element={<PublicShell><Landing /></PublicShell>} />
+            <Route path="/about" element={<PublicShell><About /></PublicShell>} />
+            <Route path="/wildlife-guide" element={<PublicShell><WildlifeGuide /></PublicShell>} />
+            <Route path="/v1/login" element={<Login />} />
+            <Route path="/v1/register" element={<Register />} />
+            <Route path="/v1/forgot-password" element={<ForgotPassword />} />
+            <Route path="/error" element={<ServerError />} />
+            <Route path="/rate-limited" element={<RateLimited />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </LocationProvider>
       </AuthProvider>
     </BrowserRouter>

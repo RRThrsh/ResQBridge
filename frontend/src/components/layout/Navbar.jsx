@@ -45,7 +45,7 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {isAuthenticated && (
+          {isAuthenticated && user?.role !== 'superadmin' && user?.role !== 'admin' && (
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600">{user?.firstName} {user?.lastName}</span>
               <button
@@ -89,7 +89,7 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {isAuthenticated && (
+          {isAuthenticated && user?.role !== 'superadmin' && user?.role !== 'admin' && (
             <>
               <div className="border-t border-gray-100 px-4 py-3 text-sm text-gray-600">
                 {user?.firstName} {user?.lastName}

@@ -1,9 +1,10 @@
 const API_BASE = '/api/v1'
 
 export class ApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status, errors) {
     super(message)
     this.status = status
+    this.errors = errors
   }
 }
 
@@ -19,7 +20,7 @@ async function request(endpoint, options = {}) {
   const data = await res.json()
 
   if (!res.ok) {
-    throw new ApiError(data.message || 'Something went wrong', res.status)
+    throw new ApiError(data.message || 'Something went wrong', res.status, data.errors)
   }
 
   return data
@@ -46,4 +47,15 @@ export const auth = {
       method: 'POST',
       body: JSON.stringify({ email }),
     }),
+}
+
+export const admin = {
+  getUsers: () => request('/admin/users'),
+  getUser: (uuid) => request(`/admin/users/${uuid}`),
+  updateUserRole: (uuid, role) =>
+    request(`/admin/users/${uuid}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    }),
+  getStats: () => request('/admin/stats'),
 }
