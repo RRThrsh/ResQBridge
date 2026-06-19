@@ -5,10 +5,12 @@ const roles = [
     badge: 'bg-red-100 text-red-800',
     permissions: [
       'Full system access',
-      'Manage all user roles',
+      'Manage all user roles (including superadmin)',
       'View and delete audit logs',
+      'View admin dashboard & monitoring',
       'Edit system configuration',
-      'Access monitoring dashboard',
+      'Edit landing page content',
+      'Access all reports and data',
     ],
   },
   {
@@ -16,10 +18,12 @@ const roles = [
     color: 'blue',
     badge: 'bg-blue-100 text-blue-800',
     permissions: [
-      'View all users',
-      'Manage rescuer and user roles',
-      'View audit logs (read-only)',
-      'Access reports',
+      'View users and stats',
+      'Change user roles (cannot promote to superadmin)',
+      'Cannot change own role',
+      'No access to audit logs',
+      'No access to system configuration',
+      'No access to dashboard & monitoring',
     ],
   },
   {
