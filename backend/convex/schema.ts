@@ -26,4 +26,24 @@ export default defineSchema({
   })
     .index("by_email", ["email"])
     .index("by_uuid", ["uuid"]),
+
+  logs: defineTable({
+    userId: v.optional(v.string()),
+    eventType: v.string(),
+    section: v.optional(v.string()),
+    ipAddress: v.string(),
+    userAgent: v.optional(v.string()),
+    metadata: v.optional(v.string()),
+    sessionDuration: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_eventType", ["eventType"])
+    .index("by_ipAddress", ["ipAddress"])
+    .index("by_createdAt", ["createdAt"]),
+
+  config: defineTable({
+    key: v.string(),
+    value: v.string(),
+  })
+    .index("by_key", ["key"]),
 });

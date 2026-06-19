@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { logs } from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -21,6 +22,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    logs.trackLogout().catch(() => {})
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setToken(null)

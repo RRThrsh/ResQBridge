@@ -58,4 +58,38 @@ export const admin = {
       body: JSON.stringify({ role }),
     }),
   getStats: () => request('/admin/stats'),
+
+  getLogs: (params = {}) => {
+    const qs = new URLSearchParams()
+    if (params.eventType) qs.set('eventType', params.eventType)
+    if (params.ipAddress) qs.set('ipAddress', params.ipAddress)
+    if (params.limit) qs.set('limit', params.limit)
+    if (params.cursor) qs.set('cursor', params.cursor)
+    const query = qs.toString()
+    return request(`/admin/logs${query ? `?${query}` : ''}`)
+  },
+  getLogStats: () => request('/admin/logs/stats'),
+  getLogsByIP: (ip) => request(`/admin/logs/ip/${ip}`),
+  cleanupLogs: (retentionDays) =>
+    request('/admin/logs/cleanup', {
+      method: 'POST',
+      body: JSON.stringify({ retentionDays }),
+    }),
+
+  getConfig: () => request('/admin/config'),
+  updateConfig: (key, value) =>
+    request('/admin/config', {
+      method: 'PUT',
+      body: JSON.stringify({ key, value }),
+    }),
+}
+
+export const logs = {
+  trackGuest: (section, duration, eventType) =>
+    request('/log/guest', {
+      method: 'POST',
+      body: JSON.stringify({ section, duration, eventType }),
+    }),
+  trackLogout: () =>
+    request('/log/logout', { method: 'POST' }),
 }

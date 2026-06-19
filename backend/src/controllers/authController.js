@@ -5,12 +5,14 @@ const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { AppError } = require("../middleware/errorHandler");
 const { sendOtp, sendPasswordReset } = require("../services/email");
+const { logEvent } = require("../middleware/logAudit");
 
 const sendOtpHandler = async (req, res) => {
   const email = req.body.email.trim().toLowerCase();
 
   const existingUser = await convexClient.query(anyApi.users.getUserByEmail, { email });
   if (existingUser) {
+    await logEvent({ req, eventType: "login_attempt", metadata: { email, reason: "already_registered" } });
     throw new AppError("Email already registered.", 409);
   }
 
@@ -19,6 +21,8 @@ const sendOtpHandler = async (req, res) => {
 
   await convexClient.mutation(anyApi.otp.createOtp, { email, otp: code, expiresAt });
   await sendOtp(email, code);
+
+  await logEvent({ req, eventType: "login_attempt", metadata: { email, action: "otp_sent" } });
 
   res.json({ message: "OTP sent to your email." });
 };
@@ -59,6 +63,8 @@ const register = async (req, res) => {
     { expiresIn: "7d" },
   );
 
+  await logEvent({ req, userId: userUuid, eventType: "register", metadata: { email, role: "user" } });
+
   res.status(201).json({
     message: "User registered successfully.",
     token,
@@ -82,6 +88,7 @@ const login = async (req, res) => {
 
   if (!user) {
     console.log(`[LOGIN] user NOT FOUND for "${trimmedEmail}"`);
+    await logEvent({ req, eventType: "login_attempt", metadata: { email: trimmedEmail, reason: "user_not_found" } });
     throw new AppError("Invalid email or password.", 401);
   }
 
@@ -89,6 +96,7 @@ const login = async (req, res) => {
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
+    await logEvent({ req, eventType: "login_attempt", metadata: { email: trimmedEmail, reason: "wrong_password" } });
     throw new AppError("Invalid email or password.", 401);
   }
 
@@ -97,6 +105,8 @@ const login = async (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: "7d" },
   );
+
+  await logEvent({ req, userId: user.uuid, eventType: "login", metadata: { email: user.email, role: user.role } });
 
   res.json({
     message: "Login successful.",
