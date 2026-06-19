@@ -13,7 +13,9 @@ import NotFound from './pages/errors/NotFound.jsx'
 import ServerError from './pages/errors/ServerError.jsx'
 import RateLimited from './pages/errors/RateLimited.jsx'
 import AdminDashboard from './pages/admin/Dashboard.jsx'
+import RescuerLayout from './pages/rescuer/Layout.jsx'
 import RescuerDashboard from './pages/rescuer/Dashboard.jsx'
+import RescuerReports from './pages/rescuer/Reports.jsx'
 import Report from './pages/landing/Report.jsx'
 
 function PublicShell({ children }) {
@@ -42,7 +44,11 @@ function App() {
             <Route path="/error" element={<ServerError />} />
             <Route path="/rate-limited" element={<RateLimited />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/rescuer/dashboard" element={<RescuerDashboard />} />
+            <Route path="/rescuer" element={<RescuerLayout />}>
+              <Route index element={<RescuerDashboard />} />
+              <Route path="dashboard" element={<RescuerDashboard />} />
+              <Route path="reports" element={<RescuerReports />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </LocationProvider>

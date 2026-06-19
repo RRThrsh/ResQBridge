@@ -45,4 +45,23 @@ export default defineSchema({
     value: v.string(),
   })
     .index("by_key", ["key"]),
+
+  reports: defineTable({
+    name: v.string(),
+    phone: v.string(),
+    category: v.string(),
+    animalType: v.string(),
+    urgency: v.string(),
+    location: v.string(),
+    description: v.string(),
+    images: v.string(),
+    status: v.string(),
+    assignedTo: v.optional(v.string()),
+    reporterIp: v.string(),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_status", ["status"]),
 });

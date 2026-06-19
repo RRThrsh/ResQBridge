@@ -40,12 +40,15 @@ export default function Report() {
     urgency: '',
     location: '',
     description: '',
+    latitude: '',
+    longitude: '',
   })
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreviews, setImagePreviews] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [gettingLocation, setGettingLocation] = useState(false)
 
   function update(field) {
     return (e) => setForm({ ...form, [field]: e.target.value })
@@ -68,6 +71,25 @@ export default function Report() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  function getLocation() {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser.')
+      return
+    }
+    setGettingLocation(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((prev) => ({ ...prev, latitude: pos.coords.latitude.toString(), longitude: pos.coords.longitude.toString() }))
+        setGettingLocation(false)
+      },
+      () => {
+        setError('Could not get your location. Please allow location access or enter manually.')
+        setGettingLocation(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    )
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
@@ -81,6 +103,8 @@ export default function Report() {
       fd.append('urgency', form.urgency)
       fd.append('location', form.location)
       fd.append('description', form.description)
+      if (form.latitude) fd.append('latitude', form.latitude)
+      if (form.longitude) fd.append('longitude', form.longitude)
       imageFiles.forEach((f) => fd.append('images', f))
 
       const res = await fetch(`${API_BASE}/report`, {
@@ -112,7 +136,7 @@ export default function Report() {
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button onClick={() => navigate('/')}>Back to Home</Button>
-            <Button variant="outline" onClick={() => { setSubmitted(false); setForm({ name: '', phone: '', category: '', animalType: '', urgency: '', location: '', description: '' }); setImageFiles([]); setImagePreviews([]); if (fileRef.current) fileRef.current.value = '' }}>
+            <Button variant="outline" onClick={() => { setSubmitted(false); setForm({ name: '', phone: '', category: '', animalType: '', urgency: '', location: '', description: '', latitude: '', longitude: '' }); setImageFiles([]); setImagePreviews([]); if (fileRef.current) fileRef.current.value = '' }}>
               Submit Another
             </Button>
           </div>
@@ -220,12 +244,68 @@ export default function Report() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700">Pin Location <span className="text-gray-400">(optional)</span></label>
+            <div className="mt-1.5 space-y-3">
+              <button
+                type="button"
+                onClick={getLocation}
+                disabled={gettingLocation}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 transition hover:border-green-500 hover:text-green-600 disabled:opacity-50"
+              >
+                {gettingLocation ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                ) : (
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                  </svg>
+                )}
+                {gettingLocation ? 'Getting location...' : 'Get Current Location'}
+              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-400">Latitude</label>
+                  <input
+                    type="text"
+                    value={form.latitude}
+                    onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+                    className="mt-0.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                    placeholder="14.5995"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-400">Longitude</label>
+                  <input
+                    type="text"
+                    value={form.longitude}
+                    onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+                    className="mt-0.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                    placeholder="120.9842"
+                  />
+                </div>
+              </div>
+              {form.latitude && form.longitude && (
+                <div className="overflow-hidden rounded-lg border border-gray-200">
+                  <iframe
+                    title="Map preview"
+                    width="100%"
+                    height="220"
+                    frameBorder="0"
+                    scrolling="no"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(form.longitude) - 0.01},${parseFloat(form.latitude) - 0.01},${parseFloat(form.longitude) + 0.01},${parseFloat(form.latitude) + 0.01}&layer=mapnik&marker=${parseFloat(form.latitude)},${parseFloat(form.longitude)}`}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
               rows={4}
               value={form.description}
               onChange={update('description')}
-              className="mt-1.5 w-full resize-none rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              className="mt-1.5 w-full resize-y rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
               placeholder="Describe the animal's condition, behavior, and any immediate concerns..."
               required
             />
