@@ -21,9 +21,9 @@ async function sendOtp(email, otp) {
       <h2>Email Verification</h2>
       <p>Your OTP code is:</p>
       <h1 style="letter-spacing: 6px; font-size: 32px;">${otp}</h1>
-      <p>This code expires in 10 minutes.</p>
+      <p>This code expires in 1 minute.</p>
     `,
-    text: `Your OTP code is: ${otp}. It expires in 10 minutes.`,
+    text: `Your OTP code is: ${otp}. It expires in 1 minute.`,
   });
 }
 

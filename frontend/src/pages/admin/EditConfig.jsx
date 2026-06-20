@@ -50,7 +50,7 @@ export default function EditConfig({ section }) {
     try {
       setLoading(true)
       const res = await fetch(`${API_BASE}/admin/landing-config`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        credentials: 'include',
       })
       const data = await res.json()
       setConfig(ensureSections(data.config))
@@ -226,7 +226,7 @@ export default function EditConfig({ section }) {
     }
     xhr.onerror = () => { alert('Upload failed'); setUploading(null) }
     xhr.open('POST', UPLOAD_URL)
-    xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`)
+    xhr.withCredentials = true
     xhr.send(formData)
   }
 
@@ -332,7 +332,7 @@ export default function EditConfig({ section }) {
     }
     xhr.onerror = () => { alert('Upload failed'); setUploading(null) }
     xhr.open('POST', UPLOAD_URL)
-    xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`)
+    xhr.withCredentials = true
     xhr.send(formData)
   }
 
@@ -396,10 +396,8 @@ export default function EditConfig({ section }) {
       setMessage(null)
       const res = await fetch(`${API_BASE}/admin/landing-config`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(config),
       })
       const data = await res.json()

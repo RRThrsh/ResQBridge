@@ -26,18 +26,9 @@ const CATEGORY_LABELS = {
   other: 'Other',
 }
 
-function getUser() {
-  try { return JSON.parse(localStorage.getItem('user')) } catch { return null }
-}
-
-function getToken() {
-  return localStorage.getItem('token')
-}
-
 export default function RescuerReports() {
-  const { user: ctxUser } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
-  const user = ctxUser || getUser()
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
@@ -56,7 +47,7 @@ export default function RescuerReports() {
     try {
       const params = status ? `?status=${status}` : ''
       const res = await fetch(`${API_BASE}/rescuer/reports${params}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const data = await res.json()
       if (res.ok) setReports(data.reports || [])

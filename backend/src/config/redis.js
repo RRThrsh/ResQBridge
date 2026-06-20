@@ -29,7 +29,7 @@ if (REDIS_URL) {
 }
 
 async function getRedis() {
-  if (redis && !redis.status === "ready") {
+  if (redis && redis.status !== "ready") {
     try {
       await redis.connect();
     } catch {

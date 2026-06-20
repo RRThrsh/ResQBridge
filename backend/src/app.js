@@ -3,6 +3,8 @@ const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
 const hpp = require("hpp");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const reportRoutes = require("./routes/report");
@@ -10,13 +12,33 @@ const rescuerRoutes = require("./routes/rescuer");
 const { globalLimiter, authLimiter } = require("./middleware/rateLimiter");
 const { errorHandler, asyncHandler } = require("./middleware/errorHandler");
 const { logEvent } = require("./middleware/logAudit");
+const { authenticate } = require("./middleware/auth");
 
 const app = express();
 
 app.set("trust proxy", 1);
 
-app.use(helmet());
-app.use(cors());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://maps.googleapis.com", "https://maps.gstatic.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:", "https://maps.gstatic.com", "https://maps.googleapis.com"],
+      connectSrc: ["'self'", "https://maps.googleapis.com"],
+      frameSrc: ["'self'", "https://www.openstreetmap.org"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+}));
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true,
+}));
+app.use(cookieParser());
 app.use(globalLimiter);
 app.use(hpp());
 app.use(morgan("dev"));
@@ -50,17 +72,18 @@ app.post("/api/v1/log/guest", async (req, res) => {
 });
 
 app.post("/api/v1/log/logout", async (req, res) => {
-  const authHeader = req.headers.authorization;
+  const token = req.cookies.token || (req.headers.authorization || "").split(" ")[1];
   let userId = null;
-  if (authHeader) {
-    try {
-      const token = authHeader.split(" ")[1];
-      const decoded = require("jsonwebtoken").verify(token, process.env.JWT_SECRET);
-      userId = decoded.uuid;
-    } catch {}
+  if (token) {
+    try { userId = jwt.verify(token, process.env.JWT_SECRET).uuid; } catch {}
   }
+  res.clearCookie("token", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", path: "/" });
   await logEvent({ req, userId, eventType: "logout" });
   res.json({ message: "Logged." });
+});
+
+app.get("/api/v1/auth/me", authenticate, (req, res) => {
+  res.json({ user: req.user });
 });
 
 app.use("/api/v1/auth", authLimiter, authRoutes);

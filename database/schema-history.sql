@@ -1,6 +1,10 @@
 -- Schema created: 2026-06-12
 -- Source: backend/convex/schema.ts
+-- Last updated: 2026-06-20
 
+-- ============================================================
+-- otps — One-time passwords for email-based authentication
+-- ============================================================
 CREATE TABLE otps (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
@@ -11,6 +15,9 @@ CREATE TABLE otps (
     INDEX by_email (email)
 );
 
+-- ============================================================
+-- users — Application users with role-based access control
+-- ============================================================
 CREATE TABLE users (
     uuid VARCHAR(36) PRIMARY KEY,
     firstName VARCHAR(255) NOT NULL,
@@ -24,9 +31,10 @@ CREATE TABLE users (
     INDEX by_uuid (uuid)
 );
 
+-- ============================================================
+-- logs — Audit trail for user actions, guest visits, events
 -- Added: 2026-06-19
--- Audit log for all user transactions
-
+-- ============================================================
 CREATE TABLE logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     userId VARCHAR(36),
@@ -42,11 +50,36 @@ CREATE TABLE logs (
     INDEX by_createdAt (createdAt)
 );
 
--- Application configuration key-value store
-
+-- ============================================================
+-- config — Key-value application/landing page configuration
+-- ============================================================
 CREATE TABLE config (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     `key` VARCHAR(255) NOT NULL UNIQUE,
     `value` TEXT NOT NULL,
     INDEX by_key (`key`)
+);
+
+-- ============================================================
+-- reports — Animal rescue incident reports
+-- Added: 2026-06-20
+-- ============================================================
+CREATE TABLE reports (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    animalType VARCHAR(100) NOT NULL,
+    urgency VARCHAR(50) NOT NULL,
+    location VARCHAR(500) NOT NULL,
+    description TEXT NOT NULL,
+    images TEXT NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    assignedTo VARCHAR(36),
+    reporterIp VARCHAR(45) NOT NULL,
+    latitude DOUBLE,
+    longitude DOUBLE,
+    createdAt BIGINT NOT NULL,
+    INDEX by_createdAt (createdAt),
+    INDEX by_status (status)
 );

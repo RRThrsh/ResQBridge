@@ -126,24 +126,21 @@ const getLandingConfig = async (_req, res) => {
   res.json({ config: merged, defaults: LANDING_DEFAULTS, maintenanceMode: maintenanceMode === "true", maintenanceEndTime, otpEnabled: otpEnabled !== "false" });
 };
 
-const updateLandingConfig = async (req, res) => {
-  const { hero, stats, contact, faq, carousel, communityBoard, location, newsEvents, howItWorks, successStories, gallery, donate, volunteer, partners } = req.body;
+const ALLOWED_SECTION_KEYS = new Set([
+  "hero", "stats", "contact", "faq", "carousel", "communityBoard",
+  "location", "newsEvents", "howItWorks", "successStories", "gallery",
+  "donate", "volunteer", "partners",
+]);
 
+const updateLandingConfig = async (req, res) => {
   const payload = {};
-  if (hero) payload.hero = hero;
-  if (stats) payload.stats = stats;
-  if (contact) payload.contact = contact;
-  if (faq) payload.faq = faq;
-  if (carousel) payload.carousel = carousel;
-  if (communityBoard) payload.communityBoard = communityBoard;
-  if (location) payload.location = location;
-  if (newsEvents) payload.newsEvents = newsEvents;
-  if (howItWorks) payload.howItWorks = howItWorks;
-  if (successStories) payload.successStories = successStories;
-  if (gallery) payload.gallery = gallery;
-  if (donate) payload.donate = donate;
-  if (volunteer) payload.volunteer = volunteer;
-  if (partners) payload.partners = partners;
+  for (const key of Object.keys(req.body)) {
+    if (!ALLOWED_SECTION_KEYS.has(key)) continue;
+    const val = req.body[key];
+    if (val !== null && val !== undefined && typeof val !== "string") {
+      payload[key] = val;
+    }
+  }
 
   await convexClient.mutation(anyApi.config.upsertConfig, {
     key: "landingContent",

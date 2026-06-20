@@ -14,16 +14,11 @@ const roleLabels = {
   rescuer: 'Rescuer',
 }
 
-function getUser() {
-  try { return JSON.parse(localStorage.getItem('user')) } catch { return null }
-}
-
 export default function RescuerLayout() {
-  const { user: ctxUser, logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const user = ctxUser || getUser()
 
   useEffect(() => {
     if (!user || user.role !== 'rescuer') {
