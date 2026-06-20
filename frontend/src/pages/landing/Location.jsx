@@ -24,17 +24,22 @@ export default function Location({ title, subtitle, center }) {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: apiKey,
   })
+  const mapsFailed = isLoaded && !loadError && !window.google?.maps?.version
 
-  const onMapLoad = useCallback(() => setMapLoaded(true), [])
+  const onMapLoad = useCallback(() => {
+    if (window.google?.maps?.version) setMapLoaded(true)
+  }, [])
 
   const onPolyLoad = useCallback((poly) => {
     polyRef.current = poly
-    if (routePathRef.current && poly.setPath) poly.setPath(routePathRef.current)
+    if (routePathRef.current) {
+      try { poly.setPath(routePathRef.current) } catch {}
+    }
   }, [])
 
   useEffect(() => {
-    if (polyRef.current && routePath && polyRef.current.setPath) {
-      polyRef.current.setPath(routePath)
+    if (polyRef.current && routePath) {
+      try { polyRef.current.setPath(routePath) } catch {}
     }
   }, [routePath])
 
@@ -149,7 +154,7 @@ export default function Location({ title, subtitle, center }) {
           </div>
 
           <div className="overflow-hidden rounded-xl border border-gray-200 lg:col-span-3">
-            {loadError ? (
+            {loadError || mapsFailed ? (
               <div className="flex min-h-[300px] items-center justify-center bg-gray-50 lg:min-h-[420px]">
                 <p className="text-sm text-gray-400">Failed to load Google Maps. Check your API key.</p>
               </div>
