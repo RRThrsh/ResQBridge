@@ -29,11 +29,11 @@ export default function Location({ title, subtitle, center }) {
 
   const onPolyLoad = useCallback((poly) => {
     polyRef.current = poly
-    if (routePathRef.current) poly.setPath(routePathRef.current)
+    if (routePathRef.current && poly.setPath) poly.setPath(routePathRef.current)
   }, [])
 
   useEffect(() => {
-    if (polyRef.current && routePath) {
+    if (polyRef.current && routePath && polyRef.current.setPath) {
       polyRef.current.setPath(routePath)
     }
   }, [routePath])
