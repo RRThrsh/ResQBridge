@@ -9,14 +9,12 @@ export class ApiError extends Error {
 }
 
 async function request(endpoint, options = {}) {
-  const token = localStorage.getItem('token')
   const headers = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers })
+  const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers, credentials: 'include' })
   const data = await res.json()
 
   if (!res.ok) {

@@ -189,6 +189,12 @@ const configSubLinks = [
   { key: 'faq', label: 'FAQ' },
   { key: 'carousel', label: 'Carousel' },
   { key: 'communityBoard', label: 'Community Board' },
+  { key: 'howItWorks', label: 'How It Works' },
+  { key: 'successStories', label: 'Success Stories' },
+  { key: 'gallery', label: 'Gallery' },
+  { key: 'donate', label: 'Donate' },
+  { key: 'volunteer', label: 'Volunteer' },
+  { key: 'partners', label: 'Partners' },
   { key: 'location', label: 'Location' },
   { key: 'newsEvents', label: 'News & Events' },
 ]

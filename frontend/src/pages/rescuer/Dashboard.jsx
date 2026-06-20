@@ -1,12 +1,7 @@
 import { useAuth } from '../../context/AuthContext'
 
-function getUser() {
-  try { return JSON.parse(localStorage.getItem('user')) } catch { return null }
-}
-
 export default function RescuerDashboard() {
-  const { user: ctxUser } = useAuth()
-  const user = ctxUser || getUser()
+  const { user } = useAuth()
 
   if (!user) return null
 

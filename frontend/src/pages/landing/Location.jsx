@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { GoogleMap, Marker, useLoadScript, Circle, Polyline } from '@react-google-maps/api'
 import { useLocationContext } from '../../context/LocationContext.jsx'
 
@@ -16,9 +16,32 @@ export default function Location({ title, subtitle, center }) {
   useEffect(() => { requestLocation() }, [requestLocation])
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
+  const [mapLoaded, setMapLoaded] = useState(false)
+  const polyRef = useRef(null)
+  const routePathRef = useRef(routePath)
+  routePathRef.current = routePath
+
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: apiKey,
   })
+  const mapsFailed = isLoaded && !loadError && !window.google?.maps?.version
+
+  const onMapLoad = useCallback(() => {
+    if (window.google?.maps?.version) setMapLoaded(true)
+  }, [])
+
+  const onPolyLoad = useCallback((poly) => {
+    polyRef.current = poly
+    if (routePathRef.current) {
+      try { poly.setPath(routePathRef.current) } catch {}
+    }
+  }, [])
+
+  useEffect(() => {
+    if (polyRef.current && routePath) {
+      try { polyRef.current.setPath(routePath) } catch {}
+    }
+  }, [routePath])
 
   function isOpen() {
     const now = new Date()
@@ -131,7 +154,7 @@ export default function Location({ title, subtitle, center }) {
           </div>
 
           <div className="overflow-hidden rounded-xl border border-gray-200 lg:col-span-3">
-            {loadError ? (
+            {loadError || mapsFailed ? (
               <div className="flex min-h-[300px] items-center justify-center bg-gray-50 lg:min-h-[420px]">
                 <p className="text-sm text-gray-400">Failed to load Google Maps. Check your API key.</p>
               </div>
@@ -153,34 +176,39 @@ export default function Location({ title, subtitle, center }) {
                   center={userPos || center}
                   zoom={userPos ? 13 : 11}
                   options={mapOptions}
+                  onLoad={onMapLoad}
                 >
-                  <Marker position={center} title="Palawan Wildlife Rescue Center" />
-                  {routePath && (
-                    <Polyline
-                      path={routePath}
-                      options={{
-                        strokeColor: '#16a34a',
-                        strokeWeight: 4,
-                        strokeOpacity: 0.85,
-                        geodesic: true,
-                      }}
-                    />
-                  )}
-                  {userPos && (
+                  {mapLoaded && (
                     <>
-                      <Marker
-                        position={userPos}
-                        title="Your location"
-                        icon={{
-                          path: window.google.maps.SymbolPath.CIRCLE,
-                          scale: 8,
-                          fillColor: '#3b82f6',
-                          fillOpacity: 1,
-                          strokeColor: '#fff',
-                          strokeWeight: 3,
-                        }}
-                      />
-                      <Circle center={userPos} radius={30} options={{ fillColor: '#3b82f6', fillOpacity: 0.1, strokeColor: '#3b82f6', strokeOpacity: 0.3, strokeWeight: 1 }} />
+                      <Marker position={center} title="Palawan Wildlife Rescue Center" />
+                      {routePath && (
+                        <Polyline
+                          onLoad={onPolyLoad}
+                          options={{
+                            strokeColor: '#16a34a',
+                            strokeWeight: 4,
+                            strokeOpacity: 0.85,
+                            geodesic: true,
+                          }}
+                        />
+                      )}
+                      {userPos && (
+                        <>
+                          <Marker
+                            position={userPos}
+                            title="Your location"
+                            icon={{
+                              path: window.google.maps.SymbolPath.CIRCLE,
+                              scale: 8,
+                              fillColor: '#3b82f6',
+                              fillOpacity: 1,
+                              strokeColor: '#fff',
+                              strokeWeight: 3,
+                            }}
+                          />
+                          <Circle center={userPos} radius={30} options={{ fillColor: '#3b82f6', fillOpacity: 0.1, strokeColor: '#3b82f6', strokeOpacity: 0.3, strokeWeight: 1 }} />
+                        </>
+                      )}
                     </>
                   )}
                 </GoogleMap>

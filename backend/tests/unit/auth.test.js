@@ -43,7 +43,7 @@ describe("authenticate", () => {
     expect(res.state.body.message).toBe("Invalid or expired token.");
   });
 
-  it("calls next when token is valid", () => {
+  it("calls next when Authorization header token is valid", () => {
     const token = jwt.sign({ uuid: "abc", role: "user" }, SECRET);
     const req = mockReq(token);
     const res = mockRes();
@@ -53,6 +53,38 @@ describe("authenticate", () => {
     });
     expect(called).toBe(true);
     expect(req.user.uuid).toBe("abc");
+  });
+
+  it("calls next when cookie token is valid", () => {
+    const token = jwt.sign({ uuid: "cookie-user", role: "admin" }, SECRET);
+    const req = {
+      cookies: { token },
+      headers: {},
+    };
+    const res = mockRes();
+    let called = false;
+    authenticate(req, res, () => {
+      called = true;
+    });
+    expect(called).toBe(true);
+    expect(req.user.uuid).toBe("cookie-user");
+    expect(req.user.role).toBe("admin");
+  });
+
+  it("prefers cookie over Authorization header", () => {
+    const cookieToken = jwt.sign({ uuid: "cookie-user" }, SECRET);
+    const headerToken = jwt.sign({ uuid: "header-user" }, SECRET);
+    const req = {
+      cookies: { token: cookieToken },
+      headers: { authorization: `Bearer ${headerToken}` },
+    };
+    const res = mockRes();
+    let called = false;
+    authenticate(req, res, () => {
+      called = true;
+    });
+    expect(called).toBe(true);
+    expect(req.user.uuid).toBe("cookie-user");
   });
 });
 

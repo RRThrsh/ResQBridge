@@ -73,6 +73,14 @@ const register = async (req, res) => {
 
   await logEvent({ req, userId: userUuid, eventType: "register", metadata: { email, role: "rescuer" } });
 
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
+  });
+
   res.status(201).json({
     message: "User registered successfully.",
     token,
@@ -115,6 +123,14 @@ const login = async (req, res) => {
   );
 
   await logEvent({ req, userId: user.uuid, eventType: "login", metadata: { email: user.email, role: user.role } });
+
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
+  });
 
   res.json({
     message: "Login successful.",

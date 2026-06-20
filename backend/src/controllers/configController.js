@@ -69,6 +69,12 @@ const LANDING_DEFAULTS = {
     subtitle: "Visit us at our rescue center in Palawan.",
     center: { lat: 9.799447, lng: 118.693766 },
   },
+  howItWorks: { title: "", subtitle: "", steps: [] },
+  successStories: { title: "", subtitle: "", stories: [] },
+  gallery: { title: "", subtitle: "", images: [] },
+  donate: { title: "", subtitle: "", reasons: [], donateLinks: { note: "", donateUrl: "", monthlyUrl: "" } },
+  volunteer: { title: "", subtitle: "", roles: [], requirements: [], cta: { label: "", link: "" } },
+  partners: { title: "", subtitle: "", partners: [] },
   newsEvents: {
     title: "News & Events",
     subtitle: "Stay updated on rescues, releases, and upcoming community activities.",
@@ -106,6 +112,12 @@ const getLandingConfig = async (_req, res) => {
     carousel: stored.carousel || LANDING_DEFAULTS.carousel,
     communityBoard: { ...LANDING_DEFAULTS.communityBoard, ...(stored.communityBoard || {}) },
     location: { ...LANDING_DEFAULTS.location, ...(stored.location || {}) },
+    howItWorks: { ...LANDING_DEFAULTS.howItWorks, ...(stored.howItWorks || {}) },
+    successStories: { ...LANDING_DEFAULTS.successStories, ...(stored.successStories || {}) },
+    gallery: { ...LANDING_DEFAULTS.gallery, ...(stored.gallery || {}) },
+    donate: { ...LANDING_DEFAULTS.donate, ...(stored.donate || {}) },
+    volunteer: { ...LANDING_DEFAULTS.volunteer, ...(stored.volunteer || {}) },
+    partners: { ...LANDING_DEFAULTS.partners, ...(stored.partners || {}) },
     newsEvents: { ...LANDING_DEFAULTS.newsEvents, ...(stored.newsEvents || {}) },
   };
 
@@ -114,18 +126,21 @@ const getLandingConfig = async (_req, res) => {
   res.json({ config: merged, defaults: LANDING_DEFAULTS, maintenanceMode: maintenanceMode === "true", maintenanceEndTime, otpEnabled: otpEnabled !== "false" });
 };
 
-const updateLandingConfig = async (req, res) => {
-  const { hero, stats, contact, faq, carousel, communityBoard, location, newsEvents } = req.body;
+const ALLOWED_SECTION_KEYS = new Set([
+  "hero", "stats", "contact", "faq", "carousel", "communityBoard",
+  "location", "newsEvents", "howItWorks", "successStories", "gallery",
+  "donate", "volunteer", "partners",
+]);
 
+const updateLandingConfig = async (req, res) => {
   const payload = {};
-  if (hero) payload.hero = hero;
-  if (stats) payload.stats = stats;
-  if (contact) payload.contact = contact;
-  if (faq) payload.faq = faq;
-  if (carousel) payload.carousel = carousel;
-  if (communityBoard) payload.communityBoard = communityBoard;
-  if (location) payload.location = location;
-  if (newsEvents) payload.newsEvents = newsEvents;
+  for (const key of Object.keys(req.body)) {
+    if (!ALLOWED_SECTION_KEYS.has(key)) continue;
+    const val = req.body[key];
+    if (val !== null && val !== undefined && typeof val !== "string") {
+      payload[key] = val;
+    }
+  }
 
   await convexClient.mutation(anyApi.config.upsertConfig, {
     key: "landingContent",
