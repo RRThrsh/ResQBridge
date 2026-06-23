@@ -8,6 +8,7 @@ const LOCAL_BADGES = {
   en_route: 'bg-blue-100 text-blue-800 border-blue-300',
   in_progress: 'bg-amber-100 text-amber-800 border-amber-300',
   resolved: 'bg-green-100 text-green-800 border-green-300',
+  failed: 'bg-red-100 text-red-800 border-red-300',
 }
 
 const URGENCY_LABEL = {
@@ -30,6 +31,9 @@ export default function RescuerAssignments() {
   const [actionLoading, setActionLoading] = useState(null)
   const [acceptedIds, setAcceptedIds] = useState(new Set())
   const [enRouteIds, setEnRouteIds] = useState(new Set())
+  const [diaryText, setDiaryText] = useState({})
+  const [failReason, setFailReason] = useState({})
+  const [showFailInput, setShowFailInput] = useState(new Set())
 
   function fetchReports() {
     if (!user) return
@@ -77,9 +81,45 @@ export default function RescuerAssignments() {
     finally { setActionLoading(null) }
   }
 
+  async function handleResolve(reportId) {
+    const diary = diaryText[reportId] || ''
+    if (!diary.trim()) {
+      alert('Please write a diary entry about how you executed the rescue.')
+      return
+    }
+    setActionLoading(reportId)
+    try {
+      await rescuerApi.addNote(reportId, `Rescue Diary: ${diary}`)
+      await rescuerApi.updateReportStatus(reportId, 'resolved')
+      fetchReports()
+    } catch { alert('Failed to resolve.') }
+    finally { setActionLoading(null) }
+  }
+
+  async function handleFail(reportId) {
+    const diary = diaryText[reportId] || ''
+    const reason = failReason[reportId] || ''
+    if (!diary.trim()) {
+      alert('Please write a diary entry about what happened.')
+      return
+    }
+    if (!reason.trim()) {
+      alert('Please provide the reason why the rescue failed.')
+      return
+    }
+    setActionLoading(reportId)
+    try {
+      await rescuerApi.addNote(reportId, `Rescue Diary: ${diary}`)
+      await rescuerApi.addNote(reportId, `Failure Reason: ${reason}`)
+      await rescuerApi.updateReportStatus(reportId, 'failed')
+      fetchReports()
+    } catch { alert('Failed to mark as failed.') }
+    finally { setActionLoading(null) }
+  }
+
   if (!user) return null
 
-  const activeCount = reports.filter((r) => r.status !== 'resolved').length
+  const activeCount = reports.filter((r) => r.status !== 'resolved' && r.status !== 'failed').length
 
   return (
     <main className="flex-1 overflow-y-auto p-6 md:p-8">
@@ -98,6 +138,7 @@ export default function RescuerAssignments() {
               { key: 'en_route', label: 'En Route' },
               { key: 'in_progress', label: 'Working' },
               { key: 'resolved', label: 'Done' },
+              { key: 'failed', label: 'Failed' },
             ].map((s) => (
               <button
                 key={s.key}
@@ -137,6 +178,7 @@ export default function RescuerAssignments() {
               const isAccepted = acceptedIds.has(r._id)
               const isEnRouted = enRouteIds.has(r._id)
               const badgeKey = r.status === 'resolved' ? 'resolved'
+                : r.status === 'failed' ? 'failed'
                 : r.status === 'in_progress' ? 'in_progress'
                 : isEnRouted ? 'en_route'
                 : isAccepted ? 'accepted'
@@ -146,7 +188,12 @@ export default function RescuerAssignments() {
                 : badgeKey === 'accepted' ? 'Accepted'
                 : badgeKey === 'en_route' ? 'En Route'
                 : badgeKey === 'in_progress' ? 'Working'
+                : badgeKey === 'failed' ? 'Failed'
                 : 'Done'
+
+              const showDiary = isEnRouted || r.status === 'en_route' || r.status === 'in_progress'
+              const showInitial = !isAccepted && !isEnRouted && r.status !== 'en_route' && r.status !== 'in_progress' && r.status !== 'resolved' && r.status !== 'failed'
+
               return (
                 <div key={r._id} className="rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-sm hover:border-amber-400 transition-all">
                   <div className="flex items-start gap-4">
@@ -171,7 +218,7 @@ export default function RescuerAssignments() {
                   </div>
 
                   <div className="mt-4 pt-4 border-t-2 border-gray-100 flex flex-wrap gap-2">
-                    {!isAccepted && !isEnRouted && (
+                    {showInitial && (
                       <>
                         <button
                           onClick={() => handleAccept(r._id)}
@@ -198,6 +245,56 @@ export default function RescuerAssignments() {
                       </button>
                     )}
                   </div>
+
+                  {showDiary && (
+                    <div className="mt-4 pt-4 border-t-2 border-gray-100 space-y-3">
+                      <textarea
+                        placeholder="Write your rescue diary here..."
+                        value={diaryText[r._id] || ''}
+                        onChange={(e) => setDiaryText({ ...diaryText, [r._id]: e.target.value })}
+                        className="w-full rounded-xl border-2 border-gray-300 p-3 text-base focus:border-amber-500 focus:outline-none"
+                        rows={3}
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => handleResolve(r._id)}
+                          disabled={actionLoading === r._id}
+                          className="rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
+                        >
+                          {actionLoading === r._id ? '...' : '✅ Resolve'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            const next = new Set(showFailInput)
+                            if (next.has(r._id)) next.delete(r._id)
+                            else next.add(r._id)
+                            setShowFailInput(next)
+                          }}
+                          className="rounded-xl bg-red-100 px-5 py-2.5 text-base font-bold text-red-700 hover:bg-red-200 transition-colors border-2 border-red-200"
+                        >
+                          ✗ Failed
+                        </button>
+                      </div>
+                      {showFailInput.has(r._id) && (
+                        <div className="space-y-2">
+                          <textarea
+                            placeholder="Why did the rescue fail?"
+                            value={failReason[r._id] || ''}
+                            onChange={(e) => setFailReason({ ...failReason, [r._id]: e.target.value })}
+                            className="w-full rounded-xl border-2 border-red-300 p-3 text-base focus:border-red-500 focus:outline-none"
+                            rows={2}
+                          />
+                          <button
+                            onClick={() => handleFail(r._id)}
+                            disabled={actionLoading === r._id}
+                            className="rounded-xl bg-red-600 px-5 py-2.5 text-base font-bold text-white hover:bg-red-700 transition-colors shadow disabled:opacity-50"
+                          >
+                            {actionLoading === r._id ? '...' : 'Confirm Failed'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}
