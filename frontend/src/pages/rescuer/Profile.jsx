@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { rescuer as rescuerApi } from '../../services/api'
+import { CheckIcon, XIcon } from '../../components/SvgIcons'
 
 export default function RescuerProfile() {
   const { user } = useAuth()
@@ -42,7 +43,7 @@ export default function RescuerProfile() {
               ? 'bg-green-100 text-green-800 border-green-300'
               : 'bg-red-100 text-red-800 border-red-300'
           }`}>
-            <span className="text-2xl">{message.type === 'success' ? '✓' : '✕'}</span>
+            <span>{message.type === 'success' ? <CheckIcon className="w-6 h-6" /> : <XIcon className="w-6 h-6" />}</span>
             {message.text}
           </div>
         )}
