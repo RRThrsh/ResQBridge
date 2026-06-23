@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { rescuer as rescuerApi } from '../../services/api'
+import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIcon } from '../../components/SvgIcons'
 
 const URGENCY_LABEL = {
   low: { label: 'Low', class: 'bg-gray-100 text-gray-700' },
@@ -17,12 +18,12 @@ const STATUS_BADGE = {
 }
 
 const CATEGORY_ICONS = {
-  injury: '🩺',
-  stranded: '🏝️',
-  missing: '🔍',
-  found: '🐾',
-  abandoned: '🏚️',
-  other: '📋',
+  injury: MedicalIcon,
+  stranded: StrandedIcon,
+  missing: SearchIcon,
+  found: PawIcon,
+  abandoned: HouseIcon,
+  other: ClipboardIcon,
 }
 
 export default function RescuerDashboard() {
@@ -122,7 +123,7 @@ export default function RescuerDashboard() {
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">Recent Assignments</h2>
             <button
-              onClick={() => navigate('/rescuer/reports')}
+              onClick={() => navigate('/rescuer/assignments')}
               className="rounded-xl bg-amber-600 px-5 py-2.5 text-base font-bold text-white hover:bg-amber-700 transition-colors shadow"
             >
               View All Reports
@@ -138,10 +139,10 @@ export default function RescuerDashboard() {
                 <div
                   key={r._id}
                   className="rounded-2xl border-2 border-gray-200 bg-white p-5 transition-all hover:border-amber-400 hover:shadow-md cursor-pointer"
-                  onClick={() => navigate('/rescuer/reports')}
+                  onClick={() => navigate('/rescuer/assignments')}
                 >
                   <div className="flex items-start gap-4">
-                    <span className="text-2xl mt-0.5">{CATEGORY_ICONS[r.category] || '📋'}</span>
+                    <span className="mt-0.5">{(() => { const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon; return <Icon className="w-7 h-7 text-gray-600" />; })()}</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-lg font-bold text-gray-900">{r.name}</span>
@@ -181,7 +182,7 @@ export default function RescuerDashboard() {
             <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <button
-                onClick={() => navigate('/rescuer/reports')}
+                onClick={() => navigate('/rescuer/assignments')}
                 className="flex w-full items-center gap-3 rounded-xl bg-amber-600 px-5 py-4 text-lg font-bold text-white hover:bg-amber-700 transition-colors shadow"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
