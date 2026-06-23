@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 
 export const insertActivityLog = mutation({
   args: {
@@ -22,14 +23,13 @@ export const insertActivityLog = mutation({
 export const getActivityLogs = query({
   args: {
     userId: v.string(),
-    limit: v.optional(v.number()),
+    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 50;
     return await ctx.db
       .query("activityLogs")
       .withIndex("by_userId", (idx) => idx.eq("userId", args.userId))
       .order("desc")
-      .take(limit);
+      .paginate(args.paginationOpts);
   },
 });
