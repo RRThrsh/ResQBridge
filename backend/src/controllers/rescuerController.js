@@ -111,7 +111,7 @@ const updateReportStatus = async (req, res) => {
   const { status } = req.body;
   const userId = req.user.uuid;
 
-  if (!["pending", "assigned", "en_route", "in_progress", "resolved"].includes(status)) {
+  if (!["pending", "assigned", "en_route", "in_progress", "resolved", "failed"].includes(status)) {
     return res.status(400).json({ message: "Invalid status." });
   }
 
