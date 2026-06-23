@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const router = express.Router();
-const { sendOtpHandler, register, login, forgotPassword } = require("../controllers/authController");
+const { sendOtpHandler, register, login, forgotPassword, resetPassword } = require("../controllers/authController");
 const { validate } = require("../middleware/validate");
 const { asyncHandler } = require("../middleware/errorHandler");
 
@@ -45,5 +45,11 @@ const forgotPasswordRules = [
 ];
 
 router.post("/forgot-password", forgotPasswordRules, validate, asyncHandler(forgotPassword));
+
+const resetPasswordRules = [
+  body("token").trim().notEmpty().withMessage("Token is required."),
+  body("password").trim().isLength({ min: 6 }).withMessage("Password must be at least 6 characters."),
+];
+router.post("/reset-password", resetPasswordRules, validate, asyncHandler(resetPassword));
 
 module.exports = router;
