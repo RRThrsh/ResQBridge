@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
 import { rescuer as rescuerApi } from '../../services/api'
 import ReportMap from './ReportMap'
+import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIcon, RefreshIcon, CheckCircleIcon } from '../../components/SvgIcons'
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
@@ -25,12 +26,12 @@ const STATUS_LABEL = {
 }
 
 const CATEGORY_ICONS = {
-  injury: '🩺',
-  stranded: '🏝️',
-  missing: '🔍',
-  found: '🐾',
-  abandoned: '🏚️',
-  other: '📋',
+  injury: MedicalIcon,
+  stranded: StrandedIcon,
+  missing: SearchIcon,
+  found: PawIcon,
+  abandoned: HouseIcon,
+  other: ClipboardIcon,
 }
 
 const CATEGORY_LABELS = {
@@ -247,7 +248,7 @@ export default function RescuerReports() {
                     }}
                     className="flex w-full items-start gap-4 px-6 py-5 text-left"
                   >
-                    <span className="text-2xl mt-0.5">{CATEGORY_ICONS[r.category] || '📋'}</span>
+                    <span className="mt-0.5">{(() => { const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon; return <Icon className="w-7 h-7 text-gray-600" />; })()}</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xl font-bold text-gray-900">{r.name}</span>
@@ -342,16 +343,18 @@ export default function RescuerReports() {
                                 disabled={actionLoading === r._id}
                                 className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-lg font-bold text-white shadow transition-all hover:bg-blue-700 disabled:opacity-50"
                               >
-                                {actionLoading === r._id ? 'Updating...' : '🔄 Start Working'}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-base font-bold text-white hover:bg-blue-700 transition-colors shadow disabled:opacity-50"
+                              >
+                                {actionLoading === r._id ? 'Updating...' : <><RefreshIcon className="w-5 h-5" /> Start Working</>}
                               </button>
                             )}
                             {r.status === 'in_progress' && (
                               <button
-                                onClick={() => handleStatusChange(r._id, 'resolved')}
+                                onClick={() => handleClaim(r._id, 'resolved')}
                                 disabled={actionLoading === r._id}
-                                className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-6 py-3.5 text-lg font-bold text-white shadow transition-all hover:bg-green-700 disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
                               >
-                                {actionLoading === r._id ? 'Updating...' : '✅ Mark as Resolved'}
+                                {actionLoading === r._id ? 'Updating...' : <><CheckCircleIcon className="w-5 h-5" /> Mark as Resolved</>}
                               </button>
                             )}
                           </>
