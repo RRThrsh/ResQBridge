@@ -14,6 +14,7 @@ const {
   updateLocation,
   rejectAssignment,
 } = require("../controllers/rescuerController");
+const { upload, uploadImage } = require("../controllers/uploadController");
 
 router.use(authenticate);
 router.use(authorize("rescuer", "admin", "superadmin"));
@@ -28,5 +29,6 @@ router.get("/activity", asyncHandler(getActivity));
 router.patch("/availability", asyncHandler(updateAvailability));
 router.post("/location", asyncHandler(updateLocation));
 router.post("/reports/:id/reject", asyncHandler(rejectAssignment));
+router.post("/upload", upload.single("image"), asyncHandler(uploadImage));
 
 module.exports = router;
