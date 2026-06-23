@@ -81,6 +81,56 @@ export const admin = {
       method: 'PUT',
       body: JSON.stringify({ key, value }),
     }),
+
+  getReports: () => request('/admin/reports'),
+  assignReport: (reportId, userId) =>
+    request(`/admin/reports/${reportId}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    }),
+  getRescuerLocations: () => request('/admin/rescuer-locations'),
+}
+
+export const rescuer = {
+  getReports: (params = {}) => {
+    const qs = new URLSearchParams()
+    if (params.status) qs.set('status', params.status)
+    if (params.assignedTo) qs.set('assignedTo', params.assignedTo)
+    if (params.search) qs.set('search', params.search)
+    if (params.sortBy) qs.set('sortBy', params.sortBy)
+    const query = qs.toString()
+    return request(`/rescuer/reports${query ? `?${query}` : ''}`)
+  },
+  updateReportStatus: (id, status) =>
+    request(`/rescuer/reports/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+  getStats: () => request('/rescuer/stats'),
+  updateProfile: (body) =>
+    request('/rescuer/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
+  getActivity: () => request('/rescuer/activity'),
+  updateAvailability: (availability) =>
+    request('/rescuer/availability', {
+      method: 'PATCH',
+      body: JSON.stringify({ availability }),
+    }),
+  getNotes: (reportId) => request(`/rescuer/reports/${reportId}/notes`),
+  addNote: (reportId, content) =>
+    request(`/rescuer/reports/${reportId}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    }),
+  updateLocation: (latitude, longitude) =>
+    request('/rescuer/location', {
+      method: 'POST',
+      body: JSON.stringify({ latitude, longitude }),
+    }),
+  rejectAssignment: (reportId) =>
+    request(`/rescuer/reports/${reportId}/reject`, { method: 'POST' }),
 }
 
 export const logs = {
