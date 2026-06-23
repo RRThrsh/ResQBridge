@@ -13,6 +13,9 @@ const { globalLimiter, authLimiter } = require("./middleware/rateLimiter");
 const { errorHandler, asyncHandler } = require("./middleware/errorHandler");
 const { logEvent } = require("./middleware/logAudit");
 const { authenticate } = require("./middleware/auth");
+const convexClient = require("./config/convex");
+const { anyApi } = require("convex/server");
+const { addSSEClient } = require("./services/notification");
 
 const app = express();
 
@@ -82,8 +85,24 @@ app.post("/api/v1/log/logout", async (req, res) => {
   res.json({ message: "Logged." });
 });
 
-app.get("/api/v1/auth/me", authenticate, (req, res) => {
-  res.json({ user: req.user });
+app.get("/api/v1/auth/me", authenticate, asyncHandler(async (req, res) => {
+  const user = await convexClient.query(anyApi.users.getUserByUuid, { uuid: req.user.uuid });
+  if (!user) {
+    res.clearCookie("token", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", path: "/" });
+    return res.status(401).json({ message: "User not found." });
+  }
+  const { password, ...safeUser } = user;
+  res.json({ user: safeUser });
+}));
+
+app.get("/api/v1/report/updates", authenticate, (req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
+  res.write(`data: ${JSON.stringify({ type: "connected" })}\n\n`);
+  addSSEClient(res);
 });
 
 app.use("/api/v1/auth", authLimiter, authRoutes);
