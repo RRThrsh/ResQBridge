@@ -2,13 +2,20 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { rescuer as rescuerApi } from '../../services/api'
 
-const LOCAL_BADGES = {
+const BADGES = {
   new: 'bg-indigo-100 text-indigo-800 border-indigo-300',
-  accepted: 'bg-blue-100 text-blue-800 border-blue-300',
   en_route: 'bg-blue-100 text-blue-800 border-blue-300',
   in_progress: 'bg-amber-100 text-amber-800 border-amber-300',
   resolved: 'bg-green-100 text-green-800 border-green-300',
   failed: 'bg-red-100 text-red-800 border-red-300',
+}
+
+const BADGE_LABELS = {
+  new: 'New',
+  en_route: 'En Route',
+  in_progress: 'Working',
+  resolved: 'Done',
+  failed: 'Failed',
 }
 
 const URGENCY_LABEL = {
@@ -34,6 +41,8 @@ export default function RescuerAssignments() {
   const [diaryText, setDiaryText] = useState({})
   const [failReason, setFailReason] = useState({})
   const [showFailInput, setShowFailInput] = useState(new Set())
+  const [uploadingId, setUploadingId] = useState(null)
+  const [uploadedImages, setUploadedImages] = useState({})
 
   function fetchReports() {
     if (!user) return
@@ -117,6 +126,35 @@ export default function RescuerAssignments() {
     finally { setActionLoading(null) }
   }
 
+  async function handleImageUpload(reportId, file) {
+    setUploadingId(reportId)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await fetch('/api/v1/rescuer/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (data.url) {
+        setUploadedImages((prev) => ({
+          ...prev,
+          [reportId]: [...(prev[reportId] || []), data.url],
+        }))
+      }
+    } catch { alert('Failed to upload image.') }
+    finally { setUploadingId(null) }
+  }
+
+  function statusBadgeKey(status) {
+    if (status === 'resolved') return 'resolved'
+    if (status === 'failed') return 'failed'
+    if (status === 'in_progress') return 'in_progress'
+    if (status === 'en_route') return 'en_route'
+    return 'new'
+  }
+
   if (!user) return null
 
   const activeCount = reports.filter((r) => r.status !== 'resolved' && r.status !== 'failed').length
@@ -177,22 +215,13 @@ export default function RescuerAssignments() {
               const urgency = URGENCY_LABEL[r.urgency] || URGENCY_LABEL.low
               const isAccepted = acceptedIds.has(r._id)
               const isEnRouted = enRouteIds.has(r._id)
-              const badgeKey = r.status === 'resolved' ? 'resolved'
-                : r.status === 'failed' ? 'failed'
-                : r.status === 'in_progress' ? 'in_progress'
-                : isEnRouted ? 'en_route'
-                : isAccepted ? 'accepted'
-                : 'new'
-              const badgeClass = LOCAL_BADGES[badgeKey] || LOCAL_BADGES.new
-              const badgeLabel = badgeKey === 'new' ? 'New'
-                : badgeKey === 'accepted' ? 'Accepted'
-                : badgeKey === 'en_route' ? 'En Route'
-                : badgeKey === 'in_progress' ? 'Working'
-                : badgeKey === 'failed' ? 'Failed'
-                : 'Done'
+              const badgeKey = statusBadgeKey(r.status)
+              const badgeClass = BADGES[badgeKey] || BADGES.new
+              const badgeLabel = BADGE_LABELS[badgeKey]
 
               const showDiary = isEnRouted || r.status === 'en_route' || r.status === 'in_progress'
               const showInitial = !isAccepted && !isEnRouted && r.status !== 'en_route' && r.status !== 'in_progress' && r.status !== 'resolved' && r.status !== 'failed'
+              const reportImages = uploadedImages[r._id] || []
 
               return (
                 <div key={r._id} className="rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-sm hover:border-amber-400 transition-all">
@@ -255,6 +284,37 @@ export default function RescuerAssignments() {
                         className="w-full rounded-xl border-2 border-gray-300 p-3 text-base focus:border-amber-500 focus:outline-none"
                         rows={3}
                       />
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <label className="cursor-pointer rounded-xl bg-gray-100 px-4 py-2.5 text-base font-bold text-gray-700 hover:bg-gray-200 border-2 border-gray-300 transition-colors">
+                          {uploadingId === r._id ? 'Uploading...' : '📷 Add Photo'}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            className="hidden"
+                            disabled={uploadingId === r._id}
+                            onChange={(e) => {
+                              const file = e.target.files[0]
+                              if (file) handleImageUpload(r._id, file)
+                              e.target.value = ''
+                            }}
+                          />
+                        </label>
+                      </div>
+
+                      {reportImages.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {reportImages.map((url, i) => (
+                            <img
+                              key={i}
+                              src={url}
+                              alt={`Rescue photo ${i + 1}`}
+                              className="h-24 w-24 rounded-xl object-cover border-2 border-gray-200"
+                            />
+                          ))}
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => handleResolve(r._id)}
@@ -275,6 +335,7 @@ export default function RescuerAssignments() {
                           ✗ Failed
                         </button>
                       </div>
+
                       {showFailInput.has(r._id) && (
                         <div className="space-y-2">
                           <textarea
