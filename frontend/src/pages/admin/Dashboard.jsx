@@ -7,6 +7,8 @@ import Permissions from './Permissions'
 import Monitoring from './Monitoring'
 import EditConfig from './EditConfig'
 import SystemConfig from './SystemConfig'
+import AdminReports from './AdminReports'
+import RescuerMap from './RescuerMap'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 
 const roleBadge = {
@@ -29,6 +31,8 @@ const sidebarLinks = [
   { key: 'monitoring', label: 'Monitoring', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
   { key: 'editConfig', label: 'Edit Config', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
   { key: 'config', label: 'Config', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
+  { key: 'reports', label: 'Reports', icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z' },
+  { key: 'rescuerMap', label: 'Rescuer Map', icon: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z' },
 ]
 
 const tabLabels = {
@@ -39,10 +43,12 @@ const tabLabels = {
   monitoring: 'Monitoring',
   editConfig: 'Edit Config',
   config: 'Config',
+  reports: 'Reports',
+  rescuerMap: 'Rescuer Map',
 }
 
 export default function Dashboard() {
-  const { user, logout } = useAuth()
+  const { user, loading: authLoading, logout } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [editSection, setEditSection] = useState(null)
@@ -76,9 +82,10 @@ export default function Dashboard() {
   }, [navigate])
 
   useEffect(() => {
+    if (authLoading) return
     if (!user) { navigate('/v1/login'); return }
     fetchData()
-  }, [user, navigate, fetchData])
+  }, [user, authLoading, navigate, fetchData])
 
   async function handleRoleChange(uuid, newRole) {
     try {
@@ -95,6 +102,7 @@ export default function Dashboard() {
     }
   }
 
+  if (authLoading) return <LoadingScreen />
   if (loading && !users.length) {
     return <LoadingScreen />
   }
@@ -157,8 +165,10 @@ export default function Dashboard() {
             {activeTab === 'permissions' && <Permissions />}
             {activeTab === 'monitoring' && <Monitoring />}
             {activeTab === 'editConfig' && <EditConfig section={editSection} />}
-            {activeTab === 'config' && <SystemConfig />}
-          </FadeIn>
+  {activeTab === 'config' && <SystemConfig />}
+  {activeTab === 'reports' && <AdminReports />}
+  {activeTab === 'rescuerMap' && <RescuerMap />}
+</FadeIn>
         </div>
       </main>
     </div>
