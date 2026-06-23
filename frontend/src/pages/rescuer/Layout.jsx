@@ -188,7 +188,7 @@ export default function RescuerLayout() {
               </svg>
             </button>
             <span className="hidden md:block text-lg font-semibold text-gray-800 capitalize">
-              {location.pathname === '/rescuer/reports' ? 'All Reports' : location.pathname.split('/').pop().replace('-', ' ')}
+              {location.pathname === '/rescuer/assignments' ? 'All Assignments' : location.pathname.split('/').pop().replace('-', ' ')}
             </span>
           </div>
           <div className="flex items-center gap-5">
