@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { rescuer as rescuerApi } from '../../services/api'
+import { CheckIcon, XIcon, CarIcon, CameraIcon, ClipboardIcon, MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, CheckCircleIcon, XCircleIcon } from '../../components/SvgIcons'
 
 const BADGES = {
   new: 'bg-indigo-100 text-indigo-800 border-indigo-300',
@@ -26,8 +27,8 @@ const URGENCY_LABEL = {
 }
 
 const CATEGORY_ICONS = {
-  injury: '🩺', stranded: '🏝️', missing: '🔍',
-  found: '🐾', abandoned: '🏚️', other: '📋',
+  injury: MedicalIcon, stranded: StrandedIcon, missing: SearchIcon,
+  found: PawIcon, abandoned: HouseIcon, other: ClipboardIcon,
 }
 
 export default function RescuerAssignments() {
@@ -226,7 +227,7 @@ export default function RescuerAssignments() {
               return (
                 <div key={r._id} className="rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-sm hover:border-amber-400 transition-all">
                   <div className="flex items-start gap-4">
-                    <span className="text-2xl mt-0.5">{CATEGORY_ICONS[r.category] || '📋'}</span>
+                    <span className="mt-0.5">{(() => { const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon; return <Icon className="w-7 h-7 text-gray-600" />; })()}</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xl font-bold text-gray-900">{r.name}</span>
@@ -251,16 +252,16 @@ export default function RescuerAssignments() {
                       <>
                         <button
                           onClick={() => handleAccept(r._id)}
-                          className="rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow"
                         >
-                          ✓ Accept
+                          <CheckIcon className="w-5 h-5" /> Accept
                         </button>
                         <button
                           onClick={() => handleReject(r._id)}
                           disabled={actionLoading === r._id}
-                          className="rounded-xl bg-red-100 px-5 py-2.5 text-base font-bold text-red-700 hover:bg-red-200 transition-colors border-2 border-red-200 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-red-100 px-5 py-2.5 text-base font-bold text-red-700 hover:bg-red-200 transition-colors border-2 border-red-200 disabled:opacity-50"
                         >
-                          ✕ Reject
+                          <XIcon className="w-5 h-5" /> Reject
                         </button>
                       </>
                     )}
@@ -268,9 +269,9 @@ export default function RescuerAssignments() {
                       <button
                         onClick={() => handleEnRoute(r._id)}
                         disabled={actionLoading === r._id}
-                        className="rounded-xl bg-blue-600 px-5 py-2.5 text-base font-bold text-white hover:bg-blue-700 transition-colors shadow disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-base font-bold text-white hover:bg-blue-700 transition-colors shadow disabled:opacity-50"
                       >
-                        {actionLoading === r._id ? '...' : '🚗 En Route'}
+                        {actionLoading === r._id ? '...' : <><CarIcon className="w-5 h-5" /> En Route</>}
                       </button>
                     )}
                   </div>
@@ -286,8 +287,8 @@ export default function RescuerAssignments() {
                       />
 
                       <div className="flex flex-wrap items-center gap-2">
-                        <label className="cursor-pointer rounded-xl bg-gray-100 px-4 py-2.5 text-base font-bold text-gray-700 hover:bg-gray-200 border-2 border-gray-300 transition-colors">
-                          {uploadingId === r._id ? 'Uploading...' : '📷 Add Photo'}
+                        <label className="inline-flex items-center gap-1.5 cursor-pointer rounded-xl bg-gray-100 px-4 py-2.5 text-base font-bold text-gray-700 hover:bg-gray-200 border-2 border-gray-300 transition-colors">
+                          {uploadingId === r._id ? 'Uploading...' : <><CameraIcon className="w-5 h-5" /> Add Photo</>}
                           <input
                             type="file"
                             accept="image/jpeg,image/png,image/gif,image/webp"
@@ -319,9 +320,9 @@ export default function RescuerAssignments() {
                         <button
                           onClick={() => handleResolve(r._id)}
                           disabled={actionLoading === r._id}
-                          className="rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
                         >
-                          {actionLoading === r._id ? '...' : '✅ Resolve'}
+                          {actionLoading === r._id ? '...' : <><CheckCircleIcon className="w-5 h-5" /> Resolve</>}
                         </button>
                         <button
                           onClick={() => {
@@ -330,9 +331,9 @@ export default function RescuerAssignments() {
                             else next.add(r._id)
                             setShowFailInput(next)
                           }}
-                          className="rounded-xl bg-red-100 px-5 py-2.5 text-base font-bold text-red-700 hover:bg-red-200 transition-colors border-2 border-red-200"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-red-100 px-5 py-2.5 text-base font-bold text-red-700 hover:bg-red-200 transition-colors border-2 border-red-200"
                         >
-                          ✗ Failed
+                          <XCircleIcon className="w-5 h-5" /> Failed
                         </button>
                       </div>
 
