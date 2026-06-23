@@ -4,7 +4,7 @@ const router = express.Router();
 const { authenticate, authorize } = require("../middleware/auth");
 const { validate } = require("../middleware/validate");
 const { asyncHandler } = require("../middleware/errorHandler");
-const { getUsers, getUser, updateUserRole, getStats } = require("../controllers/adminController");
+const { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations } = require("../controllers/adminController");
 const { getLogs, getLogStats, getLogsByIP, deleteOldLogs } = require("../controllers/logController");
 const { getDashboardData } = require("../controllers/dashboardController");
 const { getConfig, updateConfig, getLandingConfig, updateLandingConfig } = require("../controllers/configController");
@@ -35,6 +35,10 @@ router.put("/config", superOnly, asyncHandler(updateConfig));
 
 router.get("/landing-config", superOnly, asyncHandler(getLandingConfig));
 router.put("/landing-config", superOnly, asyncHandler(updateLandingConfig));
+
+router.get("/reports", adminOnly, asyncHandler(getAdminReports));
+router.post("/reports/:id/assign", adminOnly, asyncHandler(assignReport));
+router.get("/rescuer-locations", adminOnly, asyncHandler(getRescuerLocations));
 
 const { upload, uploadImage } = require("../controllers/uploadController");
 router.post("/upload", superOnly, upload.single("image"), asyncHandler(uploadImage));
