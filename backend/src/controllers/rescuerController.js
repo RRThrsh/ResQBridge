@@ -202,11 +202,13 @@ const updateProfile = async (req, res) => {
 
 const getActivity = async (req, res) => {
   const userId = req.user.uuid;
-  const logs = await convexClient.query(anyApi.activity.getActivityLogs, {
+  const cursor = req.query.cursor || null;
+  const numItems = parseInt(req.query.limit, 10) || 20;
+  const result = await convexClient.query(anyApi.activity.getActivityLogs, {
     userId,
-    limit: 100,
+    paginationOpts: { cursor, numItems },
   });
-  res.json({ activity: logs });
+  res.json({ activity: result.page, continueCursor: result.continueCursor, isDone: result.isDone });
 };
 
 const updateAvailability = async (req, res) => {
