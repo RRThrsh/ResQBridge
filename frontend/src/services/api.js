@@ -112,7 +112,7 @@ export const rescuer = {
       method: 'PATCH',
       body: JSON.stringify(body),
     }),
-  getActivity: () => request('/rescuer/activity'),
+  getActivity: (cursor) => request(`/rescuer/activity?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`),
   updateAvailability: (availability) =>
     request('/rescuer/availability', {
       method: 'PATCH',
