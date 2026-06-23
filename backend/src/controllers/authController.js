@@ -166,4 +166,38 @@ const forgotPassword = async (req, res) => {
   res.json({ message: "Password reset link sent to your email." });
 };
 
-module.exports = { sendOtpHandler, register, login, forgotPassword };
+const resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    throw new AppError("Token and password are required.", 400);
+  }
+  if (password.length < 6) {
+    throw new AppError("Password must be at least 6 characters.", 400);
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    throw new AppError("Invalid or expired reset token.", 400);
+  }
+
+  if (decoded.type !== "password-reset") {
+    throw new AppError("Invalid reset token.", 400);
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  await convexClient.mutation(anyApi.users.updatePassword, {
+    uuid: decoded.uuid,
+    password: hashedPassword,
+  });
+
+  await logEvent({ req, userId: decoded.uuid, eventType: "password_reset_completed" });
+
+  res.json({ message: "Password reset successful." });
+};
+
+module.exports = { sendOtpHandler, register, login, forgotPassword, resetPassword };
