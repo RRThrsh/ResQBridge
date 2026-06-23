@@ -66,6 +66,73 @@ const updateUserRole = async (req, res) => {
   res.json({ message: "User role updated successfully." });
 };
 
+const getAdminReports = async (req, res) => {
+  const reports = await convexClient.query(anyApi.reports.getAdminReports);
+  const mapped = reports.map((r) => ({
+    _id: r._id,
+    name: r.name,
+    phone: r.phone,
+    category: r.category,
+    animalType: r.animalType,
+    urgency: r.urgency,
+    location: r.location,
+    description: r.description,
+    images: JSON.parse(r.images || "[]"),
+    status: r.status,
+    assignedTo: r.assignedTo || null,
+    assignedUser: r.assignedUser || null,
+    latitude: r.latitude ?? null,
+    longitude: r.longitude ?? null,
+    createdAt: r.createdAt,
+  }));
+  res.json({ reports: mapped });
+};
+
+const assignReport = async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+  const adminUuid = req.user.uuid;
+
+  if (!userId) {
+    return res.status(400).json({ message: "Rescuer userId is required." });
+  }
+
+  await convexClient.mutation(anyApi.reports.assignReport, { reportId: id, userId });
+
+  const rescuer = await convexClient.query(anyApi.users.getUserByUuid, { uuid: userId });
+  const rescuerName = rescuer ? `${rescuer.firstName} ${rescuer.lastName}` : userId;
+
+  await convexClient.mutation(anyApi.activity.insertActivityLog, {
+    userId,
+    action: "assigned",
+    reportId: id,
+    details: `Assigned to ${rescuerName}`,
+  });
+
+  await logEvent({
+    req,
+    userId: adminUuid,
+    eventType: "report_assigned",
+    metadata: { reportId: id, assignedTo: userId, rescuerName },
+  });
+
+  const { publish } = require("../services/notification");
+  await publish({
+    type: "report:assigned",
+    reportId: id,
+    assignedTo: userId,
+    assignedByName: rescuerName,
+    timestamp: Date.now(),
+  });
+
+  res.json({ message: `Report assigned to ${rescuerName}.` });
+};
+
+const getRescuerLocations = async (_req, res) => {
+  const locations = await convexClient.query(anyApi.locations.getRescuerLocations);
+  res.json({ locations });
+};
+
 const getStats = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
   const totalUsers = users.length;
@@ -76,4 +143,4 @@ const getStats = async (_req, res) => {
   res.json({ stats: { totalUsers, roleCounts } });
 };
 
-module.exports = { getUsers, getUser, updateUserRole, getStats };
+module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations };
