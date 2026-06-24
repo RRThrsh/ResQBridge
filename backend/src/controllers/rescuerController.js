@@ -263,6 +263,20 @@ const getNotes = async (req, res) => {
   res.json({ notes });
 };
 
+const triggerSos = async (req, res) => {
+  const { lat, lng } = req.body;
+  const user = req.user;
+  await publish({
+    type: "rescuer:sos",
+    rescuerName: `${user.firstName} ${user.lastName}`,
+    rescuerId: user.uuid,
+    lat,
+    lng,
+    timestamp: new Date().toISOString(),
+  });
+  res.json({ success: true });
+};
+
 module.exports = {
   getReports,
   updateReportStatus,
@@ -274,4 +288,5 @@ module.exports = {
   getNotes,
   updateLocation,
   rejectAssignment,
+  triggerSos,
 };

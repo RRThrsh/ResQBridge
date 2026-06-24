@@ -25,6 +25,15 @@ const navItems = [
     ),
   },
   {
+    label: 'Browse Reports',
+    path: '/rescuer/reports',
+    icon: (
+      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+      </svg>
+    ),
+  },
+  {
     label: 'Activity Log',
     path: '/rescuer/activity',
     icon: (
@@ -94,7 +103,10 @@ export default function RescuerLayout() {
   }
 
   function handleSOS() {
-    window.open('tel:911', '_blank')
+    if (userPos) {
+      rescuerApi.triggerSos(userPos.lat, userPos.lng).catch(() => {})
+    }
+    window.location.href = 'tel:911'
   }
 
   if (authLoading) return null
@@ -193,7 +205,7 @@ export default function RescuerLayout() {
           </div>
           <div className="flex items-center gap-5">
             <button
-              onClick={() => navigate('/rescuer/assignments')}
+              onClick={() => navigate('/rescuer/notifications')}
               className="relative"
               aria-label="Notifications"
             >

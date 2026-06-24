@@ -131,6 +131,11 @@ export const rescuer = {
     }),
   rejectAssignment: (reportId) =>
     request(`/rescuer/reports/${reportId}/reject`, { method: 'POST' }),
+  triggerSos: (lat, lng) =>
+    request('/rescuer/sos', {
+      method: 'POST',
+      body: JSON.stringify({ lat, lng }),
+    }),
 }
 
 export const logs = {

@@ -135,7 +135,7 @@ export default function RescuerDashboard() {
             </div>
           ) : stats?.recentReports?.length > 0 ? (
             <div className="space-y-3">
-              {stats.recentReports.map((r) => (
+              {stats.recentReports.slice(0, 5).map((r) => (
                 <div
                   key={r._id}
                   className="rounded-2xl border-2 border-gray-200 bg-white p-5 transition-all hover:border-amber-400 hover:shadow-md cursor-pointer"

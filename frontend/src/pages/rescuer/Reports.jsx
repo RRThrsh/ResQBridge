@@ -343,14 +343,12 @@ export default function RescuerReports() {
                                 disabled={actionLoading === r._id}
                                 className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-lg font-bold text-white shadow transition-all hover:bg-blue-700 disabled:opacity-50"
                               >
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-base font-bold text-white hover:bg-blue-700 transition-colors shadow disabled:opacity-50"
-                              >
                                 {actionLoading === r._id ? 'Updating...' : <><RefreshIcon className="w-5 h-5" /> Start Working</>}
                               </button>
                             )}
                             {r.status === 'in_progress' && (
                               <button
-                                onClick={() => handleClaim(r._id, 'resolved')}
+                                onClick={() => handleStatusChange(r._id, 'resolved')}
                                 disabled={actionLoading === r._id}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
                               >
