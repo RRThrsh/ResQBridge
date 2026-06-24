@@ -46,13 +46,17 @@ const updateUserRole = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-  if (role === "superadmin") {
-    const allUsers = await convexClient.query(anyApi.users.getAllUsers);
-    const superadminCount = allUsers.filter((u) => u.role === "superadmin").length;
+  const allUsers = await convexClient.query(anyApi.users.getAllUsers);
+  const superadminCount = allUsers.filter((u) => u.role === "superadmin").length;
 
+  if (role === "superadmin") {
     if (superadminCount >= 1 && user.role !== "superadmin") {
       return res.status(400).json({ message: "A superadmin already exists. Only one superadmin is allowed." });
     }
+  }
+
+  if (user.role === "superadmin" && role !== "superadmin" && superadminCount <= 1) {
+    return res.status(400).json({ message: "Cannot demote the only superadmin. Promote another user first." });
   }
 
   if (req.user.role !== "superadmin" && uuid === req.user.uuid) {

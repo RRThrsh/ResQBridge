@@ -33,7 +33,7 @@ const CATEGORY_LABELS = {
   found: 'Found Animal', abandoned: 'Abandoned', other: 'Other',
 }
 
-export default function AdminReports() {
+export default function AdminReports({ adminPermissions }) {
   const [reports, setReports] = useState([])
   const [users, setUsers] = useState([])
   const [locations, setLocations] = useState([])
@@ -112,14 +112,14 @@ export default function AdminReports() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Reports</h2>
-          <p className="mt-1 text-lg text-gray-500">
+          <h2 className="text-lg font-bold text-gray-900">Reports</h2>
+          <p className="text-xs text-gray-500">
             {loading ? 'Loading...' : `${filtered.length} total`}
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap">
           {[
             { key: '', label: 'All' },
             { key: 'pending', label: 'Pending' },
@@ -132,7 +132,7 @@ export default function AdminReports() {
             <button
               key={s.key}
               onClick={() => { setFilter(s.key); setPage(1); setExpanded(null) }}
-              className={`rounded-xl px-5 py-3 text-base font-bold transition-all border-2 ${
+              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all border ${
                 filter === s.key
                   ? 'bg-green-600 text-white shadow border-green-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-green-500 hover:text-green-700'
@@ -144,20 +144,20 @@ export default function AdminReports() {
         </div>
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-3">
-        <div className="flex-1 min-w-[200px]">
+      <div className="mb-4 flex flex-wrap gap-2">
+        <div className="flex-1 min-w-[180px]">
           <input
             type="text"
             placeholder="Search by name, location, animal..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); setExpanded(null) }}
-            className="w-full rounded-xl border-2 border-gray-300 px-5 py-3.5 text-base font-medium focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-100 transition-all"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all"
           />
         </div>
         <select
           value={sortBy}
           onChange={(e) => { setSortBy(e.target.value); setPage(1) }}
-          className="rounded-xl border-2 border-gray-300 px-5 py-3.5 text-base font-bold bg-white text-gray-700 focus:border-green-600 focus:outline-none focus:ring-4 focus:ring-green-100 transition-all"
+          className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold bg-white text-gray-700 focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all"
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
@@ -170,19 +170,19 @@ export default function AdminReports() {
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-600 border-t-transparent" />
         </div>
       ) : paginated.length === 0 ? (
-        <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-white p-16 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-green-100">
-            <svg className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
+            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
             </svg>
           </div>
-          <h3 className="mt-5 text-xl font-bold text-gray-900">No reports found</h3>
-          <p className="mt-2 text-base text-gray-500">
+          <h3 className="mt-3 text-sm font-bold text-gray-900">No reports found</h3>
+          <p className="mt-1 text-xs text-gray-500">
             {filter ? `No reports with status "${filter.replace('_', ' ')}"` : 'No reports have been submitted yet'}
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {paginated.map((r) => {
             const urgency = URGENCY_LABEL[r.urgency] || URGENCY_LABEL.low
             const statusClass = STATUS_BADGE[r.status] || STATUS_BADGE.pending
@@ -192,10 +192,10 @@ export default function AdminReports() {
             return (
               <div
                 key={r._id}
-                className={`rounded-2xl border-2 transition-all ${
+                className={`rounded-lg border transition-all ${
                   isExpanded
-                    ? 'border-green-500 shadow-lg bg-white'
-                    : 'border-gray-200 bg-white hover:border-green-400 hover:shadow-md'
+                    ? 'border-green-500 shadow bg-white'
+                    : 'border-gray-200 bg-white hover:border-green-400 hover:shadow-sm'
                 }`}
               >
                 <button
@@ -203,20 +203,20 @@ export default function AdminReports() {
                     const next = isExpanded ? null : r._id
                     setExpanded(next)
                   }}
-                  className="flex w-full items-start gap-4 px-6 py-5 text-left"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left"
                 >
-                  <span className="mt-0.5">{(() => { const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon; return <Icon className="w-7 h-7 text-gray-600" />; })()}</span>
+                  <span>{(() => { const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon; return <Icon className="w-5 h-5 text-gray-600 shrink-0" />; })()}</span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xl font-bold text-gray-900">{r.name}</span>
-                      <span className={`rounded-full border-2 px-3 py-1 text-sm font-bold ${statusClass}`}>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-sm font-bold text-gray-900">{r.name}</span>
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${statusClass}`}>
                         {statusLabel}
                       </span>
-                      <span className={`rounded-full px-3 py-1 text-sm font-bold ${urgency.class}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${urgency.class}`}>
                         {urgency.label}
                       </span>
                       {r.assignedUser && (
-                        <span className="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-sm font-bold border border-indigo-300 inline-flex items-center gap-1.5">
+                        <span className="rounded-full bg-indigo-100 text-indigo-800 px-2 py-0.5 text-[11px] font-bold border border-indigo-300 inline-flex items-center gap-1">
                           {r.assignedUser.firstName} {r.assignedUser.lastName}
                           <span className={`text-[10px] ${getRescuerStatus(r.assignedTo).color}`}>
                             · {getRescuerStatus(r.assignedTo).label}
@@ -224,92 +224,89 @@ export default function AdminReports() {
                         </span>
                       )}
                     </div>
-                    <p className="mt-1.5 text-base text-gray-600">
+                    <p className="mt-0.5 text-xs text-gray-500">
                       {CATEGORY_LABELS[r.category] || r.category} &middot; {r.animalType} &middot; {r.location}
                     </p>
-                    <p className="mt-1 text-sm text-gray-500 font-medium">
-                      {new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </p>
                   </div>
-                  <div className={`mt-1 flex items-center gap-2 transition-all ${isExpanded ? 'rotate-180' : ''}`}>
-                    <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  </div>
+                  <svg className={`h-4 w-4 shrink-0 text-gray-400 transition-all ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t-2 border-gray-100 px-6 pb-6">
-                    <div className="grid gap-5 sm:grid-cols-2 pt-5">
+                  <div className="border-t border-gray-100 px-4 pb-4">
+                    <div className="grid gap-3 sm:grid-cols-2 pt-3">
                       <div>
-                        <p className="text-sm font-bold uppercase tracking-wide text-gray-500">Contact</p>
-                        <p className="text-lg font-semibold text-gray-900 mt-0.5">{r.phone}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Contact</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-0.5">{r.phone}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-bold uppercase tracking-wide text-gray-500">Category</p>
-                        <p className="text-lg text-gray-900 mt-0.5">{CATEGORY_LABELS[r.category] || r.category}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Category</p>
+                        <p className="text-sm text-gray-900 mt-0.5">{CATEGORY_LABELS[r.category] || r.category}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-bold uppercase tracking-wide text-gray-500">Animal</p>
-                        <p className="text-lg text-gray-900 mt-0.5">{r.animalType}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Animal</p>
+                        <p className="text-sm text-gray-900 mt-0.5">{r.animalType}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-bold uppercase tracking-wide text-gray-500">Location</p>
-                        <p className="text-lg text-gray-900 mt-0.5">{r.location}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Location</p>
+                        <p className="text-sm text-gray-900 mt-0.5">{r.location}</p>
                       </div>
                     </div>
 
                     {r.description && (
-                      <div className="mt-5">
-                        <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-1.5">Description</p>
-                        <p className="text-base text-gray-800 bg-gray-50 rounded-xl px-5 py-4 border-2 border-gray-200 leading-relaxed">
+                      <div className="mt-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">Description</p>
+                        <p className="text-xs text-gray-700 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-200 leading-relaxed">
                           {r.description}
                         </p>
                       </div>
                     )}
 
                     {r.images && r.images.length > 0 && (
-                      <div className="mt-5">
-                        <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-2">Photos</p>
-                        <div className="flex flex-wrap gap-3">
+                      <div className="mt-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1.5">Photos</p>
+                        <div className="flex flex-wrap gap-2">
                           {r.images.map((img, i) => (
                             <a key={i} href={img} target="_blank" rel="noopener noreferrer"
-                              className="group relative overflow-hidden rounded-xl border-2 border-gray-200">
-                              <img src={img} alt="" className="h-24 w-36 object-cover transition group-hover:scale-105" />
+                              className="group relative overflow-hidden rounded-lg border border-gray-200">
+                              <img src={img} alt="" className="h-16 w-24 object-cover transition group-hover:scale-105" />
                             </a>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    <div className="mt-5 pt-5 border-t-2 border-gray-100 flex flex-wrap items-center gap-4">
+                    <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-3">
                       <div>
-                        <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-1.5">Assigned Rescuer</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-0.5">Assigned Rescuer</p>
                         {r.assignedTo ? (
-                          <span className="text-base font-semibold text-gray-900">
+                          <span className="text-sm font-semibold text-gray-900">
                             {r.assignedUser?.firstName} {r.assignedUser?.lastName}
                           </span>
                         ) : (
-                          <span className="text-base text-gray-400">Unassigned</span>
+                          <span className="text-sm text-gray-400">Unassigned</span>
                         )}
                       </div>
                       {r.status !== 'resolved' && r.status !== 'failed' && !r.assignedTo && (
-                        <select
-                          disabled={assigningId === r._id}
-                          defaultValue=""
-                          onChange={(e) => handleAssign(r._id, e.target.value)}
-                          className="rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-base font-bold text-gray-700 focus:border-green-600 focus:outline-none disabled:opacity-50"
-                        >
-                          <option value="" disabled>Assign rescuer...</option>
-                          {users.map((u) => {
-                            const s = getRescuerStatus(u.uuid)
-                            return (
-                              <option key={u.uuid} value={u.uuid}>
-                                {u.firstName} {u.lastName} — {s.label}
-                              </option>
-                            )
-                          })}
-                        </select>
+                        (adminPermissions?.reports?.write || adminPermissions?.reports?.execute) ? (
+                          <select
+                            disabled={assigningId === r._id}
+                            defaultValue=""
+                            onChange={(e) => handleAssign(r._id, e.target.value)}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 focus:border-green-600 focus:outline-none disabled:opacity-50"
+                          >
+                            <option value="" disabled>Assign rescuer...</option>
+                            {users.map((u) => {
+                              const s = getRescuerStatus(u.uuid)
+                              return (
+                                <option key={u.uuid} value={u.uuid}>
+                                  {u.firstName} {u.lastName} — {s.label}
+                                </option>
+                              )
+                            })}
+                          </select>
+                        ) : null
                       )}
                     </div>
                   </div>
@@ -321,11 +318,11 @@ export default function AdminReports() {
       )}
 
       {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-2">
+        <div className="mt-4 flex items-center justify-center gap-1.5">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage <= 1}
-            className="rounded-xl border-2 border-gray-300 bg-white px-4 py-2 text-base font-bold text-gray-700 hover:border-green-500 hover:text-green-700 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-green-500 hover:text-green-700 transition-colors disabled:opacity-40 disabled:pointer-events-none"
           >
             Prev
           </button>
@@ -333,7 +330,7 @@ export default function AdminReports() {
             <button
               key={p}
               onClick={() => setPage(p)}
-              className={`rounded-xl border-2 px-4 py-2 text-base font-bold transition-colors ${
+              className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
                 p === safePage
                   ? 'bg-green-600 text-white shadow border-green-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-green-500 hover:text-green-700'
@@ -345,7 +342,7 @@ export default function AdminReports() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage >= totalPages}
-            className="rounded-xl border-2 border-gray-300 bg-white px-4 py-2 text-base font-bold text-gray-700 hover:border-green-500 hover:text-green-700 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-green-500 hover:text-green-700 transition-colors disabled:opacity-40 disabled:pointer-events-none"
           >
             Next
           </button>

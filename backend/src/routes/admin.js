@@ -8,6 +8,7 @@ const { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignRepo
 const { getLogs, getLogStats, getLogsByIP, deleteOldLogs } = require("../controllers/logController");
 const { getDashboardData } = require("../controllers/dashboardController");
 const { getConfig, updateConfig, getLandingConfig, updateLandingConfig } = require("../controllers/configController");
+const { getAdminPermissions, updateAdminPermissions } = require("../controllers/permissionsController");
 
 router.use(authenticate);
 
@@ -35,6 +36,9 @@ router.put("/config", superOnly, asyncHandler(updateConfig));
 
 router.get("/landing-config", superOnly, asyncHandler(getLandingConfig));
 router.put("/landing-config", superOnly, asyncHandler(updateLandingConfig));
+
+router.get("/permissions", superOnly, asyncHandler(getAdminPermissions));
+router.put("/permissions", superOnly, asyncHandler(updateAdminPermissions));
 
 router.get("/reports", adminOnly, asyncHandler(getAdminReports));
 router.post("/reports/:id/assign", adminOnly, asyncHandler(assignReport));

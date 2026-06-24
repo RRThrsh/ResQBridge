@@ -61,26 +61,29 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [updating, setUpdating] = useState(null)
+  const [adminPermissions, setAdminPermissions] = useState(null)
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      const [usersRes, statsRes, dashRes] = await Promise.all([
+      const [usersRes, statsRes, dashRes, permRes] = await Promise.all([
         adminApi.getUsers(),
         adminApi.getStats(),
         adminApi.getDashboardData(),
+        user?.role !== 'superadmin' ? adminApi.getAdminPermissions() : Promise.resolve({ permissions: {} }),
       ])
       setUsers(usersRes.users)
       setStats(statsRes.stats)
       setDashData(dashRes)
+      if (permRes?.permissions) setAdminPermissions(permRes.permissions)
     } catch (err) {
       setError(err.message || 'Failed to load admin data')
       if (err.status === 401 || err.status === 403) navigate('/v1/login')
     } finally {
       setLoading(false)
     }
-  }, [navigate])
+  }, [navigate, user])
 
   useEffect(() => {
     if (authLoading) return
@@ -119,6 +122,7 @@ export default function Dashboard() {
         logout={logout}
         navigate={navigate}
         editSection={editSection}
+        adminPermissions={adminPermissions}
       />
 
       <main className="flex flex-1 flex-col overflow-hidden">
@@ -167,7 +171,7 @@ export default function Dashboard() {
             {activeTab === 'monitoring' && <Monitoring />}
             {activeTab === 'landingPage' && <EditConfig section={editSection} />}
   {activeTab === 'systemConfig' && <SystemConfig />}
-  {activeTab === 'reports' && <AdminReports />}
+            {activeTab === 'reports' && <AdminReports adminPermissions={adminPermissions} />}
   {activeTab === 'rescuerMap' && <RescuerMap />}
 </FadeIn>
         </div>
@@ -210,8 +214,18 @@ const configSubLinks = [
   { key: 'newsEvents', label: 'News & Events' },
 ]
 
-function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, navigate, editSection }) {
+const SUPER_ONLY_KEYS = new Set(['audit', 'landingPage', 'systemConfig', 'permissions'])
+
+function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, navigate, editSection, adminPermissions }) {
   const [expanded, setExpanded] = useState('')
+
+  const visibleLinks = sidebarLinks.filter((link) => {
+    if (user?.role === 'superadmin') return true
+    if (SUPER_ONLY_KEYS.has(link.key)) return false
+    if (!adminPermissions) return false
+    const perm = adminPermissions[link.key]
+    return perm?.read === true
+  })
 
   return (
     <aside className={`relative flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
@@ -232,7 +246,7 @@ function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, na
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
-        {sidebarLinks.map((link) => {
+        {visibleLinks.map((link) => {
           const isActive = activeTab === link.key
           const isExpanded = expanded === link.key
           if (link.key === 'landingPage') {

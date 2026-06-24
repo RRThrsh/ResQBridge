@@ -95,6 +95,12 @@ export const admin = {
       body: JSON.stringify({ userId }),
     }),
   getRescuerLocations: () => request('/admin/rescuer-locations'),
+  getAdminPermissions: () => request('/admin/permissions'),
+  updateAdminPermissions: (permissions) =>
+    request('/admin/permissions', {
+      method: 'PUT',
+      body: JSON.stringify(permissions),
+    }),
 }
 
 export const rescuer = {
