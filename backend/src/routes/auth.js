@@ -10,9 +10,20 @@ const sendOtpRules = [
 ];
 
 const registerRules = [
-  body("firstName").trim().notEmpty().withMessage("First name is required."),
-  body("lastName").trim().notEmpty().withMessage("Last name is required."),
-  body("phoneNumber").trim().notEmpty().withMessage("Phone number is required."),
+  body("firstName")
+    .trim()
+    .notEmpty().withMessage("First name is required.")
+    .isLength({ max: 50 }).withMessage("First name must be at most 50 characters.")
+    .matches(/^[a-zA-Z\s'-]+$/).withMessage("First name contains invalid characters."),
+  body("lastName")
+    .trim()
+    .notEmpty().withMessage("Last name is required.")
+    .isLength({ max: 50 }).withMessage("Last name must be at most 50 characters.")
+    .matches(/^[a-zA-Z\s'-]+$/).withMessage("Last name contains invalid characters."),
+  body("phoneNumber")
+    .trim()
+    .notEmpty().withMessage("Phone number is required.")
+    .matches(/^\+?\d{7,15}$/).withMessage("Valid phone number is required (7-15 digits)."),
   body("email").trim().normalizeEmail().isEmail().withMessage("Valid email is required."),
   body("password")
     .trim()
@@ -27,6 +38,7 @@ const registerRules = [
   body("otp")
     .optional({ values: "falsy" })
     .trim()
+    .isNumeric()
     .isLength({ min: 6, max: 6 })
     .withMessage("Valid 6-digit OTP is required."),
 ];
