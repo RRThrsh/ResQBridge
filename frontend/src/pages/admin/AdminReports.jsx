@@ -308,6 +308,27 @@ export default function AdminReports({ adminPermissions }) {
                           </select>
                         ) : null
                       )}
+                      {(adminPermissions?.reports?.execute) && (
+                        <button
+                          onClick={async () => {
+                            if (!window.confirm('Archive this report? It will be moved to the Archives.')) return
+                            try {
+                              await adminApi.archiveReport(r._id)
+                              setReports((prev) => prev.filter((x) => x._id !== r._id))
+                            } catch (err) {
+                              alert(err.message || 'Failed to archive report.')
+                            }
+                          }}
+                          className="ml-auto rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+                        >
+                          <span className="flex items-center gap-1">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                            Archive
+                          </span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}

@@ -9,6 +9,7 @@
  */
 
 import type * as activity from "../activity.js";
+import type * as adminNotifications from "../adminNotifications.js";
 import type * as config from "../config.js";
 import type * as locations from "../locations.js";
 import type * as logs from "../logs.js";
@@ -25,6 +26,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
+  adminNotifications: typeof adminNotifications;
   config: typeof config;
   locations: typeof locations;
   logs: typeof logs;

@@ -69,6 +69,16 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"]),
 
+  adminNotifications: defineTable({
+    type: v.string(),
+    message: v.string(),
+    link: v.optional(v.string()),
+    read: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_read", ["read"])
+    .index("by_createdAt", ["createdAt"]),
+
   reportNotes: defineTable({
     reportId: v.string(),
     userId: v.string(),
@@ -93,6 +103,9 @@ export default defineSchema({
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
     createdAt: v.number(),
+    archived: v.optional(v.boolean()),
+    archivedAt: v.optional(v.number()),
+    archivedBy: v.optional(v.string()),
   })
     .index("by_createdAt", ["createdAt"])
     .index("by_status", ["status"])

@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { admin as adminApi } from '../../services/api'
+import NotificationBell from '../../components/admin/NotificationBell'
 import AuditLogs from './AuditLogs'
 import Permissions from './Permissions'
 import Monitoring from './Monitoring'
 import EditConfig from './EditConfig'
 import SystemConfig from './SystemConfig'
 import AdminReports from './AdminReports'
+import AdminArchives from './AdminArchives'
 import RescuerMap from './RescuerMap'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 
@@ -33,6 +35,7 @@ const sidebarLinks = [
   { key: 'systemConfig', label: 'System Config', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
   { key: 'reports', label: 'Reports', icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z' },
   { key: 'rescuerMap', label: 'Rescuer Map', icon: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z' },
+  { key: 'archive', label: 'Archives', icon: 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4' },
 ]
 
 const tabLabels = {
@@ -45,6 +48,7 @@ const tabLabels = {
   systemConfig: 'System Config',
   reports: 'Reports',
   rescuerMap: 'Rescuer Map',
+  archive: 'Archives',
 }
 
 export default function Dashboard() {
@@ -172,6 +176,7 @@ export default function Dashboard() {
             {activeTab === 'landingPage' && <EditConfig section={editSection} />}
   {activeTab === 'systemConfig' && <SystemConfig />}
             {activeTab === 'reports' && <AdminReports adminPermissions={adminPermissions} />}
+            {activeTab === 'archive' && <AdminArchives />}
   {activeTab === 'rescuerMap' && <RescuerMap />}
 </FadeIn>
         </div>
@@ -381,7 +386,8 @@ function TopBar({ title, user, onRefresh, sidebarCollapsed, onToggleSidebar }) {
         <span className="font-medium text-gray-900">{title}</span>
       </div>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-1">
+        <NotificationBell adminApi={adminApi} />
         <button
           onClick={onRefresh}
           className="flex items-center gap-2 rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:shadow active:scale-95"

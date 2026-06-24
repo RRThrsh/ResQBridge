@@ -3,6 +3,7 @@ const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
 const { publish } = require("../services/notification");
 const { sendReportStatus } = require("../services/email");
+const { notifyAdmin } = require("../services/adminNotification");
 
 const getReports = async (req, res) => {
   const { status, assignedTo, search, sortBy } = req.query;
@@ -273,6 +274,13 @@ const triggerSos = async (req, res) => {
     lng,
     timestamp: new Date().toISOString(),
   });
+
+  await notifyAdmin({
+    type: "sos",
+    message: `SOS alert from ${user.firstName} ${user.lastName}`,
+    link: "/admin/dashboard/rescuerMap",
+  });
+
   res.json({ success: true });
 };
 

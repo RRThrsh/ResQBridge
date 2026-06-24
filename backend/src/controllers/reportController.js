@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
+const { notifyAdmin } = require("../services/adminNotification");
 
 const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -61,6 +62,12 @@ const submitReport = async (req, res) => {
     reporterIp: clientIp,
     latitude: lat,
     longitude: lng,
+  });
+
+  await notifyAdmin({
+    type: "new_report",
+    message: `New ${urgency} ${animalType} report from ${name || "Anonymous"} at ${location}`,
+    link: "/admin/dashboard/reports",
   });
 
   res.status(201).json({ message: "Report submitted successfully.", images });

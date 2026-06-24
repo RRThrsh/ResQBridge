@@ -96,6 +96,25 @@ export const admin = {
     }),
   getRescuerLocations: () => request('/admin/rescuer-locations'),
   getAdminPermissions: () => request('/admin/permissions'),
+  getNotifications: () => request('/admin/notifications'),
+  getUnreadCount: () => request('/admin/notifications/unread-count'),
+  markAsRead: (id) =>
+    request(`/admin/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllAsRead: () =>
+    request('/admin/notifications/read-all', { method: 'POST' }),
+  getArchivedReports: () => request('/admin/reports/archived'),
+  archiveReport: (reportId) =>
+    request(`/admin/reports/${reportId}/archive`, {
+      method: 'PUT',
+    }),
+  unarchiveReport: (reportId) =>
+    request(`/admin/reports/${reportId}/unarchive`, {
+      method: 'POST',
+    }),
+  deleteReport: (reportId) =>
+    request(`/admin/reports/${reportId}`, {
+      method: 'DELETE',
+    }),
   updateAdminPermissions: (permissions) =>
     request('/admin/permissions', {
       method: 'PUT',

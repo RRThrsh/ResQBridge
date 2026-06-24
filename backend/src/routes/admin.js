@@ -4,11 +4,12 @@ const router = express.Router();
 const { authenticate, authorize, authorizeWithPermission } = require("../middleware/auth");
 const { validate } = require("../middleware/validate");
 const { asyncHandler } = require("../middleware/errorHandler");
-const { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations } = require("../controllers/adminController");
+const { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, archiveReport, unarchiveReport, getArchivedReports, deleteReport } = require("../controllers/adminController");
 const { getLogs, getLogStats, getLogsByIP, deleteOldLogs } = require("../controllers/logController");
 const { getDashboardData } = require("../controllers/dashboardController");
 const { getConfig, updateConfig, getLandingConfig, updateLandingConfig } = require("../controllers/configController");
 const { getAdminPermissions, updateAdminPermissions } = require("../controllers/permissionsController");
+const { getNotifications, getUnreadCount, markAsRead, markAllAsRead } = require("../controllers/adminNotificationController");
 
 router.use(authenticate);
 
@@ -42,7 +43,16 @@ router.put("/permissions", superOnly, asyncHandler(updateAdminPermissions));
 
 router.get("/reports", authorizeWithPermission("reports"), asyncHandler(getAdminReports));
 router.post("/reports/:id/assign", authorizeWithPermission("reports", "execute"), asyncHandler(assignReport));
+router.put("/reports/:id/archive", authorizeWithPermission("reports", "execute"), asyncHandler(archiveReport));
+router.get("/reports/archived", authorizeWithPermission("archive"), asyncHandler(getArchivedReports));
+router.post("/reports/:id/unarchive", authorizeWithPermission("archive", "write"), asyncHandler(unarchiveReport));
+router.delete("/reports/:id", authorizeWithPermission("archive", "execute"), asyncHandler(deleteReport));
 router.get("/rescuer-locations", authorizeWithPermission("rescuerMap"), asyncHandler(getRescuerLocations));
+
+router.get("/notifications", asyncHandler(getNotifications));
+router.get("/notifications/unread-count", asyncHandler(getUnreadCount));
+router.patch("/notifications/:id/read", asyncHandler(markAsRead));
+router.post("/notifications/read-all", asyncHandler(markAllAsRead));
 
 const { upload, uploadImage } = require("../controllers/uploadController");
 router.post("/upload", superOnly, upload.single("image"), asyncHandler(uploadImage));

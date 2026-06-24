@@ -1,6 +1,7 @@
 const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
+const { notifyAdmin } = require("../services/adminNotification");
 
 const getUsers = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
@@ -137,6 +138,86 @@ const getRescuerLocations = async (_req, res) => {
   res.json({ locations });
 };
 
+const archiveReport = async (req, res) => {
+  const { id } = req.params;
+  const adminUuid = req.user.uuid;
+
+  await convexClient.mutation(anyApi.reports.archiveReport, { reportId: id, archivedBy: adminUuid });
+
+  await logEvent({
+    req,
+    userId: adminUuid,
+    eventType: "report_archived",
+    metadata: { reportId: id, archivedBy: adminUuid },
+  });
+
+  await notifyAdmin({
+    type: "report_archived",
+    message: `Report at ${id} archived by ${req.user.firstName} ${req.user.lastName}`,
+  });
+
+  res.json({ message: "Report archived." });
+};
+
+const unarchiveReport = async (req, res) => {
+  const { id } = req.params;
+
+  await convexClient.mutation(anyApi.reports.unarchiveReport, { reportId: id });
+
+  await logEvent({
+    req,
+    userId: req.user.uuid,
+    eventType: "report_unarchived",
+    metadata: { reportId: id },
+  });
+
+  res.json({ message: "Report restored from archive." });
+};
+
+const getArchivedReports = async (_req, res) => {
+  const reports = await convexClient.query(anyApi.reports.getArchivedReports);
+  const mapped = reports.map((r) => ({
+    _id: r._id,
+    name: r.name,
+    phone: r.phone,
+    category: r.category,
+    animalType: r.animalType,
+    urgency: r.urgency,
+    location: r.location,
+    description: r.description,
+    images: JSON.parse(r.images || "[]"),
+    status: r.status,
+    assignedTo: r.assignedTo || null,
+    assignedUser: r.assignedUser || null,
+    latitude: r.latitude ?? null,
+    longitude: r.longitude ?? null,
+    createdAt: r.createdAt,
+    archivedAt: r.archivedAt,
+    archivedByName: r.archivedByName,
+  }));
+  res.json({ reports: mapped });
+};
+
+const deleteReport = async (req, res) => {
+  const { id } = req.params;
+
+  await convexClient.mutation(anyApi.reports.deleteReport, { reportId: id });
+
+  await logEvent({
+    req,
+    userId: req.user.uuid,
+    eventType: "report_deleted",
+    metadata: { reportId: id },
+  });
+
+  await notifyAdmin({
+    type: "report_deleted",
+    message: `Report permanently deleted by ${req.user.firstName} ${req.user.lastName}`,
+  });
+
+  res.json({ message: "Report permanently deleted." });
+};
+
 const getStats = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
   const totalUsers = users.length;
@@ -147,4 +228,4 @@ const getStats = async (_req, res) => {
   res.json({ stats: { totalUsers, roleCounts } });
 };
 
-module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations };
+module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, archiveReport, unarchiveReport, getArchivedReports, deleteReport };

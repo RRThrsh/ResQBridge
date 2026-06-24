@@ -10,6 +10,7 @@ const FEATURES = [
   { key: 'audit', label: 'Audit Logs', desc: 'View system activity logs' },
   { key: 'landingPage', label: 'Landing Page', desc: 'Edit landing page content' },
   { key: 'systemConfig', label: 'System Config', desc: 'Modify system configuration' },
+  { key: 'archive', label: 'Archives', desc: 'View and manage archived reports' },
 ]
 
 const ACTIONS = [
