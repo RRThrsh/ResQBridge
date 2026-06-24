@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DoubleConfirmation, SkeletonCard } from '../../components/ui'
 import { admin as adminApi } from '../../services/api'
 import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIcon } from '../../components/SvgIcons'
 
@@ -170,9 +171,8 @@ export default function AdminReports({ adminPermissions }) {
       {(adminPermissions?.reports?.execute) && selectedIds.size > 0 && (
         <div className="mb-3 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
           <span className="text-sm font-medium text-green-800">{selectedIds.size} selected</span>
-          <button
-            onClick={async () => {
-              if (!window.confirm(`Archive ${selectedIds.size} report${selectedIds.size > 1 ? 's' : ''}?`)) return
+          <DoubleConfirmation
+            onConfirm={async () => {
               setBulkArchiving(true)
               try {
                 await adminApi.bulkArchiveReports([...selectedIds])
@@ -185,11 +185,17 @@ export default function AdminReports({ adminPermissions }) {
                 setBulkArchiving(false)
               }
             }}
-            disabled={bulkArchiving}
-            className="rounded-lg bg-green-600 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+            title="Archive Reports"
+            message={`Are you sure you want to archive ${selectedIds.size} report${selectedIds.size > 1 ? 's' : ''}? They will be moved to the Archives.`}
+            confirmText="Yes, Archive"
           >
-            {bulkArchiving ? 'Archiving...' : 'Archive Selected'}
-          </button>
+            <button
+              disabled={bulkArchiving}
+              className="rounded-lg bg-green-600 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+            >
+              {bulkArchiving ? 'Archiving...' : 'Archive Selected'}
+            </button>
+          </DoubleConfirmation>
           <button
             onClick={() => setSelectedIds(new Set())}
             className="rounded-lg border border-green-300 px-4 py-1.5 text-xs font-bold text-green-700 transition-colors hover:bg-green-100"
@@ -200,8 +206,8 @@ export default function AdminReports({ adminPermissions }) {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-32">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-600 border-t-transparent" />
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} lines={1} className="rounded-lg border p-3" />)}
         </div>
       ) : paginated.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
@@ -383,9 +389,8 @@ export default function AdminReports({ adminPermissions }) {
                         ) : null
                       )}
                       {(adminPermissions?.reports?.execute) && (
-                        <button
-                          onClick={async () => {
-                            if (!window.confirm('Archive this report? It will be moved to the Archives.')) return
+                        <DoubleConfirmation
+                          onConfirm={async () => {
                             try {
                               await adminApi.archiveReport(r._id)
                               setReports((prev) => prev.filter((x) => x._id !== r._id))
@@ -393,15 +398,19 @@ export default function AdminReports({ adminPermissions }) {
                               alert(err.message || 'Failed to archive report.')
                             }
                           }}
-                          className="ml-auto rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+                          title="Archive Report"
+                          message="Are you sure you want to archive this report? It will be moved to the Archives."
+                          confirmText="Yes, Archive"
                         >
-                          <span className="flex items-center gap-1">
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                            </svg>
-                            Archive
-                          </span>
-                        </button>
+                          <button className="ml-auto rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700">
+                            <span className="flex items-center gap-1">
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                              </svg>
+                              Archive
+                            </span>
+                          </button>
+                        </DoubleConfirmation>
                       )}
                     </div>
                   </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
+import { DoubleConfirmation, SkeletonCard } from '../../components/ui'
 import { rescuer as rescuerApi } from '../../services/api'
 import ReportMap from './ReportMap'
 import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIcon, RefreshIcon, CheckCircleIcon } from '../../components/SvgIcons'
@@ -210,8 +211,8 @@ export default function RescuerReports() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-amber-600 border-t-transparent" />
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : reports.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-white p-16 text-center">
@@ -338,22 +339,34 @@ export default function RescuerReports() {
                         {r.assignedTo && r.status !== 'resolved' && (
                           <>
                             {r.status === 'pending' && (
-                              <button
-                                onClick={() => handleStatusChange(r._id, 'in_progress')}
-                                disabled={actionLoading === r._id}
-                                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-lg font-bold text-white shadow transition-all hover:bg-blue-700 disabled:opacity-50"
+                              <DoubleConfirmation
+                                onConfirm={() => handleStatusChange(r._id, 'in_progress')}
+                                title="Start Working"
+                                message="Are you sure you want to start working on this report? This will update the status to 'In Progress'."
+                                confirmText="Yes, Start Working"
                               >
-                                {actionLoading === r._id ? 'Updating...' : <><RefreshIcon className="w-5 h-5" /> Start Working</>}
-                              </button>
+                                <button
+                                  disabled={actionLoading === r._id}
+                                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-lg font-bold text-white shadow transition-all hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  {actionLoading === r._id ? 'Updating...' : <><RefreshIcon className="w-5 h-5" /> Start Working</>}
+                                </button>
+                              </DoubleConfirmation>
                             )}
                             {r.status === 'in_progress' && (
-                              <button
-                                onClick={() => handleStatusChange(r._id, 'resolved')}
-                                disabled={actionLoading === r._id}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
+                              <DoubleConfirmation
+                                onConfirm={() => handleStatusChange(r._id, 'resolved')}
+                                title="Mark as Resolved"
+                                message="Are you sure you want to mark this report as resolved?"
+                                confirmText="Yes, Resolve"
                               >
-                                {actionLoading === r._id ? 'Updating...' : <><CheckCircleIcon className="w-5 h-5" /> Mark as Resolved</>}
-                              </button>
+                                <button
+                                  disabled={actionLoading === r._id}
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
+                                >
+                                  {actionLoading === r._id ? 'Updating...' : <><CheckCircleIcon className="w-5 h-5" /> Mark as Resolved</>}
+                                </button>
+                              </DoubleConfirmation>
                             )}
                           </>
                         )}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { DoubleConfirmation, SkeletonTable } from '../../components/ui'
 import { admin as adminApi } from '../../services/api'
 import NotificationBell from '../../components/admin/NotificationBell'
 import AuditLogs from './AuditLogs'
@@ -195,10 +196,63 @@ export default function Dashboard() {
 
 function LoadingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-green-600 border-t-transparent" />
-        <p className="mt-4 text-sm text-gray-400">Loading dashboard...</p>
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      <div className="flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-6 shadow-sm">
+        <div className="h-6 w-48 animate-pulse rounded bg-gray-200" />
+        <div className="ml-auto flex items-center gap-3">
+          <div className="h-8 w-8 animate-pulse rounded-lg bg-gray-200" />
+          <div className="h-8 w-32 animate-pulse rounded-lg bg-gray-200" />
+        </div>
+      </div>
+      <div className="flex flex-1">
+        <div className="hidden w-64 flex-col border-r border-gray-200 bg-white md:flex">
+          <div className="border-b border-gray-100 px-4 py-5">
+            <div className="h-7 w-32 animate-pulse rounded bg-gray-200" />
+          </div>
+          <div className="flex-1 space-y-1 px-2 py-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+                <div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
+                <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="space-y-6">
+            <div>
+              <div className="h-7 w-36 animate-pulse rounded bg-gray-200" />
+              <div className="mt-2 h-4 w-64 animate-pulse rounded bg-gray-200" />
+            </div>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-gray-200 bg-gradient-to-br p-5">
+                  <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
+                  <div className="mt-2 h-8 w-16 animate-pulse rounded bg-gray-200" />
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="rounded-xl border border-gray-200 bg-white shadow-sm lg:col-span-2">
+                <div className="border-b border-gray-100 px-6 py-4">
+                  <div className="h-5 w-32 animate-pulse rounded bg-gray-200" />
+                </div>
+                <div className="p-6">
+                  <div className="h-72 animate-pulse rounded-lg bg-gray-100" />
+                </div>
+              </div>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="rounded-xl border p-5">
+                    <div className="h-3 w-24 animate-pulse rounded bg-gray-200" />
+                    <div className="mt-2 h-8 w-16 animate-pulse rounded bg-gray-200" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <SkeletonTable rows={5} cols={4} />
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -608,6 +662,12 @@ function DashboardTab({ stats, dashData, chartPeriod, onChartPeriodChange, userN
 
 function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh }) {
   const [openDropdown, setOpenDropdown] = useState(null)
+  const [pendingRoleChange, setPendingRoleChange] = useState(null)
+
+  function handleRoleClick(uuid, role) {
+    setOpenDropdown(null)
+    setPendingRoleChange({ uuid, role })
+  }
 
   const roles = [
     { value: 'rescuer', label: 'Rescuer' },
@@ -692,8 +752,7 @@ function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh })
                                   key={r.value}
                                   disabled={isActive || isUpdating}
                                   onClick={() => {
-                                    setOpenDropdown(null)
-                                    if (!isActive) onRoleChange(u.uuid, r.value)
+                                    if (!isActive) handleRoleClick(u.uuid, r.value)
                                   }}
                                   className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
                                     isActive
@@ -726,6 +785,38 @@ function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh })
           </tbody>
         </table>
       </div>
+
+      {pendingRoleChange && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-gray-900">Change User Role</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Are you sure you want to change this user's role to <strong>{pendingRoleChange.role}</strong>?
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setPendingRoleChange(null)}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <DoubleConfirmation
+                onConfirm={() => {
+                  onRoleChange(pendingRoleChange.uuid, pendingRoleChange.role)
+                  setPendingRoleChange(null)
+                }}
+                title="Confirm Role Change"
+                message={`This will change the user's role to ${pendingRoleChange.role}. Are you sure?`}
+                confirmText={`Yes, Change to ${pendingRoleChange.role}`}
+              >
+                <button className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700">
+                  Confirm Change
+                </button>
+              </DoubleConfirmation>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

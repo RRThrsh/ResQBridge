@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DoubleConfirmation, SkeletonConfigCard } from '../../components/ui'
 import { admin as adminApi } from '../../services/api'
 
 export default function SystemConfig() {
@@ -79,8 +80,14 @@ export default function SystemConfig() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-600 border-t-transparent" />
+      <div>
+        <div className="mb-6">
+          <div className="h-7 w-24 animate-pulse rounded-lg bg-gray-200" />
+          <div className="mt-1 h-4 w-64 animate-pulse rounded bg-gray-200" />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {Array.from({ length: 3 }).map((_, i) => <SkeletonConfigCard key={i} />)}
+        </div>
       </div>
     )
   }
@@ -134,13 +141,19 @@ export default function SystemConfig() {
             >
               Save
             </button>
-            <button
-              onClick={handleCleanupNow}
-              disabled={saving}
-              className="rounded-lg border border-red-300 px-5 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+            <DoubleConfirmation
+              onConfirm={handleCleanupNow}
+              title="Delete Old Logs"
+              message="Are you sure you want to permanently delete all log entries older than the specified retention period? This action cannot be undone."
+              confirmText="Yes, Delete Logs"
             >
-              Delete Old Logs Now
-            </button>
+              <button
+                disabled={saving}
+                className="rounded-lg border border-red-300 px-5 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+              >
+                Delete Old Logs Now
+              </button>
+            </DoubleConfirmation>
           </div>
         </div>
 
@@ -159,17 +172,26 @@ export default function SystemConfig() {
                   : 'The landing page is publicly accessible.'}
               </p>
             </div>
-            <button
-              onClick={handleToggleMaintenance}
-              disabled={saving}
-              className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${
-                shutdownMode
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-red-600 text-white hover:bg-red-700'
-              }`}
+            <DoubleConfirmation
+              onConfirm={handleToggleMaintenance}
+              title={shutdownMode ? 'Disable Maintenance Mode' : 'Enable Maintenance Mode'}
+              message={shutdownMode
+                ? 'Are you sure you want to disable maintenance mode? The landing page will become publicly accessible again.'
+                : 'Are you sure you want to enable maintenance mode? The landing page will show a maintenance notice to all visitors.'
+              }
+              confirmText={shutdownMode ? 'Yes, Disable' : 'Yes, Shutdown'}
             >
-              {shutdownMode ? 'Disable' : 'Shutdown'}
-            </button>
+              <button
+                disabled={saving}
+                className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  shutdownMode
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-red-600 text-white hover:bg-red-700'
+                }`}
+              >
+                {shutdownMode ? 'Disable' : 'Shutdown'}
+              </button>
+            </DoubleConfirmation>
           </div>
 
           {shutdownMode && (
@@ -228,8 +250,8 @@ export default function SystemConfig() {
                   : 'Users can register without email verification.'}
               </p>
             </div>
-            <button
-              onClick={async () => {
+            <DoubleConfirmation
+              onConfirm={async () => {
                 try {
                   setSaving(true)
                   setMessage(null)
@@ -243,15 +265,24 @@ export default function SystemConfig() {
                   setSaving(false)
                 }
               }}
-              disabled={saving}
-              className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${
-                otpEnabled
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
+              title={otpEnabled ? 'Disable OTP' : 'Enable OTP'}
+              message={otpEnabled
+                ? 'Are you sure you want to disable OTP verification? Users will be able to register without email verification.'
+                : 'Are you sure you want to enable OTP verification? Users will need to verify their email via OTP to register.'
+              }
+              confirmText={otpEnabled ? 'Yes, Disable OTP' : 'Yes, Enable OTP'}
             >
-              {otpEnabled ? 'Disable OTP' : 'Enable OTP'}
-            </button>
+              <button
+                disabled={saving}
+                className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  otpEnabled
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                {otpEnabled ? 'Disable OTP' : 'Enable OTP'}
+              </button>
+            </DoubleConfirmation>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
+import { DoubleConfirmation, SkeletonCard } from '../../components/ui'
 import { rescuer as rescuerApi } from '../../services/api'
 import { CheckIcon, XIcon, CarIcon, CameraIcon, ClipboardIcon, MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, CheckCircleIcon, XCircleIcon } from '../../components/SvgIcons'
 import ReportMap from './ReportMap'
@@ -97,7 +98,6 @@ export default function RescuerAssignments() {
   }
 
   async function handleReject(reportId) {
-    if (!confirm('Reject this assignment? It will go back to the admin.')) return
     setActionLoading(reportId)
     try {
       await rescuerApi.rejectAssignment(reportId)
@@ -213,8 +213,8 @@ export default function RescuerAssignments() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-amber-600 border-t-transparent" />
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : reports.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-white p-16 text-center">
@@ -312,19 +312,29 @@ export default function RescuerAssignments() {
                       <div className="px-5 pb-4 pt-4 border-t-2 border-gray-100 flex flex-wrap gap-2">
                         {showInitial && (
                           <>
-                            <button
-                              onClick={() => handleAccept(r._id)}
-                              className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow"
+                            <DoubleConfirmation
+                              onConfirm={() => handleAccept(r._id)}
+                              title="Accept Assignment"
+                              message="Are you sure you want to accept this assignment? You will be responsible for responding to this rescue request."
+                              confirmText="Yes, Accept"
                             >
-                              <CheckIcon className="w-5 h-5" /> Accept
-                            </button>
-                            <button
-                              onClick={() => handleReject(r._id)}
-                              disabled={actionLoading === r._id}
-                              className="inline-flex items-center gap-1.5 rounded-xl bg-red-100 px-5 py-2.5 text-base font-bold text-red-700 hover:bg-red-200 transition-colors border-2 border-red-200 disabled:opacity-50"
+                              <button className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow">
+                                <CheckIcon className="w-5 h-5" /> Accept
+                              </button>
+                            </DoubleConfirmation>
+                            <DoubleConfirmation
+                              onConfirm={() => handleReject(r._id)}
+                              title="Reject Assignment"
+                              message="Are you sure you want to reject this assignment? This will make it available for other rescuers."
+                              confirmText="Yes, Reject"
                             >
-                              <XIcon className="w-5 h-5" /> Reject
-                            </button>
+                              <button
+                                disabled={actionLoading === r._id}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-red-100 px-5 py-2.5 text-base font-bold text-red-700 hover:bg-red-200 transition-colors border-2 border-red-200 disabled:opacity-50"
+                              >
+                                <XIcon className="w-5 h-5" /> Reject
+                              </button>
+                            </DoubleConfirmation>
                           </>
                         )}
                       </div>
@@ -370,13 +380,19 @@ export default function RescuerAssignments() {
                           )}
 
                           <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => handleResolve(r._id)}
-                              disabled={actionLoading === r._id}
-                              className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
+                            <DoubleConfirmation
+                              onConfirm={() => handleResolve(r._id)}
+                              title="Resolve Assignment"
+                              message="Are you sure you want to mark this assignment as resolved?"
+                              confirmText="Yes, Resolve"
                             >
-                              {actionLoading === r._id ? '...' : <><CheckCircleIcon className="w-5 h-5" /> Resolve</>}
-                            </button>
+                              <button
+                                disabled={actionLoading === r._id}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
+                              >
+                                {actionLoading === r._id ? '...' : <><CheckCircleIcon className="w-5 h-5" /> Resolve</>}
+                              </button>
+                            </DoubleConfirmation>
                             <button
                               onClick={() => {
                                 const next = new Set(showFailInput)
@@ -399,13 +415,19 @@ export default function RescuerAssignments() {
                                 className="w-full rounded-xl border-2 border-red-300 p-3 text-base focus:border-red-500 focus:outline-none"
                                 rows={2}
                               />
-                              <button
-                                onClick={() => handleFail(r._id)}
-                                disabled={actionLoading === r._id}
-                                className="rounded-xl bg-red-600 px-5 py-2.5 text-base font-bold text-white hover:bg-red-700 transition-colors shadow disabled:opacity-50"
+                              <DoubleConfirmation
+                                onConfirm={() => handleFail(r._id)}
+                                title="Mark as Failed"
+                                message="Are you sure you want to mark this assignment as failed?"
+                                confirmText="Yes, Mark Failed"
                               >
-                                {actionLoading === r._id ? '...' : 'Confirm Failed'}
-                              </button>
+                                <button
+                                  disabled={actionLoading === r._id}
+                                  className="rounded-xl bg-red-600 px-5 py-2.5 text-base font-bold text-white hover:bg-red-700 transition-colors shadow disabled:opacity-50"
+                                >
+                                  {actionLoading === r._id ? '...' : 'Confirm Failed'}
+                                </button>
+                              </DoubleConfirmation>
                             </div>
                           )}
                         </div>
