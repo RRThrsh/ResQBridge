@@ -39,20 +39,4 @@ const deleteOldLogs = async (req, res) => {
   res.json({ message: `Deleted ${result.deleted} logs older than ${retentionDays} days.` });
 };
 
-const trackGuest = async (req, res) => {
-  const { section, duration, eventType } = req.body;
-
-  await convexClient.mutation(anyApi.logs.insertLog, {
-    userId: req.user?.uuid || undefined,
-    eventType: eventType || "guest",
-    section: section || "unknown",
-    ipAddress: req.ip,
-    userAgent: req.headers["user-agent"] || undefined,
-    metadata: undefined,
-    sessionDuration: duration || undefined,
-  });
-
-  res.json({ message: "Logged." });
-};
-
-module.exports = { getLogs, getLogStats, getLogsByIP, deleteOldLogs, trackGuest };
+module.exports = { getLogs, getLogStats, getLogsByIP, deleteOldLogs };

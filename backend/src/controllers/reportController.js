@@ -66,31 +66,4 @@ const submitReport = async (req, res) => {
   res.status(201).json({ message: "Report submitted successfully.", images });
 };
 
-const getReports = async (req, res) => {
-  const { status } = req.query;
-  const reports = await convexClient.query(anyApi.reports.getReports, {
-    status: status || undefined,
-    limit: 100,
-  });
-
-  const mapped = reports.map((r) => ({
-    _id: r._id,
-    name: r.name,
-    phone: r.phone,
-    category: r.category,
-    animalType: r.animalType,
-    urgency: r.urgency,
-    location: r.location,
-    description: r.description,
-    images: JSON.parse(r.images || "[]"),
-    status: r.status,
-    assignedTo: r.assignedTo || null,
-    latitude: r.latitude ?? null,
-    longitude: r.longitude ?? null,
-    createdAt: r.createdAt,
-  }));
-
-  res.json({ reports: mapped });
-};
-
-module.exports = { submitReport, getReports };
+module.exports = { submitReport };

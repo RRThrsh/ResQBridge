@@ -2,7 +2,7 @@ const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
 const { publish } = require("../services/notification");
-const { sendAssignment, sendReportStatus } = require("../services/email");
+const { sendReportStatus } = require("../services/email");
 
 const getReports = async (req, res) => {
   const { status, assignedTo, search, sortBy } = req.query;
@@ -74,7 +74,6 @@ const rejectAssignment = async (req, res) => {
     metadata: { reportId: id },
   });
 
-  const { publish } = require("../services/notification");
   await publish({
     type: "report:rejected",
     reportId: id,
