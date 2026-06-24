@@ -74,11 +74,22 @@ export default function Register() {
     }
   }
 
+  function sanitizeText(val) {
+    return val.replace(/<[^>]*>/g, '').trim()
+  }
+
   function handleBlur(name) {
     return () => {
       setTouched((prev) => ({ ...prev, [name]: true }))
-      const value = name === 'phone' ? phone : name === 'firstName' ? firstName : name === 'lastName' ? lastName : name === 'email' ? email : name === 'password' ? password : name === 'confirmPassword' ? confirmPassword : name === 'otp' ? otp : ''
-      const err = validateField(name, value)
+      const value = name === 'phone' ? phone : name === 'firstName' ? firstName : name === 'lastName' ? lastName : name === 'email' ? email : name === 'password' ? password : name === 'confirmPassword' ? confirmPassword : name === 'otp' ? otp : name === 'barangay' ? barangay : name === 'street' ? street : name === 'city' ? city : name === 'province' ? province : name === 'zipcode' ? zipcode : ''
+      if (name !== 'password' && name !== 'confirmPassword') {
+        const sanitized = sanitizeText(value)
+        if (sanitized !== value) {
+          const setters = { firstName: setFirstName, lastName: setLastName, email: setEmail, phone: setPhone, otp: setOtp, barangay: setBarangay, street: setStreet, city: setCity, province: setProvince, zipcode: setZipcode }
+          if (setters[name]) setters[name](sanitized)
+        }
+      }
+      const err = validateField(name, name === 'phone' ? value.replace(/\D/g, '') : value)
       setFieldErrors((prev) => ({ ...prev, [name]: err }))
     }
   }
@@ -87,7 +98,7 @@ export default function Register() {
     return (e) => {
       setter(e.target.value)
       if (touched[name]) {
-        const err = validateField(name, e.target.value)
+        const err = validateField(name, name === 'phone' ? e.target.value.replace(/\D/g, '') : e.target.value)
         setFieldErrors((prev) => ({ ...prev, [name]: err }))
       }
     }
@@ -158,13 +169,13 @@ export default function Register() {
     setLoading(true)
     try {
       const data = await auth.register({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
+        firstName: sanitizeText(firstName),
+        lastName: sanitizeText(lastName),
         phoneNumber: phone.replace(/\D/g, ''),
-        email: email.trim(),
+        email: sanitizeText(email),
         password,
         confirmPassword,
-        otp,
+        otp: otp.trim(),
       })
       login(data.token, data.user)
       navigate('/rescuer/dashboard')
@@ -449,6 +460,7 @@ export default function Register() {
                     list="barangay-list"
                     value={barangay}
                     onChange={(e) => setBarangay(e.target.value)}
+                    onBlur={() => setBarangay((v) => sanitizeText(v))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Type to search..."
                   />
@@ -458,6 +470,7 @@ export default function Register() {
                   <input
                     value={street}
                     onChange={(e) => setStreet(e.target.value)}
+                    onBlur={() => setStreet((v) => sanitizeText(v))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Street"
                   />
@@ -470,6 +483,7 @@ export default function Register() {
                     list="city-list"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
+                    onBlur={() => setCity((v) => sanitizeText(v))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Type to search..."
                   />
@@ -480,6 +494,7 @@ export default function Register() {
                     list="province-list"
                     value={province}
                     onChange={(e) => setProvince(e.target.value)}
+                    onBlur={() => setProvince((v) => sanitizeText(v))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Type to search..."
                   />
@@ -489,6 +504,7 @@ export default function Register() {
                   <input
                     value={zipcode}
                     onChange={(e) => setZipcode(e.target.value)}
+                    onBlur={() => setZipcode((v) => v.replace(/\D/g, ''))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Zipcode"
                   />
