@@ -12,6 +12,8 @@ const DEFAULT_ADMIN_PERMISSIONS = {
   systemConfig: { read: false, write: false, execute: false },
   dashboard: { read: true, write: false, execute: false },
   archive: { read: false, write: false, execute: false },
+  exportData: { read: false, write: false, execute: false },
+  systemHealth: { read: false, write: false, execute: false },
 };
 
 const ACTIONS = ["read", "write", "execute"];

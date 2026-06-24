@@ -1,6 +1,6 @@
 -- Schema created: 2026-06-12
 -- Source: backend/convex/schema.ts
--- Last updated: 2026-06-24
+-- Last updated: 2026-06-24 (3 features added)
 
 -- ============================================================
 -- otps — One-time passwords for email-based authentication

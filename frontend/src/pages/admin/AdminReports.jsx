@@ -44,6 +44,8 @@ export default function AdminReports({ adminPermissions }) {
   const [expanded, setExpanded] = useState(null)
   const [assigningId, setAssigningId] = useState(null)
   const [page, setPage] = useState(1)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkArchiving, setBulkArchiving] = useState(false)
   const pageSize = 10
 
   useEffect(() => {
@@ -165,6 +167,38 @@ export default function AdminReports({ adminPermissions }) {
         </select>
       </div>
 
+      {(adminPermissions?.reports?.execute) && selectedIds.size > 0 && (
+        <div className="mb-3 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
+          <span className="text-sm font-medium text-green-800">{selectedIds.size} selected</span>
+          <button
+            onClick={async () => {
+              if (!window.confirm(`Archive ${selectedIds.size} report${selectedIds.size > 1 ? 's' : ''}?`)) return
+              setBulkArchiving(true)
+              try {
+                await adminApi.bulkArchiveReports([...selectedIds])
+                const reportData = await adminApi.getReports()
+                setReports(reportData.reports || [])
+                setSelectedIds(new Set())
+              } catch (err) {
+                alert(err.message || 'Failed to archive reports.')
+              } finally {
+                setBulkArchiving(false)
+              }
+            }}
+            disabled={bulkArchiving}
+            className="rounded-lg bg-green-600 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+          >
+            {bulkArchiving ? 'Archiving...' : 'Archive Selected'}
+          </button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="rounded-lg border border-green-300 px-4 py-1.5 text-xs font-bold text-green-700 transition-colors hover:bg-green-100"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-32">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-600 border-t-transparent" />
@@ -183,11 +217,31 @@ export default function AdminReports({ adminPermissions }) {
         </div>
       ) : (
         <div className="space-y-2">
+          {(adminPermissions?.reports?.execute) && (
+            <div className="flex items-center gap-2 px-1 py-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === paginated.length && paginated.length > 0}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedIds(new Set(paginated.map((r) => r._id)))
+                    } else {
+                      setSelectedIds(new Set())
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                />
+                <span className="text-xs text-gray-500">Select all</span>
+              </label>
+            </div>
+          )}
           {paginated.map((r) => {
             const urgency = URGENCY_LABEL[r.urgency] || URGENCY_LABEL.low
             const statusClass = STATUS_BADGE[r.status] || STATUS_BADGE.pending
             const statusLabel = STATUS_LABELS[r.status] || r.status.replace('_', ' ')
             const isExpanded = expanded === r._id
+            const isSelected = selectedIds.has(r._id)
 
             return (
               <div
@@ -195,16 +249,35 @@ export default function AdminReports({ adminPermissions }) {
                 className={`rounded-lg border transition-all ${
                   isExpanded
                     ? 'border-green-500 shadow bg-white'
+                    : isSelected
+                    ? 'border-green-400 bg-green-50/30'
                     : 'border-gray-200 bg-white hover:border-green-400 hover:shadow-sm'
                 }`}
               >
-                <button
-                  onClick={() => {
-                    const next = isExpanded ? null : r._id
-                    setExpanded(next)
-                  }}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left"
-                >
+                <div className="flex items-center">
+                  {(adminPermissions?.reports?.execute) && (
+                    <label className="flex items-center justify-center pl-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          const next = new Set(selectedIds)
+                          if (e.target.checked) next.add(r._id)
+                          else next.delete(r._id)
+                          setSelectedIds(next)
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                    </label>
+                  )}
+                  <button
+                    onClick={() => {
+                      const next = isExpanded ? null : r._id
+                      setExpanded(next)
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left"
+                  >
                   <span>{(() => { const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon; return <Icon className="w-5 h-5 text-gray-600 shrink-0" />; })()}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -232,6 +305,7 @@ export default function AdminReports({ adminPermissions }) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                   </svg>
                 </button>
+                </div>
 
                 {isExpanded && (
                   <div className="border-t border-gray-100 px-4 pb-4">

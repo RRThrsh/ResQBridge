@@ -139,24 +139,29 @@ const getRescuerLocations = async (_req, res) => {
 };
 
 const archiveReport = async (req, res) => {
-  const { id } = req.params;
   const adminUuid = req.user.uuid;
+  const ids = req.params.id ? [req.params.id] : req.body.ids;
 
-  await convexClient.mutation(anyApi.reports.archiveReport, { reportId: id, archivedBy: adminUuid });
+  if (!ids || ids.length === 0) {
+    return res.status(400).json({ message: "No report IDs provided." });
+  }
+
+  await convexClient.mutation(anyApi.reports.archiveReports, { reportIds: ids, archivedBy: adminUuid });
 
   await logEvent({
     req,
     userId: adminUuid,
     eventType: "report_archived",
-    metadata: { reportId: id, archivedBy: adminUuid },
+    metadata: { reportIds: ids },
   });
 
+  const count = ids.length;
   await notifyAdmin({
     type: "report_archived",
-    message: `Report at ${id} archived by ${req.user.firstName} ${req.user.lastName}`,
+    message: `${count} report${count > 1 ? "s" : ""} archived by ${req.user.firstName} ${req.user.lastName}`,
   });
 
-  res.json({ message: "Report archived." });
+  res.json({ message: `${count} report${count > 1 ? "s" : ""} archived.` });
 };
 
 const unarchiveReport = async (req, res) => {

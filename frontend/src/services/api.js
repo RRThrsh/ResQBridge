@@ -96,6 +96,12 @@ export const admin = {
     }),
   getRescuerLocations: () => request('/admin/rescuer-locations'),
   getAdminPermissions: () => request('/admin/permissions'),
+  getHealth: () => request('/admin/health'),
+  bulkArchiveReports: (ids) =>
+    request('/admin/reports/bulk/archive', {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    }),
   getNotifications: () => request('/admin/notifications'),
   getUnreadCount: () => request('/admin/notifications/unread-count'),
   markAsRead: (id) =>

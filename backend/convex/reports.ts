@@ -218,6 +218,23 @@ export const unarchiveReport = mutation({
   },
 });
 
+export const archiveReports = mutation({
+  args: {
+    reportIds: v.array(v.id("reports")),
+    archivedBy: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    for (const reportId of args.reportIds) {
+      await ctx.db.patch(reportId, {
+        archived: true,
+        archivedAt: now,
+        archivedBy: args.archivedBy,
+      });
+    }
+  },
+});
+
 export const deleteReport = mutation({
   args: {
     reportId: v.id("reports"),

@@ -11,6 +11,8 @@ const FEATURES = [
   { key: 'landingPage', label: 'Landing Page', desc: 'Edit landing page content' },
   { key: 'systemConfig', label: 'System Config', desc: 'Modify system configuration' },
   { key: 'archive', label: 'Archives', desc: 'View and manage archived reports' },
+  { key: 'exportData', label: 'Export', desc: 'Download data as CSV' },
+  { key: 'systemHealth', label: 'System Health', desc: 'View server and service status' },
 ]
 
 const ACTIONS = [

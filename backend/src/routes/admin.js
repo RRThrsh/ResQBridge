@@ -10,6 +10,8 @@ const { getDashboardData } = require("../controllers/dashboardController");
 const { getConfig, updateConfig, getLandingConfig, updateLandingConfig } = require("../controllers/configController");
 const { getAdminPermissions, updateAdminPermissions } = require("../controllers/permissionsController");
 const { getNotifications, getUnreadCount, markAsRead, markAllAsRead } = require("../controllers/adminNotificationController");
+const { exportReports, exportUsers, exportLogs } = require("../controllers/exportController");
+const { getHealth } = require("../controllers/healthController");
 
 router.use(authenticate);
 
@@ -44,10 +46,17 @@ router.put("/permissions", superOnly, asyncHandler(updateAdminPermissions));
 router.get("/reports", authorizeWithPermission("reports"), asyncHandler(getAdminReports));
 router.post("/reports/:id/assign", authorizeWithPermission("reports", "execute"), asyncHandler(assignReport));
 router.put("/reports/:id/archive", authorizeWithPermission("reports", "execute"), asyncHandler(archiveReport));
+router.post("/reports/bulk/archive", authorizeWithPermission("reports", "execute"), asyncHandler(archiveReport));
 router.get("/reports/archived", authorizeWithPermission("archive"), asyncHandler(getArchivedReports));
 router.post("/reports/:id/unarchive", authorizeWithPermission("archive", "write"), asyncHandler(unarchiveReport));
 router.delete("/reports/:id", authorizeWithPermission("archive", "execute"), asyncHandler(deleteReport));
 router.get("/rescuer-locations", authorizeWithPermission("rescuerMap"), asyncHandler(getRescuerLocations));
+
+router.get("/export/reports", authorizeWithPermission("exportData"), asyncHandler(exportReports));
+router.get("/export/users", authorizeWithPermission("exportData"), asyncHandler(exportUsers));
+router.get("/export/logs", authorizeWithPermission("exportData"), asyncHandler(exportLogs));
+
+router.get("/health", authorizeWithPermission("systemHealth"), asyncHandler(getHealth));
 
 router.get("/notifications", asyncHandler(getNotifications));
 router.get("/notifications/unread-count", asyncHandler(getUnreadCount));
