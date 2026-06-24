@@ -215,6 +215,47 @@ export default function Register() {
                     )}
                   </button>
                 </div>
+                {password.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    <div className="flex gap-2">
+                      {password.length >= 8 ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          At least 8 characters
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                          At least 8 characters
+                        </span>
+                      )}
+                      {/[a-zA-Z]/.test(password) && /\d/.test(password) ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          Letters & numbers
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                          Letters & numbers
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      {[1, 2].map((step) => {
+                        const filled = step === 1 ? password.length >= 8 : (/[a-zA-Z]/.test(password) && /\d/.test(password))
+                        return (
+                          <div
+                            key={step}
+                            className={`h-1 flex-1 rounded-full transition-colors ${
+                              filled ? 'bg-green-500' : 'bg-gray-200'
+                            }`}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
