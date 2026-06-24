@@ -22,6 +22,10 @@ export default defineSchema({
       v.literal("admin"),
       v.literal("rescuer"),
     ),
+    availability: v.optional(v.union(
+      v.literal("available"),
+      v.literal("busy"),
+    )),
   })
     .index("by_email", ["email"])
     .index("by_uuid", ["uuid"]),
@@ -46,6 +50,44 @@ export default defineSchema({
   })
     .index("by_key", ["key"]),
 
+  activityLogs: defineTable({
+    userId: v.string(),
+    action: v.string(),
+    reportId: v.optional(v.string()),
+    details: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_createdAt", ["createdAt"]),
+
+  rescuerLocations: defineTable({
+    userId: v.string(),
+    userName: v.string(),
+    latitude: v.number(),
+    longitude: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId", ["userId"]),
+
+  adminNotifications: defineTable({
+    type: v.string(),
+    message: v.string(),
+    link: v.optional(v.string()),
+    read: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_read", ["read"])
+    .index("by_createdAt", ["createdAt"]),
+
+  reportNotes: defineTable({
+    reportId: v.string(),
+    userId: v.string(),
+    userName: v.string(),
+    content: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_reportId", ["reportId"]),
+
   reports: defineTable({
     name: v.string(),
     phone: v.string(),
@@ -61,7 +103,11 @@ export default defineSchema({
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
     createdAt: v.number(),
+    archived: v.optional(v.boolean()),
+    archivedAt: v.optional(v.number()),
+    archivedBy: v.optional(v.string()),
   })
     .index("by_createdAt", ["createdAt"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_assignedTo", ["assignedTo"]),
 });

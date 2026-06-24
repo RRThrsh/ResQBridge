@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { admin as adminApi } from '../../services/api'
 
-const API_BASE = '/api/v1'
-const UPLOAD_URL = `${API_BASE}/admin/upload`
+const UPLOAD_URL = '/api/v1/admin/upload'
 
 export default function EditConfig({ section }) {
   const [config, setConfig] = useState(null)
@@ -49,10 +48,7 @@ export default function EditConfig({ section }) {
   async function fetchConfig() {
     try {
       setLoading(true)
-      const res = await fetch(`${API_BASE}/admin/landing-config`, {
-        credentials: 'include',
-      })
-      const data = await res.json()
+      const data = await adminApi.getLandingConfig()
       setConfig(ensureSections(data.config))
       setDefaults(ensureSections(data.defaults))
     } catch { /* silent */ }
@@ -394,14 +390,7 @@ export default function EditConfig({ section }) {
     try {
       setSaving(true)
       setMessage(null)
-      const res = await fetch(`${API_BASE}/admin/landing-config`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(config),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message)
+      await adminApi.updateLandingConfig(config)
       setMessage({ type: 'success', text: 'Landing page content saved.' })
       setDirty(false)
     } catch (err) {

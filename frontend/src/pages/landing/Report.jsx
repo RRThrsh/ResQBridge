@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from '../../components/ui'
+import { Button, DoubleConfirmation } from '../../components/ui'
 
 const API_BASE = '/api/v1'
 
@@ -346,9 +346,17 @@ export default function Report() {
             </div>
           </div>
 
-          <Button type="submit" isLoading={submitting} size="lg" className="w-full">
-            {submitting ? 'Submitting...' : 'Submit Report'}
-          </Button>
+          <DoubleConfirmation
+            onConfirm={handleSubmit}
+            title="Submit Animal Report"
+            message="Are you sure you want to submit this animal rescue report? It will be sent to rescue teams for response."
+            confirmText="Yes, Submit Report"
+            triggerVariant="primary"
+          >
+            <Button type="button" isLoading={submitting} size="lg" className="w-full">
+              {submitting ? 'Submitting...' : 'Submit Report'}
+            </Button>
+          </DoubleConfirmation>
         </form>
       </div>
     </div>

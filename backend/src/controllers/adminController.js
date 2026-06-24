@@ -1,6 +1,7 @@
 const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
+const { notifyAdmin } = require("../services/adminNotification");
 
 const getUsers = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
@@ -46,13 +47,17 @@ const updateUserRole = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-  if (role === "superadmin") {
-    const allUsers = await convexClient.query(anyApi.users.getAllUsers);
-    const superadminCount = allUsers.filter((u) => u.role === "superadmin").length;
+  const allUsers = await convexClient.query(anyApi.users.getAllUsers);
+  const superadminCount = allUsers.filter((u) => u.role === "superadmin").length;
 
+  if (role === "superadmin") {
     if (superadminCount >= 1 && user.role !== "superadmin") {
       return res.status(400).json({ message: "A superadmin already exists. Only one superadmin is allowed." });
     }
+  }
+
+  if (user.role === "superadmin" && role !== "superadmin" && superadminCount <= 1) {
+    return res.status(400).json({ message: "Cannot demote the only superadmin. Promote another user first." });
   }
 
   if (req.user.role !== "superadmin" && uuid === req.user.uuid) {
@@ -66,6 +71,158 @@ const updateUserRole = async (req, res) => {
   res.json({ message: "User role updated successfully." });
 };
 
+const getAdminReports = async (req, res) => {
+  const reports = await convexClient.query(anyApi.reports.getAdminReports);
+  const mapped = reports.map((r) => ({
+    _id: r._id,
+    name: r.name,
+    phone: r.phone,
+    category: r.category,
+    animalType: r.animalType,
+    urgency: r.urgency,
+    location: r.location,
+    description: r.description,
+    images: JSON.parse(r.images || "[]"),
+    status: r.status,
+    assignedTo: r.assignedTo || null,
+    assignedUser: r.assignedUser || null,
+    latitude: r.latitude ?? null,
+    longitude: r.longitude ?? null,
+    createdAt: r.createdAt,
+  }));
+  res.json({ reports: mapped });
+};
+
+const assignReport = async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+  const adminUuid = req.user.uuid;
+
+  if (!userId) {
+    return res.status(400).json({ message: "Rescuer userId is required." });
+  }
+
+  await convexClient.mutation(anyApi.reports.assignReport, { reportId: id, userId });
+
+  const rescuer = await convexClient.query(anyApi.users.getUserByUuid, { uuid: userId });
+  const rescuerName = rescuer ? `${rescuer.firstName} ${rescuer.lastName}` : userId;
+
+  await convexClient.mutation(anyApi.activity.insertActivityLog, {
+    userId,
+    action: "assigned",
+    reportId: id,
+    details: `Assigned to ${rescuerName}`,
+  });
+
+  await logEvent({
+    req,
+    userId: adminUuid,
+    eventType: "report_assigned",
+    metadata: { reportId: id, assignedTo: userId, rescuerName },
+  });
+
+  const { publish } = require("../services/notification");
+  await publish({
+    type: "report:assigned",
+    reportId: id,
+    assignedTo: userId,
+    assignedByName: rescuerName,
+    timestamp: Date.now(),
+  });
+
+  res.json({ message: `Report assigned to ${rescuerName}.` });
+};
+
+const getRescuerLocations = async (_req, res) => {
+  const locations = await convexClient.query(anyApi.locations.getRescuerLocations);
+  res.json({ locations });
+};
+
+const archiveReport = async (req, res) => {
+  const adminUuid = req.user.uuid;
+  const ids = req.params.id ? [req.params.id] : req.body.ids;
+
+  if (!ids || ids.length === 0) {
+    return res.status(400).json({ message: "No report IDs provided." });
+  }
+
+  await convexClient.mutation(anyApi.reports.archiveReports, { reportIds: ids, archivedBy: adminUuid });
+
+  await logEvent({
+    req,
+    userId: adminUuid,
+    eventType: "report_archived",
+    metadata: { reportIds: ids },
+  });
+
+  const count = ids.length;
+  await notifyAdmin({
+    type: "report_archived",
+    message: `${count} report${count > 1 ? "s" : ""} archived by ${req.user.firstName} ${req.user.lastName}`,
+  });
+
+  res.json({ message: `${count} report${count > 1 ? "s" : ""} archived.` });
+};
+
+const unarchiveReport = async (req, res) => {
+  const { id } = req.params;
+
+  await convexClient.mutation(anyApi.reports.unarchiveReport, { reportId: id });
+
+  await logEvent({
+    req,
+    userId: req.user.uuid,
+    eventType: "report_unarchived",
+    metadata: { reportId: id },
+  });
+
+  res.json({ message: "Report restored from archive." });
+};
+
+const getArchivedReports = async (_req, res) => {
+  const reports = await convexClient.query(anyApi.reports.getArchivedReports);
+  const mapped = reports.map((r) => ({
+    _id: r._id,
+    name: r.name,
+    phone: r.phone,
+    category: r.category,
+    animalType: r.animalType,
+    urgency: r.urgency,
+    location: r.location,
+    description: r.description,
+    images: JSON.parse(r.images || "[]"),
+    status: r.status,
+    assignedTo: r.assignedTo || null,
+    assignedUser: r.assignedUser || null,
+    latitude: r.latitude ?? null,
+    longitude: r.longitude ?? null,
+    createdAt: r.createdAt,
+    archivedAt: r.archivedAt,
+    archivedByName: r.archivedByName,
+  }));
+  res.json({ reports: mapped });
+};
+
+const deleteReport = async (req, res) => {
+  const { id } = req.params;
+
+  await convexClient.mutation(anyApi.reports.deleteReport, { reportId: id });
+
+  await logEvent({
+    req,
+    userId: req.user.uuid,
+    eventType: "report_deleted",
+    metadata: { reportId: id },
+  });
+
+  await notifyAdmin({
+    type: "report_deleted",
+    message: `Report permanently deleted by ${req.user.firstName} ${req.user.lastName}`,
+  });
+
+  res.json({ message: "Report permanently deleted." });
+};
+
 const getStats = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
   const totalUsers = users.length;
@@ -76,4 +233,4 @@ const getStats = async (_req, res) => {
   res.json({ stats: { totalUsers, roleCounts } });
 };
 
-module.exports = { getUsers, getUser, updateUserRole, getStats };
+module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, archiveReport, unarchiveReport, getArchivedReports, deleteReport };

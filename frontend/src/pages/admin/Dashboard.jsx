@@ -1,12 +1,19 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { DoubleConfirmation, SkeletonTable } from '../../components/ui'
 import { admin as adminApi } from '../../services/api'
+import NotificationBell from '../../components/admin/NotificationBell'
 import AuditLogs from './AuditLogs'
 import Permissions from './Permissions'
 import Monitoring from './Monitoring'
 import EditConfig from './EditConfig'
 import SystemConfig from './SystemConfig'
+import AdminReports from './AdminReports'
+import AdminArchives from './AdminArchives'
+import DataExport from './DataExport'
+import SystemHealth from './SystemHealth'
+import RescuerMap from './RescuerMap'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 
 const roleBadge = {
@@ -27,8 +34,13 @@ const sidebarLinks = [
   { key: 'audit', label: 'Audit Logs', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
   { key: 'permissions', label: 'Permissions', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
   { key: 'monitoring', label: 'Monitoring', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
-  { key: 'editConfig', label: 'Edit Config', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
-  { key: 'config', label: 'Config', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
+  { key: 'landingPage', label: 'Landing Page', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
+  { key: 'systemConfig', label: 'System Config', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
+  { key: 'reports', label: 'Reports', icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z' },
+  { key: 'rescuerMap', label: 'Rescuer Map', icon: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z' },
+  { key: 'archive', label: 'Archives', icon: 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4' },
+  { key: 'exportData', label: 'Export', icon: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3' },
+  { key: 'systemHealth', label: 'System Health', icon: 'M11.42 15.17l-5.1 2.85a.98.98 0 01-1.38-1.02l.7-5.88a1 1 0 00-.3-.88L2.1 7.46a1 1 0 01.53-1.7l5.9-.85a1 1 0 00.76-.54l2.63-5.34a1 1 0 011.86 0l2.63 5.34a1 1 0 00.76.54l5.9.85a1 1 0 01.53 1.7l-4.24 4.01a1 1 0 00-.3.88l.7 5.88a.98.98 0 01-1.38 1.02l-5.1-2.85a1 1 0 00-.95 0z' },
 ]
 
 const tabLabels = {
@@ -37,14 +49,20 @@ const tabLabels = {
   audit: 'Audit Logs',
   permissions: 'Permissions',
   monitoring: 'Monitoring',
-  editConfig: 'Edit Config',
-  config: 'Config',
+  landingPage: 'Landing Page',
+  systemConfig: 'System Config',
+  reports: 'Reports',
+  rescuerMap: 'Rescuer Map',
+  archive: 'Archives',
+  exportData: 'Export',
+  systemHealth: 'System Health',
 }
 
 export default function Dashboard() {
-  const { user, logout } = useAuth()
+  const { user, loading: authLoading, logout } = useAuth()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const { tab } = useParams()
+  const activeTab = tab || 'dashboard'
   const [editSection, setEditSection] = useState(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [users, setUsers] = useState([])
@@ -54,31 +72,35 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [updating, setUpdating] = useState(null)
+  const [adminPermissions, setAdminPermissions] = useState(null)
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      const [usersRes, statsRes, dashRes] = await Promise.all([
+      const [usersRes, statsRes, dashRes, permRes] = await Promise.all([
         adminApi.getUsers(),
         adminApi.getStats(),
         adminApi.getDashboardData(),
+        user?.role !== 'superadmin' ? adminApi.getAdminPermissions() : Promise.resolve({ permissions: {} }),
       ])
       setUsers(usersRes.users)
       setStats(statsRes.stats)
       setDashData(dashRes)
+      if (permRes?.permissions) setAdminPermissions(permRes.permissions)
     } catch (err) {
       setError(err.message || 'Failed to load admin data')
       if (err.status === 401 || err.status === 403) navigate('/v1/login')
     } finally {
       setLoading(false)
     }
-  }, [navigate])
+  }, [navigate, user])
 
   useEffect(() => {
+    if (authLoading) return
     if (!user) { navigate('/v1/login'); return }
     fetchData()
-  }, [user, navigate, fetchData])
+  }, [user, authLoading, navigate, fetchData])
 
   async function handleRoleChange(uuid, newRole) {
     try {
@@ -95,6 +117,7 @@ export default function Dashboard() {
     }
   }
 
+  if (authLoading) return <LoadingScreen />
   if (loading && !users.length) {
     return <LoadingScreen />
   }
@@ -105,11 +128,12 @@ export default function Dashboard() {
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((c) => !c)}
         activeTab={activeTab}
-        onTabChange={(key, section) => { setActiveTab(key); setEditSection(section || null) }}
+        onTabChange={(key, section) => { navigate(`/admin/dashboard/${key}`); setEditSection(section || null) }}
         user={user}
         logout={logout}
         navigate={navigate}
         editSection={editSection}
+        adminPermissions={adminPermissions}
       />
 
       <main className="flex flex-1 flex-col overflow-hidden">
@@ -156,9 +180,14 @@ export default function Dashboard() {
             {activeTab === 'audit' && <AuditLogs />}
             {activeTab === 'permissions' && <Permissions />}
             {activeTab === 'monitoring' && <Monitoring />}
-            {activeTab === 'editConfig' && <EditConfig section={editSection} />}
-            {activeTab === 'config' && <SystemConfig />}
-          </FadeIn>
+            {activeTab === 'landingPage' && <EditConfig section={editSection} />}
+  {activeTab === 'systemConfig' && <SystemConfig />}
+            {activeTab === 'reports' && <AdminReports adminPermissions={adminPermissions} />}
+            {activeTab === 'archive' && <AdminArchives />}
+            {activeTab === 'exportData' && <DataExport />}
+            {activeTab === 'systemHealth' && <SystemHealth />}
+  {activeTab === 'rescuerMap' && <RescuerMap />}
+</FadeIn>
         </div>
       </main>
     </div>
@@ -167,10 +196,63 @@ export default function Dashboard() {
 
 function LoadingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-green-600 border-t-transparent" />
-        <p className="mt-4 text-sm text-gray-400">Loading dashboard...</p>
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      <div className="flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-6 shadow-sm">
+        <div className="h-6 w-48 animate-pulse rounded bg-gray-200" />
+        <div className="ml-auto flex items-center gap-3">
+          <div className="h-8 w-8 animate-pulse rounded-lg bg-gray-200" />
+          <div className="h-8 w-32 animate-pulse rounded-lg bg-gray-200" />
+        </div>
+      </div>
+      <div className="flex flex-1">
+        <div className="hidden w-64 flex-col border-r border-gray-200 bg-white md:flex">
+          <div className="border-b border-gray-100 px-4 py-5">
+            <div className="h-7 w-32 animate-pulse rounded bg-gray-200" />
+          </div>
+          <div className="flex-1 space-y-1 px-2 py-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+                <div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
+                <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="space-y-6">
+            <div>
+              <div className="h-7 w-36 animate-pulse rounded bg-gray-200" />
+              <div className="mt-2 h-4 w-64 animate-pulse rounded bg-gray-200" />
+            </div>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-gray-200 bg-gradient-to-br p-5">
+                  <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
+                  <div className="mt-2 h-8 w-16 animate-pulse rounded bg-gray-200" />
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="rounded-xl border border-gray-200 bg-white shadow-sm lg:col-span-2">
+                <div className="border-b border-gray-100 px-6 py-4">
+                  <div className="h-5 w-32 animate-pulse rounded bg-gray-200" />
+                </div>
+                <div className="p-6">
+                  <div className="h-72 animate-pulse rounded-lg bg-gray-100" />
+                </div>
+              </div>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="rounded-xl border p-5">
+                    <div className="h-3 w-24 animate-pulse rounded bg-gray-200" />
+                    <div className="mt-2 h-8 w-16 animate-pulse rounded bg-gray-200" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <SkeletonTable rows={5} cols={4} />
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -199,8 +281,18 @@ const configSubLinks = [
   { key: 'newsEvents', label: 'News & Events' },
 ]
 
-function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, navigate, editSection }) {
+const SUPER_ONLY_KEYS = new Set(['permissions'])
+
+function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, navigate, editSection, adminPermissions }) {
   const [expanded, setExpanded] = useState('')
+
+  const visibleLinks = sidebarLinks.filter((link) => {
+    if (user?.role === 'superadmin') return true
+    if (SUPER_ONLY_KEYS.has(link.key)) return false
+    if (!adminPermissions) return false
+    const perm = adminPermissions[link.key]
+    return perm?.read === true
+  })
 
   return (
     <aside className={`relative flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
@@ -221,10 +313,10 @@ function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, na
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
-        {sidebarLinks.map((link) => {
+        {visibleLinks.map((link) => {
           const isActive = activeTab === link.key
           const isExpanded = expanded === link.key
-          if (link.key === 'editConfig') {
+          if (link.key === 'landingPage') {
             return (
               <div key={link.key}>
                 <button
@@ -262,7 +354,7 @@ function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, na
                       return (
                         <button
                           key={sub.key}
-                          onClick={() => onTabChange('editConfig', sub.key)}
+                          onClick={() => onTabChange('landingPage', sub.key)}
                           className={`flex w-full items-center rounded-lg px-3 py-2 text-sm transition-colors ${
                             isSubActive
                               ? 'bg-green-50 font-medium text-green-700'
@@ -356,7 +448,8 @@ function TopBar({ title, user, onRefresh, sidebarCollapsed, onToggleSidebar }) {
         <span className="font-medium text-gray-900">{title}</span>
       </div>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-1">
+        <NotificationBell adminApi={adminApi} />
         <button
           onClick={onRefresh}
           className="flex items-center gap-2 rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:shadow active:scale-95"
@@ -569,6 +662,12 @@ function DashboardTab({ stats, dashData, chartPeriod, onChartPeriodChange, userN
 
 function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh }) {
   const [openDropdown, setOpenDropdown] = useState(null)
+  const [pendingRoleChange, setPendingRoleChange] = useState(null)
+
+  function handleRoleClick(uuid, role) {
+    setOpenDropdown(null)
+    setPendingRoleChange({ uuid, role })
+  }
 
   const roles = [
     { value: 'rescuer', label: 'Rescuer' },
@@ -653,8 +752,7 @@ function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh })
                                   key={r.value}
                                   disabled={isActive || isUpdating}
                                   onClick={() => {
-                                    setOpenDropdown(null)
-                                    if (!isActive) onRoleChange(u.uuid, r.value)
+                                    if (!isActive) handleRoleClick(u.uuid, r.value)
                                   }}
                                   className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
                                     isActive
@@ -687,6 +785,38 @@ function UsersTab({ users, currentUserUuid, updating, onRoleChange, onRefresh })
           </tbody>
         </table>
       </div>
+
+      {pendingRoleChange && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-gray-900">Change User Role</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Are you sure you want to change this user's role to <strong>{pendingRoleChange.role}</strong>?
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setPendingRoleChange(null)}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <DoubleConfirmation
+                onConfirm={() => {
+                  onRoleChange(pendingRoleChange.uuid, pendingRoleChange.role)
+                  setPendingRoleChange(null)
+                }}
+                title="Confirm Role Change"
+                message={`This will change the user's role to ${pendingRoleChange.role}. Are you sure?`}
+                confirmText={`Yes, Change to ${pendingRoleChange.role}`}
+              >
+                <button className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700">
+                  Confirm Change
+                </button>
+              </DoubleConfirmation>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

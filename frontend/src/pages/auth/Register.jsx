@@ -26,8 +26,83 @@ export default function Register() {
   const [otpLoading, setOtpLoading] = useState(false)
   const [otpMessage, setOtpMessage] = useState('')
 
+  const [barangay, setBarangay] = useState('')
+  const [street, setStreet] = useState('')
+  const [city, setCity] = useState('')
+  const [province, setProvince] = useState('')
+  const [zipcode, setZipcode] = useState('')
+
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
+  const [touched, setTouched] = useState({})
   const [loading, setLoading] = useState(false)
+
+  function validateField(name, value) {
+    switch (name) {
+      case 'firstName':
+        if (!value.trim()) return 'First name is required.'
+        if (value.trim().length > 50) return 'First name must be at most 50 characters.'
+        if (!/^[a-zA-Z\s'-]+$/.test(value.trim())) return 'First name contains invalid characters.'
+        return ''
+      case 'lastName':
+        if (!value.trim()) return 'Last name is required.'
+        if (value.trim().length > 50) return 'Last name must be at most 50 characters.'
+        if (!/^[a-zA-Z\s'-]+$/.test(value.trim())) return 'Last name contains invalid characters.'
+        return ''
+      case 'phone':
+        const digits = value.replace(/\D/g, '')
+        if (!digits) return 'Phone number is required.'
+        if (digits.length < 7 || digits.length > 15) return 'Phone must be 7–15 digits.'
+        return ''
+      case 'email':
+        if (!value.trim()) return 'Email is required.'
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return 'Invalid email format.'
+        return ''
+      case 'password':
+        if (!value) return 'Password is required.'
+        if (value.length < 8) return 'Password must be at least 8 characters.'
+        return ''
+      case 'confirmPassword':
+        if (!value) return 'Please confirm your password.'
+        if (value !== password) return 'Passwords do not match.'
+        return ''
+      case 'otp':
+        if (value && (!/^\d{6}$/.test(value))) return 'OTP must be 6 digits.'
+        return ''
+      default:
+        return ''
+    }
+  }
+
+  function sanitizeText(val) {
+    return val.replace(/<[^>]*>/g, '').trim()
+  }
+
+  function handleBlur(name) {
+    return () => {
+      setTouched((prev) => ({ ...prev, [name]: true }))
+      const value = name === 'phone' ? phone : name === 'firstName' ? firstName : name === 'lastName' ? lastName : name === 'email' ? email : name === 'password' ? password : name === 'confirmPassword' ? confirmPassword : name === 'otp' ? otp : name === 'barangay' ? barangay : name === 'street' ? street : name === 'city' ? city : name === 'province' ? province : name === 'zipcode' ? zipcode : ''
+      if (name !== 'password' && name !== 'confirmPassword') {
+        const sanitized = sanitizeText(value)
+        if (sanitized !== value) {
+          const setters = { firstName: setFirstName, lastName: setLastName, email: setEmail, phone: setPhone, otp: setOtp, barangay: setBarangay, street: setStreet, city: setCity, province: setProvince, zipcode: setZipcode }
+          if (setters[name]) setters[name](sanitized)
+        }
+      }
+      const err = validateField(name, name === 'phone' ? value.replace(/\D/g, '') : value)
+      setFieldErrors((prev) => ({ ...prev, [name]: err }))
+    }
+  }
+
+  function handleInputChange(setter, name) {
+    return (e) => {
+      setter(e.target.value)
+      if (touched[name]) {
+        const err = validateField(name, name === 'phone' ? e.target.value.replace(/\D/g, '') : e.target.value)
+        setFieldErrors((prev) => ({ ...prev, [name]: err }))
+      }
+    }
+  }
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -63,30 +138,63 @@ export default function Register() {
     e.preventDefault()
     setError('')
 
+    const fields = [
+      { name: 'firstName', value: firstName },
+      { name: 'lastName', value: lastName },
+      { name: 'phone', value: phone },
+      { name: 'email', value: email },
+      { name: 'password', value: password },
+      { name: 'confirmPassword', value: confirmPassword },
+    ]
+    if (otpSent) fields.push({ name: 'otp', value: otp })
+
+    const newErrors = {}
+    fields.forEach(({ name, value }) => {
+      const err = validateField(name, value)
+      if (err) newErrors[name] = err
+    })
+
+    const allTouched = {}
+    fields.forEach(({ name }) => { allTouched[name] = true })
+    setTouched(allTouched)
+    setFieldErrors(newErrors)
+
+    if (Object.keys(newErrors).length > 0) return
+
     if (!agreed) {
       setError('You must agree to the Terms of Service and Privacy Policy.')
-      return
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.')
       return
     }
 
     setLoading(true)
     try {
       const data = await auth.register({
-        firstName,
-        lastName,
-        phoneNumber: phone,
-        email,
+        firstName: sanitizeText(firstName),
+        lastName: sanitizeText(lastName),
+        phoneNumber: phone.replace(/\D/g, ''),
+        email: sanitizeText(email),
         password,
         confirmPassword,
-        otp,
+        otp: otp.trim(),
       })
       login(data.token, data.user)
       navigate('/rescuer/dashboard')
     } catch (err) {
-      setError(err.message)
+      if (err.errors && Array.isArray(err.errors)) {
+        const serverErrors = {}
+        err.errors.forEach((e) => {
+          const map = { firstName: 'firstName', lastName: 'lastName', phoneNumber: 'phone', email: 'email', password: 'password', confirmPassword: 'confirmPassword', otp: 'otp' }
+          const key = map[e.field]
+          if (key) serverErrors[key] = e.message
+        })
+        if (Object.keys(serverErrors).length > 0) {
+          setFieldErrors((prev) => ({ ...prev, ...serverErrors }))
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -116,22 +224,38 @@ export default function Register() {
                 <input
                   type="text"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                  onChange={handleInputChange(setFirstName, 'firstName')}
+                  onBlur={handleBlur('firstName')}
+                  className={`mt-1.5 w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                    touched.firstName && fieldErrors.firstName
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                      : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
+                  }`}
                   placeholder="Juan"
                   required
                 />
+                {touched.firstName && fieldErrors.firstName && (
+                  <p className="mt-1 text-xs text-red-500">{fieldErrors.firstName}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Last Name</label>
                 <input
                   type="text"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                  onChange={handleInputChange(setLastName, 'lastName')}
+                  onBlur={handleBlur('lastName')}
+                  className={`mt-1.5 w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                    touched.lastName && fieldErrors.lastName
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                      : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
+                  }`}
                   placeholder="Dela Cruz"
                   required
                 />
+                {touched.lastName && fieldErrors.lastName && (
+                  <p className="mt-1 text-xs text-red-500">{fieldErrors.lastName}</p>
+                )}
               </div>
             </div>
 
@@ -140,24 +264,42 @@ export default function Register() {
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                onChange={handleInputChange(setPhone, 'phone')}
+                onBlur={handleBlur('phone')}
+                className={`mt-1.5 w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                  touched.phone && fieldErrors.phone
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                    : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
+                }`}
                 placeholder="+63 9XX XXX XXXX"
                 required
               />
+              {touched.phone && fieldErrors.phone && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.phone}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Email</label>
               <div className="mt-1.5 flex gap-2">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
-                  placeholder="you@example.com"
-                  required
-                />
+                <div className="flex-1">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={handleInputChange(setEmail, 'email')}
+                    onBlur={handleBlur('email')}
+                    className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                      touched.email && fieldErrors.email
+                        ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                        : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
+                    }`}
+                    placeholder="you@example.com"
+                    required
+                  />
+                  {touched.email && fieldErrors.email && (
+                    <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>
+                  )}
+                </div>
                 {otpEnabled && (
                   <button
                     type="button"
@@ -177,12 +319,20 @@ export default function Register() {
                 <input
                   type="text"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                  onChange={handleInputChange(setOtp, 'otp')}
+                  onBlur={handleBlur('otp')}
+                  className={`mt-1.5 w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                    touched.otp && fieldErrors.otp
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                      : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
+                  }`}
                   placeholder="6-digit code"
                   required
                   maxLength={6}
                 />
+                {touched.otp && fieldErrors.otp && (
+                  <p className="mt-1 text-xs text-red-500">{fieldErrors.otp}</p>
+                )}
               </div>
             )}
 
@@ -193,8 +343,13 @@ export default function Register() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                    onChange={handleInputChange(setPassword, 'password')}
+                    onBlur={handleBlur('password')}
+                    className={`w-full rounded-lg border px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                      touched.password && fieldErrors.password
+                        ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                        : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
+                    }`}
                     placeholder="Min. 8 characters"
                     required
                   />
@@ -215,6 +370,47 @@ export default function Register() {
                     )}
                   </button>
                 </div>
+                {password.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    <div className="flex gap-2">
+                      {password.length >= 8 ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          At least 8 characters
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                          At least 8 characters
+                        </span>
+                      )}
+                      {/[a-zA-Z]/.test(password) && /\d/.test(password) ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          Letters & numbers
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                          Letters & numbers
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      {[1, 2].map((step) => {
+                        const filled = step === 1 ? password.length >= 8 : (/[a-zA-Z]/.test(password) && /\d/.test(password))
+                        return (
+                          <div
+                            key={step}
+                            className={`h-1 flex-1 rounded-full transition-colors ${
+                              filled ? 'bg-green-500' : 'bg-gray-200'
+                            }`}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
@@ -222,8 +418,13 @@ export default function Register() {
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                    onChange={handleInputChange(setConfirmPassword, 'confirmPassword')}
+                    onBlur={handleBlur('confirmPassword')}
+                    className={`w-full rounded-lg border px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                      touched.confirmPassword && fieldErrors.confirmPassword
+                        ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                        : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
+                    }`}
                     placeholder="Repeat password"
                     required
                   />
@@ -244,6 +445,9 @@ export default function Register() {
                     )}
                   </button>
                 </div>
+                {touched.confirmPassword && fieldErrors.confirmPassword && (
+                  <p className="mt-1 text-xs text-red-500">{fieldErrors.confirmPassword}</p>
+                )}
               </div>
             </div>
 
@@ -254,6 +458,9 @@ export default function Register() {
                   <label className="block text-xs font-medium text-gray-500">Barangay</label>
                   <input
                     list="barangay-list"
+                    value={barangay}
+                    onChange={(e) => setBarangay(e.target.value)}
+                    onBlur={() => setBarangay((v) => sanitizeText(v))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Type to search..."
                   />
@@ -261,6 +468,9 @@ export default function Register() {
                 <div>
                   <label className="block text-xs font-medium text-gray-500">Street</label>
                   <input
+                    value={street}
+                    onChange={(e) => setStreet(e.target.value)}
+                    onBlur={() => setStreet((v) => sanitizeText(v))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Street"
                   />
@@ -271,6 +481,9 @@ export default function Register() {
                   <label className="block text-xs font-medium text-gray-500">City</label>
                   <input
                     list="city-list"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    onBlur={() => setCity((v) => sanitizeText(v))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Type to search..."
                   />
@@ -279,6 +492,9 @@ export default function Register() {
                   <label className="block text-xs font-medium text-gray-500">Province</label>
                   <input
                     list="province-list"
+                    value={province}
+                    onChange={(e) => setProvince(e.target.value)}
+                    onBlur={() => setProvince((v) => sanitizeText(v))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Type to search..."
                   />
@@ -286,6 +502,9 @@ export default function Register() {
                 <div className="col-span-1">
                   <label className="block text-xs font-medium text-gray-500">Zipcode</label>
                   <input
+                    value={zipcode}
+                    onChange={(e) => setZipcode(e.target.value)}
+                    onBlur={() => setZipcode((v) => v.replace(/\D/g, ''))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Zipcode"
                   />

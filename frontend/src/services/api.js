@@ -81,6 +81,98 @@ export const admin = {
       method: 'PUT',
       body: JSON.stringify({ key, value }),
     }),
+
+  getLandingConfig: () => request('/admin/landing-config'),
+  updateLandingConfig: (config) =>
+    request('/admin/landing-config', {
+      method: 'PUT',
+      body: JSON.stringify(config),
+    }),
+  getReports: () => request('/admin/reports'),
+  assignReport: (reportId, userId) =>
+    request(`/admin/reports/${reportId}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    }),
+  getRescuerLocations: () => request('/admin/rescuer-locations'),
+  getAdminPermissions: () => request('/admin/permissions'),
+  getHealth: () => request('/admin/health'),
+  bulkArchiveReports: (ids) =>
+    request('/admin/reports/bulk/archive', {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    }),
+  getNotifications: () => request('/admin/notifications'),
+  getUnreadCount: () => request('/admin/notifications/unread-count'),
+  markAsRead: (id) =>
+    request(`/admin/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllAsRead: () =>
+    request('/admin/notifications/read-all', { method: 'POST' }),
+  getArchivedReports: () => request('/admin/reports/archived'),
+  archiveReport: (reportId) =>
+    request(`/admin/reports/${reportId}/archive`, {
+      method: 'PUT',
+    }),
+  unarchiveReport: (reportId) =>
+    request(`/admin/reports/${reportId}/unarchive`, {
+      method: 'POST',
+    }),
+  deleteReport: (reportId) =>
+    request(`/admin/reports/${reportId}`, {
+      method: 'DELETE',
+    }),
+  updateAdminPermissions: (permissions) =>
+    request('/admin/permissions', {
+      method: 'PUT',
+      body: JSON.stringify(permissions),
+    }),
+}
+
+export const rescuer = {
+  getReports: (params = {}) => {
+    const qs = new URLSearchParams()
+    if (params.status) qs.set('status', params.status)
+    if (params.assignedTo) qs.set('assignedTo', params.assignedTo)
+    if (params.search) qs.set('search', params.search)
+    if (params.sortBy) qs.set('sortBy', params.sortBy)
+    const query = qs.toString()
+    return request(`/rescuer/reports${query ? `?${query}` : ''}`)
+  },
+  updateReportStatus: (id, status) =>
+    request(`/rescuer/reports/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+  getStats: () => request('/rescuer/stats'),
+  updateProfile: (body) =>
+    request('/rescuer/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
+  getActivity: (cursor) => request(`/rescuer/activity?limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`),
+  updateAvailability: (availability) =>
+    request('/rescuer/availability', {
+      method: 'PATCH',
+      body: JSON.stringify({ availability }),
+    }),
+  getNotes: (reportId) => request(`/rescuer/reports/${reportId}/notes`),
+  addNote: (reportId, content) =>
+    request(`/rescuer/reports/${reportId}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    }),
+  updateLocation: (latitude, longitude) =>
+    request('/rescuer/location', {
+      method: 'POST',
+      body: JSON.stringify({ latitude, longitude }),
+    }),
+  rejectAssignment: (reportId) =>
+    request(`/rescuer/reports/${reportId}/reject`, { method: 'POST' }),
+  triggerSos: (lat, lng) =>
+    request('/rescuer/sos', {
+      method: 'POST',
+      body: JSON.stringify({ lat, lng }),
+    }),
 }
 
 export const logs = {

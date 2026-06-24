@@ -1,6 +1,6 @@
 -- Schema created: 2026-06-12
 -- Source: backend/convex/schema.ts
--- Last updated: 2026-06-20
+-- Last updated: 2026-06-24 (3 features added)
 
 -- ============================================================
 -- otps — One-time passwords for email-based authentication
@@ -63,6 +63,7 @@ CREATE TABLE config (
 -- ============================================================
 -- reports — Animal rescue incident reports
 -- Added: 2026-06-20
+-- Columns archived/archivedAt/archivedBy added: 2026-06-24
 -- ============================================================
 CREATE TABLE reports (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -80,6 +81,25 @@ CREATE TABLE reports (
     latitude DOUBLE,
     longitude DOUBLE,
     createdAt BIGINT NOT NULL,
+    archived BOOLEAN DEFAULT FALSE,
+    archivedAt BIGINT,
+    archivedBy VARCHAR(36),
     INDEX by_createdAt (createdAt),
-    INDEX by_status (status)
+    INDEX by_status (status),
+    INDEX by_assignedTo (assignedTo)
+);
+
+-- ============================================================
+-- adminNotifications — Real-time alerts for admin dashboard
+-- Added: 2026-06-24
+-- ============================================================
+CREATE TABLE adminNotifications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    link VARCHAR(500),
+    read BOOLEAN NOT NULL DEFAULT FALSE,
+    createdAt BIGINT NOT NULL,
+    INDEX by_read (read),
+    INDEX by_createdAt (createdAt)
 );

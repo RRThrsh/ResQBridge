@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
+const { notifyAdmin } = require("../services/adminNotification");
 
 const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -63,34 +64,13 @@ const submitReport = async (req, res) => {
     longitude: lng,
   });
 
+  await notifyAdmin({
+    type: "new_report",
+    message: `New ${urgency} ${animalType} report from ${name || "Anonymous"} at ${location}`,
+    link: "/admin/dashboard/reports",
+  });
+
   res.status(201).json({ message: "Report submitted successfully.", images });
 };
 
-const getReports = async (req, res) => {
-  const { status } = req.query;
-  const reports = await convexClient.query(anyApi.reports.getReports, {
-    status: status || undefined,
-    limit: 100,
-  });
-
-  const mapped = reports.map((r) => ({
-    _id: r._id,
-    name: r.name,
-    phone: r.phone,
-    category: r.category,
-    animalType: r.animalType,
-    urgency: r.urgency,
-    location: r.location,
-    description: r.description,
-    images: JSON.parse(r.images || "[]"),
-    status: r.status,
-    assignedTo: r.assignedTo || null,
-    latitude: r.latitude ?? null,
-    longitude: r.longitude ?? null,
-    createdAt: r.createdAt,
-  }));
-
-  res.json({ reports: mapped });
-};
-
-module.exports = { submitReport, getReports };
+module.exports = { submitReport };

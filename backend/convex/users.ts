@@ -55,6 +55,39 @@ export const getAllUsers = query({
   },
 });
 
+export const updateUser = mutation({
+  args: {
+    uuid: v.string(),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.uuid))
+      .unique();
+    if (!user) throw new Error("User not found");
+    const patch: Record<string, string> = {};
+    if (args.firstName !== undefined) patch.firstName = args.firstName;
+    if (args.lastName !== undefined) patch.lastName = args.lastName;
+    if (args.phoneNumber !== undefined) patch.phoneNumber = args.phoneNumber;
+    return await ctx.db.patch(user._id, patch);
+  },
+});
+
+export const updatePassword = mutation({
+  args: { uuid: v.string(), password: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.uuid))
+      .unique();
+    if (!user) throw new Error("User not found");
+    return await ctx.db.patch(user._id, { password: args.password });
+  },
+});
+
 export const updateUserRole = mutation({
   args: {
     uuid: v.string(),
@@ -71,5 +104,23 @@ export const updateUserRole = mutation({
       .unique();
     if (!user) throw new Error("User not found");
     return await ctx.db.patch(user._id, { role: args.role });
+  },
+});
+
+export const updateAvailability = mutation({
+  args: {
+    uuid: v.string(),
+    availability: v.union(
+      v.literal("available"),
+      v.literal("busy"),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.uuid))
+      .unique();
+    if (!user) throw new Error("User not found");
+    return await ctx.db.patch(user._id, { availability: args.availability });
   },
 });
