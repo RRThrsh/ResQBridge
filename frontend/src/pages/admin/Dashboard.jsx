@@ -214,7 +214,7 @@ const configSubLinks = [
   { key: 'newsEvents', label: 'News & Events' },
 ]
 
-const SUPER_ONLY_KEYS = new Set(['audit', 'landingPage', 'systemConfig', 'permissions'])
+const SUPER_ONLY_KEYS = new Set(['permissions'])
 
 function Sidebar({ collapsed, onToggle, activeTab, onTabChange, user, logout, navigate, editSection, adminPermissions }) {
   const [expanded, setExpanded] = useState('')

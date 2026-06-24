@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react'
 import { admin as adminApi } from '../../services/api'
 
 const FEATURES = [
+  { key: 'dashboard', label: 'Dashboard', desc: 'View analytics overview' },
   { key: 'users', label: 'Users', desc: 'Manage user accounts and roles' },
-  { key: 'reports', label: 'Reports', desc: 'View and manage rescue reports' },
+  { key: 'reports', label: 'Reports', desc: 'View and assign rescue reports' },
   { key: 'rescuerMap', label: 'Rescuer Map', desc: 'View rescuer live locations' },
   { key: 'monitoring', label: 'Monitoring', desc: 'Access system monitoring' },
+  { key: 'audit', label: 'Audit Logs', desc: 'View system activity logs' },
+  { key: 'landingPage', label: 'Landing Page', desc: 'Edit landing page content' },
+  { key: 'systemConfig', label: 'System Config', desc: 'Modify system configuration' },
 ]
 
 const ACTIONS = [
@@ -28,12 +32,10 @@ export default function Permissions() {
   }, [])
 
   async function handleToggle(feature, action) {
+    const current = permissions[feature] || {}
     const next = {
       ...permissions,
-      [feature]: {
-        ...permissions[feature],
-        [action]: !(permissions[feature]?.[action] || false),
-      },
+      [feature]: { ...current, [action]: !(current[action] || false) },
     }
     setPermissions(next)
     setSaving(true)
@@ -62,9 +64,9 @@ export default function Permissions() {
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900">Admin Permissions</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Set granular Read / Write / Execute permissions for each feature.
-          These apply to all users with the <strong>admin</strong> role.
-          Superadmin always has full access.
+          Set Read / Write / Execute permissions for each feature. These apply
+          to all users with the <strong>admin</strong> role. Superadmin always
+          has full access to everything.
         </p>
       </div>
 
@@ -82,7 +84,7 @@ export default function Permissions() {
         <table className="min-w-full divide-y divide-gray-100">
           <thead>
             <tr className="bg-gray-50">
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 w-56">
                 Feature
               </th>
               {ACTIONS.map((action) => (
@@ -138,8 +140,8 @@ export default function Permissions() {
       )}
 
       <p className="mt-4 text-xs text-gray-400">
-        Changes take effect immediately. Admin users may need to refresh to see
-        updated permissions.
+        Dashboard is always readable for admin users. Changes take effect
+        immediately.
       </p>
     </div>
   )

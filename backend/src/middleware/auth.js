@@ -1,4 +1,6 @@
 const jwt = require("jsonwebtoken");
+const convexClient = require("../config/convex");
+const { anyApi } = require("convex/server");
 
 function authenticate(req, res, next) {
   const token = req.cookies?.token || (req.headers.authorization || "").split(" ")[1];
@@ -24,6 +26,27 @@ function authorize(...roles) {
   };
 }
 
+function authorizeWithPermission(feature, action = "read") {
+  return async (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Access denied." });
+    }
+    if (req.user.role === "superadmin") return next();
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden. Insufficient permissions." });
+    }
+    try {
+      const raw = await convexClient.query(anyApi.config.getConfigValue, { key: "adminPermissions" });
+      let permissions = {};
+      try { permissions = raw ? JSON.parse(raw) : {}; } catch { permissions = {}; }
+      if (permissions[feature]?.[action] === true) return next();
+      return res.status(403).json({ message: "Forbidden. No permission." });
+    } catch {
+      return res.status(403).json({ message: "Forbidden." });
+    }
+  };
+}
+
 function checkOwnership(getResourceOwnerId) {
   return (req, res, next) => {
     const ownerId = getResourceOwnerId(req);
@@ -34,4 +57,4 @@ function checkOwnership(getResourceOwnerId) {
   };
 }
 
-module.exports = { authenticate, authorize, checkOwnership };
+module.exports = { authenticate, authorize, authorizeWithPermission, checkOwnership };

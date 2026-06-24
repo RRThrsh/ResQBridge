@@ -7,6 +7,10 @@ const DEFAULT_ADMIN_PERMISSIONS = {
   reports: { read: false, write: false, execute: false },
   rescuerMap: { read: false, write: false, execute: false },
   monitoring: { read: false, write: false, execute: false },
+  audit: { read: false, write: false, execute: false },
+  landingPage: { read: false, write: false, execute: false },
+  systemConfig: { read: false, write: false, execute: false },
+  dashboard: { read: true, write: false, execute: false },
 };
 
 const ACTIONS = ["read", "write", "execute"];
