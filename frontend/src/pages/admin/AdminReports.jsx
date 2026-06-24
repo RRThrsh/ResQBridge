@@ -36,6 +36,7 @@ const CATEGORY_LABELS = {
 export default function AdminReports() {
   const [reports, setReports] = useState([])
   const [users, setUsers] = useState([])
+  const [locations, setLocations] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [search, setSearch] = useState('')
@@ -46,14 +47,31 @@ export default function AdminReports() {
   const pageSize = 10
 
   useEffect(() => {
-    Promise.all([
+    Promise.allSettled([
       adminApi.getReports(),
       adminApi.getUsers(),
-    ]).then(([reportData, userData]) => {
-      setReports(reportData.reports || [])
-      setUsers((userData.users || []).filter((u) => u.role === 'rescuer'))
-    }).catch(() => {}).finally(() => setLoading(false))
+      adminApi.getRescuerLocations(),
+    ]).then(([reportRes, userRes, locRes]) => {
+      if (reportRes.status === 'fulfilled') setReports(reportRes.value.reports || [])
+      if (userRes.status === 'fulfilled') setUsers((userRes.value.users || []).filter((u) => u.role === 'rescuer'))
+      if (locRes.status === 'fulfilled') setLocations(locRes.value.locations || [])
+    }).finally(() => setLoading(false))
   }, [])
+
+  function getRescuerStatus(uuid) {
+    const activeReport = reports.find(
+      (r) => r.assignedTo === uuid && r.status !== 'resolved' && r.status !== 'failed'
+    )
+    if (activeReport) {
+      if (activeReport.status === 'en_route') return { label: 'En Route', color: 'text-blue-700' }
+      if (activeReport.status === 'in_progress') return { label: 'Busy', color: 'text-red-700' }
+      return { label: 'Busy', color: 'text-red-700' }
+    }
+    const loc = locations.find((l) => l.userId === uuid)
+    const isActive = loc && Date.now() - new Date(loc.updatedAt).getTime() < 120000
+    if (isActive) return { label: 'Active', color: 'text-green-700' }
+    return { label: 'Offline', color: 'text-gray-400' }
+  }
 
   async function handleAssign(reportId, userId) {
     if (!userId) return
@@ -198,8 +216,11 @@ export default function AdminReports() {
                         {urgency.label}
                       </span>
                       {r.assignedUser && (
-                        <span className="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-sm font-bold border border-indigo-300">
+                        <span className="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-sm font-bold border border-indigo-300 inline-flex items-center gap-1.5">
                           {r.assignedUser.firstName} {r.assignedUser.lastName}
+                          <span className={`text-[10px] ${getRescuerStatus(r.assignedTo).color}`}>
+                            · {getRescuerStatus(r.assignedTo).label}
+                          </span>
                         </span>
                       )}
                     </div>
@@ -280,11 +301,14 @@ export default function AdminReports() {
                           className="rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-base font-bold text-gray-700 focus:border-green-600 focus:outline-none disabled:opacity-50"
                         >
                           <option value="" disabled>Assign rescuer...</option>
-                          {users.map((u) => (
-                            <option key={u.uuid} value={u.uuid}>
-                              {u.firstName} {u.lastName}
-                            </option>
-                          ))}
+                          {users.map((u) => {
+                            const s = getRescuerStatus(u.uuid)
+                            return (
+                              <option key={u.uuid} value={u.uuid}>
+                                {u.firstName} {u.lastName} — {s.label}
+                              </option>
+                            )
+                          })}
                         </select>
                       )}
                     </div>

@@ -82,6 +82,12 @@ export const admin = {
       body: JSON.stringify({ key, value }),
     }),
 
+  getLandingConfig: () => request('/admin/landing-config'),
+  updateLandingConfig: (config) =>
+    request('/admin/landing-config', {
+      method: 'PUT',
+      body: JSON.stringify(config),
+    }),
   getReports: () => request('/admin/reports'),
   assignReport: (reportId, userId) =>
     request(`/admin/reports/${reportId}/assign`, {

@@ -52,6 +52,7 @@ function App() {
             <Route path="/error" element={<ServerError />} />
             <Route path="/rate-limited" element={<RateLimited />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/dashboard/:tab" element={<AdminDashboard />} />
             <Route path="/rescuer" element={<RescuerLayout />}>
               <Route index element={<RescuerDashboard />} />
               <Route path="dashboard" element={<RescuerDashboard />} />

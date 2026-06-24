@@ -87,7 +87,7 @@ export default function RescuerMap() {
               title={loc.userName}
               onClick={() => setSelected(loc)}
               icon={{
-                path: window.google?.maps?.SymbolPath?.CIRCLE || undefined,
+                path: google.maps.SymbolPath.CIRCLE,
                 scale: 10,
                 fillColor: '#16a34a',
                 fillOpacity: 0.9,
