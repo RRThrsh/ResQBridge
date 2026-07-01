@@ -270,7 +270,7 @@ const configSubLinks = [
   { key: 'contact', label: 'Contact' },
   { key: 'faq', label: 'FAQ' },
   { key: 'carousel', label: 'Carousel' },
-  { key: 'communityBoard', label: 'Community Board' },
+
   { key: 'howItWorks', label: 'How It Works' },
   { key: 'successStories', label: 'Success Stories' },
   { key: 'gallery', label: 'Gallery' },

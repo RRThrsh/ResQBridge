@@ -5,7 +5,7 @@ import { SessionProvider } from '../../context/SessionContext'
 import SectionTracker from './SectionTracker'
 import HeroSection from './HeroSection'
 import Carousel from './Carousel'
-import CommunityBoard from './CommunityBoard'
+
 import Location from './Location'
 import NewsEvents from './NewsEvents'
 import StatsSection from './StatsSection'
@@ -23,7 +23,7 @@ const API_BASE = '/api/v1'
 
 const EMPTY_CONFIG = {
   hero: {}, stats: [], contact: {}, faq: [], carousel: [],
-  communityBoard: {}, howItWorks: { steps: [] },
+  howItWorks: { steps: [] },
   successStories: { stories: [] }, gallery: { images: [] },
   donate: { reasons: [], donateLinks: {} },
   volunteer: { roles: [], requirements: [], cta: {} },
@@ -82,9 +82,7 @@ export default function Landing() {
           <SectionTracker name="carousel">
             <Carousel slides={cfg.carousel} />
           </SectionTracker>
-          <SectionTracker name="community-board">
-            <CommunityBoard title={cfg.communityBoard.title} subtitle={cfg.communityBoard.subtitle} />
-          </SectionTracker>
+
           <SectionTracker name="how-it-works">
             <HowItWorks title={cfg.howItWorks.title} subtitle={cfg.howItWorks.subtitle} steps={cfg.howItWorks.steps} />
           </SectionTracker>
