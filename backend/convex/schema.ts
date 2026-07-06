@@ -77,6 +77,16 @@ export default defineSchema({
     .index("by_assignedTo", ["assignedTo"])
     .index("by_status", ["status"]),
 
+  adminNotifications: defineTable({
+    type: v.string(),
+    message: v.string(),
+    link: v.optional(v.string()),
+    read: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_read", ["read"])
+    .index("by_createdAt", ["createdAt"]),
+
   rescuerLocations: defineTable({
     userId: v.string(),
     userName: v.string(),
