@@ -6,7 +6,6 @@ import Navbar from './components/layout/Navbar.jsx'
 import Footer from './components/layout/Footer.jsx'
 import Landing from './pages/landing'
 import About from './pages/About.jsx'
-import WildlifeGuide from './pages/WildlifeGuide.jsx'
 import Login from './pages/auth/Login.jsx'
 import Register from './pages/auth/Register.jsx'
 import ForgotPassword from './pages/auth/ForgotPassword.jsx'
@@ -22,6 +21,8 @@ import RescuerAssignments from './pages/rescuer/Assignments.jsx'
 import RescuerActivity from './pages/rescuer/Activity.jsx'
 import RescuerReports from './pages/rescuer/Reports.jsx'
 import RescuerNotifications from './pages/rescuer/Notifications.jsx'
+import RescuerShifts from './pages/rescuer/Shifts.jsx'
+import RescuerTeamMap from './pages/rescuer/TeamMap.jsx'
 import Report from './pages/landing/Report.jsx'
 
 function PublicShell({ children }) {
@@ -43,7 +44,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/about" element={<PublicShell><About /></PublicShell>} />
-            <Route path="/wildlife-guide" element={<PublicShell><WildlifeGuide /></PublicShell>} />
             <Route path="/report" element={<PublicShell><Report /></PublicShell>} />
             <Route path="/v1/login" element={<Login />} />
             <Route path="/v1/register" element={<Register />} />
@@ -61,6 +61,8 @@ function App() {
               <Route path="notifications" element={<RescuerNotifications />} />
               <Route path="activity" element={<RescuerActivity />} />
               <Route path="profile" element={<RescuerProfile />} />
+              <Route path="shifts" element={<RescuerShifts />} />
+              <Route path="team-map" element={<RescuerTeamMap />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

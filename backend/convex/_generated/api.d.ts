@@ -11,12 +11,16 @@
 import type * as activity from "../activity.js";
 import type * as adminNotifications from "../adminNotifications.js";
 import type * as config from "../config.js";
+import type * as equipmentChecklists from "../equipmentChecklists.js";
 import type * as locations from "../locations.js";
 import type * as logs from "../logs.js";
+import type * as messages from "../messages.js";
 import type * as notes from "../notes.js";
 import type * as otp from "../otp.js";
 import type * as reports from "../reports.js";
+import type * as shifts from "../shifts.js";
 import type * as users from "../users.js";
+import type * as voiceNotes from "../voiceNotes.js";
 
 import type {
   ApiFromModules,
@@ -28,12 +32,16 @@ declare const fullApi: ApiFromModules<{
   activity: typeof activity;
   adminNotifications: typeof adminNotifications;
   config: typeof config;
+  equipmentChecklists: typeof equipmentChecklists;
   locations: typeof locations;
   logs: typeof logs;
+  messages: typeof messages;
   notes: typeof notes;
   otp: typeof otp;
   reports: typeof reports;
+  shifts: typeof shifts;
   users: typeof users;
+  voiceNotes: typeof voiceNotes;
 }>;
 
 /**

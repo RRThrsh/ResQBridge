@@ -20,7 +20,6 @@ export default function Footer() {
               {[
                 { label: 'Home', to: '/' },
                 { label: 'About', to: '/about' },
-                { label: 'Wildlife Guide', to: '/wildlife-guide' },
               ].map((link) => (
                 <li key={link.label}>
                   <Link to={link.to} className="text-sm text-gray-500 transition-colors hover:text-green-600">
