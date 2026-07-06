@@ -121,11 +121,15 @@ export const getReports = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 200;
     if (args.assignedTo) {
-      return await ctx.db
+      const reports = await ctx.db
         .query("reports")
         .withIndex("by_assignedTo", (q) => q.eq("assignedTo", args.assignedTo!))
         .order("desc")
         .take(limit);
+      if (args.status) {
+        return reports.filter((r) => r.status === args.status);
+      }
+      return reports;
     }
     if (args.status) {
       return await ctx.db
