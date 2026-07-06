@@ -12,8 +12,7 @@ import StatsSection from './StatsSection'
 import FAQSection from './FAQSection'
 import ContactSection from './ContactSection'
 import SuccessStories from './SuccessStories'
-import DonateSection from './DonateSection'
-import VolunteerSection from './VolunteerSection'
+
 import HowItWorks from './HowItWorks'
 import Gallery from './Gallery'
 import PartnerLogos from './PartnerLogos'
@@ -25,8 +24,7 @@ const EMPTY_CONFIG = {
   hero: {}, stats: [], contact: {}, faq: [], carousel: [],
   howItWorks: { steps: [] },
   successStories: { stories: [] }, gallery: { images: [] },
-  donate: { reasons: [], donateLinks: {} },
-  volunteer: { roles: [], requirements: [], cta: {} },
+
   partners: { partners: [] }, location: { center: { lat: 9.799447, lng: 118.693766 } },
   newsEvents: { news: [], events: [] },
 }
@@ -95,12 +93,7 @@ export default function Landing() {
           <SectionTracker name="stats">
             <StatsSection stats={cfg.stats} />
           </SectionTracker>
-          <SectionTracker name="donate">
-            <DonateSection title={cfg.donate.title} subtitle={cfg.donate.subtitle} reasons={cfg.donate.reasons} donateLinks={cfg.donate.donateLinks} />
-          </SectionTracker>
-          <SectionTracker name="volunteer">
-            <VolunteerSection title={cfg.volunteer.title} subtitle={cfg.volunteer.subtitle} roles={cfg.volunteer.roles} requirements={cfg.volunteer.requirements} cta={cfg.volunteer.cta} />
-          </SectionTracker>
+
           <SectionTracker name="partners">
             <PartnerLogos title={cfg.partners.title} subtitle={cfg.partners.subtitle} partners={cfg.partners.partners} />
           </SectionTracker>
