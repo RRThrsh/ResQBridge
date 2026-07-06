@@ -23,6 +23,7 @@ import RescuerReports from './pages/rescuer/Reports.jsx'
 import RescuerNotifications from './pages/rescuer/Notifications.jsx'
 import RescuerShifts from './pages/rescuer/Shifts.jsx'
 import RescuerTeamMap from './pages/rescuer/TeamMap.jsx'
+import WildlifeGuide from './pages/WildlifeGuide.jsx'
 import Report from './pages/landing/Report.jsx'
 
 function PublicShell({ children }) {
@@ -44,6 +45,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/about" element={<PublicShell><About /></PublicShell>} />
+            <Route path="/wildlife-guide" element={<PublicShell><WildlifeGuide /></PublicShell>} />
             <Route path="/report" element={<PublicShell><Report /></PublicShell>} />
             <Route path="/v1/login" element={<Login />} />
             <Route path="/v1/register" element={<Register />} />

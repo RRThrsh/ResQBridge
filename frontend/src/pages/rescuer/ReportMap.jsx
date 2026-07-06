@@ -7,13 +7,14 @@ const containerStyle = {
   borderRadius: '0.75rem',
 }
 
-export default function ReportMap({ latitude, longitude, label, userPos }) {
+export default function ReportMap({ latitude, longitude, label, userPos, autoRoute }) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   const [routePath, setRoutePath] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
   const [loadingRoute, setLoadingRoute] = useState(false)
   const [map, setMap] = useState(null)
   const followRef = useRef(true)
+  const autoFetched = useRef(false)
 
   const { isLoaded } = useLoadScript({ googleMapsApiKey: apiKey })
 
@@ -29,6 +30,14 @@ export default function ReportMap({ latitude, longitude, label, userPos }) {
     if (!map || !userPos || !followRef.current) return
     map.panTo(userPos)
   }, [map, userPos])
+
+  useEffect(() => {
+    if (autoRoute && userPos && !autoFetched.current) {
+      autoFetched.current = true
+      followRef.current = false
+      fetchRoute(userPos.lat, userPos.lng)
+    }
+  }, [autoRoute, userPos])
 
   async function fetchRoute(originLat, originLng) {
     setLoadingRoute(true)
@@ -54,7 +63,10 @@ export default function ReportMap({ latitude, longitude, label, userPos }) {
   }
 
   function handleDirections() {
-    if (!userPos) return
+    if (!userPos) {
+      window.location.href = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
+      return
+    }
     fetchRoute(userPos.lat, userPos.lng)
   }
 
@@ -64,8 +76,11 @@ export default function ReportMap({ latitude, longitude, label, userPos }) {
   }
 
   function openInGoogleMaps() {
-    if (!userPos) return
-    fetchRoute(userPos.lat, userPos.lng)
+    if (userPos) {
+      window.location.href = `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${latitude},${longitude}`
+    } else {
+      window.location.href = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
+    }
   }
 
   if (!isLoaded) {
