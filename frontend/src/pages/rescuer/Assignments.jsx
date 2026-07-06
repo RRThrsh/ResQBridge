@@ -53,7 +53,87 @@ export default function RescuerAssignments() {
   const [page, setPage] = useState(1)
   const pageSize = 10
 
+  const [checklists, setChecklists] = useState({})
+  const [voiceNotes, setVoiceNotes] = useState({})
+  const [recordingId, setRecordingId] = useState(null)
+  const [audioBlobs, setAudioBlobs] = useState({})
+  const mediaRecorderRef = useRef(null)
+
+  const EQUIPMENT_ITEMS = [
+    'First Aid Kit', 'Stretcher / Carrier', 'Capture Net', 'Gloves',
+    'Flashlight', 'Water / Food', 'Leash / Rope', 'Phone Charger',
+    'GPS Device', 'Fire Extinguisher',
+  ]
+
+  async function loadChecklist(reportId) {
+    if (checklists[reportId]) return
+    try {
+      const data = await rescuerApi.getChecklist(reportId)
+      if (data.checklist) setChecklists((prev) => ({ ...prev, [reportId]: data.checklist.items }))
+    } catch {}
+  }
+
+  function toggleCheckItem(reportId, index) {
+    setChecklists((prev) => {
+      const items = [...(prev[reportId] || EQUIPMENT_ITEMS.map((label) => ({ label, checked: false })))]
+      items[index] = { ...items[index], checked: !items[index].checked }
+      rescuerApi.saveChecklist(reportId, items).catch(() => {})
+      return { ...prev, [reportId]: items }
+    })
+  }
+
+  async function loadVoiceNotes(reportId) {
+    if (voiceNotes[reportId] !== undefined) return
+    try {
+      const data = await rescuerApi.getVoiceNotes(reportId)
+      setVoiceNotes((prev) => ({ ...prev, [reportId]: data.notes || [] }))
+    } catch {}
+  }
+
+  async function startRecording(reportId) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      const chunks = []
+      mr.ondataavailable = (e) => chunks.push(e.data)
+      mr.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' })
+        const url = URL.createObjectURL(blob)
+        setAudioBlobs((prev) => ({ ...prev, [reportId]: url }))
+        setRecordingId(null)
+        stream.getTracks().forEach((t) => t.stop())
+      }
+      mediaRecorderRef.current = mr
+      mr.start()
+      setRecordingId(reportId)
+    } catch { alert('Microphone access denied.') }
+  }
+
+  function stopRecording() {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+  }
+
+  async function submitVoiceNote(reportId) {
+    const blob = audioBlobs[reportId]
+    if (!blob) return
+    try {
+      const formData = new FormData()
+      formData.append('image', blob, `voice-${reportId}.webm`)
+      const res = await fetch('/api/v1/rescuer/upload', { method: 'POST', credentials: 'include', body: formData })
+      const data = await res.json()
+      if (data.url) {
+        await rescuerApi.addVoiceNote(reportId, data.url)
+        const notes = await rescuerApi.getVoiceNotes(reportId)
+        setVoiceNotes((prev) => ({ ...prev, [reportId]: notes.notes || [] }))
+        setAudioBlobs((prev) => { const copy = { ...prev }; delete copy[reportId]; return copy })
+      }
+    } catch { alert('Failed to upload voice note.') }
+  }
+
   function fetchReports() {
+    console.log('fetchReports called', { user: !!user, uuid: user?.uuid, filter })
     if (!user) return
     setLoading(true)
     const statusParam = filter === 'unaccepted' ? undefined : (filter || undefined)
@@ -284,8 +364,13 @@ export default function RescuerAssignments() {
                     <button
                       onClick={() => {
                         const next = new Set(collapsedIds)
-                        if (next.has(r._id)) next.delete(r._id)
-                        else next.add(r._id)
+                        if (next.has(r._id)) {
+                          next.delete(r._id)
+                        } else {
+                          next.add(r._id)
+                          loadChecklist(r._id)
+                          loadVoiceNotes(r._id)
+                        }
                         setCollapsedIds(next)
                       }}
                       className="inline-flex items-center justify-center rounded-xl bg-gray-100 w-10 h-10 text-gray-600 hover:bg-gray-200 border-2 border-gray-200 transition-colors shrink-0"
@@ -306,6 +391,32 @@ export default function RescuerAssignments() {
                             label={r.name}
                             userPos={userPos}
                           />
+                        </div>
+                      )}
+
+                      {!showInitial && (
+                        <div className="px-5 pb-4 pt-4 border-t-2 border-gray-100">
+                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Equipment Checklist</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {(checklists[r._id] || EQUIPMENT_ITEMS.map((l) => ({ label: l, checked: false }))).map((item, i) => (
+                              <button
+                                key={i}
+                                onClick={() => toggleCheckItem(r._id, i)}
+                                className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all ${
+                                  item.checked
+                                    ? 'bg-green-50 border-green-300 text-green-800'
+                                    : 'bg-white border-gray-200 text-gray-600 hover:border-amber-400'
+                                }`}
+                              >
+                                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-xs ${
+                                  item.checked ? 'bg-green-600 border-green-600 text-white' : 'border-gray-300'
+                                }`}>
+                                  {item.checked ? '✓' : ''}
+                                </span>
+                                {item.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
 
@@ -430,6 +541,59 @@ export default function RescuerAssignments() {
                               </DoubleConfirmation>
                             </div>
                           )}
+                        </div>
+                      )}
+                      {!showInitial && (
+                        <div className="px-5 pb-5 pt-4 border-t-2 border-gray-100">
+                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Voice Notes</p>
+                          <div className="space-y-3">
+                            {(voiceNotes[r._id] || []).length > 0 ? (
+                              voiceNotes[r._id].map((vn) => (
+                                <div key={vn._id} className="flex items-center gap-3 rounded-xl bg-gray-50 border-2 border-gray-200 px-4 py-3">
+                                  <svg className="h-5 w-5 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                                  </svg>
+                                  <span className="text-sm font-medium text-gray-700">{vn.userName}</span>
+                                  <span className="text-xs text-gray-400">{vn.duration ? `${Math.round(vn.duration)}s` : ''}</span>
+                                  <audio controls src={vn.audioUrl} className="h-8 flex-1" />
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-sm text-gray-500 italic">No voice notes</p>
+                            )}
+                            <div className="flex gap-2">
+                              {recordingId === r._id ? (
+                                <button
+                                  onClick={stopRecording}
+                                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700"
+                                >
+                                  <span className="h-3 w-3 rounded-full bg-white animate-pulse" />
+                                  Stop Recording
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => startRecording(r._id)}
+                                  className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-amber-700"
+                                >
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                                  </svg>
+                                  Record
+                                </button>
+                              )}
+                              {audioBlobs[r._id] && (
+                                <>
+                                  <audio controls src={audioBlobs[r._id]} className="h-10" />
+                                  <button
+                                    onClick={() => submitVoiceNote(r._id)}
+                                    className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700"
+                                  >
+                                    Upload
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </>

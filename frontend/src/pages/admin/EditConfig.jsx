@@ -686,29 +686,6 @@ export default function EditConfig({ section }) {
           </div>
         </section>}
 
-        {section === 'communityBoard' && <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Community Board</h2>
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                value={config.communityBoard.title}
-                onChange={(e) => update('communityBoard.title', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Subtitle</label>
-              <textarea
-                rows={2}
-                value={config.communityBoard.subtitle}
-                onChange={(e) => update('communityBoard.subtitle', e.target.value)}
-                className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
-            </div>
-          </div>
-        </section>}
-
         {section === 'howItWorks' && <section className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="text-lg font-semibold text-gray-900">How It Works</h2>
           <div className="mt-4 space-y-4">

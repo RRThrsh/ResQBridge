@@ -23,7 +23,7 @@ export function LocationProvider({ children }) {
   const [routePath, setRoutePath] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
   const [routeLoading, setRouteLoading] = useState(false)
-  const [requested, setRequested] = useState(false)
+  const watchIdRef = useRef(null)
 
   async function fetchRoute(origin) {
     setRouteLoading(true)
@@ -45,26 +45,32 @@ export function LocationProvider({ children }) {
   }
 
   function requestLocation() {
-    if (requested) return
-    setRequested(true)
+    if (watchIdRef.current) return
 
     if (!navigator.geolocation) {
       setLocError('Geolocation not supported')
       return
     }
 
-    navigator.geolocation.getCurrentPosition(
+    watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
         setUserPos(coords)
         setDistance(haversineDistance(coords, CENTER))
         setLocError(null)
-        fetchRoute(coords)
       },
       () => setLocError('Enable location services'),
       { enableHighAccuracy: true, timeout: 10000 },
     )
   }
+
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current) {
+        navigator.geolocation.clearWatch(watchIdRef.current)
+      }
+    }
+  }, [])
 
   return (
     <LocationContext.Provider value={{ userPos, locError, distance, routePath, routeInfo, routeLoading, requestLocation }}>

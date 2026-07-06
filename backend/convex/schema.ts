@@ -110,4 +110,43 @@ export default defineSchema({
     .index("by_createdAt", ["createdAt"])
     .index("by_status", ["status"])
     .index("by_assignedTo", ["assignedTo"]),
+
+  voiceNotes: defineTable({
+    reportId: v.string(),
+    userId: v.string(),
+    userName: v.string(),
+    audioUrl: v.string(),
+    duration: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_reportId", ["reportId"]),
+
+  shifts: defineTable({
+    userId: v.string(),
+    dayOfWeek: v.number(),
+    startTime: v.string(),
+    endTime: v.string(),
+    active: v.boolean(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_and_day", ["userId", "dayOfWeek"]),
+
+  equipmentChecklists: defineTable({
+    reportId: v.string(),
+    userId: v.string(),
+    items: v.array(v.object({ label: v.string(), checked: v.boolean() })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_reportId", ["reportId"]),
+
+  messages: defineTable({
+    senderId: v.string(),
+    senderName: v.string(),
+    senderRole: v.string(),
+    content: v.string(),
+    reportId: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_reportId", ["reportId"]),
 });

@@ -173,6 +173,37 @@ export const rescuer = {
       method: 'POST',
       body: JSON.stringify({ lat, lng }),
     }),
+
+  getShifts: () => request('/rescuer/shifts'),
+  saveShifts: (shifts) =>
+    request('/rescuer/shifts', {
+      method: 'POST',
+      body: JSON.stringify({ shifts }),
+    }),
+
+  sendMessage: (content, reportId) =>
+    request('/rescuer/messages', {
+      method: 'POST',
+      body: JSON.stringify({ content, reportId }),
+    }),
+  getMessages: (reportId) =>
+    request(`/rescuer/messages${reportId ? `?reportId=${reportId}` : ''}`),
+  getConversations: () => request('/rescuer/conversations'),
+  getRescuerLocations: () => request('/rescuer/locations'),
+
+  getChecklist: (reportId) => request(`/rescuer/reports/${reportId}/checklist`),
+  saveChecklist: (reportId, items) =>
+    request(`/rescuer/reports/${reportId}/checklist`, {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    }),
+
+  getVoiceNotes: (reportId) => request(`/rescuer/reports/${reportId}/voice-notes`),
+  addVoiceNote: (reportId, audioUrl, duration) =>
+    request('/rescuer/voice-notes', {
+      method: 'POST',
+      body: JSON.stringify({ reportId, audioUrl, duration }),
+    }),
 }
 
 export const logs = {

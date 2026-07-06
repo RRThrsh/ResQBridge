@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { GoogleMap, Marker, useLoadScript, Polyline } from '@react-google-maps/api'
 
 const containerStyle = {
@@ -13,6 +13,7 @@ export default function ReportMap({ latitude, longitude, label, userPos }) {
   const [routeInfo, setRouteInfo] = useState(null)
   const [loadingRoute, setLoadingRoute] = useState(false)
   const [map, setMap] = useState(null)
+  const followRef = useRef(true)
 
   const { isLoaded } = useLoadScript({ googleMapsApiKey: apiKey })
 
@@ -23,6 +24,11 @@ export default function ReportMap({ latitude, longitude, label, userPos }) {
       m.setZoom(15)
     }
   }, [latitude, longitude])
+
+  useEffect(() => {
+    if (!map || !userPos || !followRef.current) return
+    map.panTo(userPos)
+  }, [map, userPos])
 
   async function fetchRoute(originLat, originLng) {
     setLoadingRoute(true)
@@ -40,23 +46,15 @@ export default function ReportMap({ latitude, longitude, label, userPos }) {
         })
       }
     } catch {
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${latitude},${longitude}`,
-        '_blank'
-      )
+      setLoadingRoute(false)
+      return
     } finally {
       setLoadingRoute(false)
     }
   }
 
   function handleDirections() {
-    if (!userPos) {
-      window.open(
-        `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
-        '_blank'
-      )
-      return
-    }
+    if (!userPos) return
     fetchRoute(userPos.lat, userPos.lng)
   }
 
@@ -66,17 +64,8 @@ export default function ReportMap({ latitude, longitude, label, userPos }) {
   }
 
   function openInGoogleMaps() {
-    if (userPos) {
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${latitude},${longitude}`,
-        '_blank'
-      )
-    } else {
-      window.open(
-        `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
-        '_blank'
-      )
-    }
+    if (!userPos) return
+    fetchRoute(userPos.lat, userPos.lng)
   }
 
   if (!isLoaded) {
@@ -134,9 +123,21 @@ export default function ReportMap({ latitude, longitude, label, userPos }) {
             : (label || 'Report location')}
         </div>
         <div className="flex gap-2">
+          {userPos && (
+            <button
+              onClick={() => { followRef.current = !followRef.current; if (followRef.current && map) map.panTo(userPos) }}
+              className={`px-3 py-2.5 rounded-xl text-base font-bold transition-colors border-2 ${
+                followRef.current
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-600 border-gray-300'
+              }`}
+            >
+              Follow Me
+            </button>
+          )}
           {!routePath ? (
             <button
-              onClick={handleDirections}
+              onClick={() => { followRef.current = false; handleDirections() }}
               disabled={loadingRoute}
               className="bg-amber-600 text-white px-5 py-2.5 rounded-xl text-base font-bold hover:bg-amber-700 disabled:opacity-50 transition-colors shadow"
             >
