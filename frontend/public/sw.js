@@ -1,4 +1,4 @@
-const CACHE = 'resqbridge-v1'
+const CACHE = 'resqbridge-v2'
 const ASSETS = ['/', '/offline']
 
 self.addEventListener('install', (e) => {
@@ -25,11 +25,15 @@ self.addEventListener('fetch', (e) => {
     )
     return
   }
-  e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request).then((res) => {
-      const copy = res.clone()
-      caches.open(CACHE).then((c) => c.put(e.request, copy))
-      return res
-    }))
-  )
+  if (e.request.url.includes('/assets/')) {
+    e.respondWith(
+      caches.match(e.request).then((cached) => cached || fetch(e.request).then((res) => {
+        const copy = res.clone()
+        caches.open(CACHE).then((c) => c.put(e.request, copy))
+        return res
+      }))
+    )
+    return
+  }
+  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)))
 })

@@ -97,7 +97,7 @@ export default function Report() {
     try {
       const fd = new FormData()
       fd.append('name', form.name)
-      fd.append('phone', form.phone)
+      fd.append('phone', form.phone ? '+63' + form.phone : '')
       fd.append('category', form.category)
       fd.append('animalType', form.animalType)
       fd.append('urgency', form.urgency)
@@ -177,8 +177,14 @@ export default function Report() {
                 <span className="inline-flex items-center rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 px-3 text-sm text-gray-600">+63</span>
                 <input
                   type="tel"
+                  inputMode="numeric"
                   value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                  onBeforeInput={(e) => { if (e.data && /\D/.test(e.data)) e.preventDefault() }}
+                  onPaste={(e) => {
+                    const text = (e.clipboardData || window.clipboardData).getData('text')
+                    if (text && /\D/.test(text)) e.preventDefault()
+                  }}
+                  onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                   className="block w-full rounded-r-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
                   placeholder="9XX XXX XXXX"
                   required
