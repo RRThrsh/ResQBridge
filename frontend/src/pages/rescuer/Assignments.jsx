@@ -353,7 +353,7 @@ export default function RescuerAssignments() {
                           const url = userPos
                             ? `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${dest}`
                             : `https://www.google.com/maps/search/?api=1&query=${dest}`
-                          window.location.href = url
+                          window.open(url, '_blank')
                         }}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-4 py-2.5 text-base font-bold text-blue-700 hover:bg-blue-100 border-2 border-blue-200 transition-colors shrink-0"
                       >

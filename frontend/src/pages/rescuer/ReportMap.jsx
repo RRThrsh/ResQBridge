@@ -76,11 +76,13 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
   }
 
   function openInGoogleMaps() {
+    let url
     if (userPos) {
-      window.location.href = `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${latitude},${longitude}`
+      url = `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${latitude},${longitude}`
     } else {
-      window.location.href = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
+      url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
     }
+    window.open(url, '_blank')
   }
 
   if (!isLoaded) {
