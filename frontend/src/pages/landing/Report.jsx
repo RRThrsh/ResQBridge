@@ -2,6 +2,56 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, DoubleConfirmation, InfoPopover } from '../../components/ui'
 import species from '../../data/wildlifeSpecies'
+import L from 'leaflet'
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+
+import iconUrl from 'leaflet/dist/images/marker-icon.png'
+import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
+import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
+
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl })
+
+function LocationMarker({ form, setForm }) {
+  const lat = parseFloat(form.latitude)
+  const lng = parseFloat(form.longitude)
+  const position = isNaN(lat) || isNaN(lng) ? null : [lat, lng]
+
+  useMapEvents({
+    click(e) {
+      setForm((prev) => ({ ...prev, latitude: e.latlng.lat.toString(), longitude: e.latlng.lng.toString() }))
+    },
+  })
+
+  if (!position) return null
+
+  return (
+    <Marker
+      position={position}
+      draggable
+      eventHandlers={{
+        dragend(e) {
+          const { lat, lng } = e.target.getLatLng()
+          setForm((prev) => ({ ...prev, latitude: lat.toString(), longitude: lng.toString() }))
+        },
+      }}
+    />
+  )
+}
+
+function MapCentered({ form, locateTrigger }) {
+  const lat = parseFloat(form.latitude)
+  const lng = parseFloat(form.longitude)
+  const position = isNaN(lat) || isNaN(lng) ? null : [lat, lng]
+
+  const map = useMap()
+  useEffect(() => {
+    if (position) map.setView(position, 16)
+  }, [map, position, locateTrigger])
+
+  return null
+}
 
 const API_BASE = '/api/v1'
 
@@ -31,6 +81,7 @@ export default function Report() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
   const [gettingLocation, setGettingLocation] = useState(false)
+  const [locateTrigger, setLocateTrigger] = useState(0)
   const [speciesOpen, setSpeciesOpen] = useState(false)
   const [speciesQuery, setSpeciesQuery] = useState('')
   const speciesRef = useRef(null)
@@ -79,18 +130,23 @@ export default function Report() {
       (pos) => {
         setForm((prev) => ({ ...prev, latitude: pos.coords.latitude.toString(), longitude: pos.coords.longitude.toString() }))
         setGettingLocation(false)
+        setLocateTrigger((c) => c + 1)
       },
       () => {
-        setError('Could not get your location. Please allow location access or enter manually.')
+        setError('Could not get your location. Please allow location access and try again.')
         setGettingLocation(false)
       },
-      { enableHighAccuracy: true, timeout: 10000 },
+      { enableHighAccuracy: true, timeout: 15000 },
     )
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    if (imageFiles.length === 0) {
+      setError('Please upload at least one supporting photo.')
+      return
+    }
     setSubmitting(true)
     try {
       const fd = new FormData()
@@ -101,8 +157,8 @@ export default function Report() {
       fd.append('wildlifeCondition', form.wildlifeCondition)
       fd.append('location', form.location)
       fd.append('description', form.description)
-      if (form.latitude) fd.append('latitude', form.latitude)
-      if (form.longitude) fd.append('longitude', form.longitude)
+      fd.append('latitude', form.latitude)
+      fd.append('longitude', form.longitude)
       imageFiles.forEach((f) => fd.append('images', f))
 
       const res = await fetch(`${API_BASE}/report`, {
@@ -296,20 +352,31 @@ export default function Report() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Location</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Nearest Landmark <InfoPopover>
+                <p className="font-semibold">Nearest Landmark</p>
+                <p className="mt-1 text-gray-300">Providing a nearby landmark helps responders locate the reported wildlife more quickly and accurately, especially if GPS accuracy is limited.</p>
+              </InfoPopover>
+            </label>
             <input
               type="text"
               value={form.location}
               onChange={update('location')}
               className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              placeholder="Barangay, city, or landmark"
-              required
+              placeholder="Near Barangay Hall, beside the elementary school."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Pin Location <span className="text-gray-400">(optional)</span></label>
+            <label className="block text-sm font-medium text-gray-700">
+              GPS Location <InfoPopover position="top">
+                <p className="font-semibold">GPS Location</p>
+                <p className="mt-1 text-gray-300">Your current GPS location is required to help responders accurately locate the reported wildlife. After retrieving your location, verify the marker on the map and adjust it if necessary before submitting your report.</p>
+              </InfoPopover>
+            </label>
             <div className="mt-1.5 space-y-3">
+              <input type="hidden" name="latitude" value={form.latitude} required />
+              <input type="hidden" name="longitude" value={form.longitude} required />
               <button
                 type="button"
                 onClick={getLocation}
@@ -319,66 +386,60 @@ export default function Report() {
                 {gettingLocation ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
                 ) : (
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                  </svg>
+                  <span className="text-base">📍</span>
                 )}
                 {gettingLocation ? 'Getting location...' : 'Get Current Location'}
               </button>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-400">Latitude</label>
-                  <input
-                    type="text"
-                    value={form.latitude}
-                    onChange={(e) => setForm({ ...form, latitude: e.target.value })}
-                    className="mt-0.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    placeholder="14.5995"
+              <div className="relative h-56 overflow-hidden rounded-lg border border-gray-200">
+                <MapContainer
+                  center={form.latitude && form.longitude ? [parseFloat(form.latitude), parseFloat(form.longitude)] : [9.967, 118.783]}
+                  zoom={form.latitude && form.longitude ? 16 : 7}
+                  className="h-full w-full"
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400">Longitude</label>
-                  <input
-                    type="text"
-                    value={form.longitude}
-                    onChange={(e) => setForm({ ...form, longitude: e.target.value })}
-                    className="mt-0.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    placeholder="120.9842"
-                  />
-                </div>
+                  <LocationMarker form={form} setForm={setForm} />
+                  <MapCentered form={form} locateTrigger={locateTrigger} />
+                </MapContainer>
+                {!form.latitude && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <span className="rounded-lg bg-white/90 px-3 py-1.5 text-sm text-gray-500 shadow-sm">
+                      Click on the map to set location
+                    </span>
+                  </div>
+                )}
               </div>
-              {form.latitude && form.longitude && (
-                <div className="overflow-hidden rounded-lg border border-gray-200">
-                  <iframe
-                    title="Map preview"
-                    width="100%"
-                    height="220"
-                    frameBorder="0"
-                    scrolling="no"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(form.longitude) - 0.01},${parseFloat(form.latitude) - 0.01},${parseFloat(form.longitude) + 0.01},${parseFloat(form.latitude) + 0.01}&layer=mapnik&marker=${parseFloat(form.latitude)},${parseFloat(form.longitude)}`}
-                  />
-                </div>
-              )}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Description <InfoPopover>
+                <p className="font-semibold">Description</p>
+                <p className="mt-1 text-gray-300">Provide a clear and detailed description of the incident. Include information such as the wildlife's behavior, condition, nearby hazards, or any other details that may assist responders in assessing and responding to the report.</p>
+              </InfoPopover>
+            </label>
             <textarea
               rows={4}
               value={form.description}
               onChange={update('description')}
               className="mt-1.5 w-full resize-y rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              placeholder="Describe the animal's condition, behavior, and any immediate concerns..."
+              placeholder="Briefly describe what happened, including the wildlife's condition, behavior, surroundings, or any important details."
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Photos <span className="text-gray-400">(up to 5, optional)</span></label>
+            <label className="block text-sm font-medium text-gray-700">
+              Supporting Photos <InfoPopover>
+                <p className="font-semibold">Supporting Photos</p>
+                <p className="mt-1 text-gray-300">Upload at least one clear photo of the wildlife or incident. Photos help responders verify the report, identify the wildlife species, assess its condition, and determine the most appropriate response before dispatching personnel.</p>
+              </InfoPopover>
+            </label>
             <div className="mt-1.5">
-              <input ref={fileRef} type="file" accept="image/*" multiple capture="environment" onChange={handleImages} className="hidden" />
+              <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp" multiple capture="environment" onChange={handleImages} className="hidden" />
               {imagePreviews.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-3">
                   {imagePreviews.map((src, i) => (
@@ -404,7 +465,7 @@ export default function Report() {
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                   </svg>
-                  {imageFiles.length === 0 ? 'Add photos' : 'Add more'}
+                  {imageFiles.length === 0 ? 'Add Photos' : 'Add More'}
                 </button>
               )}
             </div>
