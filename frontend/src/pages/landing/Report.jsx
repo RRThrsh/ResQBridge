@@ -1,33 +1,15 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, DoubleConfirmation } from '../../components/ui'
+import { Button, DoubleConfirmation, InfoPopover } from '../../components/ui'
+import species from '../../data/wildlifeSpecies'
 
 const API_BASE = '/api/v1'
 
-const CATEGORIES = [
-  { value: 'injury', label: 'Injured / In Distress' },
-  { value: 'stranded', label: 'Stranded' },
-  { value: 'missing', label: 'Missing Pet / Animal' },
-  { value: 'found', label: 'Found Animal' },
-  { value: 'abandoned', label: 'Abandoned' },
-  { value: 'other', label: 'Other' },
-]
-
-const ANIMAL_TYPES = [
-  'Wildlife (Land)',
-  'Marine',
-  'Bird',
-  'Stray Animal',
-  'Livestock',
-  'Other',
-]
-
-const URGENCY_LEVELS = [
-  { value: 'low', label: 'Low', class: 'bg-gray-100 text-gray-700 border-gray-200' },
-  { value: 'medium', label: 'Medium', class: 'bg-amber-50 text-amber-700 border-amber-200' },
-  { value: 'high', label: 'High', class: 'bg-orange-50 text-orange-700 border-orange-200' },
-  { value: 'emergency', label: 'Emergency', class: 'bg-red-50 text-red-700 border-red-200' },
-]
+const REPORT_INFO = {
+  wildlife_sighting: { label: 'Wildlife Sighting', description: 'Use this report type to report the observation of wildlife in any location. Whether the animal is healthy, injured, sick, or trapped, select its condition using the Wildlife Condition field.' },
+  illegal_possession: { label: 'Illegal Wildlife Possession', description: 'Report suspected cases of individuals keeping, transporting, selling, or possessing wildlife without proper authorization or permits.' },
+  human_wildlife_conflict: { label: 'Human–Wildlife Conflict', description: 'Report incidents where wildlife poses a threat to people or property, or where people are threatening or harming wildlife.' },
+}
 
 export default function Report() {
   const navigate = useNavigate()
@@ -37,7 +19,7 @@ export default function Report() {
     phone: '',
     category: '',
     animalType: '',
-    urgency: '',
+    wildlifeCondition: '',
     location: '',
     description: '',
     latitude: '',
@@ -49,7 +31,23 @@ export default function Report() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
   const [gettingLocation, setGettingLocation] = useState(false)
-
+  const [speciesOpen, setSpeciesOpen] = useState(false)
+  const [speciesQuery, setSpeciesQuery] = useState('')
+  const speciesRef = useRef(null)
+  const searchRef = useRef(null)
+  useEffect(() => {
+    if (!speciesOpen) return
+    function handleClick(e) {
+      if (speciesRef.current && !speciesRef.current.contains(e.target)) {
+        setSpeciesOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [speciesOpen])
+  useEffect(() => {
+    if (speciesOpen) searchRef.current?.focus()
+  }, [speciesOpen])
   function update(field) {
     return (e) => setForm({ ...form, [field]: e.target.value })
   }
@@ -100,7 +98,7 @@ export default function Report() {
       fd.append('phone', form.phone ? '+63' + form.phone : '')
       fd.append('category', form.category)
       fd.append('animalType', form.animalType)
-      fd.append('urgency', form.urgency)
+      fd.append('wildlifeCondition', form.wildlifeCondition)
       fd.append('location', form.location)
       fd.append('description', form.description)
       if (form.latitude) fd.append('latitude', form.latitude)
@@ -136,7 +134,7 @@ export default function Report() {
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button onClick={() => navigate('/')}>Back to Home</Button>
-            <Button variant="outline" onClick={() => { setSubmitted(false); setForm({ name: '', phone: '', category: '', animalType: '', urgency: '', location: '', description: '', latitude: '', longitude: '' }); setImageFiles([]); setImagePreviews([]); if (fileRef.current) fileRef.current.value = '' }}>
+            <Button variant="outline" onClick={() => { setSubmitted(false); setForm({ name: '', phone: '', category: '', animalType: '', wildlifeCondition: '', location: '', description: '', latitude: '', longitude: '' }); setImageFiles([]); setImagePreviews([]); if (fileRef.current) fileRef.current.value = '' }}>
               Submit Another
             </Button>
           </div>
@@ -172,7 +170,9 @@ export default function Report() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Contact Phone</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Contact Phone <InfoPopover>Your contact number will only be used by authorized personnel to verify your report and coordinate the appropriate response.</InfoPopover>
+              </label>
               <div className="mt-1.5 flex">
                 <span className="inline-flex items-center rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 px-3 text-sm text-gray-600">+63</span>
                 <input
@@ -193,51 +193,106 @@ export default function Report() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Category</label>
-            <select
-              value={form.category}
-              onChange={update('category')}
-              className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              required
-            >
-              <option value="">Select category</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-          </div>
-
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Animal Type</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Report Type
+                {form.category && <InfoPopover>
+                  <div>
+                    <p className="font-semibold">{REPORT_INFO[form.category]?.label}</p>
+                    <p className="mt-1 text-gray-300">{REPORT_INFO[form.category]?.description}</p>
+                  </div>
+                </InfoPopover>}
+              </label>
               <select
-                value={form.animalType}
-                onChange={update('animalType')}
+                value={form.category}
+                onChange={update('category')}
                 className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
                 required
               >
-                <option value="">Select type</option>
-                {ANIMAL_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
+                <option value="">Select report type</option>
+              <option value="wildlife_sighting">Wildlife Sighting</option>
+              <option value="illegal_possession">Illegal Wildlife Possession</option>
+                <option value="human_wildlife_conflict">Human–Wildlife Conflict</option>
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Urgency</label>
-              <div className="mt-1.5 grid grid-cols-2 gap-2">
-                {URGENCY_LEVELS.map((u) => (
-                  <button
-                    key={u.value}
-                    type="button"
-                    onClick={() => setForm({ ...form, urgency: u.value })}
-                    className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${form.urgency === u.value ? 'ring-2 ring-green-500 ring-offset-1 ' + u.class : u.class}`}
-                  >
-                    {u.label}
-                  </button>
-                ))}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700">
+                Species <InfoPopover>
+                  <p className="font-semibold">Species</p>
+                  <p className="mt-1 text-gray-300">Search and select the wildlife species from the Wildlife Guide. The list is automatically loaded from the Wildlife Guide database. If you are unable to identify the species, select Unknown Species.</p>
+                </InfoPopover>
+              </label>
+              <div className="relative mt-1.5" ref={speciesRef}>
+                <input type="hidden" name="animalType" value={form.animalType} required />
+                <button
+                  type="button"
+                  onClick={() => { setSpeciesOpen((o) => !o); if (!speciesOpen) { setSpeciesQuery('') } }}
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                >
+                  <span className={form.animalType ? '' : 'text-gray-400'}>{form.animalType || 'Select species'}</span>
+                  <svg className={`h-4 w-4 text-gray-400 transition ${speciesOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {speciesOpen && (
+                  <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg">
+                    <div className="border-b border-gray-100 p-2">
+                      <input
+                        ref={searchRef}
+                        type="text"
+                        value={speciesQuery}
+                        onChange={(e) => setSpeciesQuery(e.target.value)}
+                        className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                        placeholder="Search species..."
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      {(speciesQuery
+                        ? species.filter((s) => s.name.toLowerCase().includes(speciesQuery.toLowerCase()))
+                        : species
+                      ).map((s) => (
+                        <button
+                          key={s.name}
+                          type="button"
+                        onMouseDown={() => { setForm((prev) => ({ ...prev, animalType: s.name })); setSpeciesQuery(''); setSpeciesOpen(false) }}
+                              className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-green-50"
+                            >
+                              {s.name}
+                            </button>
+                          ))}
+                          <button
+                            type="button"
+                            onMouseDown={() => { setForm((prev) => ({ ...prev, animalType: 'Unknown Species' })); setSpeciesQuery(''); setSpeciesOpen(false) }}
+                        className="flex w-full items-center gap-2 border-t border-gray-100 px-4 py-2.5 text-left text-sm text-gray-500 italic hover:bg-green-50"
+                      >
+                        Unknown Species
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Wildlife Condition <InfoPopover>
+                <p className="font-semibold">Wildlife Condition</p>
+                <p className="mt-1 text-gray-300">Select the condition that best describes the wildlife at the time of reporting. This helps responders assess the urgency and determine the appropriate response.</p>
+              </InfoPopover>
+            </label>
+            <select
+              value={form.wildlifeCondition}
+              onChange={update('wildlifeCondition')}
+              className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              required
+            >
+              <option value="">Select condition</option>
+              <option value="Healthy">Healthy</option>
+              <option value="Injured">Injured</option>
+              <option value="Sick">Sick</option>
+              <option value="Trapped">Trapped</option>
+              <option value="Unknown">Unknown</option>
+            </select>
           </div>
 
           <div>
