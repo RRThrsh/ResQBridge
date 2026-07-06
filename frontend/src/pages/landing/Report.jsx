@@ -1,26 +1,17 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, DoubleConfirmation } from '../../components/ui'
+import { Button, DoubleConfirmation, InfoPopover } from '../../components/ui'
+import species from '../../data/wildlifeSpecies'
 
 const API_BASE = '/api/v1'
 
-const CATEGORIES = [
-  { value: 'injury', label: 'Injured / In Distress' },
-  { value: 'stranded', label: 'Stranded' },
-  { value: 'missing', label: 'Missing Pet / Animal' },
-  { value: 'found', label: 'Found Animal' },
-  { value: 'abandoned', label: 'Abandoned' },
-  { value: 'other', label: 'Other' },
-]
-
-const ANIMAL_TYPES = [
-  'Wildlife (Land)',
-  'Marine',
-  'Bird',
-  'Stray Animal',
-  'Livestock',
-  'Other',
-]
+const REPORT_INFO = {
+  wildlife_sighting: { label: 'Wildlife Sighting', description: 'Report wildlife observed in its natural habitat that does not require immediate rescue or intervention.' },
+  injured_wildlife: { label: 'Injured Wildlife', description: 'Report wildlife that is injured, sick, or unable to survive without assistance and requires immediate rescue.' },
+  trapped_wildlife: { label: 'Trapped Wildlife', description: 'Report wildlife that is trapped, entangled, confined, or unable to escape from a dangerous situation.' },
+  illegal_possession: { label: 'Illegal Wildlife Possession', description: 'Report suspected cases of individuals keeping, transporting, selling, or possessing wildlife without proper authorization or permits.' },
+  human_wildlife_conflict: { label: 'Human–Wildlife Conflict', description: 'Report incidents where wildlife poses a threat to people or property, or where people are threatening or harming wildlife.' },
+}
 
 const URGENCY_LEVELS = [
   { value: 'low', label: 'Low', class: 'bg-gray-100 text-gray-700 border-gray-200' },
@@ -49,7 +40,8 @@ export default function Report() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
   const [gettingLocation, setGettingLocation] = useState(false)
-
+  const [speciesOpen, setSpeciesOpen] = useState(false)
+  const [speciesQuery, setSpeciesQuery] = useState('')
   function update(field) {
     return (e) => setForm({ ...form, [field]: e.target.value })
   }
@@ -172,7 +164,9 @@ export default function Report() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Contact Phone</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Contact Phone <InfoPopover>Your contact number will only be used by authorized personnel to verify your report and coordinate the appropriate response.</InfoPopover>
+              </label>
               <div className="mt-1.5 flex">
                 <span className="inline-flex items-center rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 px-3 text-sm text-gray-600">+63</span>
                 <input
@@ -194,34 +188,82 @@ export default function Report() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Category</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Report Type
+              {form.category && <InfoPopover>
+                <div>
+                  <p className="font-semibold">{REPORT_INFO[form.category]?.label}</p>
+                  <p className="mt-1 text-gray-300">{REPORT_INFO[form.category]?.description}</p>
+                </div>
+              </InfoPopover>}
+            </label>
             <select
               value={form.category}
               onChange={update('category')}
               className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
               required
             >
-              <option value="">Select category</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
+              <option value="">Select report type</option>
+              <option value="wildlife_sighting">Wildlife Sighting</option>
+              <option value="injured_wildlife">Injured Wildlife</option>
+              <option value="trapped_wildlife">Trapped Wildlife</option>
+              <option value="illegal_possession">Illegal Wildlife Possession</option>
+              <option value="human_wildlife_conflict">Human–Wildlife Conflict</option>
             </select>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Animal Type</label>
-              <select
-                value={form.animalType}
-                onChange={update('animalType')}
-                className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                required
-              >
-                <option value="">Select type</option>
-                {ANIMAL_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700">
+                Species <InfoPopover>
+                  <p className="font-semibold">Species</p>
+                  <p className="mt-1 text-gray-300">Search and select the wildlife species from the Wildlife Guide. The list is automatically loaded from the Wildlife Guide database. If you are unable to identify the species, select Unknown Species.</p>
+                </InfoPopover>
+              </label>
+              <div className="relative mt-1.5">
+                <input
+                  type="text"
+                  value={speciesQuery}
+                  onChange={(e) => {
+                    setSpeciesQuery(e.target.value)
+                    setForm((prev) => ({ ...prev, animalType: '' }))
+                    setSpeciesOpen(true)
+                  }}
+                  onFocus={() => {
+                    setSpeciesQuery(form.animalType || '')
+                    setSpeciesOpen(true)
+                  }}
+                  onBlur={() => setTimeout(() => setSpeciesOpen(false), 200)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-10 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  placeholder="Search species..."
+                  required
+                />
+                <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                {speciesOpen && (
+                  <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                    {(speciesQuery && speciesQuery !== form.animalType
+                      ? species.filter((s) => s.name.toLowerCase().includes(speciesQuery.toLowerCase()))
+                      : species
+                    ).map((s) => (
+                      <button
+                        key={s.name}
+                        type="button"
+                        onMouseDown={() => { setForm((prev) => ({ ...prev, animalType: s.name })); setSpeciesQuery(s.name); setSpeciesOpen(false) }}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-green-50"
+                      >
+                        {s.name}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onMouseDown={() => { setForm((prev) => ({ ...prev, animalType: 'Unknown Species' })); setSpeciesQuery('Unknown Species'); setSpeciesOpen(false) }}
+                      className="flex w-full items-center gap-2 border-t border-gray-100 px-4 py-2.5 text-left text-sm text-gray-500 italic hover:bg-green-50"
+                    >
+                      Unknown Species
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Urgency</label>
