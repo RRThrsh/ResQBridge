@@ -5,6 +5,7 @@ const links = [
   { label: 'Home', href: '/' },
   { label: 'Report', href: '/report' },
   { label: 'About', href: '/about' },
+  { label: 'Wildlife Guide', href: '/wildlife-guide' },
 ]
 
 export default function Navbar() {

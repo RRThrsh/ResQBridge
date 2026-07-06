@@ -48,7 +48,6 @@ export default function RescuerAssignments() {
   const [showFailInput, setShowFailInput] = useState(new Set())
   const [uploadingId, setUploadingId] = useState(null)
   const [uploadedImages, setUploadedImages] = useState({})
-  const [showDirections, setShowDirections] = useState(new Set())
   const [collapsedIds, setCollapsedIds] = useState(new Set())
   const [page, setPage] = useState(1)
   const pageSize = 10
@@ -351,10 +350,11 @@ export default function RescuerAssignments() {
                     {r.latitude && r.longitude && !isCollapsed && (
                       <button
                         onClick={() => {
-                          const next = new Set(showDirections)
-                          if (next.has(r._id)) next.delete(r._id)
-                          else next.add(r._id)
-                          setShowDirections(next)
+                          const dest = `${r.latitude},${r.longitude}`
+                          const url = userPos
+                            ? `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${dest}`
+                            : `https://www.google.com/maps/search/?api=1&query=${dest}`
+                          window.location.href = url
                         }}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-4 py-2.5 text-base font-bold text-blue-700 hover:bg-blue-100 border-2 border-blue-200 transition-colors shrink-0"
                       >
@@ -383,7 +383,7 @@ export default function RescuerAssignments() {
 
                   {!isCollapsed && (
                     <>
-                      {showDirections.has(r._id) && (
+                      {r.latitude && r.longitude && (
                         <div className="px-5 pb-4">
                           <ReportMap
                             latitude={r.latitude}
