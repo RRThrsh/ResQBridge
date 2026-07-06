@@ -20,133 +20,61 @@ export default defineSchema({
     role: v.union(
       v.literal("superadmin"),
       v.literal("admin"),
+      v.literal("domestic"),
       v.literal("rescuer"),
+      v.literal("user"),
     ),
-    availability: v.optional(v.union(
-      v.literal("available"),
-      v.literal("busy"),
-    )),
   })
     .index("by_email", ["email"])
     .index("by_uuid", ["uuid"]),
 
-  logs: defineTable({
-    userId: v.optional(v.string()),
-    eventType: v.string(),
-    section: v.optional(v.string()),
-    ipAddress: v.string(),
-    userAgent: v.optional(v.string()),
-    metadata: v.optional(v.string()),
-    sessionDuration: v.optional(v.number()),
-    createdAt: v.number(),
+  admins: defineTable({
+    email: v.string(),
+    firstName: v.string(),
+    lastName: v.string(),
   })
-    .index("by_eventType", ["eventType"])
-    .index("by_ipAddress", ["ipAddress"])
-    .index("by_createdAt", ["createdAt"]),
+    .index("by_email", ["email"]),
 
-  config: defineTable({
-    key: v.string(),
-    value: v.string(),
+  rescuers: defineTable({
+    email: v.string(),
+    firstName: v.string(),
+    lastName: v.string(),
+    phoneNumber: v.string(),
   })
-    .index("by_key", ["key"]),
-
-  activityLogs: defineTable({
-    userId: v.string(),
-    action: v.string(),
-    reportId: v.optional(v.string()),
-    details: v.string(),
-    createdAt: v.number(),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_createdAt", ["createdAt"]),
-
-  rescuerLocations: defineTable({
-    userId: v.string(),
-    userName: v.string(),
-    latitude: v.number(),
-    longitude: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_userId", ["userId"]),
-
-  adminNotifications: defineTable({
-    type: v.string(),
-    message: v.string(),
-    link: v.optional(v.string()),
-    read: v.boolean(),
-    createdAt: v.number(),
-  })
-    .index("by_read", ["read"])
-    .index("by_createdAt", ["createdAt"]),
-
-  reportNotes: defineTable({
-    reportId: v.string(),
-    userId: v.string(),
-    userName: v.string(),
-    content: v.string(),
-    createdAt: v.number(),
-  })
-    .index("by_reportId", ["reportId"]),
+    .index("by_email", ["email"]),
 
   reports: defineTable({
-    name: v.string(),
-    phone: v.string(),
-    category: v.string(),
-    animalType: v.string(),
-    urgency: v.string(),
+    animalName: v.string(),
     location: v.string(),
-    description: v.string(),
-    images: v.string(),
-    status: v.string(),
-    assignedTo: v.optional(v.string()),
-    reporterIp: v.string(),
+    description: v.optional(v.string()),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
-    createdAt: v.number(),
-    archived: v.optional(v.boolean()),
-    archivedAt: v.optional(v.number()),
-    archivedBy: v.optional(v.string()),
-  })
-    .index("by_createdAt", ["createdAt"])
-    .index("by_status", ["status"])
-    .index("by_assignedTo", ["assignedTo"]),
-
-  voiceNotes: defineTable({
-    reportId: v.string(),
-    userId: v.string(),
-    userName: v.string(),
-    audioUrl: v.string(),
-    duration: v.optional(v.number()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("en_route"),
+      v.literal("rescue_success"),
+      v.literal("rescue_failed"),
+    ),
+    assignedRescuerEmail: v.optional(v.string()),
+    reporterEmail: v.string(),
     createdAt: v.number(),
   })
-    .index("by_reportId", ["reportId"]),
+    .index("by_assigned_rescuer", ["assignedRescuerEmail"])
+    .index("by_reporter", ["reporterEmail"]),
 
-  shifts: defineTable({
-    userId: v.string(),
-    dayOfWeek: v.number(),
-    startTime: v.string(),
-    endTime: v.string(),
-    active: v.boolean(),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_userId_and_day", ["userId", "dayOfWeek"]),
-
-  equipmentChecklists: defineTable({
-    reportId: v.string(),
-    userId: v.string(),
-    items: v.array(v.object({ label: v.string(), checked: v.boolean() })),
-    createdAt: v.number(),
+  rescuerLocations: defineTable({
+    rescuerEmail: v.string(),
+    rescuerName: v.string(),
+    latitude: v.number(),
+    longitude: v.number(),
+    heading: v.optional(v.number()),
+    speed: v.optional(v.number()),
     updatedAt: v.number(),
+    reportId: v.id("reports"),
+    animalName: v.optional(v.string()),
+    isTracking: v.boolean(),
   })
-    .index("by_reportId", ["reportId"]),
-
-  messages: defineTable({
-    senderId: v.string(),
-    senderName: v.string(),
-    senderRole: v.string(),
-    content: v.string(),
-    reportId: v.optional(v.string()),
-    createdAt: v.number(),
-  })
-    .index("by_reportId", ["reportId"]),
+    .index("by_rescuer_email", ["rescuerEmail"])
+    .index("by_tracking", ["isTracking"]),
 });
