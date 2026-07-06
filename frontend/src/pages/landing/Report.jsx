@@ -173,14 +173,17 @@ export default function Report() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Contact Phone</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={update('phone')}
-                className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                placeholder="+63 9XX XXX XXXX"
-                required
-              />
+              <div className="mt-1.5 flex">
+                <span className="inline-flex items-center rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 px-3 text-sm text-gray-600">+63</span>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                  className="block w-full rounded-r-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  placeholder="9XX XXX XXXX"
+                  required
+                />
+              </div>
             </div>
           </div>
 
