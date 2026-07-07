@@ -17,20 +17,28 @@ function toCSV(headers, rows) {
   return lines.join("\n");
 }
 
+const EXPORT_STATUS_MAP = {
+  pending: "pending",
+  accepted: "assigned",
+  en_route: "en_route",
+  rescue_success: "resolved",
+  rescue_failed: "failed",
+};
+
 const exportReports = async (_req, res) => {
-  const reports = await convexClient.query(anyApi.reports.getAdminReports);
+  const reports = await convexClient.query(anyApi.reports.listReports);
   const headers = ["id", "name", "phone", "category", "animalType", "urgency", "location", "description", "status", "assignedTo", "latitude", "longitude", "createdAt"];
   const rows = reports.map((r) => ({
     id: r._id,
-    name: r.name,
-    phone: r.phone,
-    category: r.category,
-    animalType: r.animalType,
-    urgency: r.urgency,
+    name: r.reporterEmail || "Anonymous",
+    phone: "",
+    category: "other",
+    animalType: r.animalName,
+    urgency: "medium",
     location: r.location,
-    description: r.description,
-    status: r.status,
-    assignedTo: r.assignedTo || "",
+    description: r.description || "",
+    status: EXPORT_STATUS_MAP[r.status] || r.status,
+    assignedTo: r.assignedRescuerEmail || "",
     latitude: r.latitude ?? "",
     longitude: r.longitude ?? "",
     createdAt: new Date(r.createdAt).toISOString(),

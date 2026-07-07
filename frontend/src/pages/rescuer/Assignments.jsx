@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
 import { DoubleConfirmation, SkeletonCard } from '../../components/ui'
@@ -131,8 +131,7 @@ export default function RescuerAssignments() {
     } catch { alert('Failed to upload voice note.') }
   }
 
-  function fetchReports() {
-    console.log('fetchReports called', { user: !!user, uuid: user?.uuid, filter })
+  const fetchReports = useCallback(() => {
     if (!user) return
     setLoading(true)
     const statusParam = filter === 'unaccepted' ? undefined : (filter || undefined)
@@ -146,7 +145,7 @@ export default function RescuerAssignments() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }
+  }, [user, filter])
 
   useEffect(() => { setPage(1); fetchReports() }, [user, filter])
 

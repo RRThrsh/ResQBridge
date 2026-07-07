@@ -40,7 +40,7 @@ router.put("/config", authorizeWithPermission("systemConfig", "write"), asyncHan
 router.get("/landing-config", authorizeWithPermission("landingPage"), asyncHandler(getLandingConfig));
 router.put("/landing-config", authorizeWithPermission("landingPage", "write"), asyncHandler(updateLandingConfig));
 
-router.get("/permissions", superOnly, asyncHandler(getAdminPermissions));
+router.get("/permissions", adminOnly, asyncHandler(getAdminPermissions));
 router.put("/permissions", superOnly, asyncHandler(updateAdminPermissions));
 
 router.get("/reports", authorizeWithPermission("reports"), asyncHandler(getAdminReports));

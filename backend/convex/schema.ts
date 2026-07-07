@@ -44,24 +44,35 @@ export default defineSchema({
     .index("by_email", ["email"]),
 
   reports: defineTable({
-    animalName: v.string(),
+    name: v.string(),
+    phone: v.string(),
+    category: v.string(),
+    animalType: v.string(),
+    urgency: v.string(),
     location: v.string(),
     description: v.optional(v.string()),
+    images: v.string(),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
     status: v.union(
       v.literal("pending"),
-      v.literal("accepted"),
+      v.literal("assigned"),
       v.literal("en_route"),
-      v.literal("rescue_success"),
-      v.literal("rescue_failed"),
+      v.literal("in_progress"),
+      v.literal("resolved"),
+      v.literal("failed"),
     ),
-    assignedRescuerEmail: v.optional(v.string()),
-    reporterEmail: v.string(),
+    assignedTo: v.optional(v.string()),
+    assignedUser: v.optional(v.object({ firstName: v.string(), lastName: v.string() })),
+    reporterEmail: v.optional(v.string()),
+    reporterIp: v.optional(v.string()),
     createdAt: v.number(),
+    archivedAt: v.optional(v.number()),
+    archivedByName: v.optional(v.string()),
   })
-    .index("by_assigned_rescuer", ["assignedRescuerEmail"])
-    .index("by_reporter", ["reporterEmail"]),
+    .index("by_assigned_to", ["assignedTo"])
+    .index("by_reporter_email", ["reporterEmail"])
+    .index("by_status", ["status"]),
 
   rescuerLocations: defineTable({
     rescuerEmail: v.string(),
