@@ -100,19 +100,19 @@ export default function RescuerDashboard() {
               key={card.label}
               className={`rounded-2xl border-2 ${card.border} ${card.bg} p-6 shadow-sm`}
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-base font-bold uppercase tracking-wide text-gray-700">{card.label}</p>
-                  <p className={`mt-2 text-5xl font-extrabold ${card.valueColor}`}>
+              <div className="flex items-center gap-4">
+                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${card.bg} ${card.text}`}>
+                  {card.icon}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold uppercase tracking-wide text-gray-700">{card.label}</p>
+                  <p className={`mt-1 text-4xl font-extrabold leading-none ${card.valueColor}`}>
                     {loading ? (
-                      <span className="inline-block h-10 w-16 animate-pulse rounded bg-gray-300" />
+                      <span className="inline-block h-9 w-16 animate-pulse rounded bg-gray-300" />
                     ) : (
                       card.value
                     )}
                   </p>
-                </div>
-                <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${card.bg} ${card.text}`}>
-                  {card.icon}
                 </div>
               </div>
             </div>
