@@ -155,34 +155,31 @@ export default function RescuerShifts() {
                   </div>
 
                   {shift.active ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-0.5">Start</label>
-                          <input
-                            type="time"
-                            value={shift.startTime}
-                            onChange={(e) => updateShift(i, 'startTime', e.target.value)}
-                            className="w-full rounded-lg border-2 border-gray-200 px-2.5 py-1.5 text-sm font-semibold text-gray-800 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all"
-                          />
-                        </div>
-                        <span className="text-lg text-gray-300 mt-5">→</span>
-                        <div className="flex-1">
-                          <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-0.5">End</label>
-                          <input
-                            type="time"
-                            value={shift.endTime}
-                            onChange={(e) => updateShift(i, 'endTime', e.target.value)}
-                            className="w-full rounded-lg border-2 border-gray-200 px-2.5 py-1.5 text-sm font-semibold text-gray-800 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all"
-                          />
-                        </div>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-0.5">Start</label>
+                        <input
+                          type="time"
+                          value={shift.startTime}
+                          onChange={(e) => updateShift(i, 'startTime', e.target.value)}
+                          className="w-full rounded-lg border-2 border-gray-200 px-2.5 py-1.5 text-sm font-semibold text-gray-800 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-0.5">End</label>
+                        <input
+                          type="time"
+                          value={shift.endTime}
+                          onChange={(e) => updateShift(i, 'endTime', e.target.value)}
+                          className="w-full rounded-lg border-2 border-gray-200 px-2.5 py-1.5 text-sm font-semibold text-gray-800 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all"
+                        />
                       </div>
                       <span className="inline-block rounded-full bg-green-100 px-3 py-0.5 text-xs font-bold text-green-800">
                         On Call
                       </span>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-[76px]">
+                    <div className="flex items-center justify-center h-[88px]">
                       <span className="text-sm font-semibold text-gray-400">Day Off</span>
                     </div>
                   )}
