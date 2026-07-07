@@ -8,14 +8,7 @@ export default function RescuerProfile() {
   const { user, updateUser } = useAuth()
   const [firstName, setFirstName] = useState(user?.firstName || '')
   const [lastName, setLastName] = useState(user?.lastName || '')
-  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '+63')
-
-  function handlePhoneChange(val) {
-    if (!val.startsWith('+63')) val = '+63' + val.replace(/^\+63/, '')
-    const digits = val.replace(/\D/g, '')
-    const maxDigits = digits.length > 12 ? digits.slice(0, 12) : digits
-    setPhoneNumber('+' + maxDigits)
-  }
+  const [phoneDigits, setPhoneDigits] = useState(user?.phoneNumber?.replace(/^\+63/, '') || '')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState(null)
 
@@ -23,7 +16,7 @@ export default function RescuerProfile() {
     setSaving(true)
     setMessage(null)
     try {
-      const result = await rescuerApi.updateProfile({ firstName, lastName, phoneNumber })
+      const result = await rescuerApi.updateProfile({ firstName, lastName, phoneNumber: phoneDigits ? '+63' + phoneDigits : '' })
       updateUser(result.user)
       setMessage({ type: 'success', text: 'Profile saved successfully!' })
     } catch (err) {
@@ -89,13 +82,22 @@ export default function RescuerProfile() {
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1.5">Phone Number</p>
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                placeholder="+63 912 345 6789"
-                className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-5 py-3.5 text-base font-semibold text-gray-900 focus:border-amber-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
-              />
+              <div className="flex">
+                <span className="inline-flex items-center rounded-l-xl border-2 border-r-0 border-gray-200 bg-gray-100 px-4 text-base font-bold text-gray-600">+63</span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={phoneDigits}
+                  onBeforeInput={(e) => { if (e.data && /\D/.test(e.data)) e.preventDefault() }}
+                  onPaste={(e) => {
+                    const text = (e.clipboardData || window.clipboardData).getData('text')
+                    if (text && /\D/.test(text)) e.preventDefault()
+                  }}
+                  onChange={(e) => setPhoneDigits(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="9XX XXX XXXX"
+                  className="block w-full rounded-r-xl border-2 border-gray-200 bg-gray-50 px-4 py-3.5 text-base font-semibold text-gray-900 outline-none transition-all focus:border-amber-600 focus:bg-white focus:ring-4 focus:ring-amber-100"
+                />
+              </div>
             </div>
 
             <div>
