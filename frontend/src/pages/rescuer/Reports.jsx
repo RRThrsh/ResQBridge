@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
-import { DoubleConfirmation, SkeletonCard } from '../../components/ui'
+import { DoubleConfirmation, SkeletonCard, Modal } from '../../components/ui'
 import { rescuer as rescuerApi } from '../../services/api'
 import ReportMap from './ReportMap'
 import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIcon, RefreshIcon, CheckCircleIcon } from '../../components/SvgIcons'
@@ -64,7 +64,7 @@ export default function RescuerReports() {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
-  const [expanded, setExpanded] = useState(null)
+  const [selectedReport, setSelectedReport] = useState(null)
   const [actionLoading, setActionLoading] = useState(null)
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('newest')
@@ -112,17 +112,14 @@ export default function RescuerReports() {
 
   function handleFilterChange(status) {
     setFilter(status)
-    setExpanded(null)
   }
 
   function handleSearch(val) {
     setSearch(val)
-    setExpanded(null)
   }
 
   function handleSortChange(val) {
     setSortBy(val)
-    setExpanded(null)
   }
 
   async function loadNotes(reportId) {
@@ -227,194 +224,215 @@ export default function RescuerReports() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {reports.map((r) => {
-              const urgency = URGENCY_LABEL[r.urgency] || URGENCY_LABEL.low
-              const status = STATUS_LABEL[r.status] || STATUS_LABEL.pending
-              const isExpanded = expanded === r._id
-              return (
-                <div
-                  key={r._id}
-                  className={`rounded-2xl border-2 transition-all ${
-                    isExpanded
-                      ? 'border-amber-500 shadow-lg bg-white'
-                      : 'border-gray-200 bg-white hover:border-amber-400 hover:shadow-md'
-                  }`}
-                >
-                  <button
-                    onClick={() => {
-                      const next = isExpanded ? null : r._id
-                      setExpanded(next)
-                      if (next) loadNotes(next)
-                    }}
-                    className="flex w-full items-start gap-4 px-6 py-5 text-left"
-                  >
-                    <span className="mt-0.5">{(() => { const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon; return <Icon className="w-7 h-7 text-gray-600" />; })()}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xl font-bold text-gray-900">{r.name}</span>
-                        <span className={`rounded-full px-3 py-1 text-sm font-bold ${status.class}`}>
-                          {STATUS_LABEL[r.status]?.label || r.status.replace('_', ' ')}
-                        </span>
-                        <span className={`rounded-full px-3 py-1 text-sm font-bold ${urgency.class}`}>
-                          {urgency.label}
-                        </span>
-                        {r.assignedTo && (
-                          <span className="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-sm font-bold border border-indigo-300">
-                            Claimed
+          <>
+            <div className="overflow-x-auto rounded-2xl border-2 border-gray-200 bg-white shadow-sm">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b-2 border-gray-200 bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-500">
+                  <tr>
+                    <th className="px-5 py-4">Reporter</th>
+                    <th className="px-5 py-4">Animal</th>
+                    <th className="px-5 py-4">Location</th>
+                    <th className="px-5 py-4">Status</th>
+                    <th className="px-5 py-4">Urgency</th>
+                    <th className="px-5 py-4">When</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {reports.map((r) => {
+                    const urgency = URGENCY_LABEL[r.urgency] || URGENCY_LABEL.low
+                    const status = STATUS_LABEL[r.status] || STATUS_LABEL.pending
+                    const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon
+                    return (
+                      <tr
+                        key={r._id}
+                        onClick={() => { setSelectedReport(r); loadNotes(r._id) }}
+                        className="cursor-pointer transition-colors hover:bg-amber-50"
+                      >
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-5 h-5 text-gray-500 shrink-0" />
+                            <span className="font-semibold text-gray-900">{r.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 text-gray-600">{r.animalType}</td>
+                        <td className="px-5 py-4 text-gray-600 max-w-[180px] truncate">{r.location}</td>
+                        <td className="px-5 py-4">
+                          <span className={`inline-block rounded-full px-3 py-0.5 text-xs font-bold ${status.class}`}>
+                            {STATUS_LABEL[r.status]?.label || r.status.replace('_', ' ')}
                           </span>
-                        )}
-                      </div>
-                      <p className="mt-1.5 text-base text-gray-600">
-                        {CATEGORY_LABELS[r.category] || r.category} &middot; {r.animalType} &middot; {r.location}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-500 font-medium">
-                        <TimeAgo date={r.createdAt} />
-                      </p>
-                    </div>
-                    <div className={`mt-1 flex items-center gap-2 transition-all ${isExpanded ? 'rotate-180' : ''}`}>
-                      <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                      </svg>
-                    </div>
-                  </button>
+                          {r.assignedTo && (
+                            <span className="ml-1.5 inline-block rounded-full bg-indigo-100 text-indigo-800 px-2 py-0.5 text-xs font-bold border border-indigo-300">
+                              Claimed
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`inline-block rounded-full px-3 py-0.5 text-xs font-bold ${urgency.class}`}>
+                            {urgency.label}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-gray-500 text-xs whitespace-nowrap">
+                          <TimeAgo date={r.createdAt} />
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-                  {isExpanded && (
-                    <div className="border-t-2 border-gray-100 px-6 pb-6">
-                      <div className="grid gap-5 sm:grid-cols-2 pt-5">
-                        <div>
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500">Contact</p>
-                          <p className="text-lg font-semibold text-gray-900 mt-0.5">{r.phone}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500">Category</p>
-                          <p className="text-lg text-gray-900 mt-0.5">{CATEGORY_LABELS[r.category] || r.category}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500">Animal</p>
-                          <p className="text-lg text-gray-900 mt-0.5">{r.animalType}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500">Location</p>
-                          <p className="text-lg text-gray-900 mt-0.5">{r.location}</p>
-                        </div>
-                      </div>
+            <Modal
+              isOpen={!!selectedReport}
+              onClose={() => setSelectedReport(null)}
+              title={selectedReport?.name || ''}
+              size="7xl"
+            >
+              {selectedReport && (() => {
+                const r = selectedReport
+                const urgency = URGENCY_LABEL[r.urgency] || URGENCY_LABEL.low
 
-                      {r.description && (
-                        <div className="mt-5">
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-1.5">Description</p>
-                          <p className="text-base text-gray-800 bg-gray-50 rounded-xl px-5 py-4 border-2 border-gray-200 leading-relaxed">
-                            {r.description}
-                          </p>
-                        </div>
-                      )}
-
-                      {r.images && r.images.length > 0 && (
-                        <div className="mt-5">
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-2">Photos</p>
-                          <div className="flex flex-wrap gap-3">
-                            {r.images.map((img, i) => (
-                              <a key={i} href={img} target="_blank" rel="noopener noreferrer"
-                                className="group relative overflow-hidden rounded-xl border-2 border-gray-200">
-                                <img src={img} alt="" className="h-24 w-36 object-cover transition group-hover:scale-105" />
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {r.latitude && r.longitude && (
-                        <div className="mt-5">
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-2">Location Map</p>
-                          <ReportMap
-                            latitude={r.latitude}
-                            longitude={r.longitude}
-                            label={`${r.animalType} - ${r.location}`}
-                            userPos={userPos}
-                          />
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-3 mt-5 pt-5 border-t-2 border-gray-100">
-                        {r.assignedTo && r.status !== 'resolved' && (
-                          <>
-                            {r.status === 'pending' && (
-                              <DoubleConfirmation
-                                onConfirm={() => handleStatusChange(r._id, 'in_progress')}
-                                title="Start Working"
-                                message="Are you sure you want to start working on this report? This will update the status to 'In Progress'."
-                                confirmText="Yes, Start Working"
-                              >
-                                <button
-                                  disabled={actionLoading === r._id}
-                                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-lg font-bold text-white shadow transition-all hover:bg-blue-700 disabled:opacity-50"
-                                >
-                                  {actionLoading === r._id ? 'Updating...' : <><RefreshIcon className="w-5 h-5" /> Start Working</>}
-                                </button>
-                              </DoubleConfirmation>
-                            )}
-                            {r.status === 'in_progress' && (
-                              <DoubleConfirmation
-                                onConfirm={() => handleStatusChange(r._id, 'resolved')}
-                                title="Mark as Resolved"
-                                message="Are you sure you want to mark this report as resolved?"
-                                confirmText="Yes, Resolve"
-                              >
-                                <button
-                                  disabled={actionLoading === r._id}
-                                  className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
-                                >
-                                  {actionLoading === r._id ? 'Updating...' : <><CheckCircleIcon className="w-5 h-5" /> Mark as Resolved</>}
-                                </button>
-                              </DoubleConfirmation>
-                            )}
-                          </>
-                        )}
-                      </div>
-
+                return (
+                  <div className="max-h-[75vh] overflow-y-auto space-y-5">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className={`rounded-full border-2 px-3 py-1 text-sm font-bold ${STATUS_LABEL[r.status]?.class || ''}`}>
+                        {STATUS_LABEL[r.status]?.label || r.status.replace('_', ' ')}
+                      </span>
+                      <span className={`rounded-full px-3 py-1 text-sm font-bold ${urgency.class}`}>{urgency.label}</span>
                       {r.assignedTo && (
-                        <div className="mt-5 pt-5 border-t-2 border-gray-100">
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Private Notes</p>
-                          <div className="space-y-3 mb-3">
-                            {notesMap[r._id]?.length > 0 ? (
-                              notesMap[r._id].map((n) => (
-                                <div key={n._id} className="rounded-xl bg-gray-50 border-2 border-gray-200 px-4 py-3">
-                                  <div className="flex items-start justify-between">
-                                    <p className="text-sm font-bold text-gray-700">{n.userName}</p>
-                                    <p className="text-xs text-gray-500">
-                                      {new Date(n.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                    </p>
-                                  </div>
-                                  <p className="mt-1 text-base text-gray-800">{n.content}</p>
-                                </div>
-                              ))
-                            ) : (
-                              <p className="text-sm text-gray-500 italic">No notes yet</p>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              placeholder="Add a note..."
-                              value={noteInputs[r._id] || ''}
-                              onChange={(e) => setNoteInputs((prev) => ({ ...prev, [r._id]: e.target.value }))}
-                              className="flex-1 rounded-xl border-2 border-gray-300 px-4 py-2.5 text-base focus:border-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
-                            />
-                            <button
-                              onClick={() => handleAddNote(r._id)}
-                              className="rounded-xl bg-amber-600 px-5 py-2.5 text-base font-bold text-white hover:bg-amber-700 transition-colors shadow"
-                            >
-                              Add
-                            </button>
-                          </div>
-                        </div>
+                        <span className="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-sm font-bold border border-indigo-300">Claimed</span>
                       )}
                     </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Contact</p>
+                        <p className="text-base font-semibold text-gray-900 mt-0.5">{r.phone}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Category</p>
+                        <p className="text-base text-gray-900 mt-0.5">{CATEGORY_LABELS[r.category] || r.category}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Animal</p>
+                        <p className="text-base text-gray-900 mt-0.5">{r.animalType}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Location</p>
+                        <p className="text-base text-gray-900 mt-0.5">{r.location}</p>
+                      </div>
+                    </div>
+
+                    {r.description && (
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">Description</p>
+                        <p className="text-sm text-gray-800 bg-gray-50 rounded-xl px-4 py-3 border-2 border-gray-200 leading-relaxed">
+                          {r.description}
+                        </p>
+                      </div>
+                    )}
+
+                    {r.images && r.images.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1.5">Photos</p>
+                        <div className="flex flex-wrap gap-2">
+                          {r.images.map((img, i) => (
+                            <a key={i} href={img} target="_blank" rel="noopener noreferrer"
+                              className="group relative overflow-hidden rounded-xl border-2 border-gray-200">
+                              <img src={img} alt="" className="h-20 w-32 object-cover transition group-hover:scale-105" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {r.latitude && r.longitude && (
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1.5">Location Map</p>
+                        <ReportMap
+                          latitude={r.latitude}
+                          longitude={r.longitude}
+                          label={`${r.animalType} - ${r.location}`}
+                          userPos={userPos}
+                          requestLocation={requestLocation}
+                        />
+                      </div>
+                    )}
+
+                    {r.assignedTo && r.status !== 'resolved' && (
+                      <div className="flex flex-wrap gap-3 pt-2">
+                        {r.status === 'pending' && (
+                          <DoubleConfirmation
+                            onConfirm={() => { handleStatusChange(r._id, 'in_progress'); setSelectedReport(null) }}
+                            title="Start Working"
+                            message="Are you sure you want to start working on this report?"
+                            confirmText="Yes, Start Working"
+                          >
+                            <button disabled={actionLoading === r._id}
+                              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow hover:bg-blue-700 disabled:opacity-50"
+                            >
+                              {actionLoading === r._id ? 'Updating...' : <><RefreshIcon className="w-4 h-4" /> Start Working</>}
+                            </button>
+                          </DoubleConfirmation>
+                        )}
+                        {r.status === 'in_progress' && (
+                          <DoubleConfirmation
+                            onConfirm={() => { handleStatusChange(r._id, 'resolved'); setSelectedReport(null) }}
+                            title="Mark as Resolved"
+                            message="Are you sure you want to mark this report as resolved?"
+                            confirmText="Yes, Resolve"
+                          >
+                            <button disabled={actionLoading === r._id}
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 shadow disabled:opacity-50"
+                            >
+                              {actionLoading === r._id ? 'Updating...' : <><CheckCircleIcon className="w-4 h-4" /> Mark as Resolved</>}
+                            </button>
+                          </DoubleConfirmation>
+                        )}
+                      </div>
+                    )}
+
+                    {r.assignedTo && (
+                      <div className="pt-3 border-t-2 border-gray-100">
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Private Notes</p>
+                        <div className="space-y-2 mb-3">
+                          {notesMap[r._id]?.length > 0 ? (
+                            notesMap[r._id].map((n) => (
+                              <div key={n._id} className="rounded-xl bg-gray-50 border-2 border-gray-200 px-4 py-3">
+                                <div className="flex items-start justify-between">
+                                  <p className="text-sm font-bold text-gray-700">{n.userName}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {new Date(n.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                  </p>
+                                </div>
+                                <p className="mt-1 text-sm text-gray-800">{n.content}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-gray-500 italic">No notes yet</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Add a note..."
+                            value={noteInputs[r._id] || ''}
+                            onChange={(e) => setNoteInputs((prev) => ({ ...prev, [r._id]: e.target.value }))}
+                            className="flex-1 rounded-xl border-2 border-gray-300 px-4 py-2 text-sm focus:border-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
+                          />
+                          <button
+                            onClick={() => handleAddNote(r._id)}
+                            className="rounded-xl bg-amber-600 px-5 py-2 text-sm font-bold text-white hover:bg-amber-700 shadow"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+            </Modal>
+          </>
         )}
       </div>
     </main>
