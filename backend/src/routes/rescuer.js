@@ -13,7 +13,6 @@ const {
   getNotes,
   updateLocation,
   rejectAssignment,
-  triggerSos,
 } = require("../controllers/rescuerController");
 const { upload, uploadImage } = require("../controllers/uploadController");
 const { getShifts, saveShifts } = require("../controllers/shiftController");
@@ -34,7 +33,6 @@ router.get("/activity", asyncHandler(getActivity));
 router.patch("/availability", asyncHandler(updateAvailability));
 router.post("/location", asyncHandler(updateLocation));
 router.post("/reports/:id/reject", asyncHandler(rejectAssignment));
-router.post("/sos", asyncHandler(triggerSos));
 router.post("/upload", upload.single("image"), asyncHandler(uploadImage));
 
 router.get("/shifts", asyncHandler(getShifts));
