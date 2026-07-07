@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
+const { DEFAULT_ADMIN_PERMISSIONS } = require("../controllers/permissionsController");
 
 function authenticate(req, res, next) {
   const token = req.cookies?.token || (req.headers.authorization || "").split(" ")[1];
@@ -37,8 +38,12 @@ function authorizeWithPermission(feature, action = "read") {
     }
     try {
       const raw = await convexClient.query(anyApi.config.getConfigValue, { key: "adminPermissions" });
-      let permissions = {};
-      try { permissions = raw ? JSON.parse(raw) : {}; } catch { permissions = {}; }
+      let stored = {};
+      try { stored = raw ? JSON.parse(raw) : {}; } catch { stored = {}; }
+      const permissions = {};
+      for (const [feature, defaults] of Object.entries(DEFAULT_ADMIN_PERMISSIONS)) {
+        permissions[feature] = { ...defaults, ...(stored[feature] || {}) };
+      }
       if (permissions[feature]?.[action] === true) return next();
       return res.status(403).json({ message: "Forbidden. No permission." });
     } catch {

@@ -3,15 +3,15 @@ import { mutation, query } from "./_generated/server";
 
 export const updateRescuerLocation = mutation({
   args: {
-    userId: v.string(),
-    userName: v.string(),
+    rescuerEmail: v.string(),
+    rescuerName: v.string(),
     latitude: v.number(),
     longitude: v.number(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("rescuerLocations")
-      .withIndex("by_userId", (idx) => idx.eq("userId", args.userId))
+      .withIndex("by_rescuer_email", (idx) => idx.eq("rescuerEmail", args.rescuerEmail))
       .unique();
 
     if (existing) {
@@ -23,8 +23,8 @@ export const updateRescuerLocation = mutation({
     }
 
     return await ctx.db.insert("rescuerLocations", {
-      userId: args.userId,
-      userName: args.userName,
+      rescuerEmail: args.rescuerEmail,
+      rescuerName: args.rescuerName,
       latitude: args.latitude,
       longitude: args.longitude,
       updatedAt: Date.now(),

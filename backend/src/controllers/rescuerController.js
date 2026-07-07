@@ -5,84 +5,70 @@ const { publish } = require("../services/notification");
 const { sendReportStatus } = require("../services/email");
 const { notifyAdmin } = require("../services/adminNotification");
 
+const RESCUER_STATUS_MAP = {
+  pending: "pending",
+  accepted: "assigned",
+  en_route: "en_route",
+  rescue_success: "resolved",
+  rescue_failed: "failed",
+};
+
 const getReports = async (req, res) => {
   const { status, assignedTo, search, sortBy } = req.query;
-  let reports = await convexClient.query(anyApi.reports.getReports, {
-    status: status || undefined,
-    assignedTo: assignedTo || undefined,
-    limit: 200,
-  });
+  const user = req.user;
+
+  let reports;
+  if (assignedTo && user?.email) {
+    reports = await convexClient.query(anyApi.reports.listReportsByRescuer, { rescuerEmail: user.email });
+  } else {
+    reports = await convexClient.query(anyApi.reports.listReports);
+  }
 
   const mapped = reports.map((r) => ({
     _id: r._id,
-    name: r.name,
-    phone: r.phone,
-    category: r.category,
-    animalType: r.animalType,
-    urgency: r.urgency,
+    name: r.reporterEmail || "Anonymous",
+    phone: "",
+    category: "other",
+    animalType: r.animalName,
+    urgency: "medium",
     location: r.location,
     description: r.description,
-    images: JSON.parse(r.images || "[]"),
-    status: r.status,
-    assignedTo: r.assignedTo || null,
+    images: [],
+    status: RESCUER_STATUS_MAP[r.status] || r.status,
+    assignedTo: r.assignedRescuerEmail || null,
     latitude: r.latitude ?? null,
     longitude: r.longitude ?? null,
     createdAt: r.createdAt,
   }));
 
+  let filtered = mapped;
+  if (status) {
+    const mappedStatus = RESCUER_STATUS_MAP[status] || status;
+    filtered = filtered.filter((r) => r.status === mappedStatus);
+  }
+
   if (search) {
     const q = search.toLowerCase();
-    const filtered = mapped.filter(
+    filtered = filtered.filter(
       (r) =>
         r.name.toLowerCase().includes(q) ||
         r.location.toLowerCase().includes(q) ||
         r.animalType.toLowerCase().includes(q) ||
-        r.category.toLowerCase().includes(q) ||
         r.description?.toLowerCase().includes(q)
     );
-    return res.json({ reports: filtered });
   }
 
-  if (sortBy === "urgency") {
-    const order = { emergency: 0, high: 1, medium: 2, low: 3 };
-    mapped.sort((a, b) => (order[a.urgency] ?? 99) - (order[b.urgency] ?? 99));
-  } else if (sortBy === "oldest") {
-    mapped.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+  if (sortBy === "oldest") {
+    filtered.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
   } else {
-    mapped.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    filtered.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
   }
 
-  res.json({ reports: mapped });
+  res.json({ reports: filtered });
 };
 
 const rejectAssignment = async (req, res) => {
-  const { id } = req.params;
-  const userId = req.user.uuid;
-
-  await convexClient.mutation(anyApi.reports.rejectAssignment, { reportId: id });
-
-  await convexClient.mutation(anyApi.activity.insertActivityLog, {
-    userId,
-    action: "rejected",
-    reportId: id,
-    details: `Rejected assignment`,
-  });
-
-  await logEvent({
-    req,
-    userId,
-    eventType: "report_rejected",
-    metadata: { reportId: id },
-  });
-
-  await publish({
-    type: "report:rejected",
-    reportId: id,
-    updatedBy: userId,
-    timestamp: Date.now(),
-  });
-
-  res.json({ message: "Assignment rejected." });
+  res.status(503).json({ message: "Rejecting assignments requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
 };
 
 const updateLocation = async (req, res) => {
@@ -94,11 +80,12 @@ const updateLocation = async (req, res) => {
   }
 
   const user = await convexClient.query(anyApi.users.getUserByUuid, { uuid: userId });
-  const userName = user ? `${user.firstName} ${user.lastName}` : userId;
+  if (!user) return res.status(404).json({ message: "User not found." });
+  const rescuerName = `${user.firstName} ${user.lastName}`.trim();
 
   await convexClient.mutation(anyApi.locations.updateRescuerLocation, {
-    userId,
-    userName,
+    rescuerEmail: user.email,
+    rescuerName,
     latitude,
     longitude,
   });
@@ -107,72 +94,44 @@ const updateLocation = async (req, res) => {
 };
 
 const updateReportStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  const userId = req.user.uuid;
-
-  if (!["pending", "assigned", "en_route", "in_progress", "resolved", "failed"].includes(status)) {
-    return res.status(400).json({ message: "Invalid status." });
-  }
-
-  await convexClient.mutation(anyApi.reports.updateReportStatus, {
-    reportId: id,
-    status,
-  });
-
-  await convexClient.mutation(anyApi.activity.insertActivityLog, {
-    userId,
-    action: `status:${status}`,
-    reportId: id,
-    details: `Updated status to ${status.replace("_", " ")}`,
-  });
-
-  await logEvent({
-    req,
-    userId,
-    eventType: "report_status",
-    metadata: { reportId: id, newStatus: status },
-  });
-
-  try {
-    await sendReportStatus(userId, "Animal", id, status);
-  } catch {}
-
-  await publish({
-    type: "report:status",
-    reportId: id,
-    status,
-    updatedBy: userId,
-    timestamp: Date.now(),
-  });
-
-  res.json({ message: `Report status updated to ${status}.`, status });
+  res.status(503).json({ message: "Updating report status requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
 };
 
 const getStats = async (req, res) => {
   const userId = req.user.uuid;
-  const stats = await convexClient.query(anyApi.reports.getRescuerStats, { uuid: userId });
+  const user = await convexClient.query(anyApi.users.getUserByUuid, { uuid: userId });
 
-  const recentReports = await convexClient.query(anyApi.reports.getReports, {
-    assignedTo: userId,
-    limit: 10,
-  });
+  let reports = [];
+  if (user?.email) {
+    reports = await convexClient.query(anyApi.reports.listReportsByRescuer, { rescuerEmail: user.email });
+  }
 
-  const mapped = recentReports.map((r) => ({
+  const total = reports.length;
+  const pending = reports.filter((r) => r.status === "pending").length;
+  const accepted = reports.filter((r) => r.status === "accepted").length;
+  const enRoute = reports.filter((r) => r.status === "en_route").length;
+  const resolved = reports.filter((r) => r.status === "rescue_success").length;
+  const failed = reports.filter((r) => r.status === "rescue_failed").length;
+
+  const recentReports = reports.slice(0, 10).map((r) => ({
     _id: r._id,
-    name: r.name,
-    category: r.category,
-    animalType: r.animalType,
-    urgency: r.urgency,
-    status: r.status,
+    name: r.reporterEmail || "Anonymous",
+    category: "other",
+    animalType: r.animalName,
+    urgency: "medium",
+    status: RESCUER_STATUS_MAP[r.status] || r.status,
     createdAt: r.createdAt,
   }));
 
-  const user = await convexClient.query(anyApi.users.getUserByUuid, { uuid: userId });
-
   res.json({
-    ...stats,
-    recentReports: mapped,
+    total,
+    pending,
+    assigned: accepted,
+    enRoute,
+    inProgress: 0,
+    resolved,
+    failed,
+    recentReports,
     availability: user?.availability || null,
   });
 };

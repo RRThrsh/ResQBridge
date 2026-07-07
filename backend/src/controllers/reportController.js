@@ -10,8 +10,18 @@ const { notifyAdmin } = require("../services/adminNotification");
 const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
+const URGENCY_MAP = {
+  Healthy: "low",
+  Injured: "emergency",
+  Sick: "high",
+  Trapped: "high",
+  Unknown: "medium",
+};
+
 const submitReport = async (req, res) => {
-  const { name, phone, category, animalType, urgency, location, description, latitude, longitude } = req.body;
+  const { name, phone, category, animalType, wildlifeCondition, location, description, latitude, longitude } = req.body;
+
+  const urgency = URGENCY_MAP[wildlifeCondition] || "medium";
 
   if (!phone || !animalType || !urgency || !location || !description) {
     return res.status(400).json({ message: "Phone, animal type, urgency, location, and description are required." });
@@ -39,6 +49,7 @@ const submitReport = async (req, res) => {
     phone,
     category: category || "other",
     animalType,
+    wildlifeCondition,
     urgency,
     location,
     description,
@@ -49,19 +60,17 @@ const submitReport = async (req, res) => {
 
   const clientIp = req.ip || req.connection?.remoteAddress || "unknown";
 
-  await convexClient.mutation(anyApi.reports.insertReport, {
-    name: name || "Anonymous",
-    phone,
-    category: category || "other",
-    animalType,
-    urgency,
+  const reporterEmail = name
+    ? `${name.replace(/\s+/g, '').toLowerCase()}@report.resqbridge`
+    : `reporter-${Date.now()}@report.resqbridge`;
+
+  await convexClient.mutation(anyApi.reports.createReport, {
+    animalName: animalType,
     location,
     description,
-    images: JSON.stringify(images),
-    status: "pending",
-    reporterIp: clientIp,
     latitude: lat,
     longitude: lng,
+    reporterEmail,
   });
 
   await notifyAdmin({

@@ -3,17 +3,17 @@ const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
 
 const DEFAULT_ADMIN_PERMISSIONS = {
-  users: { read: false, write: false, execute: false },
-  reports: { read: false, write: false, execute: false },
-  rescuerMap: { read: false, write: false, execute: false },
-  monitoring: { read: false, write: false, execute: false },
-  audit: { read: false, write: false, execute: false },
-  landingPage: { read: false, write: false, execute: false },
+  users: { read: true, write: false, execute: false },
+  reports: { read: true, write: false, execute: false },
+  rescuerMap: { read: true, write: false, execute: false },
+  monitoring: { read: true, write: false, execute: false },
+  audit: { read: true, write: false, execute: false },
+  landingPage: { read: true, write: false, execute: false },
   systemConfig: { read: false, write: false, execute: false },
   dashboard: { read: true, write: false, execute: false },
-  archive: { read: false, write: false, execute: false },
+  archive: { read: true, write: false, execute: false },
   exportData: { read: false, write: false, execute: false },
-  systemHealth: { read: false, write: false, execute: false },
+  systemHealth: { read: true, write: false, execute: false },
 };
 
 const ACTIONS = ["read", "write", "execute"];

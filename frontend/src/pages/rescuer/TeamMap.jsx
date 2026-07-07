@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { GoogleMap, Marker, useLoadScript, InfoWindow } from '@react-google-maps/api'
+import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
 import { rescuer as rescuerApi } from '../../services/api'
 
@@ -7,6 +8,7 @@ const containerStyle = { width: '100%', height: '100%', borderRadius: '0.75rem' 
 
 export default function TeamMap() {
   const { isLoaded } = useLoadScript({ googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY })
+  const { user } = useAuth()
   const { userPos } = useLocationContext()
   const [rescuers, setRescuers] = useState([])
   const [selected, setSelected] = useState(null)
@@ -55,7 +57,7 @@ export default function TeamMap() {
                 title="Your Location"
               />
             )}
-            {rescuers.filter((r) => r.userId !== userPos?.uuid).map((r) => (
+            {rescuers.filter((r) => r.rescuerEmail !== user?.email).map((r) => (
               <Marker
                 key={r.userId}
                 position={{ lat: r.latitude, lng: r.longitude }}
@@ -75,7 +77,7 @@ export default function TeamMap() {
                 position={{ lat: selected.latitude, lng: selected.longitude }}
                 onCloseClick={() => setSelected(null)}
               >
-                <div className="text-sm font-medium text-gray-900">{selected.userName}</div>
+                <div className="text-sm font-medium text-gray-900">{selected.rescuerName || selected.userName}</div>
               </InfoWindow>
             )}
           </GoogleMap>

@@ -141,7 +141,7 @@ export default function Report() {
   }
 
   async function handleSubmit(e) {
-    e.preventDefault()
+    if (e) e.preventDefault()
     setError('')
     if (imageFiles.length === 0) {
       setError('Please upload at least one supporting photo.')
