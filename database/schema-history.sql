@@ -1,6 +1,6 @@
 -- Schema created: 2026-06-12
 -- Source: backend/convex/schema.ts
--- Last updated: 2026-06-24 (3 features added)
+-- Last updated: 2026-07-07 (full schema alignment)
 
 -- ============================================================
 -- otps — One-time passwords for email-based authentication
@@ -17,6 +17,7 @@ CREATE TABLE otps (
 
 -- ============================================================
 -- users — Application users with role-based access control
+-- Added availability column: 2026-07-07
 -- ============================================================
 CREATE TABLE users (
     uuid VARCHAR(36) PRIMARY KEY,
@@ -25,29 +26,88 @@ CREATE TABLE users (
     phoneNumber VARCHAR(20) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('superadmin', 'admin', 'rescuer', 'user') NOT NULL DEFAULT 'user',
+    role ENUM('superadmin', 'admin', 'domestic', 'rescuer', 'user') NOT NULL DEFAULT 'user',
+    availability ENUM('available', 'busy') DEFAULT NULL,
     _creationTime BIGINT NOT NULL,
     INDEX by_email (email),
     INDEX by_uuid (uuid)
 );
 
 -- ============================================================
--- logs — Audit trail for user actions, guest visits, events
--- Added: 2026-06-19
+-- admins — Admin accounts (separate from users table)
+-- Added: 2026-07-07
 -- ============================================================
-CREATE TABLE logs (
+CREATE TABLE admins (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    userId VARCHAR(36),
-    eventType VARCHAR(50) NOT NULL,
-    section VARCHAR(255),
-    ipAddress VARCHAR(45) NOT NULL,
-    userAgent VARCHAR(500),
-    metadata JSON,
-    sessionDuration INT,
+    email VARCHAR(255) NOT NULL,
+    firstName VARCHAR(255) NOT NULL,
+    lastName VARCHAR(255) NOT NULL,
+    _creationTime BIGINT NOT NULL,
+    INDEX by_email (email)
+);
+
+-- ============================================================
+-- rescuers — Rescuer accounts (separate from users table)
+-- Added: 2026-07-07
+-- ============================================================
+CREATE TABLE rescuers (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    firstName VARCHAR(255) NOT NULL,
+    lastName VARCHAR(255) NOT NULL,
+    phoneNumber VARCHAR(20) NOT NULL,
+    _creationTime BIGINT NOT NULL,
+    INDEX by_email (email)
+);
+
+-- ============================================================
+-- reports — Animal rescue incident reports
+-- Added: 2026-06-20
+-- Aligned with schema: 2026-07-07
+-- ============================================================
+CREATE TABLE reports (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    animalType VARCHAR(100) NOT NULL,
+    urgency VARCHAR(50) NOT NULL,
+    location VARCHAR(500) NOT NULL,
+    description TEXT DEFAULT NULL,
+    images TEXT DEFAULT NULL,
+    latitude DOUBLE DEFAULT NULL,
+    longitude DOUBLE DEFAULT NULL,
+    status ENUM('pending','assigned','en_route','in_progress','resolved','failed') NOT NULL DEFAULT 'pending',
+    assignedTo VARCHAR(36) DEFAULT NULL,
+    assignedUser JSON DEFAULT NULL,
+    reporterEmail VARCHAR(255) DEFAULT NULL,
+    reporterIp VARCHAR(45) DEFAULT NULL,
     createdAt BIGINT NOT NULL,
-    INDEX by_eventType (eventType),
-    INDEX by_ipAddress (ipAddress),
-    INDEX by_createdAt (createdAt)
+    archivedAt BIGINT DEFAULT NULL,
+    archivedByName VARCHAR(255) DEFAULT NULL,
+    _creationTime BIGINT NOT NULL,
+    INDEX by_assignedTo (assignedTo),
+    INDEX by_status (status)
+);
+
+-- ============================================================
+-- rescuerLocations — Real-time rescuer GPS tracking
+-- Added: 2026-07-07
+-- ============================================================
+CREATE TABLE rescuerLocations (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(36) NOT NULL,
+    userName VARCHAR(255) NOT NULL,
+    latitude DOUBLE NOT NULL,
+    longitude DOUBLE NOT NULL,
+    heading DOUBLE DEFAULT NULL,
+    speed DOUBLE DEFAULT NULL,
+    updatedAt BIGINT NOT NULL,
+    reportId VARCHAR(255) DEFAULT NULL,
+    animalName VARCHAR(255) DEFAULT NULL,
+    isTracking BOOLEAN DEFAULT FALSE,
+    INDEX by_userId (userId),
+    INDEX by_tracking (isTracking)
 );
 
 -- ============================================================
@@ -61,32 +121,51 @@ CREATE TABLE config (
 );
 
 -- ============================================================
--- reports — Animal rescue incident reports
--- Added: 2026-06-20
--- Columns archived/archivedAt/archivedBy added: 2026-06-24
+-- shifts — Rescuer weekly shift schedules
+-- Added: 2026-07-07
 -- ============================================================
-CREATE TABLE reports (
+CREATE TABLE shifts (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    animalType VARCHAR(100) NOT NULL,
-    urgency VARCHAR(50) NOT NULL,
-    location VARCHAR(500) NOT NULL,
-    description TEXT NOT NULL,
-    images TEXT NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    assignedTo VARCHAR(36),
-    reporterIp VARCHAR(45) NOT NULL,
-    latitude DOUBLE,
-    longitude DOUBLE,
+    userId VARCHAR(36) NOT NULL,
+    dayOfWeek TINYINT NOT NULL,
+    startTime VARCHAR(5) NOT NULL,
+    endTime VARCHAR(5) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    INDEX by_userId (userId),
+    INDEX by_userId_and_day (userId, dayOfWeek)
+);
+
+-- ============================================================
+-- activityLogs — Audit trail for rescuer activity
+-- Added: 2026-07-07
+-- ============================================================
+CREATE TABLE activityLogs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(36) NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    reportId VARCHAR(255) DEFAULT NULL,
+    details TEXT NOT NULL,
     createdAt BIGINT NOT NULL,
-    archived BOOLEAN DEFAULT FALSE,
-    archivedAt BIGINT,
-    archivedBy VARCHAR(36),
-    INDEX by_createdAt (createdAt),
-    INDEX by_status (status),
-    INDEX by_assignedTo (assignedTo)
+    INDEX by_userId (userId)
+);
+
+-- ============================================================
+-- logs — Audit trail for user actions, guest visits, events
+-- Added: 2026-06-19
+-- ============================================================
+CREATE TABLE logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(36) DEFAULT NULL,
+    eventType VARCHAR(50) NOT NULL,
+    section VARCHAR(255) DEFAULT NULL,
+    ipAddress VARCHAR(45) NOT NULL,
+    userAgent VARCHAR(500) DEFAULT NULL,
+    metadata JSON DEFAULT NULL,
+    sessionDuration INT DEFAULT NULL,
+    createdAt BIGINT NOT NULL,
+    INDEX by_eventType (eventType),
+    INDEX by_ipAddress (ipAddress),
+    INDEX by_createdAt (createdAt)
 );
 
 -- ============================================================
@@ -97,9 +176,67 @@ CREATE TABLE adminNotifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     type VARCHAR(50) NOT NULL,
     message TEXT NOT NULL,
-    link VARCHAR(500),
+    link VARCHAR(500) DEFAULT NULL,
     read BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt BIGINT NOT NULL,
     INDEX by_read (read),
     INDEX by_createdAt (createdAt)
+);
+
+-- ============================================================
+-- equipmentChecklists — Equipment checklists per rescue report
+-- Added: 2026-07-07
+-- ============================================================
+CREATE TABLE equipmentChecklists (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    reportId VARCHAR(255) NOT NULL,
+    userId VARCHAR(36) NOT NULL,
+    items JSON NOT NULL,
+    createdAt BIGINT NOT NULL,
+    updatedAt BIGINT NOT NULL,
+    INDEX by_reportId (reportId)
+);
+
+-- ============================================================
+-- messages — Chat messages between rescuers/admins
+-- Added: 2026-07-07
+-- ============================================================
+CREATE TABLE messages (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    senderId VARCHAR(36) NOT NULL,
+    senderName VARCHAR(255) NOT NULL,
+    senderRole VARCHAR(50) NOT NULL,
+    content TEXT NOT NULL,
+    reportId VARCHAR(255) DEFAULT NULL,
+    createdAt BIGINT NOT NULL,
+    INDEX by_reportId (reportId)
+);
+
+-- ============================================================
+-- reportNotes — Internal notes attached to reports
+-- Added: 2026-07-07
+-- ============================================================
+CREATE TABLE reportNotes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    reportId VARCHAR(255) NOT NULL,
+    userId VARCHAR(36) NOT NULL,
+    userName VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    createdAt BIGINT NOT NULL,
+    INDEX by_reportId (reportId)
+);
+
+-- ============================================================
+-- voiceNotes — Voice recordings attached to reports
+-- Added: 2026-07-07
+-- ============================================================
+CREATE TABLE voiceNotes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    reportId VARCHAR(255) NOT NULL,
+    userId VARCHAR(36) NOT NULL,
+    userName VARCHAR(255) NOT NULL,
+    audioUrl TEXT NOT NULL,
+    duration INT DEFAULT NULL,
+    createdAt BIGINT NOT NULL,
+    INDEX by_reportId (reportId)
 );

@@ -84,8 +84,8 @@ const updateLocation = async (req, res) => {
   const rescuerName = `${user.firstName} ${user.lastName}`.trim();
 
   await convexClient.mutation(anyApi.locations.updateRescuerLocation, {
-    rescuerEmail: user.email,
-    rescuerName,
+    userId: user.uuid,
+    userName: rescuerName,
     latitude,
     longitude,
   });
