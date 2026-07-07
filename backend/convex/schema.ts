@@ -127,16 +127,6 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"]),
 
-  adminNotifications: defineTable({
-    type: v.string(),
-    message: v.string(),
-    link: v.optional(v.string()),
-    read: v.boolean(),
-    createdAt: v.number(),
-  })
-    .index("by_createdAt", ["createdAt"])
-    .index("by_read", ["read"]),
-
   equipmentChecklists: defineTable({
     reportId: v.string(),
     userId: v.string(),
