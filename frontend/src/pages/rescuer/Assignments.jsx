@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
-import { DoubleConfirmation, SkeletonCard } from '../../components/ui'
+import { DoubleConfirmation, SkeletonCard, Modal } from '../../components/ui'
 import { rescuer as rescuerApi } from '../../services/api'
 import { CheckIcon, XIcon, CarIcon, CameraIcon, ClipboardIcon, MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, CheckCircleIcon, XCircleIcon } from '../../components/SvgIcons'
 import ReportMap from './ReportMap'
@@ -36,7 +36,7 @@ const CATEGORY_ICONS = {
 
 export default function RescuerAssignments() {
   const { user } = useAuth()
-  const { userPos } = useLocationContext()
+  const { userPos, requestLocation } = useLocationContext()
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
@@ -48,7 +48,7 @@ export default function RescuerAssignments() {
   const [showFailInput, setShowFailInput] = useState(new Set())
   const [uploadingId, setUploadingId] = useState(null)
   const [uploadedImages, setUploadedImages] = useState({})
-  const [collapsedIds, setCollapsedIds] = useState(new Set())
+  const [selectedReport, setSelectedReport] = useState(null)
   const [page, setPage] = useState(1)
   const pageSize = 10
 
@@ -307,95 +307,121 @@ export default function RescuerAssignments() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {paginatedReports.map((r) => {
-              const urgency = URGENCY_LABEL[r.urgency] || URGENCY_LABEL.low
-              const isAccepted = acceptedIds.has(r._id)
-              const badgeKey = statusBadgeKey(r.status)
-              const badgeClass = BADGES[badgeKey] || BADGES.new
-              const badgeLabel = BADGE_LABELS[badgeKey]
+          <>
+            <div className="overflow-x-auto rounded-2xl border-2 border-gray-200 bg-white shadow-sm">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b-2 border-gray-200 bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-500">
+                  <tr>
+                    <th className="px-5 py-4">Animal</th>
+                    <th className="px-5 py-4">Location</th>
+                    <th className="px-5 py-4">Status</th>
+                    <th className="px-5 py-4">Urgency</th>
+                    <th className="px-5 py-4">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginatedReports.map((r) => {
+                    const urgency = URGENCY_LABEL[r.urgency] || URGENCY_LABEL.low
+                    const badgeKey = statusBadgeKey(r.status)
+                    const badgeClass = BADGES[badgeKey] || BADGES.new
+                    const badgeLabel = BADGE_LABELS[badgeKey]
+                    const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon
 
-              const showDiary = isAccepted || r.status === 'en_route' || r.status === 'in_progress'
-              const showInitial = !isAccepted && r.status !== 'en_route' && r.status !== 'in_progress' && r.status !== 'resolved' && r.status !== 'failed'
-              const reportImages = uploadedImages[r._id] || []
-
-              const isCollapsed = collapsedIds.has(r._id)
-
-              return (
-                <div key={r._id} className="rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:border-amber-400 transition-all">
-                  <div className="flex items-start gap-4 p-5">
-                    <span className="mt-0.5">{(() => { const Icon = CATEGORY_ICONS[r.category] || ClipboardIcon; return <Icon className="w-7 h-7 text-gray-600" />; })()}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xl font-bold text-gray-900">{r.name}</span>
-                        <span className={`rounded-full border-2 px-3 py-1 text-sm font-bold ${badgeClass}`}>
-                          {badgeLabel}
-                        </span>
-                        <span className={`rounded-full px-3 py-1 text-sm font-bold ${urgency.class}`}>
-                          {urgency.label}
-                        </span>
-                      </div>
-                      {!isCollapsed && (
-                        <>
-                          <p className="mt-1.5 text-base text-gray-600">
-                            {r.animalType} &middot; {r.location}
-                          </p>
-                          <p className="mt-1 text-sm text-gray-500">
-                            {new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    {r.latitude && r.longitude && !isCollapsed && (
-                      <button
-                        onClick={() => {
-                          const dest = `${r.latitude},${r.longitude}`
-                          const url = userPos
-                            ? `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${dest}`
-                            : `https://www.google.com/maps/search/?api=1&query=${dest}`
-                          window.location.href = url
-                        }}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-4 py-2.5 text-base font-bold text-blue-700 hover:bg-blue-100 border-2 border-blue-200 transition-colors shrink-0"
+                    return (
+                      <tr
+                        key={r._id}
+                        onClick={() => { setSelectedReport(r); loadChecklist(r._id); loadVoiceNotes(r._id) }}
+                        className="cursor-pointer transition-colors hover:bg-amber-50"
                       >
-                        <CarIcon className="w-5 h-5" /> Directions
-                      </button>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-5 h-5 text-gray-500 shrink-0" />
+                            <span className="font-semibold text-gray-900">{r.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 text-gray-600 max-w-[200px] truncate">{r.location}</td>
+                        <td className="px-5 py-4">
+                          <span className={`inline-block rounded-full border-2 px-3 py-0.5 text-xs font-bold ${badgeClass}`}>
+                            {badgeLabel}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`inline-block rounded-full px-3 py-0.5 text-xs font-bold ${urgency.class}`}>
+                            {urgency.label}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-gray-500 text-xs whitespace-nowrap">
+                          {new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <Modal
+              isOpen={!!selectedReport}
+              onClose={() => { setSelectedReport(null); setShowFailInput(new Set()) }}
+              title={selectedReport?.name || ''}
+              size="7xl"
+            >
+              {selectedReport && (() => {
+                const r = selectedReport
+                const urgency = URGENCY_LABEL[r.urgency] || URGENCY_LABEL.low
+                const isAccepted = acceptedIds.has(r._id)
+                const badgeKey = statusBadgeKey(r.status)
+                const badgeClass = BADGES[badgeKey] || BADGES.new
+                const badgeLabel = BADGE_LABELS[badgeKey]
+
+                const showDiary = isAccepted || r.status === 'en_route' || r.status === 'in_progress'
+                const showInitial = !isAccepted && r.status !== 'en_route' && r.status !== 'in_progress' && r.status !== 'resolved' && r.status !== 'failed'
+                const reportImages = uploadedImages[r._id] || []
+
+                return (
+                  <div className="max-h-[75vh] overflow-y-auto space-y-5">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className={`rounded-full border-2 px-3 py-1 text-sm font-bold ${badgeClass}`}>{badgeLabel}</span>
+                      <span className={`rounded-full px-3 py-1 text-sm font-bold ${urgency.class}`}>{urgency.label}</span>
+                      <span className="text-sm text-gray-500">{r.animalType}</span>
+                      <span className="text-sm text-gray-400">{r.location}</span>
+                    </div>
+
+                    {r.description && <p className="text-gray-700">{r.description}</p>}
+
+                    {r.latitude && r.longitude && (
+                      <ReportMap latitude={r.latitude} longitude={r.longitude} label={r.name} userPos={userPos} requestLocation={requestLocation} />
                     )}
-                    <button
-                      onClick={() => {
-                        const next = new Set(collapsedIds)
-                        if (next.has(r._id)) {
-                          next.delete(r._id)
-                        } else {
-                          next.add(r._id)
-                          loadChecklist(r._id)
-                          loadVoiceNotes(r._id)
-                        }
-                        setCollapsedIds(next)
-                      }}
-                      className="inline-flex items-center justify-center rounded-xl bg-gray-100 w-10 h-10 text-gray-600 hover:bg-gray-200 border-2 border-gray-200 transition-colors shrink-0"
-                    >
-                      <svg className={`w-5 h-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                      </svg>
-                    </button>
-                  </div>
 
-                  {!isCollapsed && (
-                    <>
-                      {r.latitude && r.longitude && (
-                        <div className="px-5 pb-4">
-                          <ReportMap
-                            latitude={r.latitude}
-                            longitude={r.longitude}
-                            label={r.name}
-                            userPos={userPos}
-                          />
-                        </div>
-                      )}
+                    {showInitial && (
+                      <div className="flex flex-wrap gap-3 pt-2">
+                        <DoubleConfirmation
+                          onConfirm={() => { handleAccept(r._id); setSelectedReport(null) }}
+                          title="Accept Assignment"
+                          message="Are you sure you want to accept this assignment? You will be responsible for responding to this rescue request."
+                          confirmText="Yes, Accept"
+                        >
+                          <button className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 shadow">
+                            <CheckIcon className="w-4 h-4" /> Accept
+                          </button>
+                        </DoubleConfirmation>
+                        <DoubleConfirmation
+                          onConfirm={() => { handleReject(r._id); setSelectedReport(null) }}
+                          title="Reject Assignment"
+                          message="Are you sure you want to reject this assignment? This will make it available for other rescuers."
+                          confirmText="Yes, Reject"
+                        >
+                          <button className="inline-flex items-center gap-1.5 rounded-xl bg-red-100 px-5 py-2.5 text-sm font-bold text-red-700 hover:bg-red-200 border-2 border-red-200">
+                            <XIcon className="w-4 h-4" /> Reject
+                          </button>
+                        </DoubleConfirmation>
+                      </div>
+                    )}
 
-                      {!showInitial && (
-                        <div className="px-5 pb-4 pt-4 border-t-2 border-gray-100">
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Equipment Checklist</p>
+                    {!showInitial && (
+                      <>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Equipment Checklist</p>
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {(checklists[r._id] || EQUIPMENT_ITEMS.map((l) => ({ label: l, checked: false }))).map((item, i) => (
                               <button
@@ -417,135 +443,89 @@ export default function RescuerAssignments() {
                             ))}
                           </div>
                         </div>
-                      )}
 
-                      <div className="px-5 pb-4 pt-4 border-t-2 border-gray-100 flex flex-wrap gap-2">
-                        {showInitial && (
-                          <>
-                            <DoubleConfirmation
-                              onConfirm={() => handleAccept(r._id)}
-                              title="Accept Assignment"
-                              message="Are you sure you want to accept this assignment? You will be responsible for responding to this rescue request."
-                              confirmText="Yes, Accept"
-                            >
-                              <button className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow">
-                                <CheckIcon className="w-5 h-5" /> Accept
-                              </button>
-                            </DoubleConfirmation>
-                            <DoubleConfirmation
-                              onConfirm={() => handleReject(r._id)}
-                              title="Reject Assignment"
-                              message="Are you sure you want to reject this assignment? This will make it available for other rescuers."
-                              confirmText="Yes, Reject"
-                            >
-                              <button
-                                disabled={actionLoading === r._id}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-red-100 px-5 py-2.5 text-base font-bold text-red-700 hover:bg-red-200 transition-colors border-2 border-red-200 disabled:opacity-50"
-                              >
-                                <XIcon className="w-5 h-5" /> Reject
-                              </button>
-                            </DoubleConfirmation>
-                          </>
-                        )}
-                      </div>
-
-                      {showDiary && (
-                        <div className="px-5 pb-5 pt-4 border-t-2 border-gray-100 space-y-3">
-                          <textarea
-                            placeholder="Write your rescue diary here..."
-                            value={diaryText[r._id] || ''}
-                            onChange={(e) => setDiaryText({ ...diaryText, [r._id]: e.target.value })}
-                            className="w-full rounded-xl border-2 border-gray-300 p-3 text-base focus:border-amber-500 focus:outline-none"
-                            rows={3}
-                          />
-
-                          <div className="flex flex-wrap items-center gap-2">
-                            <label className="inline-flex items-center gap-1.5 cursor-pointer rounded-xl bg-gray-100 px-4 py-2.5 text-base font-bold text-gray-700 hover:bg-gray-200 border-2 border-gray-300 transition-colors">
-                              {uploadingId === r._id ? 'Uploading...' : <><CameraIcon className="w-5 h-5" /> Add Photo</>}
-                              <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/gif,image/webp"
-                                className="hidden"
-                                disabled={uploadingId === r._id}
-                                onChange={(e) => {
-                                  const file = e.target.files[0]
-                                  if (file) handleImageUpload(r._id, file)
-                                  e.target.value = ''
-                                }}
-                              />
-                            </label>
-                          </div>
-
-                          {reportImages.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {reportImages.map((url, i) => (
-                                <img
-                                  key={i}
-                                  src={url}
-                                  alt={`Rescue photo ${i + 1}`}
-                                  className="h-24 w-24 rounded-xl object-cover border-2 border-gray-200"
+                        {showDiary && (
+                          <div className="space-y-3">
+                            <textarea
+                              placeholder="Write your rescue diary here..."
+                              value={diaryText[r._id] || ''}
+                              onChange={(e) => setDiaryText({ ...diaryText, [r._id]: e.target.value })}
+                              className="w-full rounded-xl border-2 border-gray-300 p-3 text-sm focus:border-amber-500 focus:outline-none"
+                              rows={3}
+                            />
+                            <div className="flex flex-wrap items-center gap-2">
+                              <label className="inline-flex items-center gap-1.5 cursor-pointer rounded-xl bg-gray-100 px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-200 border-2 border-gray-300">
+                                {uploadingId === r._id ? 'Uploading...' : <><CameraIcon className="w-4 h-4" /> Add Photo</>}
+                                <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden"
+                                  disabled={uploadingId === r._id}
+                                  onChange={(e) => {
+                                    const file = e.target.files[0]
+                                    if (file) handleImageUpload(r._id, file)
+                                    e.target.value = ''
+                                  }}
                                 />
-                              ))}
+                              </label>
                             </div>
-                          )}
-
-                          <div className="flex flex-wrap gap-2">
-                            <DoubleConfirmation
-                              onConfirm={() => handleResolve(r._id)}
-                              title="Resolve Assignment"
-                              message="Are you sure you want to mark this assignment as resolved?"
-                              confirmText="Yes, Resolve"
-                            >
-                              <button
-                                disabled={actionLoading === r._id}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-base font-bold text-white hover:bg-green-700 transition-colors shadow disabled:opacity-50"
-                              >
-                                {actionLoading === r._id ? '...' : <><CheckCircleIcon className="w-5 h-5" /> Resolve</>}
-                              </button>
-                            </DoubleConfirmation>
-                            <button
-                              onClick={() => {
-                                const next = new Set(showFailInput)
-                                if (next.has(r._id)) next.delete(r._id)
-                                else next.add(r._id)
-                                setShowFailInput(next)
-                              }}
-                              className="inline-flex items-center gap-1.5 rounded-xl bg-red-100 px-5 py-2.5 text-base font-bold text-red-700 hover:bg-red-200 transition-colors border-2 border-red-200"
-                            >
-                              <XCircleIcon className="w-5 h-5" /> Failed
-                            </button>
-                          </div>
-
-                          {showFailInput.has(r._id) && (
-                            <div className="space-y-2">
-                              <textarea
-                                placeholder="Why did the rescue fail?"
-                                value={failReason[r._id] || ''}
-                                onChange={(e) => setFailReason({ ...failReason, [r._id]: e.target.value })}
-                                className="w-full rounded-xl border-2 border-red-300 p-3 text-base focus:border-red-500 focus:outline-none"
-                                rows={2}
-                              />
+                            {reportImages.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {reportImages.map((url, i) => (
+                                  <img key={i} src={url} alt={`Photo ${i + 1}`} className="h-20 w-20 rounded-xl object-cover border-2 border-gray-200" />
+                                ))}
+                              </div>
+                            )}
+                            <div className="flex flex-wrap gap-2">
                               <DoubleConfirmation
-                                onConfirm={() => handleFail(r._id)}
-                                title="Mark as Failed"
-                                message="Are you sure you want to mark this assignment as failed?"
-                                confirmText="Yes, Mark Failed"
+                                onConfirm={() => { handleResolve(r._id); setSelectedReport(null) }}
+                                title="Resolve Assignment"
+                                message="Are you sure you want to mark this assignment as resolved?"
+                                confirmText="Yes, Resolve"
                               >
-                                <button
-                                  disabled={actionLoading === r._id}
-                                  className="rounded-xl bg-red-600 px-5 py-2.5 text-base font-bold text-white hover:bg-red-700 transition-colors shadow disabled:opacity-50"
+                                <button disabled={actionLoading === r._id}
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 shadow disabled:opacity-50"
                                 >
-                                  {actionLoading === r._id ? '...' : 'Confirm Failed'}
+                                  {actionLoading === r._id ? '...' : <><CheckCircleIcon className="w-4 h-4" /> Resolve</>}
                                 </button>
                               </DoubleConfirmation>
+                              <button
+                                onClick={() => {
+                                  const next = new Set(showFailInput)
+                                  if (next.has(r._id)) next.delete(r._id); else next.add(r._id)
+                                  setShowFailInput(next)
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-red-100 px-5 py-2.5 text-sm font-bold text-red-700 hover:bg-red-200 border-2 border-red-200"
+                              >
+                                <XCircleIcon className="w-4 h-4" /> Failed
+                              </button>
                             </div>
-                          )}
-                        </div>
-                      )}
-                      {!showInitial && (
-                        <div className="px-5 pb-5 pt-4 border-t-2 border-gray-100">
-                          <p className="text-sm font-bold uppercase tracking-wide text-gray-500 mb-3">Voice Notes</p>
-                          <div className="space-y-3">
+                            {showFailInput.has(r._id) && (
+                              <div className="space-y-2">
+                                <textarea
+                                  placeholder="Why did the rescue fail?"
+                                  value={failReason[r._id] || ''}
+                                  onChange={(e) => setFailReason({ ...failReason, [r._id]: e.target.value })}
+                                  className="w-full rounded-xl border-2 border-red-300 p-3 text-sm focus:border-red-500 focus:outline-none"
+                                  rows={2}
+                                />
+                                <DoubleConfirmation
+                                  onConfirm={() => { handleFail(r._id); setSelectedReport(null) }}
+                                  title="Mark as Failed"
+                                  message="Are you sure you want to mark this assignment as failed?"
+                                  confirmText="Yes, Mark Failed"
+                                >
+                                  <button disabled={actionLoading === r._id}
+                                    className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-700 shadow disabled:opacity-50"
+                                  >
+                                    {actionLoading === r._id ? '...' : 'Confirm Failed'}
+                                  </button>
+                                </DoubleConfirmation>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Voice Notes</p>
+                          <div className="space-y-2">
                             {(voiceNotes[r._id] || []).length > 0 ? (
                               voiceNotes[r._id].map((vn) => (
                                 <div key={vn._id} className="flex items-center gap-3 rounded-xl bg-gray-50 border-2 border-gray-200 px-4 py-3">
@@ -562,17 +542,14 @@ export default function RescuerAssignments() {
                             )}
                             <div className="flex gap-2">
                               {recordingId === r._id ? (
-                                <button
-                                  onClick={stopRecording}
-                                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700"
+                                <button onClick={stopRecording}
+                                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700"
                                 >
-                                  <span className="h-3 w-3 rounded-full bg-white animate-pulse" />
-                                  Stop Recording
+                                  <span className="h-3 w-3 rounded-full bg-white animate-pulse" /> Stop Recording
                                 </button>
                               ) : (
-                                <button
-                                  onClick={() => startRecording(r._id)}
-                                  className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-amber-700"
+                                <button onClick={() => startRecording(r._id)}
+                                  className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700"
                                 >
                                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
@@ -583,9 +560,8 @@ export default function RescuerAssignments() {
                               {audioBlobs[r._id] && (
                                 <>
                                   <audio controls src={audioBlobs[r._id]} className="h-10" />
-                                  <button
-                                    onClick={() => submitVoiceNote(r._id)}
-                                    className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700"
+                                  <button onClick={() => submitVoiceNote(r._id)}
+                                    className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700"
                                   >
                                     Upload
                                   </button>
@@ -594,13 +570,13 @@ export default function RescuerAssignments() {
                             </div>
                           </div>
                         </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })()}
+            </Modal>
+          </>
         )}
         {totalPages > 1 && (
           <div className="mt-6 flex items-center justify-center gap-2">

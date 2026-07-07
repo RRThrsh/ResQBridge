@@ -3,14 +3,12 @@ import { useNavigate } from 'react-router-dom'
 
 const NOTIFICATION_ICONS = {
   new_report: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-  sos: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z',
   report_archived: 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4',
   report_deleted: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
 }
 
 const NOTIFICATION_TYPES = {
   new_report: { icon: NOTIFICATION_ICONS.new_report, bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
-  sos: { icon: NOTIFICATION_ICONS.sos, bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
   report_archived: { icon: NOTIFICATION_ICONS.report_archived, bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
   report_deleted: { icon: NOTIFICATION_ICONS.report_deleted, bg: 'bg-gray-50', text: 'text-gray-700', dot: 'bg-gray-500' },
 }

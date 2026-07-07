@@ -3,7 +3,6 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
 import { useNotifications } from '../../context/NotificationContext'
-import { DoubleConfirmation } from '../../components/ui'
 import { rescuer as rescuerApi } from '../../services/api'
 
 const navItems = [
@@ -121,13 +120,6 @@ export default function RescuerLayout() {
     navigate('/')
   }
 
-  function handleSOS() {
-    if (userPos) {
-      rescuerApi.triggerSos(userPos.lat, userPos.lng).catch(() => {})
-    }
-    window.location.href = 'tel:911'
-  }
-
   if (authLoading) return null
   if (!user || (user.role !== 'rescuer' && user.role !== 'admin' && user.role !== 'superadmin')) return null
 
@@ -185,20 +177,6 @@ export default function RescuerLayout() {
         </div>
 
         <div className="border-t border-gray-200 p-4 space-y-2">
-          <DoubleConfirmation
-            onConfirm={handleSOS}
-            title="SOS Emergency"
-            message="Are you sure you want to trigger an SOS emergency alert? Your location will be sent to all available rescuers and emergency services."
-            confirmText="Yes, Send SOS"
-            triggerVariant="danger"
-          >
-            <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3.5 text-base font-bold text-white shadow transition-all hover:bg-red-700">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              SOS Emergency
-            </button>
-          </DoubleConfirmation>
           <button
             onClick={handleLogout}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-base font-semibold text-red-700 transition-all hover:bg-red-100"

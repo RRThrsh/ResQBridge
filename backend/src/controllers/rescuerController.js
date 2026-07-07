@@ -106,8 +106,8 @@ const updateLocation = async (req, res) => {
   const rescuerName = `${user.firstName} ${user.lastName}`.trim();
 
   await convexClient.mutation(anyApi.locations.updateRescuerLocation, {
-    rescuerEmail: user.email,
-    rescuerName,
+    userId: user.uuid,
+    userName: rescuerName,
     latitude,
     longitude,
   });
@@ -263,27 +263,6 @@ const getNotes = async (req, res) => {
   res.json({ notes });
 };
 
-const triggerSos = async (req, res) => {
-  const { lat, lng } = req.body;
-  const user = req.user;
-  await publish({
-    type: "rescuer:sos",
-    rescuerName: `${user.firstName} ${user.lastName}`,
-    rescuerId: user.uuid,
-    lat,
-    lng,
-    timestamp: new Date().toISOString(),
-  });
-
-  await notifyAdmin({
-    type: "sos",
-    message: `SOS alert from ${user.firstName} ${user.lastName}`,
-    link: "/admin/dashboard/rescuerMap",
-  });
-
-  res.json({ success: true });
-};
-
 module.exports = {
   getReports,
   updateReportStatus,
@@ -295,5 +274,4 @@ module.exports = {
   getNotes,
   updateLocation,
   rejectAssignment,
-  triggerSos,
 };
