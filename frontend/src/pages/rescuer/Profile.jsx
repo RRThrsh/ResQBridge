@@ -4,7 +4,7 @@ import { rescuer as rescuerApi } from '../../services/api'
 import { CheckIcon, XIcon } from '../../components/SvgIcons'
 
 export default function RescuerProfile() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [firstName, setFirstName] = useState(user?.firstName || '')
   const [lastName, setLastName] = useState(user?.lastName || '')
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '')
@@ -16,7 +16,8 @@ export default function RescuerProfile() {
     setSaving(true)
     setMessage(null)
     try {
-      await rescuerApi.updateProfile({ firstName, lastName, phoneNumber })
+      const result = await rescuerApi.updateProfile({ firstName, lastName, phoneNumber })
+      updateUser(result.user)
       setMessage({ type: 'success', text: 'Profile saved successfully!' })
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Could not save profile.' })

@@ -247,9 +247,12 @@ export default function RescuerLayout() {
                 <p className="text-base font-bold text-gray-900">{user.firstName} {user.lastName}</p>
                 <p className="text-sm text-gray-500">{user.email}</p>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-600 text-lg font-bold text-white shadow">
+              <button
+                onClick={() => navigate('/rescuer/profile')}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-600 text-lg font-bold text-white shadow hover:bg-amber-700 transition-colors"
+              >
                 {initials || 'R'}
-              </div>
+              </button>
             </div>
           </div>
         </header>
