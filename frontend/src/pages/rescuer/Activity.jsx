@@ -1,20 +1,28 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { rescuer as rescuerApi } from '../../services/api'
-import { ClipboardIcon, RefreshIcon, CheckCircleIcon, DotIcon, PinIcon } from '../../components/SvgIcons'
+import { ClipboardIcon, RefreshIcon, CheckCircleIcon, DotIcon, PinIcon, XIcon } from '../../components/SvgIcons'
 
 const ACTION_ICONS = {
   claimed: ClipboardIcon,
+  'status:en_route': RefreshIcon,
   'status:in_progress': RefreshIcon,
   'status:resolved': CheckCircleIcon,
+  'status:failed': XIcon,
   availability: DotIcon,
+  profile_update: RefreshIcon,
+  rejected: XIcon,
 }
 
 const ACTION_LABELS = {
   claimed: 'Claimed a report',
+  'status:en_route': 'En route to report',
   'status:in_progress': 'Started working',
   'status:resolved': 'Resolved a report',
+  'status:failed': 'Marked report as failed',
   availability: 'Changed availability',
+  profile_update: 'Updated profile',
+  rejected: 'Rejected assignment',
 }
 
 export default function RescuerActivity() {

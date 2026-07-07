@@ -13,13 +13,26 @@ const RESCUER_STATUS_MAP = {
   rescue_failed: "failed",
 };
 
+async function logActivity(userId, action, details, reportId) {
+  try {
+    await convexClient.mutation(anyApi.activity.insertActivityLog, {
+      userId,
+      action,
+      reportId: reportId || undefined,
+      details,
+    });
+  } catch (err) {
+    console.error("[ActivityLog] Failed to insert:", err.message);
+  }
+}
+
 const getReports = async (req, res) => {
   const { status, assignedTo, search, sortBy } = req.query;
   const user = req.user;
 
   let reports;
-  if (assignedTo && user?.email) {
-    reports = await convexClient.query(anyApi.reports.listReportsByRescuer, { rescuerEmail: user.email });
+  if (assignedTo && user?.uuid) {
+    reports = await convexClient.query(anyApi.reports.getReports, { assignedTo: user.uuid });
   } else {
     reports = await convexClient.query(anyApi.reports.listReports);
   }
@@ -35,7 +48,7 @@ const getReports = async (req, res) => {
     description: r.description,
     images: [],
     status: RESCUER_STATUS_MAP[r.status] || r.status,
-    assignedTo: r.assignedRescuerEmail || null,
+    assignedTo: r.assignedTo || null,
     latitude: r.latitude ?? null,
     longitude: r.longitude ?? null,
     createdAt: r.createdAt,
@@ -68,7 +81,16 @@ const getReports = async (req, res) => {
 };
 
 const rejectAssignment = async (req, res) => {
-  res.status(503).json({ message: "Rejecting assignments requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  const userId = req.user.uuid;
+
+  await convexClient.mutation(anyApi.reports.rejectAssignment, {
+    reportId: id,
+  });
+
+  await logActivity(userId, "rejected", "Rejected assignment", id);
+
+  res.json({ message: "Assignment rejected." });
 };
 
 const updateLocation = async (req, res) => {
@@ -94,16 +116,37 @@ const updateLocation = async (req, res) => {
 };
 
 const updateReportStatus = async (req, res) => {
-  res.status(503).json({ message: "Updating report status requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  const { status } = req.body;
+  const userId = req.user.uuid;
+
+  if (!status) {
+    return res.status(400).json({ message: "Status is required." });
+  }
+
+  await convexClient.mutation(anyApi.reports.updateReportStatus, {
+    reportId: id,
+    status,
+  });
+
+  const actionLabels = {
+    en_route: "status:en_route",
+    in_progress: "status:in_progress",
+    resolved: "status:resolved",
+    failed: "status:failed",
+  };
+
+  await logActivity(userId, actionLabels[status] || status, `Updated report status to ${status.replace('_', ' ')}`, id);
+
+  res.json({ message: "Report status updated." });
 };
 
 const getStats = async (req, res) => {
   const userId = req.user.uuid;
-  const user = await convexClient.query(anyApi.users.getUserByUuid, { uuid: userId });
 
   let reports = [];
-  if (user?.email) {
-    reports = await convexClient.query(anyApi.reports.listReportsByRescuer, { rescuerEmail: user.email });
+  if (userId) {
+    reports = await convexClient.query(anyApi.reports.getReports, { assignedTo: userId });
   }
 
   const total = reports.length;
@@ -154,6 +197,8 @@ const updateProfile = async (req, res) => {
     metadata: { firstName, lastName, phoneNumber },
   });
 
+  await logActivity(userId, "profile_update", `Updated profile${firstName ? ` (first name: ${firstName})` : ''}${lastName ? ` (last name: ${lastName})` : ''}`);
+
   const updated = await convexClient.query(anyApi.users.getUserByUuid, { uuid: userId });
   const { password, ...safeUser } = updated;
   res.json({ message: "Profile updated.", user: safeUser });
@@ -183,11 +228,7 @@ const updateAvailability = async (req, res) => {
     availability,
   });
 
-  await convexClient.mutation(anyApi.activity.insertActivityLog, {
-    userId,
-    action: "availability",
-    details: `Set status to ${availability}`,
-  });
+  await logActivity(userId, "availability", `Set status to ${availability}`);
 
   res.json({ message: `You are now marked as ${availability}.`, availability });
 };

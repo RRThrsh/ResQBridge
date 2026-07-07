@@ -87,6 +87,15 @@ export default defineSchema({
     .index("by_read", ["read"])
     .index("by_createdAt", ["createdAt"]),
 
+  activityLogs: defineTable({
+    userId: v.string(),
+    action: v.string(),
+    reportId: v.optional(v.string()),
+    details: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_userId", ["userId"]),
+
   rescuerLocations: defineTable({
     userId: v.string(),
     userName: v.string(),
@@ -117,15 +126,6 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_userId_and_day", ["userId", "dayOfWeek"]),
-
-  activityLogs: defineTable({
-    userId: v.string(),
-    action: v.string(),
-    reportId: v.optional(v.string()),
-    details: v.string(),
-    createdAt: v.number(),
-  })
-    .index("by_userId", ["userId"]),
 
   equipmentChecklists: defineTable({
     reportId: v.string(),
