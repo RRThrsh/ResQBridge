@@ -25,6 +25,17 @@ const ACTION_LABELS = {
   rejected: 'Rejected assignment',
 }
 
+const ACTION_STYLES = {
+  claimed: { bg: 'bg-blue-50', icon: 'text-blue-600' },
+  'status:en_route': { bg: 'bg-amber-50', icon: 'text-amber-600' },
+  'status:in_progress': { bg: 'bg-amber-50', icon: 'text-amber-600' },
+  'status:resolved': { bg: 'bg-green-50', icon: 'text-green-600' },
+  'status:failed': { bg: 'bg-red-50', icon: 'text-red-600' },
+  availability: { bg: 'bg-purple-50', icon: 'text-purple-600' },
+  profile_update: { bg: 'bg-indigo-50', icon: 'text-indigo-600' },
+  rejected: { bg: 'bg-red-50', icon: 'text-red-600' },
+}
+
 export default function RescuerActivity() {
   const { user } = useAuth()
   const [activity, setActivity] = useState([])
@@ -75,8 +86,10 @@ export default function RescuerActivity() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-amber-600 border-t-transparent" />
+          <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 border-2 border-gray-200" />
+            ))}
           </div>
         ) : activity.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-white p-16 text-center">
@@ -91,9 +104,9 @@ export default function RescuerActivity() {
         ) : (
           <>
             <div className="overflow-x-auto rounded-2xl border-2 border-gray-200 bg-white shadow-sm">
-              <table className="w-full text-base">
-                <thead>
-                  <tr className="border-b-2 border-gray-200 bg-gray-50 text-left text-base font-bold text-gray-700">
+              <table className="w-full text-sm">
+                <thead className="border-b-2 border-gray-200 bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-500">
+                  <tr>
                     <th className="px-5 py-4 w-12" />
                     <th className="px-5 py-4">Action</th>
                     <th className="px-5 py-4 hidden sm:table-cell">Details</th>
@@ -103,22 +116,34 @@ export default function RescuerActivity() {
                 <tbody className="divide-y divide-gray-100">
                   {activity.map((a) => {
                     const Icon = ACTION_ICONS[a.action] || PinIcon
+                    const style = ACTION_STYLES[a.action] || { bg: 'bg-gray-50', icon: 'text-gray-600' }
                     return (
-                      <tr key={a._id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={a._id} className="transition-colors hover:bg-amber-50">
                         <td className="px-5 py-4">
-                          <Icon className="w-6 h-6 text-gray-500" />
+                          <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${style.bg}`}>
+                            <Icon className={`w-5 h-5 ${style.icon}`} />
+                          </div>
                         </td>
-                        <td className="px-5 py-4 font-semibold text-gray-900">
-                          {ACTION_LABELS[a.action] || a.action.replace('_', ' ')}
+                        <td className="px-5 py-4">
+                          <span className="font-semibold text-gray-900">
+                            {ACTION_LABELS[a.action] || a.action.replace('_', ' ')}
+                          </span>
                         </td>
-                        <td className="px-5 py-4 text-gray-600 hidden sm:table-cell max-w-xs truncate">
+                        <td className="px-5 py-4 text-gray-500 hidden sm:table-cell max-w-xs truncate">
                           {a.details || '—'}
                         </td>
-                        <td className="px-5 py-4 text-right text-gray-500 whitespace-nowrap">
-                          {new Date(a.createdAt).toLocaleDateString('en-US', {
-                            month: 'short', day: 'numeric', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit',
-                          })}
+                        <td className="px-5 py-4 text-right text-gray-500 whitespace-nowrap text-xs">
+                          <span className="font-medium">
+                            {new Date(a.createdAt).toLocaleDateString('en-US', {
+                              month: 'short', day: 'numeric',
+                            })}
+                          </span>
+                          <br />
+                          <span className="text-gray-400">
+                            {new Date(a.createdAt).toLocaleTimeString('en-US', {
+                              hour: '2-digit', minute: '2-digit',
+                            })}
+                          </span>
                         </td>
                       </tr>
                     )
@@ -127,22 +152,22 @@ export default function RescuerActivity() {
               </table>
             </div>
 
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-base text-gray-500">
+            <div className="mt-5 flex items-center justify-between">
+              <span className="text-sm text-gray-500 font-medium">
                 Page {prevCursors.length + 1}
               </span>
               <div className="flex gap-3">
                 <button
                   onClick={handlePrev}
                   disabled={prevCursors.length === 0}
-                  className="rounded-xl border-2 border-gray-300 bg-white px-5 py-2.5 text-base font-bold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="rounded-xl border-2 border-gray-300 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
                 <button
                   onClick={handleNext}
                   disabled={isDone}
-                  className="rounded-xl border-2 border-gray-300 bg-white px-5 py-2.5 text-base font-bold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="rounded-xl border-2 border-gray-300 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
