@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { rescuer as rescuerApi } from '../../services/api'
+import { DoubleConfirmation } from '../../components/ui'
 import { CheckIcon, XIcon } from '../../components/SvgIcons'
 
 export default function RescuerProfile() {
@@ -11,8 +12,7 @@ export default function RescuerProfile() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState(null)
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function handleSubmit() {
     setSaving(true)
     setMessage(null)
     try {
@@ -58,7 +58,7 @@ export default function RescuerProfile() {
             <p className="text-lg text-white/90">{user.email}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
+          <form onSubmit={(e) => e.preventDefault()} className="p-6 md:p-8 space-y-6">
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
                 <label className="block text-base font-bold text-gray-700 mb-1.5">First Name</label>
@@ -81,12 +81,13 @@ export default function RescuerProfile() {
             </div>
 
             <div>
-              <label className="block text-base font-bold text-gray-700 mb-1.5">Phone Number</label>
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1.5">Phone Number</p>
               <input
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full rounded-xl border-2 border-gray-300 px-5 py-3.5 text-lg focus:border-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
+                placeholder="+63 XXX XXX XXXX"
+                className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-5 py-3.5 text-base font-semibold text-gray-900 focus:border-amber-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
               />
             </div>
 
@@ -105,23 +106,30 @@ export default function RescuerProfile() {
               <p className="text-base text-gray-600 font-semibold">
                 <span className="capitalize">{user.role}</span> account
               </p>
-              <button
-                type="submit"
-                disabled={saving}
-                className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-8 py-3.5 text-lg font-bold text-white shadow transition-all hover:bg-amber-700 disabled:opacity-50"
+              <DoubleConfirmation
+                onConfirm={handleSubmit}
+                title="Save Profile Changes"
+                message="Are you sure you want to update your profile information?"
+                confirmText="Yes, Save Changes"
               >
-                {saving ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Saving...
-                  </span>
-                ) : (
-                  'Save Changes'
-                )}
-              </button>
+                <button
+                  type="button"
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-8 py-3.5 text-lg font-bold text-white shadow transition-all hover:bg-amber-700 disabled:opacity-50"
+                >
+                  {saving ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </DoubleConfirmation>
             </div>
           </form>
         </div>
