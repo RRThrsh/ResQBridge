@@ -167,7 +167,9 @@ const getStats = async (req, res) => {
   }));
 
   res.json({
-    total,
+    totalAssigned: total,
+    activeRequests: pending,
+    completed: resolved,
     pending,
     assigned: accepted,
     enRoute,
@@ -175,7 +177,7 @@ const getStats = async (req, res) => {
     resolved,
     failed,
     recentReports,
-    availability: user?.availability || null,
+    availability: req.user?.availability || null,
   });
 };
 
