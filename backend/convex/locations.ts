@@ -3,16 +3,16 @@ import { mutation, query } from "./_generated/server";
 
 export const updateRescuerLocation = mutation({
   args: {
-    rescuerEmail: v.string(),
-    rescuerName: v.string(),
+    userId: v.string(),
+    userName: v.string(),
     latitude: v.number(),
     longitude: v.number(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("rescuerLocations")
-      .withIndex("by_rescuer_email", (idx) => idx.eq("rescuerEmail", args.rescuerEmail))
-      .unique();
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .first();
 
     if (existing) {
       return await ctx.db.patch(existing._id, {
@@ -23,8 +23,8 @@ export const updateRescuerLocation = mutation({
     }
 
     return await ctx.db.insert("rescuerLocations", {
-      rescuerEmail: args.rescuerEmail,
-      rescuerName: args.rescuerName,
+      userId: args.userId,
+      userName: args.userName,
       latitude: args.latitude,
       longitude: args.longitude,
       updatedAt: Date.now(),
@@ -35,6 +35,6 @@ export const updateRescuerLocation = mutation({
 export const getRescuerLocations = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("rescuerLocations").order("desc").collect();
+    return await ctx.db.query("rescuerLocations").order("desc").take(200);
   },
 });

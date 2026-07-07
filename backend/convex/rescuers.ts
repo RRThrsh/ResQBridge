@@ -14,7 +14,8 @@ export const getProfile = query({
 
 export const startTracking = mutation({
   args: {
-    rescuerEmail: v.string(),
+    userId: v.string(),
+    userName: v.string(),
     reportId: v.id("reports"),
     latitude: v.number(),
     longitude: v.number(),
@@ -22,30 +23,24 @@ export const startTracking = mutation({
     speed: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const rescuer = await ctx.db
-      .query("rescuers")
-      .withIndex("by_email", (q) => q.eq("email", args.rescuerEmail))
-      .unique();
-    if (!rescuer) throw new Error("Rescuer not found.");
-
     const report = await ctx.db.get(args.reportId);
     if (!report) throw new Error("Report not found.");
 
     const existing = await ctx.db
       .query("rescuerLocations")
-      .withIndex("by_rescuer_email", (q) => q.eq("rescuerEmail", args.rescuerEmail))
-      .unique();
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .first();
 
     const data = {
-      rescuerEmail: args.rescuerEmail,
-      rescuerName: `${rescuer.firstName} ${rescuer.lastName}`.trim(),
+      userId: args.userId,
+      userName: args.userName,
       latitude: args.latitude,
       longitude: args.longitude,
       heading: args.heading,
       speed: args.speed,
       updatedAt: Date.now(),
       reportId: args.reportId,
-      animalName: report.animalName,
+      animalName: report.name,
       isTracking: true,
     };
 
@@ -59,7 +54,7 @@ export const startTracking = mutation({
 
 export const updateLocation = mutation({
   args: {
-    rescuerEmail: v.string(),
+    userId: v.string(),
     latitude: v.number(),
     longitude: v.number(),
     heading: v.optional(v.number()),
@@ -68,8 +63,8 @@ export const updateLocation = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("rescuerLocations")
-      .withIndex("by_rescuer_email", (q) => q.eq("rescuerEmail", args.rescuerEmail))
-      .unique();
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .first();
     if (!existing) throw new Error("No active tracking session.");
     if (!existing.isTracking) throw new Error("Tracking is not active.");
 
@@ -84,12 +79,12 @@ export const updateLocation = mutation({
 });
 
 export const stopTracking = mutation({
-  args: { rescuerEmail: v.string() },
+  args: { userId: v.string() },
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("rescuerLocations")
-      .withIndex("by_rescuer_email", (q) => q.eq("rescuerEmail", args.rescuerEmail))
-      .unique();
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .first();
     if (existing) {
       await ctx.db.patch(existing._id, { isTracking: false, updatedAt: Date.now() });
     }
