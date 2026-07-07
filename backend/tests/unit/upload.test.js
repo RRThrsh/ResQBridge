@@ -33,18 +33,18 @@ describe("Upload file filter", () => {
   it("rejects .exe files", () => {
     const cb = vi.fn();
     fileFilter(null, mockFile("virus.exe", "application/x-msdownload"), cb);
-    expect(cb).toHaveBeenCalledWith(new Error("Only .jpg, .jpeg, .png, .gif, and .webp files are allowed."), false);
+    expect(cb).toHaveBeenCalledWith(new Error("Only images and audio files are allowed."), false);
   });
 
   it("rejects .php files", () => {
     const cb = vi.fn();
     fileFilter(null, mockFile("shell.php", "application/x-httpd-php"), cb);
-    expect(cb).toHaveBeenCalledWith(new Error("Only .jpg, .jpeg, .png, .gif, and .webp files are allowed."), false);
+    expect(cb).toHaveBeenCalledWith(new Error("Only images and audio files are allowed."), false);
   });
 
   it("rejects files with no extension", () => {
     const cb = vi.fn();
     fileFilter(null, mockFile("Makefile", "text/plain"), cb);
-    expect(cb).toHaveBeenCalledWith(new Error("Only .jpg, .jpeg, .png, .gif, and .webp files are allowed."), false);
+    expect(cb).toHaveBeenCalledWith(new Error("Only images and audio files are allowed."), false);
   });
 });
