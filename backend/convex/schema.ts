@@ -74,6 +74,15 @@ export default defineSchema({
     .index("by_reporter_email", ["reporterEmail"])
     .index("by_status", ["status"]),
 
+  activityLogs: defineTable({
+    userId: v.string(),
+    action: v.string(),
+    reportId: v.optional(v.string()),
+    details: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_userId", ["userId"]),
+
   rescuerLocations: defineTable({
     rescuerEmail: v.string(),
     rescuerName: v.string(),

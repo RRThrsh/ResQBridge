@@ -135,7 +135,7 @@ export default function RescuerLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <aside className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-300 bg-white shadow-lg transition-transform md:static md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-300 bg-white shadow-lg transition-transform md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-6">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-600 text-lg font-bold text-white shadow">
             R
@@ -211,7 +211,7 @@ export default function RescuerLayout() {
         </div>
       </aside>
 
-      <div className="flex flex-1 flex-col min-h-screen">
+      <div className="flex flex-1 flex-col min-h-screen md:ml-64">
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-gray-300 bg-white px-6 py-4 shadow-sm">
           <div className="flex items-center gap-4">
             <button
@@ -247,9 +247,12 @@ export default function RescuerLayout() {
                 <p className="text-base font-bold text-gray-900">{user.firstName} {user.lastName}</p>
                 <p className="text-sm text-gray-500">{user.email}</p>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-600 text-lg font-bold text-white shadow">
+              <button
+                onClick={() => navigate('/rescuer/profile')}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-600 text-lg font-bold text-white shadow hover:bg-amber-700 transition-colors"
+              >
                 {initials || 'R'}
-              </div>
+              </button>
             </div>
           </div>
         </header>
