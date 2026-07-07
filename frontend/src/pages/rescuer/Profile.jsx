@@ -8,7 +8,14 @@ export default function RescuerProfile() {
   const { user, updateUser } = useAuth()
   const [firstName, setFirstName] = useState(user?.firstName || '')
   const [lastName, setLastName] = useState(user?.lastName || '')
-  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '')
+  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '+63')
+
+  function handlePhoneChange(val) {
+    if (!val.startsWith('+63')) val = '+63' + val.replace(/^\+63/, '')
+    const digits = val.replace(/\D/g, '')
+    const maxDigits = digits.length > 12 ? digits.slice(0, 12) : digits
+    setPhoneNumber('+' + maxDigits)
+  }
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState(null)
 
@@ -85,8 +92,8 @@ export default function RescuerProfile() {
               <input
                 type="tel"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+63 XXX XXX XXXX"
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                placeholder="+63 912 345 6789"
                 className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-5 py-3.5 text-base font-semibold text-gray-900 focus:border-amber-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all"
               />
             </div>
