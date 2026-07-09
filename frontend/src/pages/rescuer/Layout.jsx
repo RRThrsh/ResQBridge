@@ -74,13 +74,23 @@ const navItems = [
 export default function RescuerLayout() {
   const { user, loading: authLoading, logout } = useAuth()
   const { userPos, requestLocation } = useLocationContext()
-  const { unreadCount } = useNotifications()
+  const { toasts, unreadCount, markAllRead } = useNotifications()
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [availability, setAvailability] = useState(user?.availability || 'available')
   const [togglingAvail, setTogglingAvail] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef(null)
   const locIntervalRef = useRef(null)
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => { requestLocation() }, [requestLocation])
 
@@ -207,7 +217,7 @@ export default function RescuerLayout() {
           </div>
           <div className="flex items-center gap-5">
             <button
-              onClick={() => navigate('/rescuer/notifications')}
+              onClick={() => setNotifOpen((prev) => !prev)}
               className="relative"
               aria-label="Notifications"
             >
@@ -237,6 +247,42 @@ export default function RescuerLayout() {
 
         <Outlet />
       </div>
+
+      {notifOpen && (
+        <div
+          ref={notifRef}
+          className="fixed top-20 right-6 z-50 w-80 rounded-2xl border-2 border-gray-200 bg-white shadow-xl"
+        >
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+            <h3 className="text-base font-bold text-gray-900">Notifications</h3>
+            {toasts.length > 0 && (
+              <button
+                onClick={() => { markAllRead(); setNotifOpen(false) }}
+                className="text-xs font-semibold text-amber-600 hover:text-amber-700"
+              >
+                Mark all read
+              </button>
+            )}
+          </div>
+          <div className="max-h-80 overflow-y-auto px-5 py-3 space-y-2">
+            {toasts.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-6">No notifications</p>
+            ) : (
+              toasts.map((t) => (
+                <div
+                  key={t.id}
+                  className={`rounded-xl border-2 px-4 py-3 ${
+                    t.type === 'success' ? 'border-green-300 bg-green-50' : 'border-amber-300 bg-amber-50'
+                  }`}
+                >
+                  <p className="text-sm font-bold text-gray-900">{t.title}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{t.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
