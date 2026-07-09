@@ -6,6 +6,21 @@ import { useAuth } from '../../context/AuthContext'
 
 const API_BASE = '/api/v1'
 
+const VALID_EMAIL_DOMAINS = [
+  'gmail.com',
+  'yahoo.com',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'icloud.com',
+  'protonmail.com',
+  'aol.com',
+  'mail.com',
+  'ymail.com',
+  'zoho.com',
+  'yandex.com',
+]
+
 export default function Register() {
   const [showTerms, setShowTerms] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
@@ -57,6 +72,8 @@ export default function Register() {
       case 'email':
         if (!value.trim()) return 'Email is required.'
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return 'Invalid email format.'
+        const domain = value.trim().split('@')[1]?.toLowerCase()
+        if (domain && !VALID_EMAIL_DOMAINS.includes(domain)) return 'Email domain is not supported.'
         return ''
       case 'password':
         if (!value) return 'Password is required.'
@@ -517,8 +534,12 @@ export default function Register() {
                 <div className="col-span-1">
                   <label className="block text-xs font-medium text-gray-500">Zipcode</label>
                   <input
+                    type="tel"
+                    inputMode="numeric"
                     value={zipcode}
-                    onChange={(e) => setZipcode(e.target.value)}
+                    onBeforeInput={(e) => { if (e.data && /\D/.test(e.data)) e.preventDefault() }}
+                    onPaste={(e) => { const pasted = (e.clipboardData || window.clipboardData).getData('text'); if (/\D/.test(pasted)) e.preventDefault() }}
+                    onChange={(e) => setZipcode(e.target.value.replace(/\D/g, '').slice(0, 4))}
                     onBlur={() => setZipcode((v) => v.replace(/\D/g, ''))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Zipcode"
