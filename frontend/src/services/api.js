@@ -175,15 +175,6 @@ export const rescuer = {
       method: 'POST',
       body: JSON.stringify({ shifts }),
     }),
-
-  sendMessage: (content, reportId) =>
-    request('/rescuer/messages', {
-      method: 'POST',
-      body: JSON.stringify({ content, reportId }),
-    }),
-  getMessages: (reportId) =>
-    request(`/rescuer/messages${reportId ? `?reportId=${reportId}` : ''}`),
-  getConversations: () => request('/rescuer/conversations'),
   getRescuerLocations: () => request('/rescuer/locations'),
 
   getChecklist: (reportId) => request(`/rescuer/reports/${reportId}/checklist`),
