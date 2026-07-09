@@ -45,23 +45,34 @@ export function LocationProvider({ children }) {
   }
 
   function requestLocation() {
-    if (watchIdRef.current) return
+    if (watchIdRef.current) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+      watchIdRef.current = null
+    }
 
     if (!navigator.geolocation) {
       setLocError('Geolocation not supported')
       return
     }
 
-    watchIdRef.current = navigator.geolocation.watchPosition(
+    setLocError(null)
+    const id = navigator.geolocation.watchPosition(
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
         setUserPos(coords)
         setDistance(haversineDistance(coords, CENTER))
         setLocError(null)
       },
-      () => setLocError('Enable location services'),
+      () => {
+        setLocError('Enable location services')
+        if (watchIdRef.current === id) {
+          navigator.geolocation.clearWatch(id)
+          watchIdRef.current = null
+        }
+      },
       { enableHighAccuracy: true, timeout: 10000 },
     )
+    watchIdRef.current = id
   }
 
   useEffect(() => {

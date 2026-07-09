@@ -21,25 +21,12 @@ const updateConfig = async (req, res) => {
   res.json({ message: "Config updated.", config: { [key]: value } });
 };
 
-const CAROUSEL_COLORS = [
-  'from-emerald-600 to-green-800',
-  'from-amber-500 to-orange-700',
-  'from-teal-600 to-cyan-800',
-  'from-blue-600 to-indigo-800',
-]
-
 const LANDING_DEFAULTS = {
   hero: {
     badge: "Palawan Wildlife Rescue & Conservation Center",
     title: "Helping Animals, Protecting Nature",
     description: "Submit reports for wildlife sightings, stray animals, rescue emergencies, and animal welfare concerns across Palawan communities.",
   },
-  stats: [
-    { label: "Rescues", value: "12K+" },
-    { label: "Teams", value: "500+" },
-    { label: "Countries", value: "30+" },
-    { label: "Response Time", value: "<5m" },
-  ],
   contact: {
     emergencyHotline: "+63 (48) 123-4567",
     phone: "+63 (48) 434-1234",
@@ -60,10 +47,6 @@ const LANDING_DEFAULTS = {
     { title: "Habitat Conservation", desc: "Preserving critical habitats for Palawan's endemic and endangered species.", image: "" },
     { title: "Marine Protection", desc: "Safeguarding sea turtles, dugongs, and coral reefs through active patrols.", image: "" },
   ],
-  communityBoard: {
-    title: "Community Board",
-    subtitle: "Recent wildlife reports from across Palawan.",
-  },
   location: {
     title: "Location",
     subtitle: "Visit us at our rescue center in Palawan.",
@@ -72,22 +55,13 @@ const LANDING_DEFAULTS = {
   howItWorks: { title: "", subtitle: "", steps: [] },
   successStories: { title: "", subtitle: "", stories: [] },
   gallery: { title: "", subtitle: "", images: [] },
-  donate: { title: "", subtitle: "", reasons: [], donateLinks: { note: "", donateUrl: "", monthlyUrl: "" } },
   volunteer: { title: "", subtitle: "", roles: [], requirements: [], cta: { label: "", link: "" } },
   partners: { title: "", subtitle: "", partners: [] },
   newsEvents: {
     title: "News & Events",
     subtitle: "Stay updated on rescues, releases, and upcoming community activities.",
-    news: [
-      { date: "Jun 8, 2026", title: "Rescue Center Reaches 12K Milestone", category: "Milestone", desc: "The center has successfully rescued and rehabilitated over 12,000 animals since opening its doors in 2015." },
-      { date: "May 22, 2026", title: "New Mangrove Nursery Established", category: "Conservation", desc: "A partnership with local communities has planted 3,000 mangrove seedlings along Puerto Princesa coastline." },
-      { date: "Apr 14, 2026", title: "Hawkbill Turtle Release at Tubbataha", category: "Release", desc: "After six months of rehabilitation, a juvenile hawksbill turtle was released back into the protected reef." },
-    ],
-    events: [
-      { date: "Jul 15, 2026", title: "Wildlife First-Responder Training", location: "Rescue Center Auditorium", desc: "A hands-on workshop covering basic wildlife handling, emergency triage, and safe transport techniques." },
-      { date: "Aug 5, 2026", title: "Coastal Clean-Up Drive", location: "Sabang Beach", desc: "Join volunteers for a morning of coastal cleanup followed by a short seminar on marine debris impact." },
-      { date: "Sep 12, 2026", title: "Community Appreciation Day", location: "Rescue Center Grounds", desc: "Open house with guided tours, wildlife exhibits, kids activities, and a chance to meet the rescue team." },
-    ],
+    news: [],
+    events: [],
   },
 };
 
@@ -106,16 +80,13 @@ const getLandingConfig = async (_req, res) => {
 
   const merged = {
     hero: { ...LANDING_DEFAULTS.hero, ...(stored.hero || {}) },
-    stats: stored.stats || LANDING_DEFAULTS.stats,
     contact: { ...LANDING_DEFAULTS.contact, ...(stored.contact || {}) },
     faq: stored.faq || LANDING_DEFAULTS.faq,
     carousel: stored.carousel || LANDING_DEFAULTS.carousel,
-    communityBoard: { ...LANDING_DEFAULTS.communityBoard, ...(stored.communityBoard || {}) },
     location: { ...LANDING_DEFAULTS.location, ...(stored.location || {}) },
     howItWorks: { ...LANDING_DEFAULTS.howItWorks, ...(stored.howItWorks || {}) },
     successStories: { ...LANDING_DEFAULTS.successStories, ...(stored.successStories || {}) },
     gallery: { ...LANDING_DEFAULTS.gallery, ...(stored.gallery || {}) },
-    donate: { ...LANDING_DEFAULTS.donate, ...(stored.donate || {}) },
     volunteer: { ...LANDING_DEFAULTS.volunteer, ...(stored.volunteer || {}) },
     partners: { ...LANDING_DEFAULTS.partners, ...(stored.partners || {}) },
     newsEvents: { ...LANDING_DEFAULTS.newsEvents, ...(stored.newsEvents || {}) },
@@ -127,9 +98,9 @@ const getLandingConfig = async (_req, res) => {
 };
 
 const ALLOWED_SECTION_KEYS = new Set([
-  "hero", "stats", "contact", "faq", "carousel", "communityBoard",
+  "hero", "contact", "faq", "carousel",
   "location", "newsEvents", "howItWorks", "successStories", "gallery",
-  "donate", "volunteer", "partners",
+  "volunteer", "partners",
 ]);
 
 const updateLandingConfig = async (req, res) => {
@@ -152,4 +123,4 @@ const updateLandingConfig = async (req, res) => {
   res.json({ message: "Landing page content updated." });
 };
 
-module.exports = { getConfig, updateConfig, getLandingConfig, updateLandingConfig, LANDING_DEFAULTS, CAROUSEL_COLORS };
+module.exports = { getConfig, updateConfig, getLandingConfig, updateLandingConfig, LANDING_DEFAULTS };

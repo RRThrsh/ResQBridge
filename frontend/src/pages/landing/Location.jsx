@@ -129,13 +129,25 @@ export default function Location({ title, subtitle, center }) {
                       <span className="text-sm text-gray-400">straight-line</span>
                     </p>
                   ) : (
-                    <p className="mt-0.5 flex items-center gap-1.5 text-gray-500">
-                      <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {locError || 'Detecting your location...'}
-                    </p>
+                    <div className="mt-1.5">
+                      {locError ? (
+                        <p className="flex items-center gap-1.5 text-sm text-gray-500">
+                          <svg className="h-4 w-4 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          {locError}
+                        </p>
+                      ) : null}
+                      <button
+                        onClick={requestLocation}
+                        className="mt-2 inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition-all duration-200 hover:bg-emerald-100 hover:shadow-sm active:scale-[0.98]"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Get My Location
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

@@ -18,7 +18,6 @@ export default function EditConfig({ section }) {
       howItWorks: { title: '', subtitle: '', steps: [] },
       successStories: { title: '', subtitle: '', stories: [] },
       gallery: { title: '', subtitle: '', images: [] },
-      donate: { title: '', subtitle: '', donateLinks: { note: '', donateUrl: '', monthlyUrl: '' }, reasons: [] },
       volunteer: { title: '', subtitle: '', roles: [], requirements: [], cta: { label: '', link: '' } },
       partners: { title: '', subtitle: '', partners: [] },
     }
@@ -67,15 +66,6 @@ export default function EditConfig({ section }) {
         obj = obj[keys[i]]
       }
       obj[keys[keys.length - 1]] = value
-      return copy
-    })
-    setDirty(true)
-  }
-
-  function updateStat(index, field, value) {
-    setConfig((prev) => {
-      const copy = structuredClone(prev)
-      copy.stats[index][field] = value
       return copy
     })
     setDirty(true)
@@ -224,26 +214,6 @@ export default function EditConfig({ section }) {
     xhr.open('POST', UPLOAD_URL)
     xhr.withCredentials = true
     xhr.send(formData)
-  }
-
-  function addDonateReason() {
-    setConfig((prev) => {
-      const c = structuredClone(prev)
-      if (!c.donate) c.donate = { title: '', subtitle: '', donateLinks: { note: '' }, reasons: [] }
-      if (!c.donate.reasons) c.donate.reasons = []
-      c.donate.reasons.push({ stat: '', label: '', desc: '' })
-      return c
-    })
-    setDirty(true)
-  }
-
-  function removeDonateReason(index) {
-    setConfig((prev) => {
-      const c = structuredClone(prev)
-      c.donate.reasons.splice(index, 1)
-      return c
-    })
-    setDirty(true)
   }
 
   function addVolunteerRole() {
@@ -488,31 +458,6 @@ export default function EditConfig({ section }) {
                 className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
               />
             </div>
-          </div>
-        </section>}
-
-        {section === 'stats' && <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Stats</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {config.stats.map((stat, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-lg border border-gray-200 p-4">
-                <span className="text-sm font-medium text-gray-500 w-6">{i + 1}.</span>
-                <div className="flex-1 space-y-2">
-                  <input
-                    value={stat.label}
-                    onChange={(e) => updateStat(i, 'label', e.target.value)}
-                    placeholder="Label"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                  />
-                  <input
-                    value={stat.value}
-                    onChange={(e) => updateStat(i, 'value', e.target.value)}
-                    placeholder="Value"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                  />
-                </div>
-              </div>
-            ))}
           </div>
         </section>}
 
@@ -954,102 +899,6 @@ export default function EditConfig({ section }) {
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleGalleryImageUpload(i, f); e.target.value = '' }} />
                       </label>
                     )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>}
-
-        {section === 'donate' && <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Donate Section</h2>
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                value={config.donate?.title || ''}
-                onChange={(e) => update('donate.title', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Subtitle</label>
-              <textarea
-                rows={2}
-                value={config.donate?.subtitle || ''}
-                onChange={(e) => update('donate.subtitle', e.target.value)}
-                className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Donation Note</label>
-              <input
-                value={config.donate?.donateLinks?.note || ''}
-                onChange={(e) => update('donate.donateLinks.note', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Donate Now URL</label>
-                <input
-                  value={config.donate?.donateLinks?.donateUrl || ''}
-                  onChange={(e) => update('donate.donateLinks.donateUrl', e.target.value)}
-                  placeholder="https://..."
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Monthly Giving URL</label>
-                <input
-                  value={config.donate?.donateLinks?.monthlyUrl || ''}
-                  onChange={(e) => update('donate.donateLinks.monthlyUrl', e.target.value)}
-                  placeholder="https://..."
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="mt-8">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900">Impact Reasons</h3>
-              <button onClick={addDonateReason} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-                + Add Reason
-              </button>
-            </div>
-            <div className="mt-3 space-y-4">
-              {(config.donate?.reasons || []).map((reason, i) => (
-                <div key={i} className="rounded-lg border border-gray-200 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">Reason {i + 1}</p>
-                    <button
-                      onClick={() => removeDonateReason(i)}
-                      className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <input
-                      value={reason.stat}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.donate.reasons[i].stat = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Stat (e.g. 12K+)"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={reason.label}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.donate.reasons[i].label = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Label"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={reason.desc}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.donate.reasons[i].desc = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Description"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
                   </div>
                 </div>
               ))}
