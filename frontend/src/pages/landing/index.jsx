@@ -14,6 +14,7 @@ import Location from './Location'
 import NewsEvents from './NewsEvents'
 import FAQSection from './FAQSection'
 import ContactSection from './ContactSection'
+import LandingSkeleton from './LandingSkeleton'
 import Maintenance from './Maintenance'
 
 const API_BASE = '/api/v1'
@@ -24,8 +25,6 @@ const EMPTY_CONFIG = {
   successStories: { stories: [] }, gallery: { images: [] },
   partners: { partners: [] }, location: { center: { lat: 9.799447, lng: 118.693766 } },
   newsEvents: { news: [], events: [] },
-  donate: { reasons: [], donateLinks: {} },
-  community: {},
 }
 
 function fillDefaults(defaults, api) {
@@ -45,6 +44,7 @@ function fillDefaults(defaults, api) {
 
 export default function Landing() {
   const [landingConfig, setLandingConfig] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [maintenanceEndTime, setMaintenanceEndTime] = useState('')
 
@@ -57,12 +57,15 @@ export default function Landing() {
         setMaintenanceEndTime(d.maintenanceEndTime || '')
       })
       .catch(() => {})
+      .finally(() => setLoading(false))
 
   useEffect(() => {
     fetchConfig()
     const id = setInterval(fetchConfig, 30000)
     return () => clearInterval(id)
   }, [])
+
+  if (loading) return <LandingSkeleton />
 
   if (maintenanceMode) return <Maintenance endTime={maintenanceEndTime} />
 
