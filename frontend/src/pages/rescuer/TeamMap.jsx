@@ -67,7 +67,7 @@ export default function TeamMap() {
               <Marker
                 key={r.userId}
                 position={{ lat: r.latitude, lng: r.longitude }}
-                onClick={() => setSelected(r)}
+                onClick={() => { setSelected(r); setCenter({ lat: r.latitude, lng: r.longitude }) }}
                 icon={{
                   path: window.google.maps.SymbolPath.CIRCLE,
                   scale: 8,
