@@ -5,17 +5,15 @@ import { SessionProvider } from '../../context/SessionContext'
 import SectionTracker from './SectionTracker'
 import HeroSection from './HeroSection'
 import Carousel from './Carousel'
-
+import HowItWorks from './HowItWorks'
+import SuccessStories from './SuccessStories'
+import Gallery from './Gallery'
+import StatsSection from './StatsSection'
+import PartnerLogos from './PartnerLogos'
 import Location from './Location'
 import NewsEvents from './NewsEvents'
-import StatsSection from './StatsSection'
 import FAQSection from './FAQSection'
 import ContactSection from './ContactSection'
-import SuccessStories from './SuccessStories'
-
-import HowItWorks from './HowItWorks'
-import Gallery from './Gallery'
-import PartnerLogos from './PartnerLogos'
 import Maintenance from './Maintenance'
 
 const API_BASE = '/api/v1'
@@ -24,9 +22,10 @@ const EMPTY_CONFIG = {
   hero: {}, stats: [], contact: {}, faq: [], carousel: [],
   howItWorks: { steps: [] },
   successStories: { stories: [] }, gallery: { images: [] },
-
   partners: { partners: [] }, location: { center: { lat: 9.799447, lng: 118.693766 } },
   newsEvents: { news: [], events: [] },
+  donate: { reasons: [], donateLinks: {} },
+  community: {},
 }
 
 function fillDefaults(defaults, api) {
