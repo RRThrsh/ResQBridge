@@ -1,54 +1,45 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { GoogleMap, Marker, useLoadScript, Circle, Polyline } from '@react-google-maps/api'
-import { useLocationContext } from '../../context/LocationContext.jsx'
+import { useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, Polyline, Circle, useMap } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import { useLocationContext } from '../../context/LocationContext'
 import AnimateIn from '../../components/ui/AnimateIn'
 
-const mapOptions = {
-  disableDefaultUI: false,
-  zoomControl: true,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: true,
+import iconUrl from 'leaflet/dist/images/marker-icon.png'
+import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
+import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
+
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl })
+
+function MapController({ center, userPos }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (userPos) {
+      map.setView([userPos.lat, userPos.lng], 13, { animate: true })
+    } else if (center) {
+      map.setView([center.lat, center.lng], 11, { animate: true })
+    }
+  }, [map, center, userPos])
+
+  return null
 }
 
 export default function Location({ title, subtitle, center }) {
   const { userPos, locError, distance, routePath, routeInfo, routeLoading, requestLocation } = useLocationContext()
 
   useEffect(() => { requestLocation() }, [requestLocation])
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
-  const [mapLoaded, setMapLoaded] = useState(false)
-  const polyRef = useRef(null)
-  const routePathRef = useRef(routePath)
-  routePathRef.current = routePath
-
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: apiKey,
-  })
-  const mapsFailed = isLoaded && !loadError && !window.google?.maps?.version
-
-  const onMapLoad = useCallback(() => {
-    if (window.google?.maps?.version) setMapLoaded(true)
-  }, [])
-
-  const onPolyLoad = useCallback((poly) => {
-    polyRef.current = poly
-    if (routePathRef.current) {
-      try { poly.setPath(routePathRef.current) } catch {}
-    }
-  }, [])
-
-  useEffect(() => {
-    if (polyRef.current && routePath) {
-      try { polyRef.current.setPath(routePath) } catch {}
-    }
-  }, [routePath])
+  const leafletRoutePath = routePath?.map(p => [p.lat, p.lng])
 
   function isOpen() {
     const now = new Date()
     const totalMins = now.getHours() * 60 + now.getMinutes()
     return totalMins >= 480 && totalMins < 1020
   }
+
+  const mapCenter = userPos || center
 
   return (
     <section className="border-t border-gray-100 px-6 py-20 sm:px-8 lg:px-8">
@@ -151,68 +142,51 @@ export default function Location({ title, subtitle, center }) {
             </div>
           </AnimateIn>
 
-          <AnimateIn animation="fade-right" delay={200} className="overflow-hidden rounded-2xl border border-gray-200 lg:col-span-3">
-            {loadError || mapsFailed ? (
-              <div className="flex min-h-[300px] items-center justify-center bg-gray-50 lg:min-h-[420px]">
-                <p className="text-sm text-gray-400">Failed to load Google Maps. Check your API key.</p>
-              </div>
-            ) : !isLoaded ? (
-              <div className="flex min-h-[300px] items-center justify-center bg-gray-50 lg:min-h-[420px]">
-                <p className="text-sm text-gray-400">Loading map...</p>
-              </div>
-            ) : (
-              <div className="relative">
-                {routeLoading && (
-                  <div className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center pt-3">
-                    <span className="rounded-full bg-white/80 px-3 py-1 text-xs text-gray-500 shadow-sm backdrop-blur-sm">
-                      Calculating route...
-                    </span>
-                  </div>
-                )}
-                <GoogleMap
-                  mapContainerStyle={{ width: '100%', height: '420px', minHeight: '300px' }}
-                  center={userPos || center}
-                  zoom={userPos ? 13 : 11}
-                  options={mapOptions}
-                  onLoad={onMapLoad}
-                >
-                  {mapLoaded && (
-                    <>
-                      <Marker position={center} title="Palawan Wildlife Rescue Center" />
-                      {routePath && (
-                        <Polyline
-                          onLoad={onPolyLoad}
-                          options={{
-                            strokeColor: '#16a34a',
-                            strokeWeight: 4,
-                            strokeOpacity: 0.85,
-                            geodesic: true,
-                          }}
-                        />
-                      )}
-                      {userPos && (
-                        <>
-                          <Marker
-                            position={userPos}
-                            title="Your location"
-                            icon={{
-                              path: window.google.maps.SymbolPath.CIRCLE,
-                              scale: 8,
-                              fillColor: '#3b82f6',
-                              fillOpacity: 1,
-                              strokeColor: '#fff',
-                              strokeWeight: 3,
-                            }}
-                          />
-                          <Circle center={userPos} radius={30} options={{ fillColor: '#3b82f6', fillOpacity: 0.1, strokeColor: '#3b82f6', strokeOpacity: 0.3, strokeWeight: 1 }} />
-                        </>
-                      )}
-                    </>
-                  )}
-                </GoogleMap>
+          <div className="relative overflow-hidden rounded-2xl border border-gray-200 lg:col-span-3">
+            {routeLoading && (
+              <div className="pointer-events-none absolute inset-0 z-[1000] flex items-start justify-center pt-3">
+                <span className="rounded-full bg-white/80 px-3 py-1 text-xs text-gray-500 shadow-sm backdrop-blur-sm">
+                  Calculating route...
+                </span>
               </div>
             )}
-          </AnimateIn>
+            <MapContainer
+              center={[mapCenter.lat, mapCenter.lng]}
+              zoom={userPos ? 13 : 11}
+              className="z-0 h-[420px] w-full min-h-[300px]"
+              scrollWheelZoom={true}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <MapController center={center} userPos={userPos} />
+
+              <Marker position={[center.lat, center.lng]} />
+
+              {leafletRoutePath && (
+                <Polyline
+                  positions={leafletRoutePath}
+                  pathOptions={{ color: '#16a34a', weight: 4, opacity: 0.85 }}
+                />
+              )}
+
+              {userPos && (
+                <>
+                  <Circle
+                    center={[userPos.lat, userPos.lng]}
+                    radius={30}
+                    pathOptions={{ fillColor: '#3b82f6', fillOpacity: 0.1, color: '#3b82f6', opacity: 0.3, weight: 1 }}
+                  />
+                  <Circle
+                    center={[userPos.lat, userPos.lng]}
+                    radius={4}
+                    pathOptions={{ fillColor: '#3b82f6', fillOpacity: 1, color: '#fff', weight: 3 }}
+                  />
+                </>
+              )}
+            </MapContainer>
+          </div>
         </div>
       </div>
     </section>
