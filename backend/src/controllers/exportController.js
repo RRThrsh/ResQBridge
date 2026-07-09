@@ -30,11 +30,11 @@ const exportReports = async (_req, res) => {
   const headers = ["id", "name", "phone", "category", "animalType", "urgency", "location", "description", "status", "assignedTo", "latitude", "longitude", "createdAt"];
   const rows = reports.map((r) => ({
     id: r._id,
-    name: r.reporterEmail || "Anonymous",
-    phone: "",
-    category: "other",
-    animalType: r.animalName,
-    urgency: "medium",
+    name: r.reporterEmail || r.name || "Anonymous",
+    phone: r.phone || "",
+    category: r.category || "other",
+    animalType: r.animalType,
+    urgency: r.urgency,
     location: r.location,
     description: r.description || "",
     status: EXPORT_STATUS_MAP[r.status] || r.status,

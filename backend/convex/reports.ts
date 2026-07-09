@@ -49,6 +49,7 @@ export const createReport = mutation({
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
     reporterEmail: v.string(),
+    urgency: v.string(),
   },
   handler: async (ctx, args) => {
     const reportId = await ctx.db.insert("reports", {
@@ -56,7 +57,7 @@ export const createReport = mutation({
       phone: "",
       category: "other",
       animalType: args.animalName,
-      urgency: "low",
+      urgency: args.urgency,
       location: args.location,
       description: args.description,
       latitude: args.latitude,

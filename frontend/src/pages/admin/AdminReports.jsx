@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react'
 import { DoubleConfirmation, SkeletonCard } from '../../components/ui'
 import { admin as adminApi } from '../../services/api'
 import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIcon } from '../../components/SvgIcons'
+import ReportMap from '../rescuer/ReportMap'
 
 const URGENCY_LABEL = {
   low: { label: 'Low', class: 'bg-gray-100 text-gray-700' },
-  medium: { label: 'Medium', class: 'bg-amber-100 text-amber-800' },
-  high: { label: 'High', class: 'bg-orange-100 text-orange-800' },
-  emergency: { label: 'Emergency', class: 'bg-red-100 text-red-800 font-bold' },
+  high: { label: 'High', class: 'bg-red-100 text-red-800 font-bold' },
 }
 
 const STATUS_BADGE = {
@@ -32,6 +31,8 @@ const CATEGORY_ICONS = {
 const CATEGORY_LABELS = {
   injury: 'Injured / In Distress', stranded: 'Stranded', missing: 'Missing Pet / Animal',
   found: 'Found Animal', abandoned: 'Abandoned', other: 'Other',
+  wildlife_sighting: 'Wildlife Sighting', illegal_possession: 'Illegal Wildlife Possession',
+  human_wildlife_conflict: 'Human–Wildlife Conflict', emergency: 'Emergency',
 }
 
 export default function AdminReports({ adminPermissions }) {
@@ -47,6 +48,7 @@ export default function AdminReports({ adminPermissions }) {
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkArchiving, setBulkArchiving] = useState(false)
+  const [assignTarget, setAssignTarget] = useState({})
   const pageSize = 10
 
   useEffect(() => {
@@ -103,7 +105,7 @@ export default function AdminReports({ adminPermissions }) {
     .sort((a, b) => {
       if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt)
       if (sortBy === 'urgency') {
-        const order = { emergency: 0, high: 1, medium: 2, low: 3 }
+        const order = { high: 0, low: 1 }
         return (order[a.urgency] ?? 3) - (order[b.urgency] ?? 3)
       }
       return new Date(b.createdAt) - new Date(a.createdAt)
@@ -357,6 +359,15 @@ export default function AdminReports({ adminPermissions }) {
                       </div>
                     )}
 
+                    {r.latitude && r.longitude && (
+                      <div className="mt-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1.5">Location Map</p>
+                        <div className="overflow-hidden rounded-lg border border-gray-200">
+                          <ReportMap latitude={r.latitude} longitude={r.longitude} label={r.animalType} />
+                        </div>
+                      </div>
+                    )}
+
                     <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-3">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-0.5">Assigned Rescuer</p>
@@ -370,22 +381,39 @@ export default function AdminReports({ adminPermissions }) {
                       </div>
                       {r.status !== 'resolved' && r.status !== 'failed' && !r.assignedTo && (
                         (adminPermissions?.reports?.write || adminPermissions?.reports?.execute) ? (
-                          <select
-                            disabled={assigningId === r._id}
-                            defaultValue=""
-                            onChange={(e) => handleAssign(r._id, e.target.value)}
-                            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 focus:border-green-600 focus:outline-none disabled:opacity-50"
-                          >
-                            <option value="" disabled>Assign rescuer...</option>
-                            {users.map((u) => {
-                              const s = getRescuerStatus(u.uuid)
-                              return (
-                                <option key={u.uuid} value={u.uuid}>
-                                  {u.firstName} {u.lastName} — {s.label}
-                                </option>
-                              )
-                            })}
-                          </select>
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={assignTarget[r._id] || ""}
+                              onChange={(e) => setAssignTarget((prev) => ({ ...prev, [r._id]: e.target.value }))}
+                              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 focus:border-green-600 focus:outline-none"
+                            >
+                              <option value="" disabled>Assign rescuer...</option>
+                              {users.map((u) => {
+                                const s = getRescuerStatus(u.uuid)
+                                return (
+                                  <option key={u.uuid} value={u.uuid}>
+                                    {u.firstName} {u.lastName} — {s.label}
+                                  </option>
+                                )
+                              })}
+                            </select>
+                            {assignTarget[r._id] && (
+                              <DoubleConfirmation
+                                onConfirm={() => handleAssign(r._id, assignTarget[r._id])}
+                                title="Confirm Assignment"
+                                message={`Assign this report to ${users.find((u) => u.uuid === assignTarget[r._id])?.firstName || ""} ${users.find((u) => u.uuid === assignTarget[r._id])?.lastName || ""}?`}
+                                confirmText="Yes, Assign"
+                                triggerVariant="primary"
+                              >
+                                <button
+                                  disabled={assigningId === r._id}
+                                  className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+                                >
+                                  {assigningId === r._id ? 'Assigning...' : 'Assign'}
+                                </button>
+                              </DoubleConfirmation>
+                            )}
+                          </div>
                         ) : null
                       )}
                       {(adminPermissions?.reports?.execute) && (
