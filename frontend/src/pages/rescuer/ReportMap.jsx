@@ -15,6 +15,8 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
   const [routeError, setRouteError] = useState(null)
   const followRef = useRef(true)
   const autoFetched = useRef(false)
+  const polyRef1 = useRef(null)
+  const polyRef2 = useRef(null)
 
   const { isLoaded } = useLoadScript({ googleMapsApiKey: apiKey })
 
@@ -25,6 +27,29 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
       m.setZoom(15)
     }
   }, [latitude, longitude])
+
+  const onPolyLoad1 = useCallback((poly) => {
+    polyRef1.current = poly
+    if (routePath) {
+      try { poly.setPath(routePath) } catch {}
+    }
+  }, [routePath])
+
+  const onPolyLoad2 = useCallback((poly) => {
+    polyRef2.current = poly
+    if (routePath) {
+      try { poly.setPath(routePath) } catch {}
+    }
+  }, [routePath])
+
+  useEffect(() => {
+    if (polyRef1.current && routePath) {
+      try { polyRef1.current.setPath(routePath) } catch {}
+    }
+    if (polyRef2.current && routePath) {
+      try { polyRef2.current.setPath(routePath) } catch {}
+    }
+  }, [routePath])
 
   useEffect(() => {
     if (!map || !userPos || !followRef.current) return
@@ -103,28 +128,6 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
     setRouteError(null)
   }
 
-  function handleNavigate() {
-    setRouteError(null)
-    if (userPos) {
-      fetchRoute(userPos.lat, userPos.lng)
-      return
-    }
-    if (requestLocation) requestLocation()
-    if (!navigator.geolocation) {
-      setRouteError('Geolocation not supported by your browser.')
-      return
-    }
-    setRouteError('Fetching your location...')
-    navigator.geolocation.getCurrentPosition(
-      (pos) => fetchRoute(pos.coords.latitude, pos.coords.longitude),
-      () => {
-        setRouteError('Could not get your location. Please enable location access.')
-        setTimeout(() => setRouteError(null), 5000)
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
-  }
-
   if (!isLoaded) {
     return (
       <div className="flex items-center justify-center rounded-xl bg-gray-100 border-2 border-gray-200" style={{ height: '320px' }}>
@@ -172,7 +175,7 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
         {routePath && (
           <>
             <Polyline
-              path={routePath}
+              onLoad={onPolyLoad1}
               options={{
                 strokeColor: '#d97706',
                 strokeWeight: 7,
@@ -180,7 +183,7 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
               }}
             />
             <Polyline
-              path={routePath}
+              onLoad={onPolyLoad2}
               options={{
                 strokeColor: '#d97706',
                 strokeWeight: 4,
@@ -258,49 +261,7 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
               Clear Route
             </button>
           )}
-          {!routePath && userPos && (
-            <button
-              onClick={() => { followRef.current = false; handleNavigate() }}
-              disabled={loadingRoute}
-              className="bg-amber-100 text-amber-800 px-4 py-2 rounded-xl text-sm font-bold hover:bg-amber-200 transition-colors border-2 border-amber-300 flex items-center gap-1.5"
-            >
-              {loadingRoute ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-800 border-t-transparent" />
-              ) : (
-                <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg> Navigate</>
-              )}
-            </button>
-          )}
-          {latitude && longitude && (
-            <div className="flex gap-1">
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2 rounded-xl text-sm font-bold bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
-                title="Open in Google Maps"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
-                GMaps
-              </a>
-              <a
-                href={`https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2 rounded-xl text-sm font-bold bg-white text-gray-700 border-2 border-gray-300 hover:bg-blue-50 transition-colors flex items-center gap-1.5"
-                title="Open in Waze"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-                </svg>
-                Waze
-              </a>
-            </div>
-          )}
+          
         </div>
       </div>
     </div>

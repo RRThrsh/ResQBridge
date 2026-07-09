@@ -34,6 +34,28 @@ const CATEGORY_ICONS = {
   found: PawIcon, abandoned: HouseIcon, other: ClipboardIcon,
 }
 
+const SPEED_KPH = 30
+
+function haversineDistance(coords1, coords2) {
+  if (!coords1 || !coords2) return null
+  const R = 6371
+  const dLat = ((coords2.lat - coords1.lat) * Math.PI) / 180
+  const dLng = ((coords2.lng - coords1.lng) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((coords1.lat * Math.PI) / 180) *
+      Math.cos((coords2.lat * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function getDistanceInfo(userPos, lat, lng) {
+  if (!userPos || lat == null || lng == null) return null
+  const dist = haversineDistance(userPos, { lat, lng })
+  if (dist == null) return null
+  return { dist, min: Math.round((dist / SPEED_KPH) * 60) }
+}
+
 export default function RescuerAssignments() {
   const { user } = useAuth()
   const { userPos, requestLocation } = useLocationContext()
@@ -355,7 +377,14 @@ export default function RescuerAssignments() {
                             <span className="font-semibold text-gray-900">{r.name}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-gray-600 max-w-[200px] truncate">{r.location}</td>
+                        <td className="px-5 py-4 text-gray-600 max-w-[200px] truncate">
+  {r.location}
+  {(() => {
+    const info = getDistanceInfo(userPos, r.latitude, r.longitude)
+    if (!info) return null
+    return <span className="block text-xs text-gray-400">{info.dist.toFixed(1)} km · {info.min} min</span>
+  })()}
+</td>
                         <td className="px-5 py-4">
                           <span className={`inline-block rounded-full border-2 px-3 py-0.5 text-xs font-bold ${badgeClass}`}>
                             {badgeLabel}
@@ -400,7 +429,14 @@ export default function RescuerAssignments() {
                       <span className={`rounded-full border-2 px-3 py-1 text-sm font-bold ${badgeClass}`}>{badgeLabel}</span>
                       <span className={`rounded-full px-3 py-1 text-sm font-bold ${urgency.class}`}>{urgency.label}</span>
                       <span className="text-sm text-gray-500">{r.animalType}</span>
-                      <span className="text-sm text-gray-400">{r.location}</span>
+                      <span className="text-sm text-gray-400">
+                        {r.location}
+                        {(() => {
+                          const info = getDistanceInfo(userPos, r.latitude, r.longitude)
+                          if (!info) return null
+                          return <> · {info.dist.toFixed(1)} km · ~{info.min} min</>
+                        })()}
+                      </span>
                     </div>
 
                     {r.description && <p className="text-gray-700">{r.description}</p>}
