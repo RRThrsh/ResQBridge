@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { GoogleMap, Marker, useLoadScript, InfoWindow } from '@react-google-maps/api'
 import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
@@ -14,11 +14,10 @@ export default function TeamMap() {
   const { userPos } = useLocationContext()
   const [rescuers, setRescuers] = useState([])
   const [selected, setSelected] = useState(null)
-  const [center, setCenter] = useState(null)
+  const mapRef = useRef(null)
+  const initialCenter = useMemo(() => userPos || DEFAULT_CENTER, [])
 
-  useEffect(() => {
-    if (!center && userPos) setCenter(userPos)
-  }, [userPos])
+  function handleMapLoad(map) { mapRef.current = map }
 
   useEffect(() => {
     async function fetchLocations() {
@@ -48,7 +47,7 @@ export default function TeamMap() {
           <p className="mt-1 text-lg text-gray-500">See other rescuers in your area ({rescuers.length} online)</p>
         </div>
         <div className="rounded-xl overflow-hidden border-2 border-gray-200" style={{ height: '70vh' }}>
-          <GoogleMap mapContainerStyle={containerStyle} center={center || DEFAULT_CENTER} zoom={12}>
+          <GoogleMap mapContainerStyle={containerStyle} center={initialCenter} zoom={12} onLoad={handleMapLoad}>
             {userPos && (
               <Marker
                 position={userPos}
@@ -67,7 +66,7 @@ export default function TeamMap() {
               <Marker
                 key={r.userId}
                 position={{ lat: r.latitude, lng: r.longitude }}
-                onClick={() => { setSelected(r); setCenter({ lat: r.latitude, lng: r.longitude }) }}
+                onClick={() => { setSelected(r); mapRef.current?.panTo({ lat: r.latitude, lng: r.longitude }) }}
                 icon={{
                   path: window.google.maps.SymbolPath.CIRCLE,
                   scale: 8,
