@@ -31,7 +31,6 @@ export default function TeamMap() {
 
   const onMapLoad = useCallback((map) => {
     mapRef.current = map
-    if (userPos) map.setCenter(userPos)
   }, [])
 
   useEffect(() => {
