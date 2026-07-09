@@ -6,13 +6,19 @@ import { rescuer as rescuerApi } from '../../services/api'
 
 const containerStyle = { width: '100%', height: '100%', borderRadius: '0.75rem' }
 
+const DEFAULT_CENTER = { lat: 9.799447, lng: 118.693766 }
+
 export default function TeamMap() {
   const { isLoaded } = useLoadScript({ googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY })
   const { user } = useAuth()
   const { userPos } = useLocationContext()
   const [rescuers, setRescuers] = useState([])
   const [selected, setSelected] = useState(null)
-  const center = userPos || { lat: 9.799447, lng: 118.693766 }
+  const [center, setCenter] = useState(null)
+
+  useEffect(() => {
+    if (!center && userPos) setCenter(userPos)
+  }, [userPos])
 
   useEffect(() => {
     async function fetchLocations() {
@@ -42,7 +48,7 @@ export default function TeamMap() {
           <p className="mt-1 text-lg text-gray-500">See other rescuers in your area ({rescuers.length} online)</p>
         </div>
         <div className="rounded-xl overflow-hidden border-2 border-gray-200" style={{ height: '70vh' }}>
-          <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={12}>
+          <GoogleMap mapContainerStyle={containerStyle} center={center || DEFAULT_CENTER} zoom={12}>
             {userPos && (
               <Marker
                 position={userPos}
