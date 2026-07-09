@@ -31,6 +31,8 @@ const CATEGORY_ICONS = {
 const CATEGORY_LABELS = {
   injury: 'Injured / In Distress', stranded: 'Stranded', missing: 'Missing Pet / Animal',
   found: 'Found Animal', abandoned: 'Abandoned', other: 'Other',
+  wildlife_sighting: 'Wildlife Sighting', illegal_possession: 'Illegal Wildlife Possession',
+  human_wildlife_conflict: 'Human–Wildlife Conflict', emergency: 'Emergency',
 }
 
 export default function AdminReports({ adminPermissions }) {
