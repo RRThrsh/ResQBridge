@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { GoogleMap, Marker, useLoadScript, InfoWindow } from '@react-google-maps/api'
 import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
@@ -12,16 +12,7 @@ export default function TeamMap() {
   const { userPos } = useLocationContext()
   const [rescuers, setRescuers] = useState([])
   const [selected, setSelected] = useState(null)
-  const [mapCenter, setMapCenter] = useState(null)
-  const center = mapCenter || userPos || { lat: 9.799447, lng: 118.693766 }
-
-  const handleMapDrag = useCallback((map) => {
-    const c = map.getCenter()
-    const lat = c.lat()
-    const lng = c.lng()
-    setMapCenter({ lat, lng })
-    rescuerApi.updateLocation(lat, lng).catch(() => {})
-  }, [])
+  const center = userPos || { lat: 9.799447, lng: 118.693766 }
 
   useEffect(() => {
     async function fetchLocations() {
@@ -51,7 +42,7 @@ export default function TeamMap() {
           <p className="mt-1 text-lg text-gray-500">See other rescuers in your area ({rescuers.length} online)</p>
         </div>
         <div className="rounded-xl overflow-hidden border-2 border-gray-200" style={{ height: '70vh' }}>
-          <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={12} onDragEnd={handleMapDrag}>
+          <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={12}>
             {userPos && (
               <Marker
                 position={userPos}
