@@ -18,6 +18,7 @@ const { upload, uploadImage } = require("../controllers/uploadController");
 const { getShifts, saveShifts } = require("../controllers/shiftController");
 const { getChecklist, saveChecklist } = require("../controllers/equipmentController");
 const { addVoiceNote, getVoiceNotes } = require("../controllers/voiceNoteController");
+const { addExpense, getExpenses, getExpenseStats } = require("../controllers/expenseController");
 
 router.use(authenticate);
 router.use(authorize("rescuer", "admin", "superadmin"));
@@ -40,6 +41,9 @@ router.get("/reports/:reportId/checklist", asyncHandler(getChecklist));
 router.post("/reports/:reportId/checklist", asyncHandler(saveChecklist));
 router.get("/reports/:reportId/voice-notes", asyncHandler(getVoiceNotes));
 router.post("/voice-notes", asyncHandler(addVoiceNote));
+router.post("/expenses", asyncHandler(addExpense));
+router.get("/expenses", asyncHandler(getExpenses));
+router.get("/expenses/stats", asyncHandler(getExpenseStats));
 router.get("/locations", asyncHandler(async (_req, res) => {
   const convexClient = require("../config/convex");
   const { anyApi } = require("convex/server");

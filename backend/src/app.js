@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const reportRoutes = require("./routes/report");
 const rescuerRoutes = require("./routes/rescuer");
+const pushRoutes = require("./routes/push");
 const { globalLimiter, authLimiter } = require("./middleware/rateLimiter");
 const { errorHandler, asyncHandler } = require("./middleware/errorHandler");
 const { logEvent } = require("./middleware/logAudit");
@@ -109,6 +110,7 @@ app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/report", reportRoutes);
 app.use("/api/v1/rescuer", rescuerRoutes);
+app.use("/api/v1/push", pushRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });

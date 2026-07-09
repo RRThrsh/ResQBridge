@@ -70,17 +70,30 @@ export default function RescuerDashboard() {
       valueColor: 'text-green-700',
     },
     {
-      label: 'Total Assigned',
-      value: stats?.totalAssigned ?? 0,
+      label: 'Resolution Rate',
+      value: stats?.resolutionRate != null ? `${stats.resolutionRate}%` : '—',
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
         </svg>
       ),
       bg: 'bg-blue-100',
       text: 'text-blue-800',
       border: 'border-blue-300',
       valueColor: 'text-blue-700',
+    },
+    {
+      label: 'Avg Response',
+      value: stats?.avgResponseTime != null ? `${stats.avgResponseTime} min` : '—',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      bg: 'bg-purple-100',
+      text: 'text-purple-800',
+      border: 'border-purple-300',
+      valueColor: 'text-purple-700',
     },
   ]
 
@@ -94,7 +107,7 @@ export default function RescuerDashboard() {
           <p className="mt-1 text-lg text-gray-500">Here is your rescue summary</p>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-3">
+        <div className="grid gap-5 grid-cols-2 sm:grid-cols-4">
           {statCards.map((card) => (
             <div
               key={card.label}
@@ -118,6 +131,60 @@ export default function RescuerDashboard() {
             </div>
           ))}
         </div>
+
+        {!loading && stats?.monthlyTrends?.length > 0 && (
+          <div className="mt-8 rounded-2xl border-2 border-gray-200 bg-white p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Monthly Trends</h2>
+            <div className="flex flex-wrap gap-6">
+              {stats.monthlyTrends.map((m) => {
+                const total = m.assigned || 1
+                const rate = m.resolved > 0 ? Math.round((m.resolved / total) * 100) : 0
+                return (
+                  <div key={m.month} className="flex-1 min-w-[120px]">
+                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500 text-center">{m.month}</p>
+                    <div className="mt-2 flex justify-center gap-3">
+                      <div className="text-center">
+                        <p className="text-2xl font-extrabold text-gray-900">{m.assigned}</p>
+                        <p className="text-xs text-gray-500">Assigned</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-extrabold text-green-600">{m.resolved}</p>
+                        <p className="text-xs text-gray-500">Done</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-gray-200 overflow-hidden">
+                      <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${rate}%` }} />
+                    </div>
+                    <p className="mt-1 text-xs text-center text-gray-500">{rate}% resolved</p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {!loading && stats?.categoryBreakdown?.length > 0 && (
+          <div className="mt-6 rounded-2xl border-2 border-gray-200 bg-white p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Animal Breakdown</h2>
+            <div className="space-y-3">
+              {stats.categoryBreakdown.map((c) => {
+                const maxCount = stats.categoryBreakdown[0]?.count || 1
+                const pct = Math.round((c.count / maxCount) * 100)
+                return (
+                  <div key={c.animal}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-semibold text-gray-700">{c.animal}</span>
+                      <span className="font-bold text-gray-900">{c.count}</span>
+                    </div>
+                    <div className="mt-1 h-2 rounded-full bg-gray-200 overflow-hidden">
+                      <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="mt-10">
           <div className="mb-5 flex items-center justify-between">

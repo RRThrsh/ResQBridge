@@ -46,6 +46,8 @@ export default function RescuerAssignments() {
   const [diaryText, setDiaryText] = useState({})
   const [failReason, setFailReason] = useState({})
   const [showFailInput, setShowFailInput] = useState(new Set())
+  const [postReport, setPostReport] = useState({})
+  const [showPostReport, setShowPostReport] = useState(new Set())
   const [uploadingId, setUploadingId] = useState(null)
   const [uploadedImages, setUploadedImages] = useState({})
   const [selectedReport, setSelectedReport] = useState(null)
@@ -184,8 +186,13 @@ export default function RescuerAssignments() {
     finally { setActionLoading(null) }
   }
 
+  const OUTCOME_OPTIONS = ['Released to wild', 'Transferred to vet', 'Transferred to wildlife center', 'Deceased', 'Escaped', 'Other']
+  const ACTION_OPTIONS = ['First aid administered', 'Animal captured/contained', 'Animal transported', 'Released on-site', 'Sedated', 'Tagged/identified', 'Owner reunited', 'Area secured']
+  const CONDITION_OPTIONS = ['Critical', 'Poor', 'Fair', 'Good', 'Excellent']
+
   async function handleResolve(reportId) {
     const diary = diaryText[reportId] || ''
+    const report = postReport[reportId] || {}
     if (!diary.trim()) {
       alert('Please write a diary entry about how you executed the rescue.')
       return
@@ -193,6 +200,15 @@ export default function RescuerAssignments() {
     setActionLoading(reportId)
     try {
       await rescuerApi.addNote(reportId, `Rescue Diary: ${diary}`)
+      const structured = [
+        `Condition on arrival: ${report.condition || 'Not specified'}`,
+        `Actions taken: ${report.actions?.length ? report.actions.join(', ') : 'None listed'}`,
+        `Outcome: ${report.outcome || 'Not specified'}`,
+        `Release/transfer location: ${report.releaseLocation || 'Not specified'}`,
+        `Environmental conditions: ${report.environment || 'Not specified'}`,
+        `Other responders: ${report.responders || 'None'}`,
+      ]
+      await rescuerApi.addNote(reportId, `Post-Rescue Report:\n${structured.join('\n')}`)
       await rescuerApi.updateReportStatus(reportId, 'resolved')
       fetchReports()
     } catch { alert('Failed to resolve.') }
@@ -453,6 +469,89 @@ export default function RescuerAssignments() {
                               className="w-full rounded-xl border-2 border-gray-300 p-3 text-sm focus:border-amber-500 focus:outline-none"
                               rows={3}
                             />
+
+                            {!showFailInput.has(r._id) && (
+                              <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-4 space-y-4">
+                                <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Post-Rescue Report</p>
+
+                                <div>
+                                  <label className="text-sm font-semibold text-gray-700">Condition on arrival</label>
+                                  <select
+                                    value={postReport[r._id]?.condition || ''}
+                                    onChange={(e) => setPostReport({ ...postReport, [r._id]: { ...postReport[r._id], condition: e.target.value } })}
+                                    className="mt-1 w-full rounded-xl border-2 border-gray-300 px-4 py-2.5 text-sm focus:border-amber-600 focus:outline-none bg-white"
+                                  >
+                                    <option value="">Select condition</option>
+                                    {CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="text-sm font-semibold text-gray-700">Actions taken</label>
+                                  <div className="mt-1 grid grid-cols-2 gap-2">
+                                    {ACTION_OPTIONS.map((a) => {
+                                      const checked = postReport[r._id]?.actions?.includes(a) || false
+                                      return (
+                                        <label key={a} className="flex items-center gap-2 cursor-pointer">
+                                          <input type="checkbox" checked={checked}
+                                            onChange={() => {
+                                              const actions = postReport[r._id]?.actions || []
+                                              const next = checked ? actions.filter((x) => x !== a) : [...actions, a]
+                                              setPostReport({ ...postReport, [r._id]: { ...postReport[r._id], actions: next } })
+                                            }}
+                                            className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                                          />
+                                          <span className="text-sm text-gray-700">{a}</span>
+                                        </label>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="text-sm font-semibold text-gray-700">Outcome</label>
+                                  <select
+                                    value={postReport[r._id]?.outcome || ''}
+                                    onChange={(e) => setPostReport({ ...postReport, [r._id]: { ...postReport[r._id], outcome: e.target.value } })}
+                                    className="mt-1 w-full rounded-xl border-2 border-gray-300 px-4 py-2.5 text-sm focus:border-amber-600 focus:outline-none bg-white"
+                                  >
+                                    <option value="">Select outcome</option>
+                                    {OUTCOME_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="text-sm font-semibold text-gray-700">Release / transfer location</label>
+                                  <input type="text"
+                                    value={postReport[r._id]?.releaseLocation || ''}
+                                    onChange={(e) => setPostReport({ ...postReport, [r._id]: { ...postReport[r._id], releaseLocation: e.target.value } })}
+                                    placeholder={r.latitude && r.longitude ? `${r.latitude}, ${r.longitude}` : 'Enter location'}
+                                    className="mt-1 w-full rounded-xl border-2 border-gray-300 px-4 py-2.5 text-sm focus:border-amber-600 focus:outline-none"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-sm font-semibold text-gray-700">Environmental conditions</label>
+                                  <input type="text"
+                                    value={postReport[r._id]?.environment || ''}
+                                    onChange={(e) => setPostReport({ ...postReport, [r._id]: { ...postReport[r._id], environment: e.target.value } })}
+                                    placeholder="e.g. Rainy, muddy, hot, night time"
+                                    className="mt-1 w-full rounded-xl border-2 border-gray-300 px-4 py-2.5 text-sm focus:border-amber-600 focus:outline-none"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-sm font-semibold text-gray-700">Other responders present</label>
+                                  <input type="text"
+                                    value={postReport[r._id]?.responders || ''}
+                                    onChange={(e) => setPostReport({ ...postReport, [r._id]: { ...postReport[r._id], responders: e.target.value } })}
+                                    placeholder="Names of other rescuers, organizations"
+                                    className="mt-1 w-full rounded-xl border-2 border-gray-300 px-4 py-2.5 text-sm focus:border-amber-600 focus:outline-none"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex flex-wrap items-center gap-2">
                               <label className="inline-flex items-center gap-1.5 cursor-pointer rounded-xl bg-gray-100 px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-200 border-2 border-gray-300">
                                 {uploadingId === r._id ? 'Uploading...' : <><CameraIcon className="w-4 h-4" /> Add Photo</>}

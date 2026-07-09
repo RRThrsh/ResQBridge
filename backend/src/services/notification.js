@@ -1,4 +1,5 @@
 const { getRedis } = require("../config/redis");
+const { sendPush } = require("./pushNotification");
 
 const CHANNEL = "report:updates";
 
@@ -17,6 +18,13 @@ async function publish(event) {
     } catch {
       sseClients.delete(client);
     }
+  }
+
+  if (event.type === "report:claimed" && event.userId) {
+    sendPush(event.userId, "Report Claimed", `Report assigned to ${event.assignedByName || "a rescuer"}`, "/rescuer/assignments");
+  }
+  if (event.type === "report:status" && event.userId) {
+    sendPush(event.userId, "Status Update", `Report updated to ${event.status?.replace("_", " ")}`, "/rescuer/assignments");
   }
 }
 

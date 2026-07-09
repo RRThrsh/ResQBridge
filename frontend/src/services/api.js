@@ -190,6 +190,14 @@ export const rescuer = {
       method: 'POST',
       body: JSON.stringify({ reportId, audioUrl, duration }),
     }),
+
+  addExpense: (data) =>
+    request('/rescuer/expenses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  getExpenses: () => request('/rescuer/expenses'),
+  getExpenseStats: () => request('/rescuer/expenses/stats'),
 }
 
 export const logs = {
