@@ -1,6 +1,6 @@
 -- Schema created: 2026-06-12
 -- Source: backend/convex/schema.ts
--- Last updated: 2026-07-07 (full schema alignment)
+-- Last updated: 2026-07-09 (removed messages, added expenses, push subscriptions)
 
 -- ============================================================
 -- otps — One-time passwords for email-based authentication
@@ -194,21 +194,6 @@ CREATE TABLE equipmentChecklists (
     items JSON NOT NULL,
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
-    INDEX by_reportId (reportId)
-);
-
--- ============================================================
--- messages — Chat messages between rescuers/admins
--- Added: 2026-07-07
--- ============================================================
-CREATE TABLE messages (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    senderId VARCHAR(36) NOT NULL,
-    senderName VARCHAR(255) NOT NULL,
-    senderRole VARCHAR(50) NOT NULL,
-    content TEXT NOT NULL,
-    reportId VARCHAR(255) DEFAULT NULL,
-    createdAt BIGINT NOT NULL,
     INDEX by_reportId (reportId)
 );
 

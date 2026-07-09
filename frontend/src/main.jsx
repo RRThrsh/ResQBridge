@@ -3,12 +3,16 @@ import { createRoot } from 'react-dom/client'
 import './styles/index.css'
 import App from './App.jsx'
 
+import { registerPush } from './services/pushService'
+
 if ('serviceWorker' in navigator) {
   if (import.meta.env.DEV) {
     navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()))
   } else {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(() => {})
+      navigator.serviceWorker.register('/sw.js').then(() => {
+        registerPush()
+      }).catch(() => {})
     })
   }
 }

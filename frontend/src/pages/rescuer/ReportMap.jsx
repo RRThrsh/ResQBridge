@@ -273,6 +273,34 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
               )}
             </button>
           )}
+          {latitude && longitude && (
+            <div className="flex gap-1">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 rounded-xl text-sm font-bold bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+                title="Open in Google Maps"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+                GMaps
+              </a>
+              <a
+                href={`https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 rounded-xl text-sm font-bold bg-white text-gray-700 border-2 border-gray-300 hover:bg-blue-50 transition-colors flex items-center gap-1.5"
+                title="Open in Waze"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                </svg>
+                Waze
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

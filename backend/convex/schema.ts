@@ -155,14 +155,22 @@ export default defineSchema({
     .index("by_ipAddress", ["ipAddress"])
     .index("by_createdAt", ["createdAt"]),
 
-  messages: defineTable({
-    senderId: v.string(),
-    senderName: v.string(),
-    senderRole: v.string(),
-    content: v.string(),
+  expenses: defineTable({
+    userId: v.string(),
     reportId: v.optional(v.string()),
+    category: v.string(),
+    amount: v.number(),
+    description: v.string(),
+    receiptUrl: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("reimbursed"),
+      v.literal("rejected"),
+    ),
     createdAt: v.number(),
   })
+    .index("by_userId", ["userId"])
     .index("by_reportId", ["reportId"]),
 
   reportNotes: defineTable({

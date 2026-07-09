@@ -25,15 +25,6 @@ const navItems = [
     ),
   },
   {
-    label: 'Browse Reports',
-    path: '/rescuer/reports',
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-      </svg>
-    ),
-  },
-  {
     label: 'Team Map',
     path: '/rescuer/team-map',
     icon: (
@@ -61,6 +52,15 @@ const navItems = [
     ),
   },
   {
+    label: 'Expenses',
+    path: '/rescuer/expenses',
+    icon: (
+      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
     label: 'Profile',
     path: '/rescuer/profile',
     icon: (
@@ -74,13 +74,23 @@ const navItems = [
 export default function RescuerLayout() {
   const { user, loading: authLoading, logout } = useAuth()
   const { userPos, requestLocation } = useLocationContext()
-  const { unreadCount } = useNotifications()
+  const { toasts, unreadCount, markAllRead } = useNotifications()
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [availability, setAvailability] = useState(user?.availability || 'available')
   const [togglingAvail, setTogglingAvail] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef(null)
   const locIntervalRef = useRef(null)
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => { requestLocation() }, [requestLocation])
 
@@ -207,7 +217,7 @@ export default function RescuerLayout() {
           </div>
           <div className="flex items-center gap-5">
             <button
-              onClick={() => navigate('/rescuer/notifications')}
+              onClick={() => setNotifOpen((prev) => !prev)}
               className="relative"
               aria-label="Notifications"
             >
@@ -237,6 +247,42 @@ export default function RescuerLayout() {
 
         <Outlet />
       </div>
+
+      {notifOpen && (
+        <div
+          ref={notifRef}
+          className="fixed top-20 right-6 z-50 w-80 rounded-2xl border-2 border-gray-200 bg-white shadow-xl"
+        >
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+            <h3 className="text-base font-bold text-gray-900">Notifications</h3>
+            {toasts.length > 0 && (
+              <button
+                onClick={() => { markAllRead(); setNotifOpen(false) }}
+                className="text-xs font-semibold text-amber-600 hover:text-amber-700"
+              >
+                Mark all read
+              </button>
+            )}
+          </div>
+          <div className="max-h-80 overflow-y-auto px-5 py-3 space-y-2">
+            {toasts.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-6">No notifications</p>
+            ) : (
+              toasts.map((t) => (
+                <div
+                  key={t.id}
+                  className={`rounded-xl border-2 px-4 py-3 ${
+                    t.type === 'success' ? 'border-green-300 bg-green-50' : 'border-amber-300 bg-amber-50'
+                  }`}
+                >
+                  <p className="text-sm font-bold text-gray-900">{t.title}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{t.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

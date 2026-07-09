@@ -19,10 +19,10 @@ import RescuerDashboard from './pages/rescuer/Dashboard.jsx'
 import RescuerProfile from './pages/rescuer/Profile.jsx'
 import RescuerAssignments from './pages/rescuer/Assignments.jsx'
 import RescuerActivity from './pages/rescuer/Activity.jsx'
-import RescuerReports from './pages/rescuer/Reports.jsx'
 import RescuerNotifications from './pages/rescuer/Notifications.jsx'
 import RescuerShifts from './pages/rescuer/Shifts.jsx'
 import RescuerTeamMap from './pages/rescuer/TeamMap.jsx'
+import RescuerExpenses from './pages/rescuer/Expenses.jsx'
 import WildlifeGuide from './pages/WildlifeGuide.jsx'
 import Report from './pages/landing/Report.jsx'
 
@@ -59,12 +59,12 @@ function App() {
               <Route index element={<RescuerDashboard />} />
               <Route path="dashboard" element={<RescuerDashboard />} />
               <Route path="assignments" element={<RescuerAssignments />} />
-              <Route path="reports" element={<RescuerReports />} />
               <Route path="notifications" element={<RescuerNotifications />} />
               <Route path="activity" element={<RescuerActivity />} />
               <Route path="profile" element={<RescuerProfile />} />
               <Route path="shifts" element={<RescuerShifts />} />
               <Route path="team-map" element={<RescuerTeamMap />} />
+              <Route path="expenses" element={<RescuerExpenses />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
