@@ -15,7 +15,6 @@ import type * as config from "../config.js";
 import type * as equipmentChecklists from "../equipmentChecklists.js";
 import type * as locations from "../locations.js";
 import type * as logs from "../logs.js";
-import type * as messages from "../messages.js";
 import type * as notes from "../notes.js";
 import type * as otp from "../otp.js";
 import type * as reports from "../reports.js";
@@ -38,7 +37,6 @@ declare const fullApi: ApiFromModules<{
   equipmentChecklists: typeof equipmentChecklists;
   locations: typeof locations;
   logs: typeof logs;
-  messages: typeof messages;
   notes: typeof notes;
   otp: typeof otp;
   reports: typeof reports;
