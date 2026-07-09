@@ -12,16 +12,20 @@ if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const URGENCY_MAP = {
   Healthy: "low",
-  Injured: "emergency",
+  Injured: "high",
   Sick: "high",
   Trapped: "high",
-  Unknown: "medium",
+  Unknown: "high",
 };
 
 const submitReport = async (req, res) => {
   const { name, phone, category, animalType, wildlifeCondition, location, description, latitude, longitude } = req.body;
 
-  const urgency = URGENCY_MAP[wildlifeCondition] || "medium";
+  let urgency = URGENCY_MAP[wildlifeCondition] || "high";
+
+  if (category === "illegal_possession" || category === "human_wildlife_conflict") {
+    urgency = "high";
+  }
 
   if (!phone || !animalType || !urgency || !location || !description) {
     return res.status(400).json({ message: "Phone, animal type, urgency, location, and description are required." });
@@ -60,17 +64,19 @@ const submitReport = async (req, res) => {
 
   const clientIp = req.ip || req.connection?.remoteAddress || "unknown";
 
-  const reporterEmail = name
-    ? `${name.replace(/\s+/g, '').toLowerCase()}@report.resqbridge`
-    : `reporter-${Date.now()}@report.resqbridge`;
-
-  await convexClient.mutation(anyApi.reports.createReport, {
-    animalName: animalType,
+  await convexClient.mutation(anyApi.reports.insertReport, {
+    name: name || "Anonymous",
+    phone,
+    category: category || "other",
+    animalType,
+    urgency,
     location,
     description,
+    images: images.length > 0 ? images.join(",") : undefined,
     latitude: lat,
     longitude: lng,
-    reporterEmail,
+    status: "pending",
+    reporterIp: clientIp,
   });
 
   await notifyAdmin({
