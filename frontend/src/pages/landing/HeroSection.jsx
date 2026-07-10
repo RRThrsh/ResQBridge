@@ -4,8 +4,8 @@ import { Button } from '../../components/ui'
 
 export default function HeroSection({
   badge = 'Community Powered',
-  title = 'Helping Lost Pets Find Their Way Home',
-  description = 'Report lost or found animals, connect with your community, and help reunite pets with their families.',
+  title = 'Helping Lost Wildlife Find Their Way Home',
+  description = 'Report lost or injured wildlife, connect with your community, and help protect and reunite animals with their natural habitats.',
 }) {
   const scrollToHowItWorks = () => {
     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
@@ -102,11 +102,11 @@ export default function HeroSection({
 
         {/* Feature pills */}
         <div className="mt-14 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
-          <FeaturePill icon="🐶" label="Lost & Found Animals" />
+          <FeaturePill icon="🌿" label="Lost & Found Wildlife" />
           <div className="hidden h-5 w-px bg-gray-300 sm:block" />
           <FeaturePill icon="⚡" label="Fast Community Reporting" />
           <div className="hidden h-5 w-px bg-gray-300 sm:block" />
-          <FeaturePill icon="💚" label="Helping Pets Reunite" />
+          <FeaturePill icon="💚" label="Helping Wildlife Reunite" />
         </div>
 
         {/* Scroll Indicator */}

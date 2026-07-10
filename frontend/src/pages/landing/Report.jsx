@@ -205,7 +205,7 @@ export default function Report() {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">Report an Animal</h1>
           <p className="mt-2 text-sm text-gray-500">
-            Report a wildlife sighting, stray animal, or rescue emergency.
+            Report a wildlife sighting, animal in distress, or rescue emergency.
           </p>
         </div>
 

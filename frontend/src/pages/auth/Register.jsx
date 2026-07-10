@@ -56,12 +56,12 @@ export default function Register() {
     switch (name) {
       case 'firstName':
         if (!value.trim()) return 'First name is required.'
-        if (value.trim().length > 50) return 'First name must be at most 50 characters.'
+        if (value.trim().length > 15) return 'First name must be at most 15 characters.'
         if (!/^[a-zA-Z\s'-]+$/.test(value.trim())) return 'First name contains invalid characters.'
         return ''
       case 'lastName':
         if (!value.trim()) return 'Last name is required.'
-        if (value.trim().length > 50) return 'Last name must be at most 50 characters.'
+        if (value.trim().length > 15) return 'Last name must be at most 15 characters.'
         if (!/^[a-zA-Z\s'-]+$/.test(value.trim())) return 'Last name contains invalid characters.'
         return ''
       case 'phone':
@@ -249,6 +249,7 @@ export default function Register() {
                       : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
                   }`}
                   placeholder="Juan"
+                  maxLength={15}
                   required
                 />
                 {touched.firstName && fieldErrors.firstName && (
@@ -268,6 +269,7 @@ export default function Register() {
                       : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
                   }`}
                   placeholder="Dela Cruz"
+                  maxLength={15}
                   required
                 />
                 {touched.lastName && fieldErrors.lastName && (

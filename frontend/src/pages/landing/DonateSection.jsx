@@ -47,7 +47,7 @@ export default function DonateSection({ title, subtitle, reasons, donateLinks })
             </div>
 
             <p className="relative mt-5 text-xs text-emerald-200/80">
-              {donateLinks?.note || '100% of donations go directly to animal care and conservation programs.'}
+              {donateLinks?.note || '100% of donations go directly to wildlife care and conservation programs.'}
             </p>
           </div>
         </AnimateIn>
