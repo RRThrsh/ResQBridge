@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { rescuer as rescuerApi } from '../../services/api'
-import { MedicalIcon, StrandedIcon, OrphanedIcon, ConflictIcon, IllegalIcon, DisplacedIcon, SightingIcon, ClipboardIcon } from '../../components/SvgIcons'
+import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIcon } from '../../components/SvgIcons'
 
 const URGENCY_LABEL = {
   low: { label: 'Low', class: 'bg-gray-100 text-gray-700' },
@@ -18,13 +18,11 @@ const STATUS_BADGE = {
 }
 
 const CATEGORY_ICONS = {
-  injured_distressed: MedicalIcon,
+  injury: MedicalIcon,
   stranded: StrandedIcon,
-  orphaned: OrphanedIcon,
-  human_conflict: ConflictIcon,
-  illegal_activity: IllegalIcon,
-  displaced: DisplacedIcon,
-  sighting: SightingIcon,
+  missing: SearchIcon,
+  found: PawIcon,
+  abandoned: HouseIcon,
   other: ClipboardIcon,
 }
 
