@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, DoubleConfirmation, InfoPopover } from '../../components/ui'
+import ReportSkeleton from './ReportSkeleton'
 import species from '../../data/wildlifeSpecies'
 import L from 'leaflet'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
@@ -77,6 +78,11 @@ export default function Report() {
   })
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreviews, setImagePreviews] = useState([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 400)
+    return () => clearTimeout(t)
+  }, [])
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -174,6 +180,8 @@ export default function Report() {
       setSubmitting(false)
     }
   }
+
+  if (loading) return <ReportSkeleton />
 
   if (submitted) {
     return (

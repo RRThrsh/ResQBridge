@@ -1,6 +1,16 @@
+import { useState, useEffect } from 'react'
 import species from '../data/wildlifeSpecies'
+import WildlifeGuideSkeleton from './WildlifeGuideSkeleton'
 
 export default function WildlifeGuide() {
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 400)
+    return () => clearTimeout(t)
+  }, [])
+
+  if (loading) return <WildlifeGuideSkeleton />
+
   const animals = species
 
   return (

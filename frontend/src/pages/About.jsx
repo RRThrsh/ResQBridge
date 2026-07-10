@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import AboutSkeleton from './AboutSkeleton'
 
 const API_BASE = '/api/v1'
 
@@ -14,6 +15,8 @@ export default function About() {
       })
       .catch(() => setConfig({}))
   }, [])
+
+  if (config === null) return <AboutSkeleton />
 
   const title = config?.title || 'About Us'
   const subtitle = config?.subtitle || 'Palawan Wildlife Rescue & Conservation Center'
