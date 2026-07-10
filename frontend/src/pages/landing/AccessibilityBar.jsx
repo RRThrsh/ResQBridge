@@ -17,7 +17,6 @@ const fontSizes = [
 const languages = [
   { code: 'en', label: 'English' },
   { code: 'fil', label: 'Filipino' },
-  { code: 'ceb', label: 'Cebuano' },
 ]
 
 export default function AccessibilityBar() {
