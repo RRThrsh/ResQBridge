@@ -71,12 +71,12 @@ const LANDING_DEFAULTS = {
     events: [],
   },
   wildlifeGuide: [
-    { name: 'Philippine Eagle', scientificName: 'Pithecophaga jefferyi', status: 'Critically Endangered', activeStatus: 'Day', habitat: 'Forest canopies', note: 'Report sightings immediately — do not approach.', images: [] },
-    { name: 'Palawan Bearcat', scientificName: 'Arctictis binturong', status: 'Vulnerable', activeStatus: 'Night', habitat: 'Lowland forests', note: 'Nocturnal and shy. If found during daytime, it may be sick.', images: [] },
-    { name: 'Hawksbill Turtle', scientificName: 'Eretmochelys imbricata', status: 'Critically Endangered', activeStatus: 'Both (Day & Night)', habitat: 'Coral reefs', note: 'If stranded, keep wet and contact rescue immediately.', images: [] },
-    { name: 'Palawan Peacock-Pheasant', scientificName: 'Polyplectron napoleonis', status: 'Vulnerable', activeStatus: 'Day', habitat: 'Primary forests', note: 'Observe from a distance. Do not disturb nesting areas.', images: [] },
-    { name: 'Dugong', scientificName: 'Dugong dugon', status: 'Vulnerable', activeStatus: 'Both (Day & Night)', habitat: 'Seagrass beds', note: 'Report any net entanglements to the coast guard.', images: [] },
-    { name: 'Philippine Cockatoo', scientificName: 'Cacatua haematuropygia', status: 'Critically Endangered', activeStatus: 'Day', habitat: 'Mangroves & forests', note: 'Do not feed or attempt to keep as a pet.', images: [] },
+    { name: 'Philippine Eagle', scientificName: 'Pithecophaga jefferyi', status: 'Critically Endangered', activeStatus: 'Day', habitat: 'Forest canopies', note: 'Report sightings immediately — do not approach.', images: [], hazard: '' },
+    { name: 'Palawan Bearcat', scientificName: 'Arctictis binturong', status: 'Vulnerable', activeStatus: 'Night', habitat: 'Lowland forests', note: 'Nocturnal and shy. If found during daytime, it may be sick.', images: [], hazard: '' },
+    { name: 'Hawksbill Turtle', scientificName: 'Eretmochelys imbricata', status: 'Critically Endangered', activeStatus: 'Both (Day & Night)', habitat: 'Coral reefs', note: 'If stranded, keep wet and contact rescue immediately.', images: [], hazard: '' },
+    { name: 'Palawan Peacock-Pheasant', scientificName: 'Polyplectron napoleonis', status: 'Vulnerable', activeStatus: 'Day', habitat: 'Primary forests', note: 'Observe from a distance. Do not disturb nesting areas.', images: [], hazard: '' },
+    { name: 'Dugong', scientificName: 'Dugong dugon', status: 'Vulnerable', activeStatus: 'Both (Day & Night)', habitat: 'Seagrass beds', note: 'Report any net entanglements to the coast guard.', images: [], hazard: '' },
+    { name: 'Philippine Cockatoo', scientificName: 'Cacatua haematuropygia', status: 'Critically Endangered', activeStatus: 'Day', habitat: 'Mangroves & forests', note: 'Do not feed or attempt to keep as a pet.', images: [], hazard: '' },
   ],
 };
 

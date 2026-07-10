@@ -373,6 +373,9 @@ export default function Report() {
                     {selectedSpecies.activeStatus && (
                       <span className="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">{selectedSpecies.activeStatus}</span>
                     )}
+                    {selectedSpecies.hazard && selectedSpecies.hazard !== 'None' && (
+                      <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">{selectedSpecies.hazard}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -590,25 +593,40 @@ export default function Report() {
               <p className="mt-1 text-sm italic text-gray-500">{selectedSpecies.scientificName}</p>
             )}
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {selectedSpecies.status && (
-                <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">{selectedSpecies.status}</span>
-              )}
-              {selectedSpecies.activeStatus && (
-                <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">{selectedSpecies.activeStatus}</span>
-              )}
-            </div>
-
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 space-y-4">
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-gray-500">Conservation Status <InfoPopover><p className="font-semibold">Conservation Status</p><p className="mt-1 text-gray-300">PCSD classification indicating how threatened the species is in Palawan.</p></InfoPopover></p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {selectedSpecies.status && (
+                    <span className="inline-block rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-medium text-red-700">{selectedSpecies.status}</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-gray-500">Active Period <InfoPopover><p className="font-semibold">Active Period</p><p className="mt-1 text-gray-300">When this animal is most active throughout the day.</p></InfoPopover></p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {selectedSpecies.activeStatus && (
+                    <span className="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-medium text-blue-700">{selectedSpecies.activeStatus}</span>
+                  )}
+                </div>
+              </div>
               {selectedSpecies.habitat && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Habitat</p>
+                  <p className="text-xs font-semibold tracking-wide text-gray-500">Habitat</p>
                   <p className="mt-0.5 text-sm text-gray-700">{selectedSpecies.habitat}</p>
+                </div>
+              )}
+              {selectedSpecies.hazard && selectedSpecies.hazard !== 'None' && (
+                <div>
+                  <p className="text-xs font-semibold tracking-wide text-gray-500">Hazard <InfoPopover><p className="font-semibold">Hazard</p><p className="mt-1 text-gray-300">Know what risks this animal may pose for your safety. Venomous animals can inject venom, poisonous animals are harmful if touched or eaten, and aggressive or defensive animals may attack if provoked.</p></InfoPopover></p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    <span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">{selectedSpecies.hazard}</span>
+                  </div>
                 </div>
               )}
               {selectedSpecies.note && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Safety Note</p>
+                  <p className="text-xs font-semibold tracking-wide text-gray-500">Safety Note</p>
                   <p className="mt-0.5 text-sm leading-relaxed text-gray-700">{selectedSpecies.note}</p>
                 </div>
               )}
