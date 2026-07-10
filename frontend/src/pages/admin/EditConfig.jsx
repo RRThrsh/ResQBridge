@@ -1379,9 +1379,9 @@ function WildlifeGuideEditor({ config, setConfig, setDirty, uploading, setUpload
       return c
     })
     setDirty(true)
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    })
+    }, 0)
   }
 
   return (
