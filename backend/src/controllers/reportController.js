@@ -23,8 +23,8 @@ const submitReport = async (req, res) => {
 
   const urgency = URGENCY_MAP[wildlifeCondition] || "medium";
 
-  if (!phone || !animalType || !urgency || !location || !description) {
-    return res.status(400).json({ message: "Phone, animal type, urgency, location, and description are required." });
+  if (!phone || !animalType || !location || !description) {
+    return res.status(400).json({ message: "Phone, animal type, location, and description are required." });
   }
 
   const lat = latitude ? parseFloat(latitude) : undefined;
@@ -64,10 +64,18 @@ const submitReport = async (req, res) => {
     ? `${name.replace(/\s+/g, '').toLowerCase()}@report.resqbridge`
     : `reporter-${Date.now()}@report.resqbridge`;
 
+  const imagesStr = images.length > 0 ? JSON.stringify(images) : undefined;
+
   await convexClient.mutation(anyApi.reports.createReport, {
-    animalName: animalType,
+    name: name || "Anonymous",
+    phone,
+    category: category || "other",
+    animalType,
+    wildlifeCondition: wildlifeCondition || "Unknown",
+    urgency,
     location,
-    description,
+    description: description || "",
+    images: imagesStr,
     latitude: lat,
     longitude: lng,
     reporterEmail,

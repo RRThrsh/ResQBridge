@@ -57,9 +57,14 @@ function MapCentered({ form, locateTrigger }) {
 const API_BASE = '/api/v1'
 
 const REPORT_INFO = {
-  wildlife_sighting: { label: 'Wildlife Sighting', description: 'Use this report type to report the observation of wildlife in any location. Whether the animal is healthy, injured, sick, or trapped, select its condition using the Wildlife Condition field.' },
-  illegal_possession: { label: 'Illegal Wildlife Possession', description: 'Report suspected cases of individuals keeping, transporting, selling, or possessing wildlife without proper authorization or permits.' },
-  human_wildlife_conflict: { label: 'Human–Wildlife Conflict', description: 'Report incidents where wildlife poses a threat to people or property, or where people are threatening or harming wildlife.' },
+  injured_distressed: { label: 'Injured / In Distress', description: 'Report wildlife that is visibly injured, bleeding, or in immediate physical distress and requires urgent assistance.' },
+  stranded: { label: 'Stranded', description: 'Report wildlife that is stranded, beached, trapped, or stuck and unable to move on its own.' },
+  orphaned: { label: 'Orphaned Young', description: 'Report young or juvenile wildlife found alone without a parent, appearing abandoned or orphaned.' },
+  human_conflict: { label: 'Human-Wildlife Conflict', description: 'Report incidents where wildlife poses a threat to people, livestock, or property, or has entered human settlements.' },
+  illegal_activity: { label: 'Illegal Activity', description: 'Report suspected poaching, wildlife trafficking, illegal possession, or other wildlife crimes.' },
+  displaced: { label: 'Displaced / Habitat Loss', description: 'Report wildlife displaced due to deforestation, development, storms, or habitat destruction.' },
+  sighting: { label: 'Wildlife Sighting', description: 'Report a general wildlife sighting with no immediate danger — useful for monitoring and conservation data.' },
+  other: { label: 'Other', description: 'For any wildlife-related situation not covered by the categories above.' },
 }
 
 export default function Report() {
@@ -275,9 +280,14 @@ export default function Report() {
                 required
               >
                 <option value="">Select report type</option>
-              <option value="wildlife_sighting">Wildlife Sighting</option>
-              <option value="illegal_possession">Illegal Wildlife Possession</option>
-                <option value="human_wildlife_conflict">Human–Wildlife Conflict</option>
+                <option value="injured_distressed">Injured / In Distress</option>
+                <option value="stranded">Stranded</option>
+                <option value="orphaned">Orphaned Young</option>
+                <option value="human_conflict">Human-Wildlife Conflict</option>
+                <option value="illegal_activity">Illegal Activity</option>
+                <option value="displaced">Displaced / Habitat Loss</option>
+                <option value="sighting">Wildlife Sighting</option>
+                <option value="other">Other</option>
               </select>
             </div>
             <div className="relative">

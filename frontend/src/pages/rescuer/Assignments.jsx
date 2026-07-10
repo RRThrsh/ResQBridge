@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLocationContext } from '../../context/LocationContext'
 import { DoubleConfirmation, SkeletonCard, Modal } from '../../components/ui'
 import { rescuer as rescuerApi } from '../../services/api'
-import { CheckIcon, XIcon, CarIcon, CameraIcon, ClipboardIcon, MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, CheckCircleIcon, XCircleIcon } from '../../components/SvgIcons'
+import { CheckIcon, XIcon, CarIcon, CameraIcon, ClipboardIcon, MedicalIcon, StrandedIcon, OrphanedIcon, ConflictIcon, IllegalIcon, DisplacedIcon, SightingIcon, CheckCircleIcon, XCircleIcon } from '../../components/SvgIcons'
 import ReportMap from './ReportMap'
 
 const BADGES = {
@@ -30,8 +30,9 @@ const URGENCY_LABEL = {
 }
 
 const CATEGORY_ICONS = {
-  injury: MedicalIcon, stranded: StrandedIcon, missing: SearchIcon,
-  found: PawIcon, abandoned: HouseIcon, other: ClipboardIcon,
+  injured_distressed: MedicalIcon, stranded: StrandedIcon, orphaned: OrphanedIcon,
+  human_conflict: ConflictIcon, illegal_activity: IllegalIcon, displaced: DisplacedIcon,
+  sighting: SightingIcon, other: ClipboardIcon,
 }
 
 const SPEED_KPH = 30

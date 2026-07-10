@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { DoubleConfirmation, SkeletonCard } from '../../components/ui'
 import { admin as adminApi } from '../../services/api'
-import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIcon } from '../../components/SvgIcons'
+import { MedicalIcon, StrandedIcon, OrphanedIcon, ConflictIcon, IllegalIcon, DisplacedIcon, SightingIcon, ClipboardIcon } from '../../components/SvgIcons'
 
 const URGENCY_LABEL = {
   low: { label: 'Low', class: 'bg-gray-100 text-gray-700' },
@@ -25,13 +25,15 @@ const STATUS_LABELS = {
 }
 
 const CATEGORY_ICONS = {
-  injury: MedicalIcon, stranded: StrandedIcon, missing: SearchIcon,
-  found: PawIcon, abandoned: HouseIcon, other: ClipboardIcon,
+  injured_distressed: MedicalIcon, stranded: StrandedIcon, orphaned: OrphanedIcon,
+  human_conflict: ConflictIcon, illegal_activity: IllegalIcon, displaced: DisplacedIcon,
+  sighting: SightingIcon, other: ClipboardIcon,
 }
 
 const CATEGORY_LABELS = {
-  injury: 'Injured / In Distress', stranded: 'Stranded', missing: 'Missing Pet / Animal',
-  found: 'Found Animal', abandoned: 'Abandoned', other: 'Other',
+  injured_distressed: 'Injured / In Distress', stranded: 'Stranded', orphaned: 'Orphaned Young',
+  human_conflict: 'Human-Wildlife Conflict', illegal_activity: 'Illegal Activity',
+  displaced: 'Displaced / Habitat Loss', sighting: 'Wildlife Sighting', other: 'Other',
 }
 
 export default function AdminReports({ adminPermissions }) {
