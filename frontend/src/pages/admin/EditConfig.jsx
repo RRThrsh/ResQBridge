@@ -430,6 +430,58 @@ export default function EditConfig({ section }) {
         </div>
       ) : (
       <div className="space-y-8">
+        {section === 'about' && <section className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-lg font-semibold text-gray-900">About Page</h2>
+          <div className="mt-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <input
+                value={config.about?.title || ''}
+                onChange={(e) => update('about.title', e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Subtitle</label>
+              <input
+                value={config.about?.subtitle || ''}
+                onChange={(e) => update('about.subtitle', e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                rows={6}
+                value={config.about?.description || ''}
+                onChange={(e) => update('about.description', e.target.value)}
+                className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                placeholder="Use blank lines to separate paragraphs."
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Mission</label>
+                <textarea
+                  rows={3}
+                  value={config.about?.mission || ''}
+                  onChange={(e) => update('about.mission', e.target.value)}
+                  className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Vision</label>
+                <textarea
+                  rows={3}
+                  value={config.about?.vision || ''}
+                  onChange={(e) => update('about.vision', e.target.value)}
+                  className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                />
+              </div>
+            </div>
+          </div>
+        </section>}
+
         {section === 'hero' && <section className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="text-lg font-semibold text-gray-900">Hero Section</h2>
           <div className="mt-4 space-y-4">

@@ -22,6 +22,13 @@ const updateConfig = async (req, res) => {
 };
 
 const LANDING_DEFAULTS = {
+  about: {
+    title: "About Us",
+    subtitle: "Palawan Wildlife Rescue & Conservation Center",
+    description: "Founded in 2015, the Palawan Wildlife Rescue & Conservation Center is a non-profit organization dedicated to the rescue, rehabilitation, and release of wildlife across Palawan island. We work closely with local communities, government agencies, and international partners to protect the region's unique biodiversity.\n\nOur team of veterinarians, biologists, and trained volunteers responds to emergencies ranging from injured marine turtles and stranded dugongs to displaced civets and orphaned hornbills. Every year, we rehabilitate and release hundreds of animals back into their natural habitats.\n\nBeyond rescue work, we run community education programs, coastal clean-up drives, and habitat restoration projects aimed at reducing human-wildlife conflict and promoting sustainable coexistence.",
+    mission: "To protect and preserve Palawan's wildlife through emergency rescue, professional rehabilitation, and community-centered conservation.",
+    vision: "A Palawan where wildlife and communities thrive together in harmony.",
+  },
   hero: {
     badge: "Palawan Wildlife Rescue & Conservation Center",
     title: "Helping Animals, Protecting Nature",
@@ -79,6 +86,7 @@ const getLandingConfig = async (_req, res) => {
   }
 
   const merged = {
+    about: { ...LANDING_DEFAULTS.about, ...(stored.about || {}) },
     hero: { ...LANDING_DEFAULTS.hero, ...(stored.hero || {}) },
     contact: { ...LANDING_DEFAULTS.contact, ...(stored.contact || {}) },
     faq: stored.faq || LANDING_DEFAULTS.faq,
@@ -98,7 +106,7 @@ const getLandingConfig = async (_req, res) => {
 };
 
 const ALLOWED_SECTION_KEYS = new Set([
-  "hero", "contact", "faq", "carousel",
+  "about", "hero", "contact", "faq", "carousel",
   "location", "newsEvents", "howItWorks", "successStories", "gallery",
   "volunteer", "partners",
 ]);

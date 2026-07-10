@@ -265,6 +265,7 @@ function FadeIn({ children }) {
 }
 
 const configSubLinks = [
+  { key: 'about', label: 'About' },
   { key: 'hero', label: 'Hero' },
   { key: 'contact', label: 'Contact' },
   { key: 'faq', label: 'FAQ' },
