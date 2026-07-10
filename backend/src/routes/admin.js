@@ -64,6 +64,6 @@ router.patch("/notifications/:id/read", asyncHandler(markAsRead));
 router.post("/notifications/read-all", asyncHandler(markAllAsRead));
 
 const { upload, uploadImage } = require("../controllers/uploadController");
-router.post("/upload", superOnly, upload.single("image"), asyncHandler(uploadImage));
+router.post("/upload", adminOnly, upload.single("image"), asyncHandler(uploadImage));
 
 module.exports = router;

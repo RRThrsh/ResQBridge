@@ -9,6 +9,7 @@ const FEATURES = [
   { key: 'monitoring', label: 'Monitoring', desc: 'Access system monitoring' },
   { key: 'audit', label: 'Audit Logs', desc: 'View system activity logs' },
   { key: 'landingPage', label: 'Landing Page', desc: 'Edit landing page content' },
+  { key: 'wildlifeGuide', label: 'Wildlife Guide', desc: 'Edit wildlife guide species' },
   { key: 'systemConfig', label: 'System Config', desc: 'Modify system configuration' },
   { key: 'archive', label: 'Archives', desc: 'View and manage archived reports' },
   { key: 'exportData', label: 'Export', desc: 'Download data as CSV' },

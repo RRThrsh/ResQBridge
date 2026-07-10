@@ -70,6 +70,14 @@ const LANDING_DEFAULTS = {
     news: [],
     events: [],
   },
+  wildlifeGuide: [
+    { name: 'Philippine Eagle', scientificName: 'Pithecophaga jefferyi', status: 'Critically Endangered', activeStatus: 'Day', habitat: 'Forest canopies', note: 'Report sightings immediately — do not approach.', images: [] },
+    { name: 'Palawan Bearcat', scientificName: 'Arctictis binturong', status: 'Vulnerable', activeStatus: 'Night', habitat: 'Lowland forests', note: 'Nocturnal and shy. If found during daytime, it may be sick.', images: [] },
+    { name: 'Hawksbill Turtle', scientificName: 'Eretmochelys imbricata', status: 'Critically Endangered', activeStatus: 'Both (Day & Night)', habitat: 'Coral reefs', note: 'If stranded, keep wet and contact rescue immediately.', images: [] },
+    { name: 'Palawan Peacock-Pheasant', scientificName: 'Polyplectron napoleonis', status: 'Vulnerable', activeStatus: 'Day', habitat: 'Primary forests', note: 'Observe from a distance. Do not disturb nesting areas.', images: [] },
+    { name: 'Dugong', scientificName: 'Dugong dugon', status: 'Vulnerable', activeStatus: 'Both (Day & Night)', habitat: 'Seagrass beds', note: 'Report any net entanglements to the coast guard.', images: [] },
+    { name: 'Philippine Cockatoo', scientificName: 'Cacatua haematuropygia', status: 'Critically Endangered', activeStatus: 'Day', habitat: 'Mangroves & forests', note: 'Do not feed or attempt to keep as a pet.', images: [] },
+  ],
 };
 
 const getLandingConfig = async (_req, res) => {
@@ -98,6 +106,10 @@ const getLandingConfig = async (_req, res) => {
     volunteer: { ...LANDING_DEFAULTS.volunteer, ...(stored.volunteer || {}) },
     partners: { ...LANDING_DEFAULTS.partners, ...(stored.partners || {}) },
     newsEvents: { ...LANDING_DEFAULTS.newsEvents, ...(stored.newsEvents || {}) },
+    wildlifeGuide: (stored.wildlifeGuide || LANDING_DEFAULTS.wildlifeGuide).map((s) => ({
+      ...s,
+      images: s.images || (s.image ? [s.image] : []),
+    })),
   };
 
   const otpEnabled = await convexClient.query(anyApi.config.getConfigValue, { key: "otpEnabled" });
@@ -108,7 +120,7 @@ const getLandingConfig = async (_req, res) => {
 const ALLOWED_SECTION_KEYS = new Set([
   "about", "hero", "contact", "faq", "carousel",
   "location", "newsEvents", "howItWorks", "successStories", "gallery",
-  "volunteer", "partners",
+  "volunteer", "partners", "wildlifeGuide",
 ]);
 
 const updateLandingConfig = async (req, res) => {

@@ -1,7 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { admin as adminApi } from '../../services/api'
 
 const UPLOAD_URL = '/api/v1/admin/upload'
+
+const STATUS_OPTIONS = [
+  'Critically Endangered',
+  'Endangered',
+  'Vulnerable',
+  'Near Threatened',
+  'Least Concern',
+  'Data Deficient',
+  'Extinct in the Wild',
+  'Extinct',
+]
+
+const ACTIVE_OPTIONS = ['Day', 'Night', 'Both (Day & Night)']
 
 export default function EditConfig({ section }) {
   const [config, setConfig] = useState(null)
@@ -11,6 +24,7 @@ export default function EditConfig({ section }) {
   const [message, setMessage] = useState(null)
   const [dirty, setDirty] = useState(false)
   const [uploading, setUploading] = useState(null) // { index, progress } or null
+  const dragIndex = useRef(null)
 
   function ensureSections(cfg) {
     if (!cfg) return cfg
@@ -356,12 +370,40 @@ export default function EditConfig({ section }) {
     setDirty(true)
   }
 
+  function moveCard(from, to) {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      const arr = c.wildlifeGuide
+      if (!arr) return c
+      const [removed] = arr.splice(from, 1)
+      arr.splice(to, 0, removed)
+      return c
+    })
+    setDirty(true)
+  }
+
+  function handleDragStart(i) { dragIndex.current = i }
+
+  function handleDragOver(e) { e.preventDefault() }
+
+  function handleDrop(i) {
+    if (dragIndex.current === null || dragIndex.current === i) return
+    moveCard(dragIndex.current, i)
+    dragIndex.current = null
+  }
+
+  function handleDragEnd() { dragIndex.current = null }
+
   async function handleSave() {
     try {
       setSaving(true)
       setMessage(null)
-      await adminApi.updateLandingConfig(config)
-      setMessage({ type: 'success', text: 'Landing page content saved.' })
+      const cleaned = { ...config }
+      if (cleaned.wildlifeGuide) {
+        cleaned.wildlifeGuide = cleaned.wildlifeGuide.filter((s) => s.name.trim() !== '')
+      }
+      await adminApi.updateLandingConfig(cleaned)
+      setMessage({ type: 'success', text: section === 'wildlifeGuide' ? 'Wildlife Guide content saved.' : 'Landing page content saved.' })
       setDirty(false)
     } catch (err) {
       setMessage({ type: 'error', text: err.message })
@@ -1304,8 +1346,316 @@ export default function EditConfig({ section }) {
             </div>
           </div>
         </section>}
+
+        {section === 'wildlifeGuide' && <WildlifeGuideEditor
+          config={config}
+          setConfig={setConfig}
+          setDirty={setDirty}
+          uploading={uploading}
+          setUploading={setUploading}
+          moveCard={moveCard}
+          handleDragStart={handleDragStart}
+          handleDragOver={handleDragOver}
+          handleDrop={handleDrop}
+          handleDragEnd={handleDragEnd}
+        />}
       </div>
       )}
     </div>
+  )
+}
+
+function WildlifeGuideEditor({ config, setConfig, setDirty, uploading, setUploading, moveCard, handleDragStart, handleDragOver, handleDrop, handleDragEnd }) {
+  const [tab, setTab] = useState('edit')
+  const listEndRef = useRef(null)
+
+  const speciesList = config?.wildlifeGuide || []
+
+  function addSpecies() {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      if (!c.wildlifeGuide) c.wildlifeGuide = []
+      c.wildlifeGuide.push({ name: '', scientificName: '', status: '', activeStatus: '', habitat: '', note: '', images: [] })
+      return c
+    })
+    setDirty(true)
+    requestAnimationFrame(() => {
+      listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }
+
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">Wildlife Guide Species</h2>
+        <button onClick={addSpecies} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+          + Add Species
+        </button>
+      </div>
+      <p className="mt-1 text-sm text-gray-500">Manage the species shown on the public Wildlife Guide page.</p>
+
+      <div className="mt-4 flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-0.5">
+        <button
+          onClick={() => setTab('edit')}
+          className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+            tab === 'edit' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >Edit</button>
+        <button
+          onClick={() => setTab('reorder')}
+          className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+            tab === 'reorder' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >Reorder</button>
+      </div>
+
+      {tab === 'edit' ? (
+        <div className="mt-4 space-y-4">
+          {speciesList.map((species, i) => (
+            <div key={i} ref={i === speciesList.length - 1 ? listEndRef : null} className="rounded-lg border border-gray-200 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700">{i + 1}</span>
+                  <p className="text-xs font-semibold text-gray-500 uppercase">Species {i + 1}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setConfig((prev) => {
+                      const c = structuredClone(prev)
+                      c.wildlifeGuide.splice(i, 1)
+                      return c
+                    })
+                    setDirty(true)
+                  }}
+                  className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Common Name</label>
+                  <input
+                    value={species.name}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].name = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    onBlur={() => {
+                      if (!species.name.trim()) {
+                        setConfig((prev) => {
+                          const c = structuredClone(prev)
+                          c.wildlifeGuide.splice(i, 1)
+                          return c
+                        })
+                        setDirty(true)
+                      }
+                    }}
+                    placeholder="e.g. Philippine Eagle"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Scientific Name</label>
+                  <input
+                    value={species.scientificName || ''}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].scientificName = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    placeholder="e.g. Pithecophaga jefferyi"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Conservation Status</label>
+                  <select
+                    value={species.status}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].status = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  >
+                    <option value="">Select status...</option>
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Active Period</label>
+                  <select
+                    value={species.activeStatus || ''}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].activeStatus = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  >
+                    <option value="">Select period...</option>
+                    {ACTIVE_OPTIONS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Habitat</label>
+                  <input
+                    value={species.habitat}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].habitat = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    placeholder="e.g. Forest canopies"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Images (up to 3)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {(species.images || []).map((img, imgIdx) => (
+                      <div key={imgIdx} className="relative h-16 w-24 overflow-hidden rounded-lg border border-gray-200">
+                        <img src={img} alt="" className="h-full w-full object-cover" />
+                        <button
+                          onClick={() => {
+                            setConfig((prev) => {
+                              const c = structuredClone(prev)
+                              const arr = c.wildlifeGuide[i].images
+                              if (arr) arr.splice(imgIdx, 1)
+                              return c
+                            })
+                            setDirty(true)
+                          }}
+                          className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white"
+                        >×</button>
+                      </div>
+                    ))}
+                    {(species.images || []).length < 3 && (
+                      uploading?.section === 'wildlifeGuide' && uploading?.index === i ? (
+                        <div className="flex items-center gap-2 px-3">
+                          <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200">
+                            <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${uploading.progress}%` }} />
+                          </div>
+                          <span className="text-[10px] text-gray-500">{uploading.progress}%</span>
+                        </div>
+                      ) : (
+                        <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-500 transition-colors hover:bg-gray-50">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          {3 - (species.images || []).length} slot{(species.images || []).length < 2 ? '' : 's'} left
+                          <input type="file" accept="image/*" multiple className="hidden" onChange={async (e) => {
+                            const files = Array.from(e.target.files || []).slice(0, 3 - (species.images || []).length)
+                            if (!files.length) return
+                            const results = []
+                            for (let fi = 0; fi < files.length; fi++) {
+                              const f = files[fi]
+                              await new Promise((resolve, reject) => {
+                                const formData = new FormData()
+                                formData.append('image', f)
+                                const xhr = new XMLHttpRequest()
+                                setUploading({ section: 'wildlifeGuide', index: i, progress: 0 })
+                                xhr.upload.onprogress = (ev) => {
+                                  if (ev.lengthComputable) {
+                                    setUploading({ section: 'wildlifeGuide', index: i, progress: Math.round((ev.loaded / ev.total) * 100) })
+                                  }
+                                }
+                                xhr.onload = () => {
+                                  if (xhr.status === 200) {
+                                    results.push(JSON.parse(xhr.responseText).url)
+                                    resolve()
+                                  } else {
+                                    try { const d = JSON.parse(xhr.responseText); alert(d.message) } catch { alert('Upload failed') }
+                                    resolve()
+                                  }
+                                }
+                                xhr.onerror = () => { alert('Upload failed'); resolve() }
+                                xhr.open('POST', UPLOAD_URL)
+                                xhr.withCredentials = true
+                                xhr.send(formData)
+                              })
+                            }
+                            if (results.length) {
+                              setConfig((prev) => {
+                                const c = structuredClone(prev)
+                                if (!c.wildlifeGuide[i].images) c.wildlifeGuide[i].images = []
+                                c.wildlifeGuide[i].images.push(...results)
+                                return c
+                              })
+                              setDirty(true)
+                            }
+                            setUploading(null)
+                            e.target.value = ''
+                          }} />
+                        </label>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className="mb-1 block text-xs font-medium text-gray-600">Safety Note</label>
+                <textarea
+                  rows={2}
+                  value={species.note}
+                  onChange={(e) => {
+                    setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].note = e.target.value; return c })
+                    setDirty(true)
+                  }}
+                  placeholder="Safety note / description"
+                  className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-4">
+          <p className="mb-4 text-sm text-gray-500">Drag and drop cards to reorder how they appear on the public Wildlife Guide page.</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {speciesList.map((species, i) => (
+              <div
+                key={i}
+                draggable
+                onDragStart={() => handleDragStart(i)}
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(i)}
+                onDragEnd={handleDragEnd}
+                className="cursor-grab active:cursor-grabbing rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-[10px] font-semibold text-green-700">{i + 1}</span>
+                  <svg className="h-4 w-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                  </svg>
+                </div>
+                {species.images?.[0] ? (
+                  <div className="mb-3 h-28 w-full overflow-hidden rounded-lg">
+                    <img src={species.images[0]} alt={species.name} className="h-full w-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="mb-3 h-28 w-full rounded-lg bg-gradient-to-br from-green-100 to-emerald-50" />
+                )}
+                <h3 className="text-base font-semibold text-gray-900">{species.name || 'Unnamed species'}</h3>
+                {species.scientificName && <p className="text-xs italic text-gray-400">{species.scientificName}</p>}
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {species.status && (
+                    <span className="inline-block rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700">{species.status}</span>
+                  )}
+                  {species.activeStatus && (
+                    <span className="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">{species.activeStatus}</span>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-gray-400">{species.habitat}</p>
+                <p className="mt-1 text-xs leading-relaxed text-gray-500">{species.note}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
   )
 }
