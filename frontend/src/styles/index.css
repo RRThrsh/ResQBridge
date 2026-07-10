@@ -27,3 +27,21 @@
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.7; }
 }
+
+html {
+  font-size: var(--a11y-font-size, 100%);
+}
+
+.high-contrast {
+  --tw-text-opacity: 1 !important;
+  --tw-bg-opacity: 1 !important;
+}
+
+.high-contrast * {
+  border-color: currentColor !important;
+}
+
+.high-contrast img,
+.high-contrast svg {
+  filter: contrast(1.2) brightness(1.05);
+}

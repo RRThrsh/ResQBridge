@@ -126,6 +126,8 @@ export default function ContactSection({ contact }) {
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                     required
+                    pattern="[a-z0-9._%+\-]+@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com|icloud\.com|protonmail\.com|aol\.com|mail\.com|ymail\.com|live\.com)"
+                    title="Please enter a valid email address (e.g., user@gmail.com)"
                     className="mt-1.5 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                     placeholder="you@example.com"
                   />
