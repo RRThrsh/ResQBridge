@@ -6,7 +6,7 @@ const containerStyle = {
   height: '320px',
 }
 
-export default function ReportMap({ latitude, longitude, label, userPos, autoRoute, requestLocation }) {
+export default function ReportMap({ latitude, longitude, label, userPos, autoRoute, requestLocation, showControls = true }) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   const [routePath, setRoutePath] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
@@ -283,48 +283,49 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
           )}
         </div>
 
-        <div className="flex gap-2">
-          {userPos && (
-            <button
-              onClick={() => {
-                const next = !followRef.current
-                followRef.current = next
-                setFollowing(next)
-                if (next && map) {
-                  setMapCenter(userPos)
-                  map.panTo(userPos)
-                  map.setZoom(17)
-                }
-              }}
-              className={`px-3 py-2 rounded-xl text-sm font-bold transition-colors border-2 ${
-                following
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-600 border-gray-300'
-              }`}
-            >
-              {following ? 'Following' : 'Follow Me'}
-            </button>
-          )}
-          {!routePath && (
-            <button
-              onClick={() => { followRef.current = false; handleDirections() }}
-              disabled={loadingRoute}
-              className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-amber-700 disabled:opacity-50 transition-colors shadow flex items-center gap-1.5"
-            >
-              {loadingRoute ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Loading
-                </span>
-              ) : (
-                <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                </svg> Get Directions</>
-              )}
-            </button>
-          )}
-          
-        </div>
+        {showControls && (
+          <div className="flex gap-2">
+            {userPos && (
+              <button
+                onClick={() => {
+                  const next = !followRef.current
+                  followRef.current = next
+                  setFollowing(next)
+                  if (next && map) {
+                    setMapCenter(userPos)
+                    map.panTo(userPos)
+                    map.setZoom(17)
+                  }
+                }}
+                className={`px-3 py-2 rounded-xl text-sm font-bold transition-colors border-2 ${
+                  following
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-600 border-gray-300'
+                }`}
+              >
+                {following ? 'Following' : 'Follow Me'}
+              </button>
+            )}
+            {!routePath && (
+              <button
+                onClick={() => { followRef.current = false; handleDirections() }}
+                disabled={loadingRoute}
+                className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-amber-700 disabled:opacity-50 transition-colors shadow flex items-center gap-1.5"
+              >
+                {loadingRoute ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Loading
+                  </span>
+                ) : (
+                  <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg> Get Directions</>
+                )}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -17,8 +17,8 @@ const BADGES = {
 const BADGE_LABELS = {
   new: 'New',
   en_route: 'En Route',
-  in_progress: 'Working',
-  resolved: 'Done',
+  in_progress: 'In Progress',
+  resolved: 'Successful',
   failed: 'Failed',
 }
 
@@ -222,7 +222,7 @@ export default function RescuerAssignments() {
   }
 
   const OUTCOME_OPTIONS = ['Released to wild', 'Transferred to vet', 'Transferred to wildlife center', 'Deceased', 'Escaped', 'Other']
-  const ACTION_OPTIONS = ['First aid administered', 'Animal captured/contained', 'Animal transported', 'Released on-site', 'Sedated', 'Tagged/identified', 'Owner reunited', 'Area secured']
+  const ACTION_OPTIONS = ['First aid administered', 'Animal captured/contained', 'Animal transported', 'Released on-site', 'Sedated', 'Tagged/identified', 'Area secured']
   const CONDITION_OPTIONS = ['Critical', 'Poor', 'Fair', 'Good', 'Excellent']
 
   async function handleResolve(reportId) {
@@ -239,14 +239,14 @@ export default function RescuerAssignments() {
         `Condition on arrival: ${report.condition || 'Not specified'}`,
         `Actions taken: ${report.actions?.length ? report.actions.join(', ') : 'None listed'}`,
         `Outcome: ${report.outcome || 'Not specified'}`,
-        `Release/transfer location: ${report.releaseLocation || 'Not specified'}`,
+
         `Environmental conditions: ${report.environment || 'Not specified'}`,
         `Other responders: ${report.responders || 'None'}`,
       ]
       await rescuerApi.addNote(reportId, `Post-Rescue Report:\n${structured.join('\n')}`)
       await rescuerApi.updateReportStatus(reportId, 'resolved')
       fetchReports()
-    } catch { alert('Failed to resolve.') }
+    } catch { alert('Failed to mark as success.') }
     finally { setActionLoading(null) }
   }
 
@@ -322,8 +322,8 @@ export default function RescuerAssignments() {
               { key: '', label: 'All' },
               { key: 'unaccepted', label: 'New' },
               { key: 'en_route', label: 'En Route' },
-              { key: 'in_progress', label: 'Working' },
-              { key: 'resolved', label: 'Done' },
+              { key: 'in_progress', label: 'In Progress' },
+              { key: 'resolved', label: 'Successful' },
               { key: 'failed', label: 'Failed' },
             ].map((s) => (
               <button
@@ -467,8 +467,38 @@ export default function RescuerAssignments() {
 
                     {r.description && <p className="text-gray-700">{r.description}</p>}
 
+                    <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-4 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Reporter</p>
+                        <p className="mt-0.5 font-semibold text-gray-900">{r.name}</p>
+                        {r.phone && <p className="text-gray-600">{r.phone}</p>}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Category</p>
+                        <p className="mt-0.5 font-semibold text-gray-900 capitalize">{r.category?.replace('_', ' ')}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Animal</p>
+                        <p className="mt-0.5 font-semibold text-gray-900">{r.animalType}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Location</p>
+                        <p className="mt-0.5 font-semibold text-gray-900">{r.location}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Urgency</p>
+                        <p className={`mt-0.5 font-semibold ${urgency.class}`}>{urgency.label}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Submitted</p>
+                        <p className="mt-0.5 font-semibold text-gray-900">
+                          {new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+
                     {r.latitude && r.longitude && (
-                      <ReportMap latitude={r.latitude} longitude={r.longitude} label={r.name} userPos={userPos} requestLocation={requestLocation} autoRoute={r.status === 'en_route'} />
+                      <ReportMap latitude={r.latitude} longitude={r.longitude} label={r.name} userPos={userPos} requestLocation={requestLocation} autoRoute={r.status === 'en_route'} showControls={r.status === 'en_route'} />
                     )}
 
                     {showInitial && (
@@ -537,11 +567,6 @@ export default function RescuerAssignments() {
 
                         {showPostArrival && (
                           <div className="space-y-3">
-                            <div className="rounded-xl bg-green-50 border-2 border-green-200 px-5 py-3 flex items-center gap-3">
-                              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-white text-sm font-bold">✓</span>
-                              <span className="text-sm font-bold text-green-800">You have arrived at the rescue site</span>
-                            </div>
-
                             <textarea
                               placeholder="Write your rescue diary here..."
                               value={diaryText[r._id] || ''}
@@ -601,16 +626,6 @@ export default function RescuerAssignments() {
                                 </div>
 
                                 <div>
-                                  <label className="text-sm font-semibold text-gray-700">Release / transfer location</label>
-                                  <input type="text"
-                                    value={postReport[r._id]?.releaseLocation || ''}
-                                    onChange={(e) => setPostReport({ ...postReport, [r._id]: { ...postReport[r._id], releaseLocation: e.target.value } })}
-                                    placeholder={r.latitude && r.longitude ? `${r.latitude}, ${r.longitude}` : 'Enter location'}
-                                    className="mt-1 w-full rounded-xl border-2 border-gray-300 px-4 py-2.5 text-sm focus:border-amber-600 focus:outline-none"
-                                  />
-                                </div>
-
-                                <div>
                                   <label className="text-sm font-semibold text-gray-700">Environmental conditions</label>
                                   <input type="text"
                                     value={postReport[r._id]?.environment || ''}
@@ -655,14 +670,14 @@ export default function RescuerAssignments() {
                             <div className="flex flex-wrap gap-2">
                               <DoubleConfirmation
                                 onConfirm={() => { handleResolve(r._id); setSelectedReport(null) }}
-                                title="Resolve Assignment"
-                                message="Are you sure you want to mark this assignment as resolved?"
-                                confirmText="Yes, Resolve"
+                                title="Mark as Success"
+                                message="Are you sure you want to mark this assignment as successful?"
+                                confirmText="Yes, Success"
                               >
                                 <button disabled={actionLoading === r._id}
                                   className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 shadow disabled:opacity-50"
                                 >
-                                  {actionLoading === r._id ? '...' : <><CheckCircleIcon className="w-4 h-4" /> Resolve</>}
+                                  {actionLoading === r._id ? '...' : <><CheckCircleIcon className="w-4 h-4" /> Success</>}
                                 </button>
                               </DoubleConfirmation>
                               <button
