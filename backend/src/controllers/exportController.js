@@ -18,11 +18,18 @@ function toCSV(headers, rows) {
 }
 
 const EXPORT_STATUS_MAP = {
-  pending: "pending",
-  accepted: "assigned",
-  en_route: "en_route",
-  rescue_success: "resolved",
-  rescue_failed: "failed",
+  pending: "Pending",
+  assigned: "Assigned",
+  en_route: "En Route",
+  in_progress: "In Progress",
+  resolved: "Successful",
+  failed: "Failed",
+};
+
+const REPORT_TYPE_MAP = {
+  wildlife_sighting: "Wildlife Sighting",
+  illegal_possession: "Illegal Wildlife Possession",
+  human_wildlife_conflict: "Human–Wildlife Conflict",
 };
 
 const exportReports = async (_req, res) => {
@@ -39,23 +46,22 @@ const exportReports = async (_req, res) => {
       if (u) userMap[u.uuid] = u;
     }
   }
-  const headers = ["id", "name", "phone", "category", "animalType", "urgency", "location", "description", "status", "assignedTo", "latitude", "longitude", "createdAt"];
+  const headers = ["Report ID", "Name", "Phone Number", "Report Type", "Animal Type", "Landmark", "Description", "Status", "Assigned To", "Google Maps Link", "Created At", "Resolved At"];
   const rows = reports.map((r) => {
     const assignedUser = r.assignedTo ? userMap[r.assignedTo] : null;
     return {
-      id: r._id,
-      name: r.reporterEmail || "Anonymous",
-      phone: r.phone ? `\t${r.phone}` : "",
-      category: "other",
-      animalType: r.animalType,
-      urgency: "medium",
-      location: r.location,
-      description: r.description || "",
-      status: EXPORT_STATUS_MAP[r.status] || r.status,
-      assignedTo: assignedUser ? `${assignedUser.firstName} ${assignedUser.lastName} (${assignedUser.phoneNumber})` : "",
-      latitude: r.latitude ?? "",
-      longitude: r.longitude ?? "",
-      createdAt: new Date(r.createdAt).toISOString(),
+      "Report ID": r._id,
+      "Name": r.reporterEmail || "Anonymous",
+      "Phone Number": r.phone ? `\t${r.phone}` : "",
+      "Report Type": REPORT_TYPE_MAP[r.category] || r.category || "Other",
+      "Animal Type": r.animalType,
+      "Landmark": r.location,
+      "Description": r.description || "",
+      "Status": EXPORT_STATUS_MAP[r.status] || r.status,
+      "Assigned To": assignedUser ? `${assignedUser.firstName} ${assignedUser.lastName} (${assignedUser.phoneNumber})` : "",
+      "Google Maps Link": r.latitude && r.longitude ? `=HYPERLINK("https://www.google.com/maps?q=${r.latitude},${r.longitude}","Click to Open in Google Maps")` : "",
+      "Created At": new Date(r.createdAt).toISOString(),
+      "Resolved At": r.resolvedAt ? new Date(r.resolvedAt).toISOString() : "",
     };
   });
   const csv = toCSV(headers, rows);

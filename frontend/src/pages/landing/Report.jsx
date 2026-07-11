@@ -447,7 +447,7 @@ export default function Report() {
                 )}
                 {gettingLocation ? 'Getting location...' : 'Get Current Location'}
               </button>
-              <div className="relative h-56 overflow-hidden rounded-lg border border-gray-200">
+              <div className="relative h-56 overflow-hidden rounded-lg border border-gray-200" style={{ isolation: 'isolate' }}>
                 <MapContainer
                   center={form.latitude && form.longitude ? [parseFloat(form.latitude), parseFloat(form.longitude)] : [9.967, 118.783]}
                   zoom={form.latitude && form.longitude ? 16 : 7}

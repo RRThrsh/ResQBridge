@@ -72,6 +72,7 @@ export default defineSchema({
     createdAt: v.number(),
     archivedAt: v.optional(v.number()),
     archivedByName: v.optional(v.string()),
+    resolvedAt: v.optional(v.number()),
   })
     .index("by_assignedTo", ["assignedTo"])
     .index("by_status", ["status"]),

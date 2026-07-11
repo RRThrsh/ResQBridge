@@ -149,7 +149,11 @@ export const updateReportStatus = mutation({
     status: reportStatus,
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.reportId, { status: args.status });
+    const patch = { status: args.status } as any;
+    if (args.status === "resolved" || args.status === "failed") {
+      patch.resolvedAt = Date.now();
+    }
+    await ctx.db.patch(args.reportId, patch);
   },
 });
 
