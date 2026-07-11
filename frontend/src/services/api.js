@@ -127,12 +127,6 @@ export const admin = {
       method: 'PUT',
       body: JSON.stringify(permissions),
     }),
-  getExpenses: () => request('/admin/expenses'),
-  updateExpenseStatus: (id, status) =>
-    request(`/admin/expenses/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    }),
 }
 
 export const rescuer = {
@@ -196,23 +190,6 @@ export const rescuer = {
     request('/rescuer/voice-notes', {
       method: 'POST',
       body: JSON.stringify({ reportId, audioUrl, duration }),
-    }),
-
-  addExpense: (data) =>
-    request('/rescuer/expenses', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-  getExpenses: () => request('/rescuer/expenses'),
-  getExpenseStats: () => request('/rescuer/expenses/stats'),
-  updateExpense: (id, data) =>
-    request(`/rescuer/expenses/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
-  deleteExpense: (id) =>
-    request(`/rescuer/expenses/${id}`, {
-      method: 'DELETE',
     }),
 }
 
