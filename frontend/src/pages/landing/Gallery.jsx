@@ -21,10 +21,10 @@ export default function Gallery({ title, subtitle, images }) {
       <div className="mx-auto max-w-6xl">
         <AnimateIn>
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{title}</h2>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-500">{subtitle}</p>
+          <p className="mt-1 max-w-3xl text-base leading-relaxed text-gray-400">{subtitle}</p>
         </AnimateIn>
 
-        <div className="mt-10 columns-1 gap-5 sm:columns-2 lg:columns-3">
+        <div className="mt-8 columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4">
           {images.map((img, i) => (
             <AnimateIn key={i} delay={i * 80}>
               <button
