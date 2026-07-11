@@ -93,7 +93,7 @@ const exportLogs = async (req, res) => {
   const result = await convexClient.query(anyApi.logs.getLogs, {
     limit: limit ? parseInt(limit, 10) : 1000,
   });
-  const logs = result.logs || result || [];
+  const logs = result.items || result || [];
   const headers = ["id", "eventType", "section", "ipAddress", "userId", "userAgent", "metadata", "sessionDuration", "createdAt"];
   const rows = (Array.isArray(logs) ? logs : []).map((l) => ({
     id: l._id,
