@@ -281,6 +281,7 @@ const configSubLinks = [
   { key: 'partners', label: 'Partners' },
   { key: 'location', label: 'Location' },
   { key: 'newsEvents', label: 'News & Events' },
+  { key: 'trustSection', label: 'Trust' },
 ]
 
 const SUPER_ONLY_KEYS = new Set(['permissions'])

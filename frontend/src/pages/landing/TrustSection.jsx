@@ -1,18 +1,20 @@
 import AnimateIn from '../../components/ui/AnimateIn'
 
-const mediaMentions = [
+const DEFAULT_MEDIA_MENTIONS = [
   { name: 'Wildlife Daily', logo: 'WD', desc: 'Community-Powered Rescue Platform of the Year' },
   { name: 'Eco Times', logo: 'ET', desc: 'Featured as top innovator in wildlife conservation' },
   { name: 'Palawan News', logo: 'PN', desc: 'ResQBridge connects over 500 volunteers island-wide' },
 ]
 
-const awards = [
+const DEFAULT_AWARDS = [
   { title: 'Best Conservation Tech', year: '2025', org: 'ASEAN Biodiversity' },
   { title: 'Community Impact Award', year: '2025', org: 'Wildlife Rescue Alliance' },
   { title: 'Innovation in Rescue', year: '2024', org: 'Palawan Council' },
 ]
 
-export default function TrustSection({ title, subtitle }) {
+export default function TrustSection({ title, subtitle, mediaMentions, awards }) {
+  const mentions = mediaMentions?.length ? mediaMentions : DEFAULT_MEDIA_MENTIONS
+  const awardList = awards?.length ? awards : DEFAULT_AWARDS
   return (
     <section className="relative overflow-hidden border-t border-gray-100 px-6 py-20 sm:px-8 lg:px-8">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.03),transparent_60%)]" />
@@ -20,10 +22,10 @@ export default function TrustSection({ title, subtitle }) {
       <div className="mx-auto max-w-6xl">
         <AnimateIn>
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{title}</h2>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-500">{subtitle}</p>
+          <p className="mt-1 max-w-2xl text-base leading-relaxed text-gray-400">{subtitle}</p>
         </AnimateIn>
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-2">
+        <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <AnimateIn delay={100}>
             <div>
               <div className="mb-5 flex items-center gap-3">
@@ -31,7 +33,7 @@ export default function TrustSection({ title, subtitle }) {
                 <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900">Media Mentions</h3>
               </div>
               <div className="space-y-4">
-                {mediaMentions.map((m, i) => (
+                {mentions.map((m, i) => (
                   <div key={i} className="flex items-start gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-sm font-bold text-white shadow-sm">
                       {m.logo}
@@ -53,7 +55,7 @@ export default function TrustSection({ title, subtitle }) {
                 <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900">Awards & Recognition</h3>
               </div>
               <div className="space-y-4">
-                {awards.map((a, i) => (
+                {awardList.map((a, i) => (
                   <div key={i} className="flex items-start gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-md">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-sm font-bold text-white shadow-sm">
                       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

@@ -29,6 +29,7 @@ export default function EditConfig({ section }) {
       successStories: { title: '', subtitle: '', stories: [] },
       gallery: { title: '', subtitle: '', images: [] },
       volunteer: { title: '', subtitle: '', roles: [], requirements: [], cta: { label: '', link: '' } },
+      trustSection: { title: '', subtitle: '', mediaMentions: [], awards: [] },
       partners: { title: '', subtitle: '', partners: [] },
     }
     const nested = {
@@ -281,6 +282,46 @@ export default function EditConfig({ section }) {
     setConfig((prev) => {
       const c = structuredClone(prev)
       c.partners.partners.splice(index, 1)
+      return c
+    })
+    setDirty(true)
+  }
+
+  function addMediaMention() {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      if (!c.trustSection) c.trustSection = { title: '', subtitle: '', mediaMentions: [], awards: [] }
+      if (!c.trustSection.mediaMentions) c.trustSection.mediaMentions = []
+      c.trustSection.mediaMentions.push({ name: '', logo: '', desc: '' })
+      return c
+    })
+    setDirty(true)
+  }
+
+  function removeMediaMention(index) {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      c.trustSection.mediaMentions.splice(index, 1)
+      return c
+    })
+    setDirty(true)
+  }
+
+  function addAward() {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      if (!c.trustSection) c.trustSection = { title: '', subtitle: '', mediaMentions: [], awards: [] }
+      if (!c.trustSection.awards) c.trustSection.awards = []
+      c.trustSection.awards.push({ title: '', year: '', org: '' })
+      return c
+    })
+    setDirty(true)
+  }
+
+  function removeAward(index) {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      c.trustSection.awards.splice(index, 1)
       return c
     })
     setDirty(true)
@@ -1206,6 +1247,139 @@ export default function EditConfig({ section }) {
                         value={partner.type}
                         onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.partners.partners[i].type = e.target.value; return c }); setDirty(true) }}
                         placeholder="e.g. Government Agency"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>}
+
+        {section === 'trustSection' && <section className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-lg font-semibold text-gray-900">Trust Section</h2>
+          <p className="mt-1 text-sm text-gray-500">Edit the trust section content including media mentions, awards, and badges.</p>
+          <div className="mt-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <input
+                value={config.trustSection?.title || ''}
+                onChange={(e) => update('trustSection.title', e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Subtitle</label>
+              <textarea
+                rows={2}
+                value={config.trustSection?.subtitle || ''}
+                onChange={(e) => update('trustSection.subtitle', e.target.value)}
+                className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+          </div>
+          <div className="mt-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900">Media Mentions</h3>
+              <button onClick={addMediaMention} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                + Add Mention
+              </button>
+            </div>
+            <div className="mt-3 space-y-4">
+              {(config.trustSection?.mediaMentions || []).map((m, i) => (
+                <div key={i} className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Mention {i + 1}</p>
+                    <button
+                      onClick={() => removeMediaMention(i)}
+                      className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Name</label>
+                      <input
+                        value={m.name}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.mediaMentions[i].name = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. Wildlife Daily"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Logo (initials)</label>
+                      <input
+                        value={m.logo}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.mediaMentions[i].logo = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. WD"
+                        maxLength={3}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Description</label>
+                      <input
+                        value={m.desc}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.mediaMentions[i].desc = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. Community-Powered Rescue..."
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900">Awards & Recognition</h3>
+              <button onClick={addAward} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                + Add Award
+              </button>
+            </div>
+            <div className="mt-3 space-y-4">
+              {(config.trustSection?.awards || []).map((a, i) => (
+                <div key={i} className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Award {i + 1}</p>
+                    <button
+                      onClick={() => removeAward(i)}
+                      className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Award Title</label>
+                      <input
+                        value={a.title}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.awards[i].title = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. Best Conservation Tech"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Year</label>
+                      <input
+                        value={a.year}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.awards[i].year = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. 2025"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Organization</label>
+                      <input
+                        value={a.org}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.awards[i].org = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. ASEAN Biodiversity"
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
                       />
                     </div>

@@ -70,6 +70,7 @@ const LANDING_DEFAULTS = {
     news: [],
     events: [],
   },
+  trustSection: { title: "", subtitle: "", mediaMentions: [], awards: [] },
   wildlifeGuide: [
     { name: 'Philippine Eagle', scientificName: 'Pithecophaga jefferyi', status: 'Critically Endangered', activeStatus: 'Day', habitat: 'Forest canopies', note: 'Report sightings immediately — do not approach.', images: [], hazard: '' },
     { name: 'Palawan Bearcat', scientificName: 'Arctictis binturong', status: 'Vulnerable', activeStatus: 'Night', habitat: 'Lowland forests', note: 'Nocturnal and shy. If found during daytime, it may be sick.', images: [], hazard: '' },
@@ -106,6 +107,7 @@ const getLandingConfig = async (_req, res) => {
     volunteer: { ...LANDING_DEFAULTS.volunteer, ...(stored.volunteer || {}) },
     partners: { ...LANDING_DEFAULTS.partners, ...(stored.partners || {}) },
     newsEvents: { ...LANDING_DEFAULTS.newsEvents, ...(stored.newsEvents || {}) },
+    trustSection: { ...LANDING_DEFAULTS.trustSection, ...(stored.trustSection || {}) },
     wildlifeGuide: (stored.wildlifeGuide || LANDING_DEFAULTS.wildlifeGuide).map((s) => ({
       ...s,
       images: s.images || (s.image ? [s.image] : []),
@@ -120,7 +122,7 @@ const getLandingConfig = async (_req, res) => {
 const ALLOWED_SECTION_KEYS = new Set([
   "about", "hero", "contact", "faq", "carousel",
   "location", "newsEvents", "howItWorks", "successStories", "gallery",
-  "volunteer", "partners", "wildlifeGuide",
+  "volunteer", "partners", "wildlifeGuide", "trustSection",
 ]);
 
 const updateLandingConfig = async (req, res) => {

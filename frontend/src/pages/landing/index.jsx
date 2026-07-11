@@ -119,7 +119,7 @@ export default function Landing() {
           </SectionTracker>
 
           <SectionTracker name="trust-section">
-            <TrustSection title={cfg.trustSection.title} subtitle={cfg.trustSection.subtitle} />
+            <TrustSection title={cfg.trustSection.title} subtitle={cfg.trustSection.subtitle} mediaMentions={cfg.trustSection.mediaMentions} awards={cfg.trustSection.awards} />
           </SectionTracker>
 
           <SectionTracker name="partners">
