@@ -83,6 +83,12 @@ export default function RescuerLayout() {
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef(null)
   const locIntervalRef = useRef(null)
+  const lastSentRef = useRef(null)
+  const userPosRef = useRef(null)
+
+  useEffect(() => {
+    userPosRef.current = userPos
+  }, [userPos])
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -95,15 +101,19 @@ export default function RescuerLayout() {
   useEffect(() => { requestLocation() }, [requestLocation])
 
   useEffect(() => {
-    if (!user || !userPos) return
-    rescuerApi.updateLocation(userPos.lat, userPos.lng).catch(() => {})
-    locIntervalRef.current = setInterval(() => {
-      if (userPos) {
-        rescuerApi.updateLocation(userPos.lat, userPos.lng).catch(() => {})
-      }
-    }, 30000)
-    return () => { if (locIntervalRef.current) clearInterval(locIntervalRef.current) }
-  }, [user, userPos])
+    if (!user) return
+    const send = () => {
+      const pos = userPosRef.current
+      if (!pos) return
+      const key = `${pos.lat.toFixed(4)}_${pos.lng.toFixed(4)}`
+      if (lastSentRef.current === key) return
+      lastSentRef.current = key
+      rescuerApi.updateLocation(pos.lat, pos.lng).catch(() => {})
+    }
+    send()
+    locIntervalRef.current = setInterval(send, 30000)
+    return () => { if (locIntervalRef.current) { clearInterval(locIntervalRef.current); locIntervalRef.current = null } }
+  }, [user])
 
   useEffect(() => {
     if (authLoading) return

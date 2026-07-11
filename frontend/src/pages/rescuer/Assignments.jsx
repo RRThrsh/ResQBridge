@@ -61,9 +61,11 @@ export default function RescuerAssignments() {
   const { userPos, requestLocation } = useLocationContext()
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [filter, setFilter] = useState('')
   const [actionLoading, setActionLoading] = useState(null)
   const [acceptedIds, setAcceptedIds] = useState(new Set())
+  const [arrivedIds, setArrivedIds] = useState(new Set())
 
   const [diaryText, setDiaryText] = useState({})
   const [failReason, setFailReason] = useState({})
@@ -166,25 +168,36 @@ export default function RescuerAssignments() {
           list = list.filter((r) => r.status === 'assigned' || r.status === 'pending')
         }
         setReports(list)
+        setError(null)
       })
-      .catch(() => {})
+      .catch((err) => {
+        setError(err.message || 'Failed to load assignments')
+        setReports([])
+      })
       .finally(() => setLoading(false))
   }, [user, filter])
 
   useEffect(() => { setPage(1); fetchReports() }, [user, filter])
 
   useEffect(() => {
-    const es = new EventSource('/api/v1/report/updates', { withCredentials: true })
-    es.onmessage = (e) => {
-      try {
-        const event = JSON.parse(e.data)
-        if (event.type === 'report:claimed' || event.type === 'report:status') {
-          fetchReports()
-        }
-      } catch {}
+    let es
+    function connect() {
+      es = new EventSource('/api/v1/report/updates', { withCredentials: true })
+      es.onmessage = (e) => {
+        try {
+          const event = JSON.parse(e.data)
+          if (event.type === 'report:claimed' || event.type === 'report:status') {
+            fetchReports()
+          }
+        } catch {}
+      }
+      es.onerror = () => {
+        es.close()
+        setTimeout(connect, 3000)
+      }
     }
-    es.onerror = () => {}
-    return () => es.close()
+    connect()
+    return () => { if (es) es.close() }
   }, [fetchReports])
 
   async function handleAccept(reportId) {
@@ -332,6 +345,14 @@ export default function RescuerAssignments() {
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
+        ) : error ? (
+          <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-16 text-center">
+            <h3 className="text-xl font-bold text-red-800">Error loading assignments</h3>
+            <p className="mt-2 text-base text-red-600">{error}</p>
+            <button onClick={fetchReports} className="mt-4 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-700">
+              Retry
+            </button>
+          </div>
         ) : reports.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-white p-16 text-center">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-100">
@@ -407,7 +428,7 @@ export default function RescuerAssignments() {
 
             <Modal
               isOpen={!!selectedReport}
-              onClose={() => { setSelectedReport(null); setShowFailInput(new Set()) }}
+              onClose={() => { setSelectedReport(null); setShowFailInput(new Set()); setArrivedIds(new Set()) }}
               title={selectedReport?.name || ''}
               size="7xl"
             >
@@ -419,9 +440,14 @@ export default function RescuerAssignments() {
                 const badgeClass = BADGES[badgeKey] || BADGES.new
                 const badgeLabel = BADGE_LABELS[badgeKey]
 
-                const showDiary = isAccepted || r.status === 'en_route' || r.status === 'in_progress'
+                const hasArrived = arrivedIds.has(r._id) || r.status === 'in_progress'
                 const showInitial = !isAccepted && r.status !== 'en_route' && r.status !== 'in_progress' && r.status !== 'resolved' && r.status !== 'failed'
+                const showEnRoute = !showInitial && !hasArrived && (isAccepted || r.status === 'en_route')
+                const showPostArrival = hasArrived
                 const reportImages = uploadedImages[r._id] || []
+
+                const distInfo = getDistanceInfo(userPos, r.latitude, r.longitude)
+                const isNearSite = distInfo && distInfo.dist <= 0.05
 
                 return (
                   <div className="max-h-[75vh] overflow-y-auto space-y-5">
@@ -442,7 +468,7 @@ export default function RescuerAssignments() {
                     {r.description && <p className="text-gray-700">{r.description}</p>}
 
                     {r.latitude && r.longitude && (
-                      <ReportMap latitude={r.latitude} longitude={r.longitude} label={r.name} userPos={userPos} requestLocation={requestLocation} />
+                      <ReportMap latitude={r.latitude} longitude={r.longitude} label={r.name} userPos={userPos} requestLocation={requestLocation} autoRoute={r.status === 'en_route'} />
                     )}
 
                     {showInitial && (
@@ -472,32 +498,50 @@ export default function RescuerAssignments() {
 
                     {!showInitial && (
                       <>
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Equipment Checklist</p>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {(checklists[r._id] || EQUIPMENT_ITEMS.map((l) => ({ label: l, checked: false }))).map((item, i) => (
+                        {showEnRoute && (
+                          <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-5 space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-lg font-bold text-amber-900">En Route to Rescue Site</p>
+                                <p className="text-sm text-amber-700">Follow the route on the map above</p>
+                              </div>
                               <button
-                                key={i}
-                                onClick={() => toggleCheckItem(r._id, i)}
-                                className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all ${
-                                  item.checked
-                                    ? 'bg-green-50 border-green-300 text-green-800'
-                                    : 'bg-white border-gray-200 text-gray-600 hover:border-amber-400'
+                                onClick={async () => {
+                                  setActionLoading(r._id)
+                                  try {
+                                    await rescuerApi.updateReportStatus(r._id, 'in_progress')
+                                    const next = new Set(arrivedIds)
+                                    next.add(r._id)
+                                    setArrivedIds(next)
+                                    fetchReports()
+                                  } catch { alert('Failed to mark arrived.') }
+                                  finally { setActionLoading(null) }
+                                }}
+                                disabled={!isNearSite || actionLoading === r._id}
+                                className={`inline-flex items-center gap-1.5 rounded-xl px-6 py-3 text-base font-bold shadow transition-all ${
+                                  isNearSite
+                                    ? 'bg-green-600 text-white hover:bg-green-700'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 }`}
                               >
-                                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-xs ${
-                                  item.checked ? 'bg-green-600 border-green-600 text-white' : 'border-gray-300'
-                                }`}>
-                                  {item.checked ? '✓' : ''}
-                                </span>
-                                {item.label}
+                                {actionLoading === r._id ? '...' : <><CarIcon className="w-5 h-5" /> Arrived</>}
                               </button>
-                            ))}
+                            </div>
+                            {!isNearSite && distInfo && (
+                              <p className="text-xs text-amber-600 font-medium">
+                                You must be within 50m of the rescue site to mark as arrived
+                              </p>
+                            )}
                           </div>
-                        </div>
+                        )}
 
-                        {showDiary && (
+                        {showPostArrival && (
                           <div className="space-y-3">
+                            <div className="rounded-xl bg-green-50 border-2 border-green-200 px-5 py-3 flex items-center gap-3">
+                              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-white text-sm font-bold">✓</span>
+                              <span className="text-sm font-bold text-green-800">You have arrived at the rescue site</span>
+                            </div>
+
                             <textarea
                               placeholder="Write your rescue diary here..."
                               value={diaryText[r._id] || ''}
@@ -658,53 +702,7 @@ export default function RescuerAssignments() {
                           </div>
                         )}
 
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Voice Notes</p>
-                          <div className="space-y-2">
-                            {(voiceNotes[r._id] || []).length > 0 ? (
-                              voiceNotes[r._id].map((vn) => (
-                                <div key={vn._id} className="flex items-center gap-3 rounded-xl bg-gray-50 border-2 border-gray-200 px-4 py-3">
-                                  <svg className="h-5 w-5 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
-                                  </svg>
-                                  <span className="text-sm font-medium text-gray-700">{vn.userName}</span>
-                                  <span className="text-xs text-gray-400">{vn.duration ? `${Math.round(vn.duration)}s` : ''}</span>
-                                  <audio controls src={vn.audioUrl} className="h-8 flex-1" />
-                                </div>
-                              ))
-                            ) : (
-                              <p className="text-sm text-gray-500 italic">No voice notes</p>
-                            )}
-                            <div className="flex gap-2">
-                              {recordingId === r._id ? (
-                                <button onClick={stopRecording}
-                                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700"
-                                >
-                                  <span className="h-3 w-3 rounded-full bg-white animate-pulse" /> Stop Recording
-                                </button>
-                              ) : (
-                                <button onClick={() => startRecording(r._id)}
-                                  className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700"
-                                >
-                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-                                  </svg>
-                                  Record
-                                </button>
-                              )}
-                              {audioBlobs[r._id] && (
-                                <>
-                                  <audio controls src={audioBlobs[r._id]} className="h-10" />
-                                  <button onClick={() => submitVoiceNote(r._id)}
-                                    className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700"
-                                  >
-                                    Upload
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+
                       </>
                     )}
                   </div>

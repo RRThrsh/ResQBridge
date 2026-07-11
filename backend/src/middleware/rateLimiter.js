@@ -14,6 +14,7 @@ const globalLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'POST' && req.originalUrl === '/api/v1/rescuer/location',
   message: { message: "Too many requests. Please try again later." },
   ...(store ? { store } : {}),
 });

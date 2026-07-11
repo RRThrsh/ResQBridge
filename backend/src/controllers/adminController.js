@@ -73,10 +73,11 @@ const updateUserRole = async (req, res) => {
 
 const STATUS_MAP = {
   pending: "pending",
-  accepted: "assigned",
+  assigned: "assigned",
   en_route: "en_route",
-  rescue_success: "resolved",
-  rescue_failed: "failed",
+  in_progress: "in_progress",
+  resolved: "resolved",
+  failed: "failed",
 };
 
 const getAdminReports = async (req, res) => {
@@ -84,16 +85,16 @@ const getAdminReports = async (req, res) => {
   const mapped = reports.map((r) => ({
     _id: r._id,
     name: r.reporterEmail || "Anonymous",
-    phone: "",
-    category: "other",
-    animalType: r.animalName,
-    urgency: "medium",
+    phone: r.phone || "",
+    category: r.category || "other",
+    animalType: r.animalName || r.animalType,
+    urgency: r.urgency || "medium",
     location: r.location,
     description: r.description,
-    images: [],
+    images: r.images ? (Array.isArray(r.images) ? r.images : [r.images]) : [],
     status: STATUS_MAP[r.status] || r.status,
-    assignedTo: r.assignedRescuerEmail || null,
-    assignedUser: null,
+    assignedTo: r.assignedRescuerEmail || r.assignedTo || null,
+    assignedUser: r.assignedUser || null,
     latitude: r.latitude ?? null,
     longitude: r.longitude ?? null,
     createdAt: r.createdAt,
@@ -102,7 +103,16 @@ const getAdminReports = async (req, res) => {
 };
 
 const assignReport = async (req, res) => {
-  res.status(503).json({ message: "Assigning reports requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ message: "userId is required." });
+  }
+  await convexClient.mutation(anyApi.reports.assignReport, {
+    reportId: id,
+    userId,
+  });
+  res.json({ message: "Report assigned." });
 };
 
 const getRescuerLocations = async (_req, res) => {
@@ -111,11 +121,32 @@ const getRescuerLocations = async (_req, res) => {
 };
 
 const archiveReport = async (req, res) => {
-  res.status(503).json({ message: "Archiving requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  await convexClient.mutation(anyApi.reports.archiveReports, {
+    reportIds: [id],
+    archivedBy: req.user.uuid,
+  });
+  res.json({ message: "Report archived." });
+};
+
+const bulkArchiveReports = async (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: "ids array is required." });
+  }
+  await convexClient.mutation(anyApi.reports.archiveReports, {
+    reportIds: ids,
+    archivedBy: req.user.uuid,
+  });
+  res.json({ message: `${ids.length} report(s) archived.` });
 };
 
 const unarchiveReport = async (req, res) => {
-  res.status(503).json({ message: "Unarchiving requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  await convexClient.mutation(anyApi.reports.unarchiveReport, {
+    reportId: id,
+  });
+  res.json({ message: "Report unarchived." });
 };
 
 const getArchivedReports = async (_req, res) => {
@@ -123,7 +154,11 @@ const getArchivedReports = async (_req, res) => {
 };
 
 const deleteReport = async (req, res) => {
-  res.status(503).json({ message: "Deleting requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  await convexClient.mutation(anyApi.reports.deleteReport, {
+    reportId: id,
+  });
+  res.json({ message: "Report deleted." });
 };
 
 const getStats = async (_req, res) => {
@@ -136,4 +171,4 @@ const getStats = async (_req, res) => {
   res.json({ stats: { totalUsers, roleCounts } });
 };
 
-module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, archiveReport, unarchiveReport, getArchivedReports, deleteReport };
+module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, archiveReport, bulkArchiveReports, unarchiveReport, getArchivedReports, deleteReport };

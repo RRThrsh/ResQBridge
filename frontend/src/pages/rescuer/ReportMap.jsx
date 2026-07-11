@@ -13,8 +13,16 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
   const [loadingRoute, setLoadingRoute] = useState(false)
   const [map, setMap] = useState(null)
   const [routeError, setRouteError] = useState(null)
-  const followRef = useRef(true)
+  const [following, setFollowing] = useState(!!autoRoute)
+  const followRef = useRef(!!autoRoute)
   const autoFetched = useRef(false)
+  const lastOriginRef = useRef(null)
+  const routeIntervalRef = useRef(null)
+  const userPosRef = useRef(userPos)
+  const [showFallback, setShowFallback] = useState(false)
+  const [mapCenter, setMapCenter] = useState(
+    following && userPos ? userPos : { lat: latitude, lng: longitude }
+  )
   const polyRef1 = useRef(null)
   const polyRef2 = useRef(null)
 
@@ -22,11 +30,9 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
 
   const onLoad = useCallback((m) => {
     setMap(m)
-    if (latitude && longitude) {
-      m.panTo({ lat: latitude, lng: longitude })
-      m.setZoom(15)
-    }
-  }, [latitude, longitude])
+    m.panTo(mapCenter)
+    m.setZoom(15)
+  }, [mapCenter])
 
   const onPolyLoad1 = useCallback((poly) => {
     polyRef1.current = poly
@@ -51,18 +57,63 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
     }
   }, [routePath])
 
+  useEffect(() => { userPosRef.current = userPos }, [userPos])
+
   useEffect(() => {
-    if (!map || !userPos || !followRef.current) return
-    map.panTo(userPos)
+    if (!userPos || !followRef.current) return
+    setMapCenter(userPos)
+    if (map) { map.panTo(userPos); map.setZoom(17) }
   }, [map, userPos])
 
   useEffect(() => {
-    if (autoRoute && userPos && !autoFetched.current) {
-      autoFetched.current = true
-      followRef.current = false
-      fetchRoute(userPos.lat, userPos.lng)
+    if (!map) return
+    const unsub = map.addListener('dragstart', () => { followRef.current = false; setFollowing(false) })
+    return () => { if (unsub) unsub.remove() }
+  }, [map])
+
+  useEffect(() => {
+    if (autoRoute && !userPos) {
+      const t = setTimeout(() => setShowFallback(true), 8000)
+      return () => clearTimeout(t)
     }
   }, [autoRoute, userPos])
+
+  useEffect(() => {
+    if (!autoRoute || !userPos) return
+    if (!autoFetched.current) {
+      autoFetched.current = true
+      lastOriginRef.current = { lat: userPos.lat, lng: userPos.lng }
+      fetchRoute(userPos.lat, userPos.lng)
+    }
+    const orig = lastOriginRef.current
+    if (orig) {
+      const dlat = userPos.lat - orig.lat
+      const dlng = userPos.lng - orig.lng
+      if (Math.sqrt(dlat * dlat + dlng * dlng) > 0.00045) {
+        lastOriginRef.current = { lat: userPos.lat, lng: userPos.lng }
+        fetchRoute(userPos.lat, userPos.lng)
+      }
+    }
+  }, [autoRoute, userPos])
+
+  useEffect(() => {
+    if (!autoRoute) return
+    routeIntervalRef.current = setInterval(() => {
+      if (followRef.current && userPosRef?.current) {
+        const pos = userPosRef.current
+        const orig = lastOriginRef.current
+        if (orig) {
+          const dlat = pos.lat - orig.lat
+          const dlng = pos.lng - orig.lng
+          if (Math.sqrt(dlat * dlat + dlng * dlng) > 0.00045) {
+            lastOriginRef.current = { lat: pos.lat, lng: pos.lng }
+            fetchRoute(pos.lat, pos.lng)
+          }
+        }
+      }
+    }, 15000)
+    return () => { if (routeIntervalRef.current) clearInterval(routeIntervalRef.current) }
+  }, [autoRoute])
 
   async function fetchRoute(originLat, originLng) {
     setLoadingRoute(true)
@@ -103,6 +154,7 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
   function handleDirections() {
     setRouteError(null)
     if (userPos) {
+      followRef.current = true
       fetchRoute(userPos.lat, userPos.lng)
       return
     }
@@ -135,12 +187,20 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
       </div>
     )
   }
+  if (autoRoute && !userPos && !showFallback) {
+    return (
+      <div className="flex items-center justify-center rounded-xl bg-gray-100 border-2 border-gray-200" style={{ height: '320px' }}>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent" />
+        <p className="ml-3 text-sm text-gray-500">Getting your location...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-xl overflow-hidden border-2 border-gray-200 relative">
       <GoogleMap
         mapContainerStyle={containerStyle}
-        center={{ lat: latitude, lng: longitude }}
+        center={mapCenter}
         zoom={15}
         onLoad={onLoad}
       >
@@ -226,17 +286,26 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
         <div className="flex gap-2">
           {userPos && (
             <button
-              onClick={() => { followRef.current = !followRef.current; if (followRef.current && map) map.panTo(userPos) }}
+              onClick={() => {
+                const next = !followRef.current
+                followRef.current = next
+                setFollowing(next)
+                if (next && map) {
+                  setMapCenter(userPos)
+                  map.panTo(userPos)
+                  map.setZoom(17)
+                }
+              }}
               className={`px-3 py-2 rounded-xl text-sm font-bold transition-colors border-2 ${
-                followRef.current
+                following
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-white text-gray-600 border-gray-300'
               }`}
             >
-              Follow Me
+              {following ? 'Following' : 'Follow Me'}
             </button>
           )}
-          {!routePath ? (
+          {!routePath && (
             <button
               onClick={() => { followRef.current = false; handleDirections() }}
               disabled={loadingRoute}
@@ -252,13 +321,6 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg> Get Directions</>
               )}
-            </button>
-          ) : (
-            <button
-              onClick={clearRoute}
-              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors border-2 border-gray-200"
-            >
-              Clear Route
             </button>
           )}
           
