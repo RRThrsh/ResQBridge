@@ -50,12 +50,12 @@ export default function StatsSection({ stats }) {
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Community-Powered Rescue
           </h2>
-          <p className="mt-3 max-w-xl text-base leading-relaxed text-gray-500">
+          <p className="mt-1 max-w-2xl text-base leading-relaxed text-gray-400">
             From the moment an animal goes missing to the joy of a safe return, ResQBridge connects every piece of the rescue puzzle.
           </p>
         </AnimateIn>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((feature, i) => (
             <AnimateIn key={feature.title} delay={300 + i * 100}>
               <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md">
@@ -65,7 +65,7 @@ export default function StatsSection({ stats }) {
                   </svg>
                 </div>
                 <h3 className="text-base font-semibold text-gray-900">{feature.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray-500">{feature.desc}</p>
+                <p className="mt-1 text-sm leading-relaxed text-gray-400">{feature.desc}</p>
               </div>
             </AnimateIn>
           ))}
