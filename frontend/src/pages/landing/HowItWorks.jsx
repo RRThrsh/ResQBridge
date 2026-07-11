@@ -18,10 +18,10 @@ export default function HowItWorks({ title, subtitle, steps }) {
       <div className="mx-auto max-w-6xl">
         <AnimateIn>
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{title}</h2>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-500">{subtitle}</p>
+          <p className="mt-1 max-w-3xl text-base leading-relaxed text-gray-400">{subtitle}</p>
         </AnimateIn>
 
-        <div className="relative mt-14">
+        <div className="relative mt-8">
           {/* Connecting line */}
           <div className="absolute left-8 top-0 hidden h-full w-0.5 bg-gradient-to-b from-emerald-400 via-emerald-500 to-emerald-400 sm:block" />
 
@@ -33,8 +33,8 @@ export default function HowItWorks({ title, subtitle, steps }) {
                     {i + 1}
                   </div>
 
-                  <div className="group flex-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md sm:p-7">
-                    <div className="flex items-center gap-3">
+                  <div className="group flex-1 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md sm:p-7">
+                    <div className="flex items-center gap-4">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 transition-colors group-hover:bg-emerald-200">
                         <svg className="h-5 w-5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={stepIcon(step.icon, i)} />
@@ -42,7 +42,7 @@ export default function HowItWorks({ title, subtitle, steps }) {
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
                     </div>
-                    <p className="mt-3 text-sm leading-relaxed text-gray-500">{step.desc}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-500">{step.desc}</p>
                   </div>
                 </div>
               </AnimateIn>
