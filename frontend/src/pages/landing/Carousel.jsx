@@ -27,8 +27,8 @@ export default function Carousel({ slides }) {
 
   return (
     <section className="relative overflow-hidden px-6 py-16 sm:px-8 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="relative isolate overflow-hidden rounded-2xl">
+      <div className="mx-auto max-w-full">
+        <div className="relative isolate overflow-hidden rounded-xl">
           {slide.image ? (
             <div className="absolute inset-0 transition-all duration-700">
               <img src={slide.image} alt="" className="h-full w-full object-cover" />
@@ -42,7 +42,7 @@ export default function Carousel({ slides }) {
               Featured
             </span>
             <h3 className="text-3xl font-bold sm:text-4xl lg:text-5xl">{slide.title}</h3>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base lg:text-lg">
+            <p className="mt-2 max-w-xl text-md leading-relaxed text-white/90 sm:text-base lg:text-xl">
               {slide.desc}
             </p>
           </div>
