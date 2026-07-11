@@ -27,22 +27,37 @@ const EXPORT_STATUS_MAP = {
 
 const exportReports = async (_req, res) => {
   const reports = await convexClient.query(anyApi.reports.listReports);
+  const assignedUuids = [...new Set(reports.map((r) => r.assignedTo).filter(Boolean))];
+  const userMap = {};
+  if (assignedUuids.length > 0) {
+    const users = await Promise.all(
+      assignedUuids.map((uuid) =>
+        convexClient.query(anyApi.users.getUserByUuid, { uuid }).catch(() => null)
+      )
+    );
+    for (const u of users) {
+      if (u) userMap[u.uuid] = u;
+    }
+  }
   const headers = ["id", "name", "phone", "category", "animalType", "urgency", "location", "description", "status", "assignedTo", "latitude", "longitude", "createdAt"];
-  const rows = reports.map((r) => ({
-    id: r._id,
-    name: r.reporterEmail || "Anonymous",
-    phone: "",
-    category: "other",
-    animalType: r.animalName,
-    urgency: "medium",
-    location: r.location,
-    description: r.description || "",
-    status: EXPORT_STATUS_MAP[r.status] || r.status,
-    assignedTo: r.assignedRescuerEmail || "",
-    latitude: r.latitude ?? "",
-    longitude: r.longitude ?? "",
-    createdAt: new Date(r.createdAt).toISOString(),
-  }));
+  const rows = reports.map((r) => {
+    const assignedUser = r.assignedTo ? userMap[r.assignedTo] : null;
+    return {
+      id: r._id,
+      name: r.reporterEmail || "Anonymous",
+      phone: r.phone ? `\t${r.phone}` : "",
+      category: "other",
+      animalType: r.animalType,
+      urgency: "medium",
+      location: r.location,
+      description: r.description || "",
+      status: EXPORT_STATUS_MAP[r.status] || r.status,
+      assignedTo: assignedUser ? `${assignedUser.firstName} ${assignedUser.lastName} (${assignedUser.phoneNumber})` : "",
+      latitude: r.latitude ?? "",
+      longitude: r.longitude ?? "",
+      createdAt: new Date(r.createdAt).toISOString(),
+    };
+  });
   const csv = toCSV(headers, rows);
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", "attachment; filename=reports.csv");
@@ -51,13 +66,14 @@ const exportReports = async (_req, res) => {
 
 const exportUsers = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
+  const filtered = users.filter((u) => u.role !== "superadmin");
   const headers = ["uuid", "firstName", "lastName", "email", "phoneNumber", "role"];
-  const rows = users.map((u) => ({
+  const rows = filtered.map((u) => ({
     uuid: u.uuid,
     firstName: u.firstName,
     lastName: u.lastName,
     email: u.email,
-    phoneNumber: u.phoneNumber,
+    phoneNumber: u.phoneNumber ? `\t${u.phoneNumber}` : "",
     role: u.role,
   }));
   const csv = toCSV(headers, rows);

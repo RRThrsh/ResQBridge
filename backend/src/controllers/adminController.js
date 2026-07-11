@@ -5,7 +5,8 @@ const { notifyAdmin } = require("../services/adminNotification");
 
 const getUsers = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
-  const sanitized = users.map((u) => ({
+  const filtered = users.filter((u) => u.role !== "superadmin");
+  const sanitized = filtered.map((u) => ({
     uuid: u.uuid,
     firstName: u.firstName,
     lastName: u.lastName,
@@ -186,9 +187,10 @@ const deleteReport = async (req, res) => {
 
 const getStats = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
-  const totalUsers = users.length;
-  const roleCounts = { superadmin: 0, admin: 0, rescuer: 0, user: 0 };
-  for (const u of users) {
+  const filtered = users.filter((u) => u.role !== "superadmin");
+  const totalUsers = filtered.length;
+  const roleCounts = { admin: 0, rescuer: 0, user: 0 };
+  for (const u of filtered) {
     if (roleCounts[u.role] !== undefined) roleCounts[u.role]++;
   }
   res.json({ stats: { totalUsers, roleCounts } });
