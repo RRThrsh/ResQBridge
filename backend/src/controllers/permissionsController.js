@@ -15,6 +15,7 @@ const DEFAULT_ADMIN_PERMISSIONS = {
   archive: { read: true, write: false, execute: false },
   exportData: { read: false, write: false, execute: false },
   systemHealth: { read: true, write: false, execute: false },
+  expenses: { read: true, write: false, execute: false },
 };
 
 const ACTIONS = ["read", "write", "execute"];

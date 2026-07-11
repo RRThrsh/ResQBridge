@@ -4,11 +4,11 @@ import { mutation, query } from "./_generated/server";
 export const insertExpense = mutation({
   args: {
     userId: v.string(),
-    reportId: v.optional(v.string()),
+    reportId: v.string(),
     category: v.string(),
     amount: v.number(),
     description: v.string(),
-    receiptUrl: v.optional(v.string()),
+    receiptImages: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("expenses", {
@@ -17,7 +17,7 @@ export const insertExpense = mutation({
       category: args.category,
       amount: args.amount,
       description: args.description,
-      receiptUrl: args.receiptUrl,
+      receiptImages: args.receiptImages,
       status: "pending",
       createdAt: Date.now(),
     });
@@ -53,6 +53,13 @@ export const getExpenseStats = query({
   },
 });
 
+export const getAllExpenses = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("expenses").order("desc").take(500);
+  },
+});
+
 export const updateExpenseStatus = mutation({
   args: {
     expenseId: v.id("expenses"),
@@ -60,5 +67,30 @@ export const updateExpenseStatus = mutation({
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.expenseId, { status: args.status });
+  },
+});
+
+export const updateExpense = mutation({
+  args: {
+    expenseId: v.id("expenses"),
+    amount: v.optional(v.number()),
+    description: v.optional(v.string()),
+    receiptImages: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const patch: Record<string, any> = {};
+    if (args.amount !== undefined) patch.amount = args.amount;
+    if (args.description !== undefined) patch.description = args.description;
+    if (args.receiptImages !== undefined) patch.receiptImages = args.receiptImages;
+    await ctx.db.patch(args.expenseId, patch);
+  },
+});
+
+export const deleteExpense = mutation({
+  args: {
+    expenseId: v.id("expenses"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.expenseId);
   },
 });

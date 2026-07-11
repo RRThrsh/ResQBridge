@@ -14,6 +14,7 @@ import AdminArchives from './AdminArchives'
 import DataExport from './DataExport'
 import SystemHealth from './SystemHealth'
 import RescuerMap from './RescuerMap'
+import AdminExpenses from './AdminExpenses'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 
 const roleBadge = {
@@ -42,6 +43,7 @@ const sidebarLinks = [
   { key: 'archive', label: 'Archives', icon: 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4' },
   { key: 'exportData', label: 'Export', icon: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3' },
   { key: 'systemHealth', label: 'System Health', icon: 'M11.42 15.17l-5.1 2.85a.98.98 0 01-1.38-1.02l.7-5.88a1 1 0 00-.3-.88L2.1 7.46a1 1 0 01.53-1.7l5.9-.85a1 1 0 00.76-.54l2.63-5.34a1 1 0 011.86 0l2.63 5.34a1 1 0 00.76.54l5.9.85a1 1 0 01.53 1.7l-4.24 4.01a1 1 0 00-.3.88l.7 5.88a.98.98 0 01-1.38 1.02l-5.1-2.85a1 1 0 00-.95 0z' },
+  { key: 'expenses', label: 'Expenses', icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' },
 ]
 
 const tabLabels = {
@@ -58,6 +60,7 @@ const tabLabels = {
   archive: 'Archives',
   exportData: 'Export',
   systemHealth: 'System Health',
+  expenses: 'Expenses',
 }
 
 export default function Dashboard() {
@@ -189,6 +192,7 @@ export default function Dashboard() {
             {activeTab === 'archive' && <AdminArchives />}
             {activeTab === 'exportData' && <DataExport />}
             {activeTab === 'systemHealth' && <SystemHealth />}
+            {activeTab === 'expenses' && <AdminExpenses />}
   {activeTab === 'rescuerMap' && <RescuerMap />}
 </FadeIn>
         </div>

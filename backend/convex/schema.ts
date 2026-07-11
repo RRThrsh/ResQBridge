@@ -156,11 +156,11 @@ export default defineSchema({
 
   expenses: defineTable({
     userId: v.string(),
-    reportId: v.optional(v.string()),
+    reportId: v.string(),
     category: v.string(),
     amount: v.number(),
     description: v.string(),
-    receiptUrl: v.optional(v.string()),
+    receiptImages: v.optional(v.array(v.string())),
     status: v.union(
       v.literal("pending"),
       v.literal("approved"),

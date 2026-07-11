@@ -127,6 +127,12 @@ export const admin = {
       method: 'PUT',
       body: JSON.stringify(permissions),
     }),
+  getExpenses: () => request('/admin/expenses'),
+  updateExpenseStatus: (id, status) =>
+    request(`/admin/expenses/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
 }
 
 export const rescuer = {
@@ -199,6 +205,15 @@ export const rescuer = {
     }),
   getExpenses: () => request('/rescuer/expenses'),
   getExpenseStats: () => request('/rescuer/expenses/stats'),
+  updateExpense: (id, data) =>
+    request(`/rescuer/expenses/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteExpense: (id) =>
+    request(`/rescuer/expenses/${id}`, {
+      method: 'DELETE',
+    }),
 }
 
 export const logs = {

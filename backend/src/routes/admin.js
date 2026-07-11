@@ -12,6 +12,7 @@ const { getAdminPermissions, updateAdminPermissions } = require("../controllers/
 const { getNotifications, getUnreadCount, markAsRead, markAllAsRead } = require("../controllers/adminNotificationController");
 const { exportReports, exportUsers, exportLogs } = require("../controllers/exportController");
 const { getHealth } = require("../controllers/healthController");
+const { getAllExpenses, updateExpenseStatus } = require("../controllers/adminExpenseController");
 
 router.use(authenticate);
 
@@ -66,5 +67,8 @@ router.post("/notifications/read-all", asyncHandler(markAllAsRead));
 
 const { upload, uploadImage } = require("../controllers/uploadController");
 router.post("/upload", adminOnly, upload.single("image"), asyncHandler(uploadImage));
+
+router.get("/expenses", authorizeWithPermission("reports"), asyncHandler(getAllExpenses));
+router.patch("/expenses/:id/status", authorizeWithPermission("reports", "execute"), asyncHandler(updateExpenseStatus));
 
 module.exports = router;
