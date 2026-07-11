@@ -21,10 +21,10 @@ export default function SuccessStories({ title, subtitle, stories }) {
       <div className="mx-auto max-w-6xl">
         <AnimateIn>
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{title}</h2>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-500">{subtitle}</p>
+          <p className="mt-1 max-w-3xl text-base leading-relaxed text-gray-400">{subtitle}</p>
         </AnimateIn>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {stories.map((s, i) => (
             <AnimateIn key={i} delay={i * 100}>
               <button
