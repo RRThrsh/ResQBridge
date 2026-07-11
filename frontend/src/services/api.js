@@ -95,6 +95,7 @@ export const admin = {
       body: JSON.stringify({ userId }),
     }),
   getRescuerLocations: () => request('/admin/rescuer-locations'),
+  getRescuerReports: (uuid) => request(`/admin/rescuers/${uuid}/reports`),
   getAdminPermissions: () => request('/admin/permissions'),
   getHealth: () => request('/admin/health'),
   bulkArchiveReports: (ids) =>

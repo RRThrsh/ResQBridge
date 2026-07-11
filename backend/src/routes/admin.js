@@ -4,7 +4,7 @@ const router = express.Router();
 const { authenticate, authorize, authorizeWithPermission } = require("../middleware/auth");
 const { validate } = require("../middleware/validate");
 const { asyncHandler } = require("../middleware/errorHandler");
-const { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, archiveReport, bulkArchiveReports, unarchiveReport, getArchivedReports, deleteReport } = require("../controllers/adminController");
+const { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, getRescuerReports, archiveReport, bulkArchiveReports, unarchiveReport, getArchivedReports, deleteReport } = require("../controllers/adminController");
 const { getLogs, getLogStats, getLogsByIP, deleteOldLogs } = require("../controllers/logController");
 const { getDashboardData } = require("../controllers/dashboardController");
 const { getConfig, updateConfig, getLandingConfig, updateLandingConfig } = require("../controllers/configController");
@@ -51,6 +51,7 @@ router.get("/reports/archived", authorizeWithPermission("archive"), asyncHandler
 router.post("/reports/:id/unarchive", authorizeWithPermission("archive", "write"), asyncHandler(unarchiveReport));
 router.delete("/reports/:id", authorizeWithPermission("archive", "execute"), asyncHandler(deleteReport));
 router.get("/rescuer-locations", authorizeWithPermission("rescuerMap"), asyncHandler(getRescuerLocations));
+router.get("/rescuers/:uuid/reports", authorizeWithPermission("rescuerMap"), asyncHandler(getRescuerReports));
 
 router.get("/export/reports", authorizeWithPermission("exportData"), asyncHandler(exportReports));
 router.get("/export/users", authorizeWithPermission("exportData"), asyncHandler(exportUsers));

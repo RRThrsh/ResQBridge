@@ -120,6 +120,28 @@ const getRescuerLocations = async (_req, res) => {
   res.json({ locations });
 };
 
+const getRescuerReports = async (req, res) => {
+  const { uuid } = req.params;
+  const reports = await convexClient.query(anyApi.reports.getReports, { assignedTo: uuid });
+  const mapped = reports.map((r) => ({
+    _id: r._id,
+    name: r.name,
+    phone: r.phone,
+    category: r.category,
+    animalType: r.animalType,
+    urgency: r.urgency,
+    location: r.location,
+    description: r.description,
+    latitude: r.latitude,
+    longitude: r.longitude,
+    status: r.status,
+    assignedTo: r.assignedTo,
+    assignedUser: r.assignedUser,
+    createdAt: r.createdAt,
+  }));
+  res.json({ reports: mapped });
+};
+
 const archiveReport = async (req, res) => {
   const { id } = req.params;
   await convexClient.mutation(anyApi.reports.archiveReports, {
@@ -171,4 +193,4 @@ const getStats = async (_req, res) => {
   res.json({ stats: { totalUsers, roleCounts } });
 };
 
-module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, archiveReport, bulkArchiveReports, unarchiveReport, getArchivedReports, deleteReport };
+module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, getRescuerReports, archiveReport, bulkArchiveReports, unarchiveReport, getArchivedReports, deleteReport };
