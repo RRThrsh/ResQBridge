@@ -27,9 +27,9 @@ export default function HeroSection({
     <section className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-white via-emerald-50/40 to-white px-6 py-20">
       {/* Animated gradient orbs */}
       <div className="pointer-events-none absolute inset-0 -z-20">
-        <div className="absolute -left-40 -top-40 h-[500px] w-[500px] animate-pulse-soft rounded-full bg-emerald-300/20 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-[500px] w-[500px] animate-float rounded-full bg-teal-300/20 blur-3xl" />
-        <div className="absolute left-1/3 top-1/4 h-72 w-72 animate-float-slow rounded-full bg-amber-200/20 blur-3xl" />
+        <div className="absolute -left-40 -top-40 h-[500px] w-[500px] animate-pulse-soft rounded-full bg-emerald-300/10 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 h-[500px] w-[500px] animate-float rounded-full bg-teal-300/10 blur-3xl" />
+        <div className="absolute left-1/3 top-1/4 h-72 w-72 animate-float-slow rounded-full bg-amber-200/10 blur-3xl" />
       </div>
 
       {/* Grid pattern overlay */}
@@ -69,16 +69,16 @@ export default function HeroSection({
         </h1>
 
         {/* Description */}
-        <p className="mt-8 max-w-2xl text-lg leading-8 text-gray-600">
+        <p className="mt-2 max-w-2xl text-lg leading-8 text-gray-400">
           {description}
         </p>
 
         {/* Buttons */}
-        <div className="mt-12 flex flex-col gap-4 sm:flex-row">
+        <div className="mt-18 flex flex-col gap-4 sm:flex-row">
           <Link to="/report">
             <Button
               size="lg"
-              className="w-full rounded-xl px-8 py-6 text-base shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-emerald-300/40 sm:w-auto"
+              className="w-full rounded-sm px-4 py-3 text-base shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-emerald-300/40 sm:w-auto"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -91,22 +91,13 @@ export default function HeroSection({
             variant="outline"
             size="lg"
             onClick={scrollToHowItWorks}
-            className="w-full rounded-xl px-8 py-6 text-base transition-all duration-300 hover:-translate-y-1 hover:bg-emerald-50 sm:w-auto"
+            className="w-full rounded-sm px-4 py-3 text-base transition-all duration-300 hover:-translate-y-1 hover:bg-emerald-50 sm:w-auto"
           >
             Learn More
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
           </Button>
-        </div>
-
-        {/* Feature pills */}
-        <div className="mt-14 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
-          <FeaturePill icon="🌿" label="Lost & Found Wildlife" />
-          <div className="hidden h-5 w-px bg-gray-300 sm:block" />
-          <FeaturePill icon="⚡" label="Fast Community Reporting" />
-          <div className="hidden h-5 w-px bg-gray-300 sm:block" />
-          <FeaturePill icon="💚" label="Helping Wildlife Reunite" />
         </div>
 
         {/* Scroll Indicator */}
