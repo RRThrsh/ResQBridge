@@ -7,6 +7,7 @@ const reportStatus = v.union(
   v.literal("assigned"),
   v.literal("en_route"),
   v.literal("in_progress"),
+  v.literal("transport_to_pwrccc"),
   v.literal("resolved"),
   v.literal("failed"),
 );

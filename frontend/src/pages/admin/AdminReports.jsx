@@ -15,13 +15,15 @@ const STATUS_BADGE = {
   assigned: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   en_route: 'bg-blue-100 text-blue-800 border-blue-300',
   in_progress: 'bg-amber-100 text-amber-800 border-amber-300',
+  transport_to_pwrccc: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   resolved: 'bg-green-100 text-green-800 border-green-300',
   failed: 'bg-red-100 text-red-800 border-red-300',
 }
 
 const STATUS_LABELS = {
   pending: 'Pending', assigned: 'Assigned', en_route: 'En Route',
-  in_progress: 'Working', resolved: 'Done', failed: 'Failed',
+  in_progress: 'Working', transport_to_pwrccc: 'Transport to PWRCCC',
+  resolved: 'Done', failed: 'Failed',
 }
 
 const CATEGORY_ICONS = {

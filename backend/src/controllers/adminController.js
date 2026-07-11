@@ -76,6 +76,7 @@ const STATUS_MAP = {
   assigned: "assigned",
   en_route: "en_route",
   in_progress: "in_progress",
+  transport_to_pwrccc: "transport_to_pwrccc",
   resolved: "resolved",
   failed: "failed",
 };

@@ -10,6 +10,7 @@ const BADGES = {
   new: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   en_route: 'bg-blue-100 text-blue-800 border-blue-300',
   in_progress: 'bg-amber-100 text-amber-800 border-amber-300',
+  transport_to_pwrccc: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   resolved: 'bg-green-100 text-green-800 border-green-300',
   failed: 'bg-red-100 text-red-800 border-red-300',
 }
@@ -18,6 +19,7 @@ const BADGE_LABELS = {
   new: 'New',
   en_route: 'En Route',
   in_progress: 'In Progress',
+  transport_to_pwrccc: 'Transport to PWRCCC',
   resolved: 'Successful',
   failed: 'Failed',
 }
@@ -297,6 +299,7 @@ export default function RescuerAssignments() {
     if (status === 'failed') return 'failed'
     if (status === 'in_progress') return 'in_progress'
     if (status === 'en_route') return 'en_route'
+    if (status === 'transport_to_pwrccc') return 'transport_to_pwrccc'
     return 'new'
   }
 
