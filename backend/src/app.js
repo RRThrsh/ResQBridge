@@ -5,15 +5,19 @@ const morgan = require("morgan");
 const hpp = require("hpp");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const path = require("path");
+const passport = require("passport");
+require("./config/passport");
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const reportRoutes = require("./routes/report");
 const rescuerRoutes = require("./routes/rescuer");
 const pushRoutes = require("./routes/push");
-const { globalLimiter, authLimiter } = require("./middleware/rateLimiter");
+const { globalLimiter, authLimiter, otpLimiter, adminLimiter } = require("./middleware/rateLimiter");
 const { errorHandler, asyncHandler } = require("./middleware/errorHandler");
 const { logEvent } = require("./middleware/logAudit");
 const { authenticate } = require("./middleware/auth");
+const { honeypot } = require("./middleware/honeypot");
 const convexClient = require("./config/convex");
 const { anyApi } = require("convex/server");
 const { addSSEClient } = require("./services/notification");
@@ -27,7 +31,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "https://maps.googleapis.com", "https://maps.gstatic.com"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://maps.gstatic.com"],
       imgSrc: ["'self'", "data:", "blob:", "https://maps.gstatic.com", "https://maps.googleapis.com"],
       connectSrc: ["'self'", "https://maps.googleapis.com"],
       frameSrc: ["'self'", "https://www.openstreetmap.org"],
@@ -37,6 +41,8 @@ app.use(helmet({
       upgradeInsecureRequests: [],
     },
   },
+  crossOriginResourcePolicy: { policy: "same-origin" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -46,9 +52,8 @@ app.use(cookieParser());
 app.use(globalLimiter);
 app.use(hpp());
 app.use(morgan("dev"));
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use("/uploads", express.static("uploads"));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.get("/api/v1", (_req, res) => {
   res.json({ message: "ResQBridge API is running" });
@@ -86,6 +91,33 @@ app.post("/api/v1/log/logout", async (req, res) => {
   res.json({ message: "Logged." });
 });
 
+app.post("/api/v1/contact", honeypot(), asyncHandler(async (req, res) => {
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: "Name, email, and message are required." });
+  }
+  await logEvent({ req, eventType: "contact", section: "contact", metadata: { name, email, subject } });
+  res.json({ message: "Message sent successfully." });
+}));
+
+app.post("/api/v1/volunteer", honeypot(), asyncHandler(async (req, res) => {
+  const { name, email, phone, interest, message } = req.body;
+  if (!name || !email) {
+    return res.status(400).json({ message: "Name and email are required." });
+  }
+  await logEvent({ req, eventType: "volunteer", section: "volunteer", metadata: { name, email, phone, interest } });
+  res.json({ message: "Application submitted successfully." });
+}));
+
+app.post("/api/v1/newsletter", honeypot(), asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "Email is required." });
+  }
+  await logEvent({ req, eventType: "newsletter", section: "newsletter", metadata: { email } });
+  res.json({ message: "Subscription successful." });
+}));
+
 app.get("/api/v1/auth/me", authenticate, asyncHandler(async (req, res) => {
   const user = await convexClient.query(anyApi.users.getUserByUuid, { uuid: req.user.uuid });
   if (!user) {
@@ -107,10 +139,14 @@ app.get("/api/v1/report/updates", authenticate, (req, res) => {
 });
 
 app.use("/api/v1/auth", authLimiter, authRoutes);
-app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/admin", adminLimiter, adminRoutes);
 app.use("/api/v1/report", reportRoutes);
 app.use("/api/v1/rescuer", rescuerRoutes);
 app.use("/api/v1/push", pushRoutes);
+
+const { serveFile } = require("./controllers/uploadController");
+app.get("/api/v1/files/:filename", authenticate, asyncHandler(serveFile));
+app.get("/api/v1/public/files/:filename", asyncHandler(serveFile));
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });

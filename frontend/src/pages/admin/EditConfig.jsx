@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react'
 import { admin as adminApi } from '../../services/api'
+import { DoubleConfirmation } from '../../components/ui'
 
 const UPLOAD_URL = '/api/v1/admin/upload'
+
+const STATUS_OPTIONS = [
+  'Critically Endangered',
+  'Endangered',
+  'Vulnerable',
+]
+
+const ACTIVE_OPTIONS = ['Day', 'Night', 'Both (Day & Night)']
+const HAZARD_OPTIONS = ['Venomous', 'Poisonous', 'Venomous & Poisonous', 'Aggressive', 'Defensive']
 
 export default function EditConfig({ section }) {
   const [config, setConfig] = useState(null)
@@ -18,8 +28,8 @@ export default function EditConfig({ section }) {
       howItWorks: { title: '', subtitle: '', steps: [] },
       successStories: { title: '', subtitle: '', stories: [] },
       gallery: { title: '', subtitle: '', images: [] },
-      donate: { title: '', subtitle: '', donateLinks: { note: '', donateUrl: '', monthlyUrl: '' }, reasons: [] },
       volunteer: { title: '', subtitle: '', roles: [], requirements: [], cta: { label: '', link: '' } },
+      trustSection: { title: '', subtitle: '', mediaMentions: [], awards: [] },
       partners: { title: '', subtitle: '', partners: [] },
     }
     const nested = {
@@ -67,15 +77,6 @@ export default function EditConfig({ section }) {
         obj = obj[keys[i]]
       }
       obj[keys[keys.length - 1]] = value
-      return copy
-    })
-    setDirty(true)
-  }
-
-  function updateStat(index, field, value) {
-    setConfig((prev) => {
-      const copy = structuredClone(prev)
-      copy.stats[index][field] = value
       return copy
     })
     setDirty(true)
@@ -226,26 +227,6 @@ export default function EditConfig({ section }) {
     xhr.send(formData)
   }
 
-  function addDonateReason() {
-    setConfig((prev) => {
-      const c = structuredClone(prev)
-      if (!c.donate) c.donate = { title: '', subtitle: '', donateLinks: { note: '' }, reasons: [] }
-      if (!c.donate.reasons) c.donate.reasons = []
-      c.donate.reasons.push({ stat: '', label: '', desc: '' })
-      return c
-    })
-    setDirty(true)
-  }
-
-  function removeDonateReason(index) {
-    setConfig((prev) => {
-      const c = structuredClone(prev)
-      c.donate.reasons.splice(index, 1)
-      return c
-    })
-    setDirty(true)
-  }
-
   function addVolunteerRole() {
     setConfig((prev) => {
       const c = structuredClone(prev)
@@ -301,6 +282,46 @@ export default function EditConfig({ section }) {
     setConfig((prev) => {
       const c = structuredClone(prev)
       c.partners.partners.splice(index, 1)
+      return c
+    })
+    setDirty(true)
+  }
+
+  function addMediaMention() {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      if (!c.trustSection) c.trustSection = { title: '', subtitle: '', mediaMentions: [], awards: [] }
+      if (!c.trustSection.mediaMentions) c.trustSection.mediaMentions = []
+      c.trustSection.mediaMentions.push({ name: '', logo: '', desc: '' })
+      return c
+    })
+    setDirty(true)
+  }
+
+  function removeMediaMention(index) {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      c.trustSection.mediaMentions.splice(index, 1)
+      return c
+    })
+    setDirty(true)
+  }
+
+  function addAward() {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      if (!c.trustSection) c.trustSection = { title: '', subtitle: '', mediaMentions: [], awards: [] }
+      if (!c.trustSection.awards) c.trustSection.awards = []
+      c.trustSection.awards.push({ title: '', year: '', org: '' })
+      return c
+    })
+    setDirty(true)
+  }
+
+  function removeAward(index) {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      c.trustSection.awards.splice(index, 1)
       return c
     })
     setDirty(true)
@@ -390,8 +411,12 @@ export default function EditConfig({ section }) {
     try {
       setSaving(true)
       setMessage(null)
-      await adminApi.updateLandingConfig(config)
-      setMessage({ type: 'success', text: 'Landing page content saved.' })
+      const cleaned = { ...config }
+      if (cleaned.wildlifeGuide) {
+        cleaned.wildlifeGuide = cleaned.wildlifeGuide.filter((s) => s.name.trim() !== '')
+      }
+      await adminApi.updateLandingConfig(cleaned)
+      setMessage({ type: 'success', text: section === 'wildlifeGuide' ? 'Wildlife Guide content saved.' : 'Landing page content saved.' })
       setDirty(false)
     } catch (err) {
       setMessage({ type: 'error', text: err.message })
@@ -428,9 +453,11 @@ export default function EditConfig({ section }) {
         </div>
         {section && (
         <div className="flex items-center gap-3">
+          {section !== 'wildlifeGuide' && (
           <button onClick={handleReset} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
             Reset to Defaults
           </button>
+          )}
           <button
             onClick={handleSave}
             disabled={saving || !dirty}
@@ -460,6 +487,58 @@ export default function EditConfig({ section }) {
         </div>
       ) : (
       <div className="space-y-8">
+        {section === 'about' && <section className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-lg font-semibold text-gray-900">About Page</h2>
+          <div className="mt-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <input
+                value={config.about?.title || ''}
+                onChange={(e) => update('about.title', e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Subtitle</label>
+              <input
+                value={config.about?.subtitle || ''}
+                onChange={(e) => update('about.subtitle', e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                rows={6}
+                value={config.about?.description || ''}
+                onChange={(e) => update('about.description', e.target.value)}
+                className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                placeholder="Use blank lines to separate paragraphs."
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Mission</label>
+                <textarea
+                  rows={3}
+                  value={config.about?.mission || ''}
+                  onChange={(e) => update('about.mission', e.target.value)}
+                  className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Vision</label>
+                <textarea
+                  rows={3}
+                  value={config.about?.vision || ''}
+                  onChange={(e) => update('about.vision', e.target.value)}
+                  className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                />
+              </div>
+            </div>
+          </div>
+        </section>}
+
         {section === 'hero' && <section className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="text-lg font-semibold text-gray-900">Hero Section</h2>
           <div className="mt-4 space-y-4">
@@ -488,31 +567,6 @@ export default function EditConfig({ section }) {
                 className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
               />
             </div>
-          </div>
-        </section>}
-
-        {section === 'stats' && <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Stats</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {config.stats.map((stat, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-lg border border-gray-200 p-4">
-                <span className="text-sm font-medium text-gray-500 w-6">{i + 1}.</span>
-                <div className="flex-1 space-y-2">
-                  <input
-                    value={stat.label}
-                    onChange={(e) => updateStat(i, 'label', e.target.value)}
-                    placeholder="Label"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                  />
-                  <input
-                    value={stat.value}
-                    onChange={(e) => updateStat(i, 'value', e.target.value)}
-                    placeholder="Value"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                  />
-                </div>
-              </div>
-            ))}
           </div>
         </section>}
 
@@ -591,19 +645,25 @@ export default function EditConfig({ section }) {
               <div key={i} className="rounded-lg border border-gray-200 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 space-y-3">
-                    <input
-                      value={item.q}
-                      onChange={(e) => updateFAQ(i, 'q', e.target.value)}
-                      placeholder="Question"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <textarea
-                      rows={2}
-                      value={item.a}
-                      onChange={(e) => updateFAQ(i, 'a', e.target.value)}
-                      placeholder="Answer"
-                      className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Question</label>
+                      <input
+                        value={item.q}
+                        onChange={(e) => updateFAQ(i, 'q', e.target.value)}
+                        placeholder="Enter question"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Answer</label>
+                      <textarea
+                        rows={2}
+                        value={item.a}
+                        onChange={(e) => updateFAQ(i, 'a', e.target.value)}
+                        placeholder="Enter answer"
+                        className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
                   </div>
                   <button
                     onClick={() => removeFAQ(i)}
@@ -631,20 +691,25 @@ export default function EditConfig({ section }) {
               <div key={i} className="rounded-lg border border-gray-200 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 space-y-3">
-                    <input
-                      value={slide.title}
-                      onChange={(e) => updateCarouselSlide(i, 'title', e.target.value)}
-                      placeholder="Slide title"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <textarea
-                      rows={2}
-                      value={slide.desc}
-                      onChange={(e) => updateCarouselSlide(i, 'desc', e.target.value)}
-                      placeholder="Slide description"
-                      className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <div className="flex items-center gap-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Slide Title</label>
+                      <input
+                        value={slide.title}
+                        onChange={(e) => updateCarouselSlide(i, 'title', e.target.value)}
+                        placeholder="Enter slide title"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Slide Description</label>
+                      <textarea
+                        rows={2}
+                        value={slide.desc}
+                        onChange={(e) => updateCarouselSlide(i, 'desc', e.target.value)}
+                        placeholder="Enter slide description"
+                        className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div><div className="flex items-center gap-3">
                       {uploading?.index === i ? (
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-20 overflow-hidden rounded-full bg-gray-200">
@@ -732,34 +797,43 @@ export default function EditConfig({ section }) {
                     </button>
                   </div>
                   <div className="mt-3 space-y-3">
-                    <input
-                      value={step.title}
-                      onChange={(e) => {
-                        setConfig((prev) => { const c = structuredClone(prev); c.howItWorks.steps[i].title = e.target.value; return c })
-                        setDirty(true)
-                      }}
-                      placeholder="Title"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <textarea
-                      rows={2}
-                      value={step.desc}
-                      onChange={(e) => {
-                        setConfig((prev) => { const c = structuredClone(prev); c.howItWorks.steps[i].desc = e.target.value; return c })
-                        setDirty(true)
-                      }}
-                      placeholder="Description"
-                      className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={step.icon}
-                      onChange={(e) => {
-                        setConfig((prev) => { const c = structuredClone(prev); c.howItWorks.steps[i].icon = e.target.value; return c })
-                        setDirty(true)
-                      }}
-                      placeholder="SVG path (stroke d attribute)"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono text-xs outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Step Title</label>
+                      <input
+                        value={step.title}
+                        onChange={(e) => {
+                          setConfig((prev) => { const c = structuredClone(prev); c.howItWorks.steps[i].title = e.target.value; return c })
+                          setDirty(true)
+                        }}
+                        placeholder="Enter step title"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Step Description</label>
+                      <textarea
+                        rows={2}
+                        value={step.desc}
+                        onChange={(e) => {
+                          setConfig((prev) => { const c = structuredClone(prev); c.howItWorks.steps[i].desc = e.target.value; return c })
+                          setDirty(true)
+                        }}
+                        placeholder="Enter step description"
+                        className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Icon (SVG path)</label>
+                      <input
+                        value={step.icon}
+                        onChange={(e) => {
+                          setConfig((prev) => { const c = structuredClone(prev); c.howItWorks.steps[i].icon = e.target.value; return c })
+                          setDirty(true)
+                        }}
+                        placeholder="SVG path (stroke d attribute)"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono text-xs outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -810,46 +884,64 @@ export default function EditConfig({ section }) {
                     </button>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <input
-                      value={story.species}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].species = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Species"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={story.name}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].name = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Author name"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={story.role}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].role = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Author role"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={story.quote}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].quote = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Quote"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Species</label>
+                      <input
+                        value={story.species}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].species = e.target.value; return c }); setDirty(true) }}
+                        placeholder="Enter species name"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Author Name</label>
+                      <input
+                        value={story.name}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].name = e.target.value; return c }); setDirty(true) }}
+                        placeholder="Enter author name"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Author Role</label>
+                      <input
+                        value={story.role}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].role = e.target.value; return c }); setDirty(true) }}
+                        placeholder="Enter author role"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Quote</label>
+                      <input
+                        value={story.quote}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].quote = e.target.value; return c }); setDirty(true) }}
+                        placeholder="Enter quote"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
                   </div>
                   <div className="mt-3 space-y-3">
-                    <textarea
-                      rows={2}
-                      value={story.result}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].result = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Short result summary"
-                      className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <textarea
-                      rows={3}
-                      value={story.fullStory}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].fullStory = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Full story (shown in modal)"
-                      className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Short Result Summary</label>
+                      <textarea
+                        rows={2}
+                        value={story.result}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].result = e.target.value; return c }); setDirty(true) }}
+                        placeholder="Enter short result summary"
+                        className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Full Story</label>
+                      <textarea
+                        rows={3}
+                        value={story.fullStory}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.successStories.stories[i].fullStory = e.target.value; return c }); setDirty(true) }}
+                        placeholder="Enter full story (shown in modal)"
+                        className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -900,32 +992,44 @@ export default function EditConfig({ section }) {
                     </button>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <input
-                      value={img.title}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.gallery.images[i].title = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Title"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={img.label}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.gallery.images[i].label = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Label (e.g. Rescue Mission)"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={img.date}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.gallery.images[i].date = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Date"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Title</label>
+                      <input
+                        value={img.title}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.gallery.images[i].title = e.target.value; return c }); setDirty(true) }}
+                        placeholder="Enter image title"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Label</label>
+                      <input
+                        value={img.label}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.gallery.images[i].label = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. Rescue Mission"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">Date</label>
+                        <input
+                          value={img.date}
+                          onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.gallery.images[i].date = e.target.value; return c }); setDirty(true) }}
+                          type="date"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Description</label>
+                    <textarea
+                      rows={2}
+                      value={img.desc}
+                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.gallery.images[i].desc = e.target.value; return c }); setDirty(true) }}
+                      placeholder="Enter image description"
+                      className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
                     />
                   </div>
-                  <textarea
-                    rows={2}
-                    value={img.desc}
-                    onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.gallery.images[i].desc = e.target.value; return c }); setDirty(true) }}
-                    placeholder="Description"
-                    className="mt-3 w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                  />
                   <div className="mt-3 flex items-center gap-3">
                     {uploading?.section === 'gallery' && uploading?.index === i ? (
                       <div className="flex items-center gap-2">
@@ -954,102 +1058,6 @@ export default function EditConfig({ section }) {
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleGalleryImageUpload(i, f); e.target.value = '' }} />
                       </label>
                     )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>}
-
-        {section === 'donate' && <section className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Donate Section</h2>
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                value={config.donate?.title || ''}
-                onChange={(e) => update('donate.title', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Subtitle</label>
-              <textarea
-                rows={2}
-                value={config.donate?.subtitle || ''}
-                onChange={(e) => update('donate.subtitle', e.target.value)}
-                className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Donation Note</label>
-              <input
-                value={config.donate?.donateLinks?.note || ''}
-                onChange={(e) => update('donate.donateLinks.note', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Donate Now URL</label>
-                <input
-                  value={config.donate?.donateLinks?.donateUrl || ''}
-                  onChange={(e) => update('donate.donateLinks.donateUrl', e.target.value)}
-                  placeholder="https://..."
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Monthly Giving URL</label>
-                <input
-                  value={config.donate?.donateLinks?.monthlyUrl || ''}
-                  onChange={(e) => update('donate.donateLinks.monthlyUrl', e.target.value)}
-                  placeholder="https://..."
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="mt-8">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900">Impact Reasons</h3>
-              <button onClick={addDonateReason} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-                + Add Reason
-              </button>
-            </div>
-            <div className="mt-3 space-y-4">
-              {(config.donate?.reasons || []).map((reason, i) => (
-                <div key={i} className="rounded-lg border border-gray-200 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">Reason {i + 1}</p>
-                    <button
-                      onClick={() => removeDonateReason(i)}
-                      className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <input
-                      value={reason.stat}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.donate.reasons[i].stat = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Stat (e.g. 12K+)"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={reason.label}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.donate.reasons[i].label = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Label"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={reason.desc}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.donate.reasons[i].desc = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Description"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
                   </div>
                 </div>
               ))}
@@ -1099,19 +1107,25 @@ export default function EditConfig({ section }) {
                       </svg>
                     </button>
                   </div>
-                  <input
-                    value={role.title}
-                    onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.volunteer.roles[i].title = e.target.value; return c }); setDirty(true) }}
-                    placeholder="Role title"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                  />
-                  <textarea
-                    rows={2}
-                    value={role.desc}
-                    onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.volunteer.roles[i].desc = e.target.value; return c }); setDirty(true) }}
-                    placeholder="Role description"
-                    className="mt-3 w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                  />
+                  <div className="mt-3">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Role Title</label>
+                    <input
+                      value={role.title}
+                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.volunteer.roles[i].title = e.target.value; return c }); setDirty(true) }}
+                      placeholder="Enter role title"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Role Description</label>
+                    <textarea
+                      rows={2}
+                      value={role.desc}
+                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.volunteer.roles[i].desc = e.target.value; return c }); setDirty(true) }}
+                      placeholder="Enter role description"
+                      className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -1126,15 +1140,18 @@ export default function EditConfig({ section }) {
             <div className="mt-3 space-y-3">
               {(config.volunteer?.requirements || []).map((req, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <input
-                    value={req}
-                    onChange={(e) => {
-                      setConfig((prev) => { const c = structuredClone(prev); c.volunteer.requirements[i] = e.target.value; return c })
-                      setDirty(true)
-                    }}
-                    placeholder={`Requirement ${i + 1}`}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                  />
+                  <div className="flex-1">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Requirement {i + 1}</label>
+                    <input
+                      value={req}
+                      onChange={(e) => {
+                        setConfig((prev) => { const c = structuredClone(prev); c.volunteer.requirements[i] = e.target.value; return c })
+                        setDirty(true)
+                      }}
+                      placeholder={`Enter requirement ${i + 1}`}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                    />
+                  </div>
                   <button
                     onClick={() => removeVolunteerRequirement(i)}
                     className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
@@ -1150,18 +1167,24 @@ export default function EditConfig({ section }) {
           <div className="mt-8">
             <h3 className="text-sm font-semibold text-gray-900">CTA Button</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <input
-                value={config.volunteer?.cta?.label || ''}
-                onChange={(e) => update('volunteer.cta.label', e.target.value)}
-                placeholder="Button label"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
-              <input
-                value={config.volunteer?.cta?.link || ''}
-                onChange={(e) => update('volunteer.cta.link', e.target.value)}
-                placeholder="Button link"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              />
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">Button Label</label>
+                <input
+                  value={config.volunteer?.cta?.label || ''}
+                  onChange={(e) => update('volunteer.cta.label', e.target.value)}
+                  placeholder="Enter button label"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">Button Link</label>
+                <input
+                  value={config.volunteer?.cta?.link || ''}
+                  onChange={(e) => update('volunteer.cta.link', e.target.value)}
+                  placeholder="Enter button link"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                />
+              </div>
             </div>
           </div>
         </section>}
@@ -1209,18 +1232,157 @@ export default function EditConfig({ section }) {
                     </button>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <input
-                      value={partner.name}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.partners.partners[i].name = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Organization name"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
-                    <input
-                      value={partner.type}
-                      onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.partners.partners[i].type = e.target.value; return c }); setDirty(true) }}
-                      placeholder="Type (e.g. Government Agency)"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                    />
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Organization Name</label>
+                      <input
+                        value={partner.name}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.partners.partners[i].name = e.target.value; return c }); setDirty(true) }}
+                        placeholder="Enter organization name"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Type</label>
+                      <input
+                        value={partner.type}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.partners.partners[i].type = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. Government Agency"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>}
+
+        {section === 'trustSection' && <section className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-lg font-semibold text-gray-900">Trust Section</h2>
+          <p className="mt-1 text-sm text-gray-500">Edit the trust section content including media mentions, awards, and badges.</p>
+          <div className="mt-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <input
+                value={config.trustSection?.title || ''}
+                onChange={(e) => update('trustSection.title', e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Subtitle</label>
+              <textarea
+                rows={2}
+                value={config.trustSection?.subtitle || ''}
+                onChange={(e) => update('trustSection.subtitle', e.target.value)}
+                className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+          </div>
+          <div className="mt-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900">Media Mentions</h3>
+              <button onClick={addMediaMention} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                + Add Mention
+              </button>
+            </div>
+            <div className="mt-3 space-y-4">
+              {(config.trustSection?.mediaMentions || []).map((m, i) => (
+                <div key={i} className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Mention {i + 1}</p>
+                    <button
+                      onClick={() => removeMediaMention(i)}
+                      className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Name</label>
+                      <input
+                        value={m.name}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.mediaMentions[i].name = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. Wildlife Daily"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Logo (initials)</label>
+                      <input
+                        value={m.logo}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.mediaMentions[i].logo = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. WD"
+                        maxLength={3}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Description</label>
+                      <input
+                        value={m.desc}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.mediaMentions[i].desc = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. Community-Powered Rescue..."
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900">Awards & Recognition</h3>
+              <button onClick={addAward} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                + Add Award
+              </button>
+            </div>
+            <div className="mt-3 space-y-4">
+              {(config.trustSection?.awards || []).map((a, i) => (
+                <div key={i} className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Award {i + 1}</p>
+                    <button
+                      onClick={() => removeAward(i)}
+                      className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Award Title</label>
+                      <input
+                        value={a.title}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.awards[i].title = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. Best Conservation Tech"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Year</label>
+                      <input
+                        value={a.year}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.awards[i].year = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. 2025"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Organization</label>
+                      <input
+                        value={a.org}
+                        onChange={(e) => { setConfig((prev) => { const c = structuredClone(prev); c.trustSection.awards[i].org = e.target.value; return c }); setDirty(true) }}
+                        placeholder="e.g. ASEAN Biodiversity"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1308,35 +1470,47 @@ export default function EditConfig({ section }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 space-y-3">
                       <div className="grid grid-cols-3 gap-3">
-                        <input
-                          value={item.date}
-                          onChange={(e) => updateNewsItem(i, 'date', e.target.value)}
-                          placeholder="Date"
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                        />
-                        <input
-                          value={item.category}
-                          onChange={(e) => updateNewsItem(i, 'category', e.target.value)}
-                          placeholder="Category"
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                        />
-                        <input
-                          value={item.title}
-                          onChange={(e) => updateNewsItem(i, 'title', e.target.value)}
-                          placeholder="Title"
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                        />
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">Date</label>
+                          <input
+                            value={item.date}
+                            onChange={(e) => updateNewsItem(i, 'date', e.target.value)}
+                            type="date"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">Category</label>
+                          <input
+                            value={item.category}
+                            onChange={(e) => updateNewsItem(i, 'category', e.target.value)}
+                            placeholder="Enter category"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">Title</label>
+                          <input
+                            value={item.title}
+                            onChange={(e) => updateNewsItem(i, 'title', e.target.value)}
+                            placeholder="Enter title"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                          />
+                        </div>
                       </div>
-                      <textarea
-                        rows={2}
-                        value={item.desc}
-                        onChange={(e) => updateNewsItem(i, 'desc', e.target.value)}
-                        placeholder="Description"
-                        className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                      />
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">Description</label>
+                        <textarea
+                          rows={2}
+                          value={item.desc}
+                          onChange={(e) => updateNewsItem(i, 'desc', e.target.value)}
+                          placeholder="Enter description"
+                          className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                        />
                     </div>
-                    <button
-                      onClick={() => removeNewsItem(i)}
+                  </div>
+                  <button
+                    onClick={() => removeNewsItem(i)}
                       className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1362,32 +1536,44 @@ export default function EditConfig({ section }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 space-y-3">
                       <div className="grid grid-cols-3 gap-3">
-                        <input
-                          value={ev.date}
-                          onChange={(e) => updateEvent(i, 'date', e.target.value)}
-                          placeholder="Date"
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                        />
-                        <input
-                          value={ev.title}
-                          onChange={(e) => updateEvent(i, 'title', e.target.value)}
-                          placeholder="Title"
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                        />
-                        <input
-                          value={ev.location}
-                          onChange={(e) => updateEvent(i, 'location', e.target.value)}
-                          placeholder="Location"
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">Date</label>
+                          <input
+                            value={ev.date}
+                            onChange={(e) => updateEvent(i, 'date', e.target.value)}
+                            type="date"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">Title</label>
+                          <input
+                            value={ev.title}
+                            onChange={(e) => updateEvent(i, 'title', e.target.value)}
+                            placeholder="Enter title"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">Location</label>
+                          <input
+                            value={ev.location}
+                            onChange={(e) => updateEvent(i, 'location', e.target.value)}
+                            placeholder="Enter location"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">Description</label>
+                        <textarea
+                          rows={2}
+                          value={ev.desc}
+                          onChange={(e) => updateEvent(i, 'desc', e.target.value)}
+                          placeholder="Enter description"
+                          className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
                         />
                       </div>
-                      <textarea
-                        rows={2}
-                        value={ev.desc}
-                        onChange={(e) => updateEvent(i, 'desc', e.target.value)}
-                        placeholder="Description"
-                        className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                      />
                     </div>
                     <button
                       onClick={() => removeEvent(i)}
@@ -1403,8 +1589,269 @@ export default function EditConfig({ section }) {
             </div>
           </div>
         </section>}
+
+        {section === 'wildlifeGuide' && <WildlifeGuideEditor
+          config={config}
+          setConfig={setConfig}
+          setDirty={setDirty}
+          uploading={uploading}
+          setUploading={setUploading}
+        />}
       </div>
       )}
     </div>
+  )
+}
+
+function WildlifeGuideEditor({ config, setConfig, setDirty, uploading, setUploading }) {
+  const speciesList = config?.wildlifeGuide || []
+
+  function addSpecies() {
+    setConfig((prev) => {
+      const c = structuredClone(prev)
+      if (!c.wildlifeGuide) c.wildlifeGuide = []
+      c.wildlifeGuide.push({ name: '', scientificName: '', status: '', activeStatus: '', habitat: '', note: '', images: [], hazard: '' })
+      return c
+    })
+    setDirty(true)
+  }
+
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">Wildlife Guide Species</h2>
+        <button onClick={addSpecies} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+          + Add Species
+        </button>
+      </div>
+      <p className="mt-1 text-sm text-gray-500">Manage the species shown on the public Wildlife Guide page.</p>
+
+      <div className="mt-4 space-y-4">
+        {speciesList.map((species, i) => (
+            <div key={i} className="rounded-lg border border-gray-200 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700">{i + 1}</span>
+                  <p className="text-xs font-semibold text-gray-500 uppercase">Species {i + 1}</p>
+                </div>
+                <DoubleConfirmation
+                  onConfirm={() => {
+                    setConfig((prev) => {
+                      const c = structuredClone(prev)
+                      c.wildlifeGuide.splice(i, 1)
+                      return c
+                    })
+                    setDirty(true)
+                  }}
+                  title="Remove Species"
+                  message={`Remove "${species.name || 'Unnamed species'}" from the Wildlife Guide?`}
+                  confirmText="Remove"
+                  triggerVariant="danger"
+                >
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </DoubleConfirmation>
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Common Name</label>
+                  <input
+                    value={species.name}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].name = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    onBlur={() => {
+                      if (!species.name.trim()) {
+                        setConfig((prev) => {
+                          const c = structuredClone(prev)
+                          c.wildlifeGuide.splice(i, 1)
+                          return c
+                        })
+                        setDirty(true)
+                      }
+                    }}
+                    placeholder="e.g. Philippine Eagle"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Scientific Name</label>
+                  <input
+                    value={species.scientificName || ''}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].scientificName = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    placeholder="e.g. Pithecophaga jefferyi"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Conservation Status</label>
+                  <select
+                    value={species.status}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].status = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  >
+                    <option value="">Select status...</option>
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Active Period</label>
+                  <select
+                    value={species.activeStatus || ''}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].activeStatus = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  >
+                    <option value="">Select period...</option>
+                    {ACTIVE_OPTIONS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Habitat</label>
+                  <input
+                    value={species.habitat}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].habitat = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    placeholder="e.g. Forest canopies"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Hazard</label>
+                  <select
+                    value={species.hazard || ''}
+                    onChange={(e) => {
+                      setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].hazard = e.target.value; return c })
+                      setDirty(true)
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  >
+                    <option value="">None</option>
+                    {HAZARD_OPTIONS.map((h) => (
+                      <option key={h} value={h}>{h}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Images (up to 3)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {(species.images || []).map((img, imgIdx) => (
+                      <div key={imgIdx} className="relative h-16 w-24 overflow-hidden rounded-lg border border-gray-200">
+                        <img src={img} alt="" className="h-full w-full object-cover" />
+                        <button
+                          onClick={() => {
+                            setConfig((prev) => {
+                              const c = structuredClone(prev)
+                              const arr = c.wildlifeGuide[i].images
+                              if (arr) arr.splice(imgIdx, 1)
+                              return c
+                            })
+                            setDirty(true)
+                          }}
+                          className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white"
+                        >×</button>
+                      </div>
+                    ))}
+                    {(species.images || []).length < 3 && (
+                      uploading?.section === 'wildlifeGuide' && uploading?.index === i ? (
+                        <div className="flex items-center gap-2 px-3">
+                          <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200">
+                            <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${uploading.progress}%` }} />
+                          </div>
+                          <span className="text-[10px] text-gray-500">{uploading.progress}%</span>
+                        </div>
+                      ) : (
+                        <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-500 transition-colors hover:bg-gray-50">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          {3 - (species.images || []).length} slot{(species.images || []).length < 2 ? '' : 's'} left
+                          <input type="file" accept="image/*" multiple className="hidden" onChange={async (e) => {
+                            const files = Array.from(e.target.files || []).slice(0, 3 - (species.images || []).length)
+                            if (!files.length) return
+                            const results = []
+                            for (let fi = 0; fi < files.length; fi++) {
+                              const f = files[fi]
+                              await new Promise((resolve, reject) => {
+                                const formData = new FormData()
+                                formData.append('image', f)
+                                const xhr = new XMLHttpRequest()
+                                setUploading({ section: 'wildlifeGuide', index: i, progress: 0 })
+                                xhr.upload.onprogress = (ev) => {
+                                  if (ev.lengthComputable) {
+                                    setUploading({ section: 'wildlifeGuide', index: i, progress: Math.round((ev.loaded / ev.total) * 100) })
+                                  }
+                                }
+                                xhr.onload = () => {
+                                  if (xhr.status === 200) {
+                                    results.push(JSON.parse(xhr.responseText).url)
+                                    resolve()
+                                  } else {
+                                    try { const d = JSON.parse(xhr.responseText); alert(d.message) } catch { alert('Upload failed') }
+                                    resolve()
+                                  }
+                                }
+                                xhr.onerror = () => { alert('Upload failed'); resolve() }
+                                xhr.open('POST', UPLOAD_URL)
+                                xhr.withCredentials = true
+                                xhr.send(formData)
+                              })
+                            }
+                            if (results.length) {
+                              setConfig((prev) => {
+                                const c = structuredClone(prev)
+                                if (!c.wildlifeGuide[i].images) c.wildlifeGuide[i].images = []
+                                c.wildlifeGuide[i].images.push(...results)
+                                return c
+                              })
+                              setDirty(true)
+                            }
+                            setUploading(null)
+                            e.target.value = ''
+                          }} />
+                        </label>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className="mb-1 block text-xs font-medium text-gray-600">Safety Note</label>
+                <textarea
+                  rows={2}
+                  value={species.note}
+                  onChange={(e) => {
+                    setConfig((prev) => { const c = structuredClone(prev); c.wildlifeGuide[i].note = e.target.value; return c })
+                    setDirty(true)
+                  }}
+                  placeholder="Safety note / description"
+                  className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+    </section>
   )
 }

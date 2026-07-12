@@ -18,31 +18,52 @@ function toCSV(headers, rows) {
 }
 
 const EXPORT_STATUS_MAP = {
-  pending: "pending",
-  accepted: "assigned",
-  en_route: "en_route",
-  rescue_success: "resolved",
-  rescue_failed: "failed",
+  pending: "Pending",
+  assigned: "Assigned",
+  en_route: "En Route",
+  in_progress: "In Progress",
+  resolved: "Successful",
+  failed: "Failed",
+};
+
+const REPORT_TYPE_MAP = {
+  wildlife_sighting: "Wildlife Sighting",
+  illegal_possession: "Illegal Wildlife Possession",
+  human_wildlife_conflict: "Human–Wildlife Conflict",
 };
 
 const exportReports = async (_req, res) => {
   const reports = await convexClient.query(anyApi.reports.listReports);
-  const headers = ["id", "name", "phone", "category", "animalType", "urgency", "location", "description", "status", "assignedTo", "latitude", "longitude", "createdAt"];
-  const rows = reports.map((r) => ({
-    id: r._id,
-    name: r.reporterEmail || r.name || "Anonymous",
-    phone: r.phone || "",
-    category: r.category || "other",
-    animalType: r.animalType,
-    urgency: r.urgency,
-    location: r.location,
-    description: r.description || "",
-    status: EXPORT_STATUS_MAP[r.status] || r.status,
-    assignedTo: r.assignedRescuerEmail || "",
-    latitude: r.latitude ?? "",
-    longitude: r.longitude ?? "",
-    createdAt: new Date(r.createdAt).toISOString(),
-  }));
+  const assignedUuids = [...new Set(reports.map((r) => r.assignedTo).filter(Boolean))];
+  const userMap = {};
+  if (assignedUuids.length > 0) {
+    const users = await Promise.all(
+      assignedUuids.map((uuid) =>
+        convexClient.query(anyApi.users.getUserByUuid, { uuid }).catch(() => null)
+      )
+    );
+    for (const u of users) {
+      if (u) userMap[u.uuid] = u;
+    }
+  }
+  const headers = ["Report ID", "Name", "Phone Number", "Report Type", "Animal Type", "Landmark", "Description", "Status", "Assigned To", "Google Maps Link", "Created At", "Resolved At"];
+  const rows = reports.map((r) => {
+    const assignedUser = r.assignedTo ? userMap[r.assignedTo] : null;
+    return {
+      "Report ID": r._id,
+      "Name": r.reporterEmail || "Anonymous",
+      "Phone Number": r.phone ? `\t${r.phone}` : "",
+      "Report Type": REPORT_TYPE_MAP[r.category] || r.category || "Other",
+      "Animal Type": r.animalType,
+      "Landmark": r.location,
+      "Description": r.description || "",
+      "Status": EXPORT_STATUS_MAP[r.status] || r.status,
+      "Assigned To": assignedUser ? `${assignedUser.firstName} ${assignedUser.lastName} (${assignedUser.phoneNumber})` : "",
+      "Google Maps Link": r.latitude && r.longitude ? `=HYPERLINK("https://www.google.com/maps?q=${r.latitude},${r.longitude}","Click to Open in Google Maps")` : "",
+      "Created At": new Date(r.createdAt).toISOString(),
+      "Resolved At": r.resolvedAt ? new Date(r.resolvedAt).toISOString() : "",
+    };
+  });
   const csv = toCSV(headers, rows);
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", "attachment; filename=reports.csv");
@@ -51,13 +72,14 @@ const exportReports = async (_req, res) => {
 
 const exportUsers = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
+  const filtered = users.filter((u) => u.role !== "superadmin");
   const headers = ["uuid", "firstName", "lastName", "email", "phoneNumber", "role"];
-  const rows = users.map((u) => ({
+  const rows = filtered.map((u) => ({
     uuid: u.uuid,
     firstName: u.firstName,
     lastName: u.lastName,
     email: u.email,
-    phoneNumber: u.phoneNumber,
+    phoneNumber: u.phoneNumber ? `\t${u.phoneNumber}` : "",
     role: u.role,
   }));
   const csv = toCSV(headers, rows);
@@ -71,7 +93,7 @@ const exportLogs = async (req, res) => {
   const result = await convexClient.query(anyApi.logs.getLogs, {
     limit: limit ? parseInt(limit, 10) : 1000,
   });
-  const logs = result.logs || result || [];
+  const logs = result.items || result || [];
   const headers = ["id", "eventType", "section", "ipAddress", "userId", "userAgent", "metadata", "sessionDuration", "createdAt"];
   const rows = (Array.isArray(logs) ? logs : []).map((l) => ({
     id: l._id,

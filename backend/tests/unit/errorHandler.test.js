@@ -38,6 +38,39 @@ describe("errorHandler", () => {
     expect(res.state.statusCode).toBe(500);
     expect(res.state.body.message).toBe("Internal server error.");
   });
+
+  it("handles MulterError LIMIT_FILE_SIZE with 413", () => {
+    const err = new Error("File too large");
+    err.name = "MulterError";
+    err.code = "LIMIT_FILE_SIZE";
+    errorHandler(err, null, res, null);
+    expect(res.state.statusCode).toBe(413);
+    expect(res.state.body.message).toBe("File too large.");
+  });
+
+  it("handles MulterError other codes with 400", () => {
+    const err = new Error("Unexpected field");
+    err.name = "MulterError";
+    errorHandler(err, null, res, null);
+    expect(res.state.statusCode).toBe(400);
+    expect(res.state.body.message).toBe("Unexpected field");
+  });
+
+  it("handles JWT errors with 401", () => {
+    const err = new Error("jwt malformed");
+    err.name = "JsonWebTokenError";
+    errorHandler(err, null, res, null);
+    expect(res.state.statusCode).toBe(401);
+    expect(res.state.body.message).toBe("Invalid or expired token.");
+  });
+
+  it("handles TokenExpiredError with 401", () => {
+    const err = new Error("jwt expired");
+    err.name = "TokenExpiredError";
+    errorHandler(err, null, res, null);
+    expect(res.state.statusCode).toBe(401);
+    expect(res.state.body.message).toBe("Invalid or expired token.");
+  });
 });
 
 describe("asyncHandler", () => {

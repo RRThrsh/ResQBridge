@@ -14,13 +14,15 @@ const STATUS_BADGE = {
   assigned: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   en_route: 'bg-blue-100 text-blue-800 border-blue-300',
   in_progress: 'bg-amber-100 text-amber-800 border-amber-300',
+  transport_to_pwrccc: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   resolved: 'bg-green-100 text-green-800 border-green-300',
   failed: 'bg-red-100 text-red-800 border-red-300',
 }
 
 const STATUS_LABELS = {
   pending: 'Pending', assigned: 'Assigned', en_route: 'En Route',
-  in_progress: 'Working', resolved: 'Done', failed: 'Failed',
+  in_progress: 'Working', transport_to_pwrccc: 'Transport to PWRCCC',
+  resolved: 'Done', failed: 'Failed',
 }
 
 const CATEGORY_ICONS = {
@@ -166,11 +168,10 @@ export default function AdminReports({ adminPermissions }) {
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
-          <option value="urgency">Urgency</option>
         </select>
       </div>
 
-      {(adminPermissions?.reports?.execute) && selectedIds.size > 0 && (
+      {(!adminPermissions || adminPermissions?.reports?.execute) && selectedIds.size > 0 && (
         <div className="mb-3 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
           <span className="text-sm font-medium text-green-800">{selectedIds.size} selected</span>
           <DoubleConfirmation
@@ -225,7 +226,7 @@ export default function AdminReports({ adminPermissions }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {(adminPermissions?.reports?.execute) && (
+          {(!adminPermissions || adminPermissions?.reports?.execute) && (
             <div className="flex items-center gap-2 px-1 py-1">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -263,7 +264,7 @@ export default function AdminReports({ adminPermissions }) {
                 }`}
               >
                 <div className="flex items-center">
-                  {(adminPermissions?.reports?.execute) && (
+                  {(!adminPermissions || adminPermissions?.reports?.execute) && (
                     <label className="flex items-center justify-center pl-3">
                       <input
                         type="checkbox"
@@ -379,44 +380,27 @@ export default function AdminReports({ adminPermissions }) {
                           <span className="text-sm text-gray-400">Unassigned</span>
                         )}
                       </div>
-                      {r.status !== 'resolved' && r.status !== 'failed' && !r.assignedTo && (
-                        (adminPermissions?.reports?.write || adminPermissions?.reports?.execute) ? (
-                          <div className="flex items-center gap-2">
-                            <select
-                              value={assignTarget[r._id] || ""}
-                              onChange={(e) => setAssignTarget((prev) => ({ ...prev, [r._id]: e.target.value }))}
-                              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 focus:border-green-600 focus:outline-none"
-                            >
-                              <option value="" disabled>Assign rescuer...</option>
-                              {users.map((u) => {
-                                const s = getRescuerStatus(u.uuid)
-                                return (
-                                  <option key={u.uuid} value={u.uuid}>
-                                    {u.firstName} {u.lastName} — {s.label}
-                                  </option>
-                                )
-                              })}
-                            </select>
-                            {assignTarget[r._id] && (
-                              <DoubleConfirmation
-                                onConfirm={() => handleAssign(r._id, assignTarget[r._id])}
-                                title="Confirm Assignment"
-                                message={`Assign this report to ${users.find((u) => u.uuid === assignTarget[r._id])?.firstName || ""} ${users.find((u) => u.uuid === assignTarget[r._id])?.lastName || ""}?`}
-                                confirmText="Yes, Assign"
-                                triggerVariant="primary"
-                              >
-                                <button
-                                  disabled={assigningId === r._id}
-                                  className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700 transition-colors disabled:opacity-50"
-                                >
-                                  {assigningId === r._id ? 'Assigning...' : 'Assign'}
-                                </button>
-                              </DoubleConfirmation>
-                            )}
-                          </div>
+                      {r.status !== 'resolved' && r.status !== 'failed' && (
+                        (!adminPermissions || adminPermissions?.reports?.write || adminPermissions?.reports?.execute) ? (
+                          <select
+                            disabled={assigningId === r._id}
+                            value={r.assignedTo || ""}
+                            onChange={(e) => handleAssign(r._id, e.target.value)}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 focus:border-green-600 focus:outline-none disabled:opacity-50"
+                          >
+                            <option value="">{r.assignedTo ? 'Change rescuer...' : 'Assign rescuer...'}</option>
+                            {users.map((u) => {
+                              const s = getRescuerStatus(u.uuid)
+                              return (
+                                <option key={u.uuid} value={u.uuid}>
+                                  {u.firstName} {u.lastName} — {s.label}
+                                </option>
+                              )
+                            })}
+                          </select>
                         ) : null
                       )}
-                      {(adminPermissions?.reports?.execute) && (
+                      {(!adminPermissions || adminPermissions?.reports?.execute) && (
                         <DoubleConfirmation
                           onConfirm={async () => {
                             try {

@@ -2,6 +2,8 @@ const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
 
+const ALLOWED_CONFIG_KEYS = new Set(["otpEnabled", "maintenanceMode", "maintenanceEndTime", "landingContent"]);
+
 const getConfig = async (_req, res) => {
   const config = await convexClient.query(anyApi.config.getConfig);
   res.json({ config });
@@ -14,6 +16,10 @@ const updateConfig = async (req, res) => {
     return res.status(400).json({ message: "key and value are required." });
   }
 
+  if (!ALLOWED_CONFIG_KEYS.has(key)) {
+    return res.status(400).json({ message: "Invalid config key." });
+  }
+
   await convexClient.mutation(anyApi.config.upsertConfig, { key, value });
 
   await logEvent({ req, userId: req.user.uuid, eventType: "config_update", metadata: { key, value: value.slice(0, 200) } });
@@ -21,25 +27,19 @@ const updateConfig = async (req, res) => {
   res.json({ message: "Config updated.", config: { [key]: value } });
 };
 
-const CAROUSEL_COLORS = [
-  'from-emerald-600 to-green-800',
-  'from-amber-500 to-orange-700',
-  'from-teal-600 to-cyan-800',
-  'from-blue-600 to-indigo-800',
-]
-
 const LANDING_DEFAULTS = {
+  about: {
+    title: "About Us",
+    subtitle: "Palawan Wildlife Rescue & Conservation Center",
+    description: "Founded in 2015, the Palawan Wildlife Rescue & Conservation Center is a non-profit organization dedicated to the rescue, rehabilitation, and release of wildlife across Palawan island. We work closely with local communities, government agencies, and international partners to protect the region's unique biodiversity.\n\nOur team of veterinarians, biologists, and trained volunteers responds to emergencies ranging from injured marine turtles and stranded dugongs to displaced civets and orphaned hornbills. Every year, we rehabilitate and release hundreds of animals back into their natural habitats.\n\nBeyond rescue work, we run community education programs, coastal clean-up drives, and habitat restoration projects aimed at reducing human-wildlife conflict and promoting sustainable coexistence.",
+    mission: "To protect and preserve Palawan's wildlife through emergency rescue, professional rehabilitation, and community-centered conservation.",
+    vision: "A Palawan where wildlife and communities thrive together in harmony.",
+  },
   hero: {
     badge: "Palawan Wildlife Rescue & Conservation Center",
     title: "Helping Animals, Protecting Nature",
     description: "Submit reports for wildlife sightings, stray animals, rescue emergencies, and animal welfare concerns across Palawan communities.",
   },
-  stats: [
-    { label: "Rescues", value: "12K+" },
-    { label: "Teams", value: "500+" },
-    { label: "Countries", value: "30+" },
-    { label: "Response Time", value: "<5m" },
-  ],
   contact: {
     emergencyHotline: "+63 (48) 123-4567",
     phone: "+63 (48) 434-1234",
@@ -60,10 +60,6 @@ const LANDING_DEFAULTS = {
     { title: "Habitat Conservation", desc: "Preserving critical habitats for Palawan's endemic and endangered species.", image: "" },
     { title: "Marine Protection", desc: "Safeguarding sea turtles, dugongs, and coral reefs through active patrols.", image: "" },
   ],
-  communityBoard: {
-    title: "Community Board",
-    subtitle: "Recent wildlife reports from across Palawan.",
-  },
   location: {
     title: "Location",
     subtitle: "Visit us at our rescue center in Palawan.",
@@ -72,23 +68,23 @@ const LANDING_DEFAULTS = {
   howItWorks: { title: "", subtitle: "", steps: [] },
   successStories: { title: "", subtitle: "", stories: [] },
   gallery: { title: "", subtitle: "", images: [] },
-  donate: { title: "", subtitle: "", reasons: [], donateLinks: { note: "", donateUrl: "", monthlyUrl: "" } },
   volunteer: { title: "", subtitle: "", roles: [], requirements: [], cta: { label: "", link: "" } },
   partners: { title: "", subtitle: "", partners: [] },
   newsEvents: {
     title: "News & Events",
     subtitle: "Stay updated on rescues, releases, and upcoming community activities.",
-    news: [
-      { date: "Jun 8, 2026", title: "Rescue Center Reaches 12K Milestone", category: "Milestone", desc: "The center has successfully rescued and rehabilitated over 12,000 animals since opening its doors in 2015." },
-      { date: "May 22, 2026", title: "New Mangrove Nursery Established", category: "Conservation", desc: "A partnership with local communities has planted 3,000 mangrove seedlings along Puerto Princesa coastline." },
-      { date: "Apr 14, 2026", title: "Hawkbill Turtle Release at Tubbataha", category: "Release", desc: "After six months of rehabilitation, a juvenile hawksbill turtle was released back into the protected reef." },
-    ],
-    events: [
-      { date: "Jul 15, 2026", title: "Wildlife First-Responder Training", location: "Rescue Center Auditorium", desc: "A hands-on workshop covering basic wildlife handling, emergency triage, and safe transport techniques." },
-      { date: "Aug 5, 2026", title: "Coastal Clean-Up Drive", location: "Sabang Beach", desc: "Join volunteers for a morning of coastal cleanup followed by a short seminar on marine debris impact." },
-      { date: "Sep 12, 2026", title: "Community Appreciation Day", location: "Rescue Center Grounds", desc: "Open house with guided tours, wildlife exhibits, kids activities, and a chance to meet the rescue team." },
-    ],
+    news: [],
+    events: [],
   },
+  trustSection: { title: "", subtitle: "", mediaMentions: [], awards: [] },
+  wildlifeGuide: [
+    { name: 'Philippine Eagle', scientificName: 'Pithecophaga jefferyi', status: 'Critically Endangered', activeStatus: 'Day', habitat: 'Forest canopies', note: 'Report sightings immediately — do not approach.', images: [], hazard: '' },
+    { name: 'Palawan Bearcat', scientificName: 'Arctictis binturong', status: 'Vulnerable', activeStatus: 'Night', habitat: 'Lowland forests', note: 'Nocturnal and shy. If found during daytime, it may be sick.', images: [], hazard: '' },
+    { name: 'Hawksbill Turtle', scientificName: 'Eretmochelys imbricata', status: 'Critically Endangered', activeStatus: 'Both (Day & Night)', habitat: 'Coral reefs', note: 'If stranded, keep wet and contact rescue immediately.', images: [], hazard: '' },
+    { name: 'Palawan Peacock-Pheasant', scientificName: 'Polyplectron napoleonis', status: 'Vulnerable', activeStatus: 'Day', habitat: 'Primary forests', note: 'Observe from a distance. Do not disturb nesting areas.', images: [], hazard: '' },
+    { name: 'Dugong', scientificName: 'Dugong dugon', status: 'Vulnerable', activeStatus: 'Both (Day & Night)', habitat: 'Seagrass beds', note: 'Report any net entanglements to the coast guard.', images: [], hazard: '' },
+    { name: 'Philippine Cockatoo', scientificName: 'Cacatua haematuropygia', status: 'Critically Endangered', activeStatus: 'Day', habitat: 'Mangroves & forests', note: 'Do not feed or attempt to keep as a pet.', images: [], hazard: '' },
+  ],
 };
 
 const getLandingConfig = async (_req, res) => {
@@ -105,20 +101,23 @@ const getLandingConfig = async (_req, res) => {
   }
 
   const merged = {
+    about: { ...LANDING_DEFAULTS.about, ...(stored.about || {}) },
     hero: { ...LANDING_DEFAULTS.hero, ...(stored.hero || {}) },
-    stats: stored.stats || LANDING_DEFAULTS.stats,
     contact: { ...LANDING_DEFAULTS.contact, ...(stored.contact || {}) },
     faq: stored.faq || LANDING_DEFAULTS.faq,
     carousel: stored.carousel || LANDING_DEFAULTS.carousel,
-    communityBoard: { ...LANDING_DEFAULTS.communityBoard, ...(stored.communityBoard || {}) },
     location: { ...LANDING_DEFAULTS.location, ...(stored.location || {}) },
     howItWorks: { ...LANDING_DEFAULTS.howItWorks, ...(stored.howItWorks || {}) },
     successStories: { ...LANDING_DEFAULTS.successStories, ...(stored.successStories || {}) },
     gallery: { ...LANDING_DEFAULTS.gallery, ...(stored.gallery || {}) },
-    donate: { ...LANDING_DEFAULTS.donate, ...(stored.donate || {}) },
     volunteer: { ...LANDING_DEFAULTS.volunteer, ...(stored.volunteer || {}) },
     partners: { ...LANDING_DEFAULTS.partners, ...(stored.partners || {}) },
     newsEvents: { ...LANDING_DEFAULTS.newsEvents, ...(stored.newsEvents || {}) },
+    trustSection: { ...LANDING_DEFAULTS.trustSection, ...(stored.trustSection || {}) },
+    wildlifeGuide: (stored.wildlifeGuide || LANDING_DEFAULTS.wildlifeGuide).map((s) => ({
+      ...s,
+      images: s.images || (s.image ? [s.image] : []),
+    })),
   };
 
   const otpEnabled = await convexClient.query(anyApi.config.getConfigValue, { key: "otpEnabled" });
@@ -127,9 +126,9 @@ const getLandingConfig = async (_req, res) => {
 };
 
 const ALLOWED_SECTION_KEYS = new Set([
-  "hero", "stats", "contact", "faq", "carousel", "communityBoard",
+  "about", "hero", "contact", "faq", "carousel",
   "location", "newsEvents", "howItWorks", "successStories", "gallery",
-  "donate", "volunteer", "partners",
+  "volunteer", "partners", "wildlifeGuide", "trustSection",
 ]);
 
 const updateLandingConfig = async (req, res) => {
@@ -152,4 +151,4 @@ const updateLandingConfig = async (req, res) => {
   res.json({ message: "Landing page content updated." });
 };
 
-module.exports = { getConfig, updateConfig, getLandingConfig, updateLandingConfig, LANDING_DEFAULTS, CAROUSEL_COLORS };
+module.exports = { getConfig, updateConfig, getLandingConfig, updateLandingConfig, LANDING_DEFAULTS };

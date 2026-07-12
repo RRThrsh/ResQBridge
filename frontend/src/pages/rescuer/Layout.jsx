@@ -52,15 +52,6 @@ const navItems = [
     ),
   },
   {
-    label: 'Expenses',
-    path: '/rescuer/expenses',
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  {
     label: 'Profile',
     path: '/rescuer/profile',
     icon: (
@@ -83,6 +74,12 @@ export default function RescuerLayout() {
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef(null)
   const locIntervalRef = useRef(null)
+  const lastSentRef = useRef(null)
+  const userPosRef = useRef(null)
+
+  useEffect(() => {
+    userPosRef.current = userPos
+  }, [userPos])
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -95,15 +92,19 @@ export default function RescuerLayout() {
   useEffect(() => { requestLocation() }, [requestLocation])
 
   useEffect(() => {
-    if (!user || !userPos) return
-    rescuerApi.updateLocation(userPos.lat, userPos.lng).catch(() => {})
-    locIntervalRef.current = setInterval(() => {
-      if (userPos) {
-        rescuerApi.updateLocation(userPos.lat, userPos.lng).catch(() => {})
-      }
-    }, 30000)
-    return () => { if (locIntervalRef.current) clearInterval(locIntervalRef.current) }
-  }, [user, userPos])
+    if (!user) return
+    const send = () => {
+      const pos = userPosRef.current
+      if (!pos) return
+      const key = `${pos.lat.toFixed(4)}_${pos.lng.toFixed(4)}`
+      if (lastSentRef.current === key) return
+      lastSentRef.current = key
+      rescuerApi.updateLocation(pos.lat, pos.lng).catch(() => {})
+    }
+    send()
+    locIntervalRef.current = setInterval(send, 30000)
+    return () => { if (locIntervalRef.current) { clearInterval(locIntervalRef.current); locIntervalRef.current = null } }
+  }, [user])
 
   useEffect(() => {
     if (authLoading) return

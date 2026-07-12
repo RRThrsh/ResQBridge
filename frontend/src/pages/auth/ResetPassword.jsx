@@ -2,9 +2,13 @@ import { useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 
 export default function ResetPassword() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  const token = searchParams.get('token')
+  const [token] = useState(() => {
+    const t = searchParams.get('token')
+    setSearchParams({}, { replace: true })
+    return t
+  })
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')

@@ -7,10 +7,12 @@ const { notifyAdmin } = require("../services/adminNotification");
 
 const RESCUER_STATUS_MAP = {
   pending: "pending",
-  accepted: "assigned",
+  assigned: "assigned",
   en_route: "en_route",
-  rescue_success: "resolved",
-  rescue_failed: "failed",
+  in_progress: "in_progress",
+  transport_to_pwrccc: "transport_to_pwrccc",
+  resolved: "resolved",
+  failed: "failed",
 };
 
 async function logActivity(userId, action, details, reportId) {
@@ -30,23 +32,26 @@ const getReports = async (req, res) => {
   const { status, assignedTo, search, sortBy } = req.query;
   const user = req.user;
 
-  let reports;
+  const queryArgs = {};
   if (assignedTo && user?.uuid) {
-    reports = await convexClient.query(anyApi.reports.getReports, { assignedTo: user.uuid });
-  } else {
-    reports = await convexClient.query(anyApi.reports.listReports);
+    queryArgs.assignedTo = user.uuid;
   }
+  if (status) {
+    const dbStatus = Object.keys(RESCUER_STATUS_MAP).find((k) => RESCUER_STATUS_MAP[k] === status) || status;
+    queryArgs.status = dbStatus;
+  }
+  const reports = await convexClient.query(anyApi.reports.getReports, queryArgs);
 
   const mapped = reports.map((r) => ({
     _id: r._id,
-    name: r.reporterEmail || r.name || "Anonymous",
+    name: r.reporterEmail || "Anonymous",
     phone: r.phone || "",
     category: r.category || "other",
-    animalType: r.animalType,
-    urgency: r.urgency,
+    animalType: r.animalName || r.animalType,
+    urgency: r.urgency || "medium",
     location: r.location,
     description: r.description,
-    images: r.images ? r.images.split(",") : [],
+    images: r.images ? (Array.isArray(r.images) ? r.images : [r.images]) : [],
     status: RESCUER_STATUS_MAP[r.status] || r.status,
     assignedTo: r.assignedTo || null,
     latitude: r.latitude ?? null,
@@ -55,11 +60,6 @@ const getReports = async (req, res) => {
   }));
 
   let filtered = mapped;
-  if (status) {
-    const mappedStatus = RESCUER_STATUS_MAP[status] || status;
-    filtered = filtered.filter((r) => r.status === mappedStatus);
-  }
-
   if (search) {
     const q = search.toLowerCase();
     filtered = filtered.filter(
@@ -155,38 +155,36 @@ const getStats = async (req, res) => {
   }
 
   const total = reports.length;
-  const pending = reports.filter((r) => r.status === "pending").length;
-  const accepted = reports.filter((r) => r.status === "accepted").length;
-  const enRoute = reports.filter((r) => r.status === "en_route").length;
-  const resolved = reports.filter((r) => r.status === "rescue_success").length;
-  const failed = reports.filter((r) => r.status === "rescue_failed").length;
-  const resolvedCount = resolved;
-  const failedCount = failed;
-  const resolutionRate = total > 0 ? Math.round((resolvedCount / total) * 100) : 0;
-
+  let pending = 0, accepted = 0, enRoute = 0, resolved = 0, failed = 0;
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const monthlyMap = {};
-  reports.forEach((r) => {
-    if (!r.createdAt) return
-    const d = new Date(r.createdAt)
-    const key = `${monthNames[d.getMonth()]} ${d.getFullYear()}`
-    if (!monthlyMap[key]) monthlyMap[key] = { month: key, assigned: 0, resolved: 0, failed: 0 }
-    monthlyMap[key].assigned++
-    if (r.status === 'rescue_success') monthlyMap[key].resolved++
-    if (r.status === 'rescue_failed') monthlyMap[key].failed++
-  });
+  const categoryMap = {};
+  for (const r of reports) {
+    if (r.status === 'pending') pending++
+    else if (r.status === 'assigned') accepted++
+    else if (r.status === 'en_route') enRoute++
+    else if (r.status === 'resolved') resolved++
+    else if (r.status === 'failed') failed++
+
+    if (r.createdAt) {
+      const d = new Date(r.createdAt)
+      const key = `${monthNames[d.getMonth()]} ${d.getFullYear()}`
+      if (!monthlyMap[key]) monthlyMap[key] = { month: key, assigned: 0, resolved: 0, failed: 0 }
+      monthlyMap[key].assigned++
+      if (r.status === 'resolved') monthlyMap[key].resolved++
+      if (r.status === 'failed') monthlyMap[key].failed++
+    }
+
+    const cat = r.animalName || 'Unknown'
+    categoryMap[cat] = (categoryMap[cat] || 0) + 1
+  }
+  const resolutionRate = total > 0 ? Math.round((resolved / total) * 100) : 0;
   const monthlyTrends = Object.values(monthlyMap).sort((a, b) => {
     const da = new Date(a.month)
     const db = new Date(b.month)
     return da - db
   });
 
-  const categoryMap = {};
-  reports.forEach((r) => {
-    const cat = r.animalName || 'Unknown'
-    if (!categoryMap[cat]) categoryMap[cat] = 0
-    categoryMap[cat]++
-  });
   const categoryBreakdown = Object.entries(categoryMap)
     .map(([animal, count]) => ({ animal, count }))
     .sort((a, b) => b.count - a.count)
@@ -195,14 +193,21 @@ const getStats = async (req, res) => {
   let totalResponseTime = 0
   let responseTimeCount = 0
   const activityLogs = activity?.page || []
-  for (let i = 0; i < activityLogs.length - 1; i++) {
-    if (activityLogs[i].action === 'status:en_route') {
-      const assigned = activityLogs.find((a, j) =>
-        j > i && a.reportId === activityLogs[i].reportId && a.action !== 'status:en_route'
-      )
-      if (assigned && activityLogs[i]._creationTime && assigned._creationTime) {
-        totalResponseTime += Math.abs(assigned._creationTime - activityLogs[i]._creationTime)
-        responseTimeCount++
+  const reportActivityMap = new Map()
+  for (const a of activityLogs) {
+    if (!a.reportId) continue
+    if (!reportActivityMap.has(a.reportId)) reportActivityMap.set(a.reportId, [])
+    reportActivityMap.get(a.reportId).push(a)
+  }
+  for (const entries of reportActivityMap.values()) {
+    entries.sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0))
+    for (let i = 0; i < entries.length - 1; i++) {
+      if (entries[i].action === 'status:en_route') {
+        const next = entries[i + 1]
+        if (next && entries[i]._creationTime && next._creationTime) {
+          totalResponseTime += Math.abs(next._creationTime - entries[i]._creationTime)
+          responseTimeCount++
+        }
       }
     }
   }
@@ -210,10 +215,10 @@ const getStats = async (req, res) => {
 
   const recentReports = reports.slice(0, 10).map((r) => ({
     _id: r._id,
-    name: r.reporterEmail || r.name || "Anonymous",
+    name: r.reporterEmail || "Anonymous",
     category: r.category || "other",
-    animalType: r.animalType,
-    urgency: r.urgency,
+    animalType: r.animalName || r.animalType,
+    urgency: r.urgency || "medium",
     status: RESCUER_STATUS_MAP[r.status] || r.status,
     location: r.location,
     createdAt: r.createdAt,
@@ -227,8 +232,8 @@ const getStats = async (req, res) => {
     assigned: accepted,
     enRoute,
     inProgress: 0,
-    resolved: resolvedCount,
-    failed: failedCount,
+    resolved,
+    failed,
     resolutionRate,
     avgResponseTime,
     monthlyTrends,

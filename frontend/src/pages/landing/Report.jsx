@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, DoubleConfirmation, InfoPopover } from '../../components/ui'
-import species from '../../data/wildlifeSpecies'
+import { Button, DoubleConfirmation, InfoPopover, HoneypotField } from '../../components/ui'
+import ReportSkeleton from './ReportSkeleton'
+import fallbackSpecies from '../../data/wildlifeSpecies'
 import L from 'leaflet'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -77,6 +78,11 @@ export default function Report() {
   })
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreviews, setImagePreviews] = useState([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 400)
+    return () => clearTimeout(t)
+  }, [])
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -86,6 +92,18 @@ export default function Report() {
   const [speciesQuery, setSpeciesQuery] = useState('')
   const speciesRef = useRef(null)
   const searchRef = useRef(null)
+  const [wildlifeSpecies, setWildlifeSpecies] = useState(null)
+  const [selectedSpecies, setSelectedSpecies] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const [lightbox, setLightbox] = useState(null)
+  useEffect(() => {
+    fetch(`${API_BASE}/landing-config`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.config?.wildlifeGuide?.length) setWildlifeSpecies(d.config.wildlifeGuide)
+      })
+      .catch(() => {})
+  }, [])
   useEffect(() => {
     if (!speciesOpen) return
     function handleClick(e) {
@@ -175,6 +193,8 @@ export default function Report() {
     }
   }
 
+  if (loading) return <ReportSkeleton />
+
   if (submitted) {
     return (
       <div className="flex flex-1 items-center justify-center bg-green-50 px-6">
@@ -190,12 +210,13 @@ export default function Report() {
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button onClick={() => navigate('/')}>Back to Home</Button>
-            <Button variant="outline" onClick={() => { setSubmitted(false); setForm({ name: '', phone: '', category: '', animalType: '', wildlifeCondition: '', location: '', description: '', latitude: '', longitude: '' }); setImageFiles([]); setImagePreviews([]); if (fileRef.current) fileRef.current.value = '' }}>
+            <Button variant="outline" onClick={() => { setSubmitted(false); setForm({ name: '', phone: '', category: '', animalType: '', wildlifeCondition: '', location: '', description: '', latitude: '', longitude: '' }); setSelectedSpecies(null); setImageFiles([]); setImagePreviews([]); if (fileRef.current) fileRef.current.value = '' }}>
               Submit Another
             </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+
     )
   }
 
@@ -205,11 +226,12 @@ export default function Report() {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">Report an Animal</h1>
           <p className="mt-2 text-sm text-gray-500">
-            Report a wildlife sighting, stray animal, or rescue emergency.
+            Report a wildlife sighting, animal in distress, or rescue emergency.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-gray-200 bg-white px-8 py-10 shadow-sm">
+          <HoneypotField />
           {error && (
             <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
           )}
@@ -302,22 +324,22 @@ export default function Report() {
                       />
                     </div>
                     <div className="max-h-48 overflow-y-auto">
-                      {(speciesQuery
-                        ? species.filter((s) => s.name.toLowerCase().includes(speciesQuery.toLowerCase()))
-                        : species
-                      ).map((s) => (
+                      {((wildlifeSpecies || fallbackSpecies).filter((s) => !speciesQuery || s.name.toLowerCase().includes(speciesQuery.toLowerCase()))).map((s) => (
                         <button
                           key={s.name}
                           type="button"
-                        onMouseDown={() => { setForm((prev) => ({ ...prev, animalType: s.name })); setSpeciesQuery(''); setSpeciesOpen(false) }}
-                              className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-green-50"
-                            >
-                              {s.name}
-                            </button>
-                          ))}
-                          <button
-                            type="button"
-                            onMouseDown={() => { setForm((prev) => ({ ...prev, animalType: 'Unknown Species' })); setSpeciesQuery(''); setSpeciesOpen(false) }}
+                          onMouseDown={() => { setForm((prev) => ({ ...prev, animalType: s.name })); setSelectedSpecies(s); setSpeciesQuery(''); setSpeciesOpen(false) }}
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-green-50"
+                        >
+                          {s.images?.[0] && (
+                            <img src={s.images[0]} alt="" className="h-6 w-6 rounded-full object-cover" />
+                          )}
+                          <span>{s.name}</span>
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onMouseDown={() => { setForm((prev) => ({ ...prev, animalType: 'Unknown Species' })); setSelectedSpecies(null); setSpeciesQuery(''); setSpeciesOpen(false) }}
                         className="flex w-full items-center gap-2 border-t border-gray-100 px-4 py-2.5 text-left text-sm text-gray-500 italic hover:bg-green-50"
                       >
                         Unknown Species
@@ -328,6 +350,42 @@ export default function Report() {
               </div>
             </div>
           </div>
+
+          {selectedSpecies && (
+            <div>
+              <p className="mb-1.5 text-xs text-gray-400">Click the animal to confirm if that is the animal you are reporting.</p>
+              <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+              <div className="flex gap-4">
+                {selectedSpecies.images?.[0] ? (
+                  <button type="button" onClick={() => setPreviewUrl(selectedSpecies.images[0])} className="h-20 w-20 shrink-0 overflow-hidden rounded-lg">
+                    <img src={selectedSpecies.images[0]} alt={selectedSpecies.name} className="h-full w-full cursor-pointer object-cover transition-opacity hover:opacity-80" />
+                  </button>
+                ) : (
+                  <div className="h-20 w-20 shrink-0 rounded-lg bg-gradient-to-br from-green-100 to-emerald-50" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold text-gray-900">{selectedSpecies.name}</h3>
+                  {selectedSpecies.scientificName && <p className="text-xs italic text-gray-400">{selectedSpecies.scientificName}</p>}
+                  {selectedSpecies.habitat && <p className="mt-1 text-xs text-gray-500">{selectedSpecies.habitat}</p>}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    {selectedSpecies.status && (
+                      <span className="inline-block rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700">{selectedSpecies.status}</span>
+                    )}
+                    {selectedSpecies.activeStatus && (
+                      <span className="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">{selectedSpecies.activeStatus}</span>
+                    )}
+                    {selectedSpecies.hazard && selectedSpecies.hazard !== 'None' && (
+                      <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">{selectedSpecies.hazard}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {selectedSpecies.note && (
+                <p className="mt-2 text-xs leading-relaxed text-gray-500">{selectedSpecies.note}</p>
+              )}
+            </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -390,7 +448,7 @@ export default function Report() {
                 )}
                 {gettingLocation ? 'Getting location...' : 'Get Current Location'}
               </button>
-              <div className="relative h-56 overflow-hidden rounded-lg border border-gray-200">
+              <div className="relative h-56 overflow-hidden rounded-lg border border-gray-200" style={{ isolation: 'isolate' }}>
                 <MapContainer
                   center={form.latitude && form.longitude ? [parseFloat(form.latitude), parseFloat(form.longitude)] : [9.967, 118.783]}
                   zoom={form.latitude && form.longitude ? 16 : 7}
@@ -438,6 +496,7 @@ export default function Report() {
                 <p className="mt-1 text-gray-300">Upload at least one clear photo of the wildlife or incident. Photos help responders verify the report, identify the wildlife species, assess its condition, and determine the most appropriate response before dispatching personnel.</p>
               </InfoPopover>
             </label>
+            <p className="mt-1 text-xs text-gray-400">You can add up to 5 photos.</p>
             <div className="mt-1.5">
               <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp" multiple capture="environment" onChange={handleImages} className="hidden" />
               {imagePreviews.length > 0 && (
@@ -484,6 +543,120 @@ export default function Report() {
           </DoubleConfirmation>
         </form>
       </div>
+
+      {previewUrl && selectedSpecies && (
+        <div
+          className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-8 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPreviewUrl(null)}
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm transition-colors hover:bg-white hover:text-gray-900"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {selectedSpecies.images?.length > 0 ? (
+              <div>
+                <div className="mb-3 aspect-square w-full overflow-hidden rounded-xl">
+                  <button onClick={() => { setLightbox(previewUrl); setPreviewUrl(null) }} className="h-full w-full">
+                    <img src={previewUrl} alt={selectedSpecies.name} className="h-full w-full cursor-zoom-in object-cover transition-transform hover:scale-105" />
+                  </button>
+                </div>
+                {selectedSpecies.images.length > 1 && (
+                  <div className="mb-6 flex gap-2">
+                    {selectedSpecies.images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setPreviewUrl(img)}
+                        className={`h-14 w-20 overflow-hidden rounded-lg border transition-opacity hover:opacity-80 ${
+                          img === previewUrl ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-200'
+                        }`}
+                      >
+                        <img src={img} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="mb-6 aspect-square w-full rounded-xl bg-gradient-to-br from-green-100 to-emerald-50" />
+            )}
+
+            <h2 className="text-2xl font-bold text-gray-900">{selectedSpecies.name}</h2>
+            {selectedSpecies.scientificName && (
+              <p className="mt-1 text-sm italic text-gray-500">{selectedSpecies.scientificName}</p>
+            )}
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-gray-500">Conservation Status <InfoPopover><p className="font-semibold">Conservation Status</p><p className="mt-1 text-gray-300">PCSD classification indicating how threatened the species is in Palawan.</p></InfoPopover></p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {selectedSpecies.status && (
+                    <span className="inline-block rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-medium text-red-700">{selectedSpecies.status}</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-gray-500">Active Period <InfoPopover><p className="font-semibold">Active Period</p><p className="mt-1 text-gray-300">When this animal is most active throughout the day.</p></InfoPopover></p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {selectedSpecies.activeStatus && (
+                    <span className="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-medium text-blue-700">{selectedSpecies.activeStatus}</span>
+                  )}
+                </div>
+              </div>
+              {selectedSpecies.habitat && (
+                <div>
+                  <p className="text-xs font-semibold tracking-wide text-gray-500">Habitat</p>
+                  <p className="mt-0.5 text-sm text-gray-700">{selectedSpecies.habitat}</p>
+                </div>
+              )}
+              {selectedSpecies.hazard && selectedSpecies.hazard !== 'None' && (
+                <div>
+                  <p className="text-xs font-semibold tracking-wide text-gray-500">Hazard <InfoPopover><p className="font-semibold">Hazard</p><p className="mt-1 text-gray-300">Know what risks this animal may pose for your safety. Venomous animals can inject venom, poisonous animals are harmful if touched or eaten, and aggressive or defensive animals may attack if provoked.</p></InfoPopover></p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    <span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">{selectedSpecies.hazard}</span>
+                  </div>
+                </div>
+              )}
+              {selectedSpecies.note && (
+                <div>
+                  <p className="text-xs font-semibold tracking-wide text-gray-500">Safety Note</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-gray-700">{selectedSpecies.note}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            onClick={() => setLightbox(null)}
+            className="absolute right-4 top-4 z-[61] flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/40"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img
+            src={lightbox}
+            alt={selectedSpecies?.name || ''}
+            className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   )
 }

@@ -6,38 +6,114 @@ const containerStyle = {
   height: '320px',
 }
 
-export default function ReportMap({ latitude, longitude, label, userPos, autoRoute, requestLocation }) {
+export default function ReportMap({ latitude, longitude, label, userPos, autoRoute, requestLocation, showControls = true }) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   const [routePath, setRoutePath] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
   const [loadingRoute, setLoadingRoute] = useState(false)
   const [map, setMap] = useState(null)
   const [routeError, setRouteError] = useState(null)
-  const followRef = useRef(true)
+  const [following, setFollowing] = useState(!!autoRoute)
+  const followRef = useRef(!!autoRoute)
   const autoFetched = useRef(false)
+  const lastOriginRef = useRef(null)
+  const routeIntervalRef = useRef(null)
+  const userPosRef = useRef(userPos)
+  const [showFallback, setShowFallback] = useState(false)
+  const [mapCenter, setMapCenter] = useState(
+    following && userPos ? userPos : { lat: latitude, lng: longitude }
+  )
+  const polyRef1 = useRef(null)
+  const polyRef2 = useRef(null)
 
   const { isLoaded } = useLoadScript({ googleMapsApiKey: apiKey })
 
   const onLoad = useCallback((m) => {
     setMap(m)
-    if (latitude && longitude) {
-      m.panTo({ lat: latitude, lng: longitude })
-      m.setZoom(15)
+    m.panTo(mapCenter)
+    m.setZoom(15)
+  }, [mapCenter])
+
+  const onPolyLoad1 = useCallback((poly) => {
+    polyRef1.current = poly
+    if (routePath) {
+      try { poly.setPath(routePath) } catch {}
     }
-  }, [latitude, longitude])
+  }, [routePath])
+
+  const onPolyLoad2 = useCallback((poly) => {
+    polyRef2.current = poly
+    if (routePath) {
+      try { poly.setPath(routePath) } catch {}
+    }
+  }, [routePath])
 
   useEffect(() => {
-    if (!map || !userPos || !followRef.current) return
-    map.panTo(userPos)
+    if (polyRef1.current && routePath) {
+      try { polyRef1.current.setPath(routePath) } catch {}
+    }
+    if (polyRef2.current && routePath) {
+      try { polyRef2.current.setPath(routePath) } catch {}
+    }
+  }, [routePath])
+
+  useEffect(() => { userPosRef.current = userPos }, [userPos])
+
+  useEffect(() => {
+    if (!userPos || !followRef.current) return
+    setMapCenter(userPos)
+    if (map) { map.panTo(userPos); map.setZoom(17) }
   }, [map, userPos])
 
   useEffect(() => {
-    if (autoRoute && userPos && !autoFetched.current) {
-      autoFetched.current = true
-      followRef.current = false
-      fetchRoute(userPos.lat, userPos.lng)
+    if (!map) return
+    const unsub = map.addListener('dragstart', () => { followRef.current = false; setFollowing(false) })
+    return () => { if (unsub) unsub.remove() }
+  }, [map])
+
+  useEffect(() => {
+    if (autoRoute && !userPos) {
+      const t = setTimeout(() => setShowFallback(true), 8000)
+      return () => clearTimeout(t)
     }
   }, [autoRoute, userPos])
+
+  useEffect(() => {
+    if (!autoRoute || !userPos) return
+    if (!autoFetched.current) {
+      autoFetched.current = true
+      lastOriginRef.current = { lat: userPos.lat, lng: userPos.lng }
+      fetchRoute(userPos.lat, userPos.lng)
+    }
+    const orig = lastOriginRef.current
+    if (orig) {
+      const dlat = userPos.lat - orig.lat
+      const dlng = userPos.lng - orig.lng
+      if (Math.sqrt(dlat * dlat + dlng * dlng) > 0.00045) {
+        lastOriginRef.current = { lat: userPos.lat, lng: userPos.lng }
+        fetchRoute(userPos.lat, userPos.lng)
+      }
+    }
+  }, [autoRoute, userPos])
+
+  useEffect(() => {
+    if (!autoRoute) return
+    routeIntervalRef.current = setInterval(() => {
+      if (followRef.current && userPosRef?.current) {
+        const pos = userPosRef.current
+        const orig = lastOriginRef.current
+        if (orig) {
+          const dlat = pos.lat - orig.lat
+          const dlng = pos.lng - orig.lng
+          if (Math.sqrt(dlat * dlat + dlng * dlng) > 0.00045) {
+            lastOriginRef.current = { lat: pos.lat, lng: pos.lng }
+            fetchRoute(pos.lat, pos.lng)
+          }
+        }
+      }
+    }, 15000)
+    return () => { if (routeIntervalRef.current) clearInterval(routeIntervalRef.current) }
+  }, [autoRoute])
 
   async function fetchRoute(originLat, originLng) {
     setLoadingRoute(true)
@@ -78,6 +154,7 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
   function handleDirections() {
     setRouteError(null)
     if (userPos) {
+      followRef.current = true
       fetchRoute(userPos.lat, userPos.lng)
       return
     }
@@ -103,32 +180,18 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
     setRouteError(null)
   }
 
-  function handleNavigate() {
-    setRouteError(null)
-    if (userPos) {
-      fetchRoute(userPos.lat, userPos.lng)
-      return
-    }
-    if (requestLocation) requestLocation()
-    if (!navigator.geolocation) {
-      setRouteError('Geolocation not supported by your browser.')
-      return
-    }
-    setRouteError('Fetching your location...')
-    navigator.geolocation.getCurrentPosition(
-      (pos) => fetchRoute(pos.coords.latitude, pos.coords.longitude),
-      () => {
-        setRouteError('Could not get your location. Please enable location access.')
-        setTimeout(() => setRouteError(null), 5000)
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
-  }
-
   if (!isLoaded) {
     return (
       <div className="flex items-center justify-center rounded-xl bg-gray-100 border-2 border-gray-200" style={{ height: '320px' }}>
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent" />
+      </div>
+    )
+  }
+  if (autoRoute && !userPos && !showFallback) {
+    return (
+      <div className="flex items-center justify-center rounded-xl bg-gray-100 border-2 border-gray-200" style={{ height: '320px' }}>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent" />
+        <p className="ml-3 text-sm text-gray-500">Getting your location...</p>
       </div>
     )
   }
@@ -137,7 +200,7 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
     <div className="rounded-xl overflow-hidden border-2 border-gray-200 relative">
       <GoogleMap
         mapContainerStyle={containerStyle}
-        center={{ lat: latitude, lng: longitude }}
+        center={mapCenter}
         zoom={15}
         onLoad={onLoad}
       >
@@ -164,7 +227,7 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
         {routePath && (
           <>
             <Polyline
-              path={routePath}
+              onLoad={onPolyLoad1}
               options={{
                 strokeColor: '#d97706',
                 strokeWeight: 7,
@@ -172,7 +235,7 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
               }}
             />
             <Polyline
-              path={routePath}
+              onLoad={onPolyLoad2}
               options={{
                 strokeColor: '#d97706',
                 strokeWeight: 4,
@@ -212,76 +275,49 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
           )}
         </div>
 
-        <div className="flex gap-2">
-          {userPos && (
-            <button
-              onClick={() => { followRef.current = !followRef.current; if (followRef.current && map) map.panTo(userPos) }}
-              className={`px-3 py-2 rounded-xl text-sm font-bold transition-colors border-2 ${
-                followRef.current
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-600 border-gray-300'
-              }`}
-            >
-              Follow Me
-            </button>
-          )}
-          {!routePath ? (
-            <button
-              onClick={() => { followRef.current = false; handleDirections() }}
-              disabled={loadingRoute}
-              className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-amber-700 disabled:opacity-50 transition-colors shadow flex items-center gap-1.5"
-            >
-              {loadingRoute ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Loading
-                </span>
-              ) : (
-                <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                </svg> Get Directions</>
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={clearRoute}
-              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors border-2 border-gray-200"
-            >
-              Clear Route
-            </button>
-          )}
-          {!routePath && userPos && (
-            <button
-              onClick={() => { followRef.current = false; handleNavigate() }}
-              disabled={loadingRoute}
-              className="bg-amber-100 text-amber-800 px-4 py-2 rounded-xl text-sm font-bold hover:bg-amber-200 transition-colors border-2 border-amber-300 flex items-center gap-1.5"
-            >
-              {loadingRoute ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-800 border-t-transparent" />
-              ) : (
-                <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg> Navigate</>
-              )}
-            </button>
-          )}
-          {latitude && longitude && (
-            <div className="flex gap-1">
-              <a
-                href={`https://www.google.com/maps?q=${latitude},${longitude}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2 rounded-xl text-sm font-bold bg-white text-gray-700 border-2 border-gray-300 hover:bg-green-50 transition-colors flex items-center gap-1.5"
-                title="View on Google Maps"
+        {showControls && (
+          <div className="flex gap-2">
+            {userPos && (
+              <button
+                onClick={() => {
+                  const next = !followRef.current
+                  followRef.current = next
+                  setFollowing(next)
+                  if (next && map) {
+                    setMapCenter(userPos)
+                    map.panTo(userPos)
+                    map.setZoom(17)
+                  }
+                }}
+                className={`px-3 py-2 rounded-xl text-sm font-bold transition-colors border-2 ${
+                  following
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-600 border-gray-300'
+                }`}
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
-                Google Maps
-              </a>
-            </div>
-          )}
-        </div>
+                {following ? 'Following' : 'Follow Me'}
+              </button>
+            )}
+            {!routePath && (
+              <button
+                onClick={() => { followRef.current = false; handleDirections() }}
+                disabled={loadingRoute}
+                className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-amber-700 disabled:opacity-50 transition-colors shadow flex items-center gap-1.5"
+              >
+                {loadingRoute ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Loading
+                  </span>
+                ) : (
+                  <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg> Get Directions</>
+                )}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

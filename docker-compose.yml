@@ -8,22 +8,23 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-resqbridge_secret}
+    command: sh -c "redis-server --requirepass \"$$REDIS_PASSWORD\""
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-resqbridge_secret}", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
 
-  backend:
+  backend-base: &backend-base
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     env_file: ./backend/.env
     environment:
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-resqbridge_secret}@redis:6379
       - NODE_ENV=production
     depends_on:
       redis:
@@ -33,6 +34,34 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
+    volumes:
+      - storage_uploads:/app/storage/uploads
+
+  backend-1:
+    <<: *backend-base
+    container_name: backend-1
+
+  backend-2:
+    <<: *backend-base
+    container_name: backend-2
+
+  backend-3:
+    <<: *backend-base
+    container_name: backend-3
+
+  frontend:
+    image: node:20-alpine
+    restart: "no"
+    working_dir: /app
+    volumes:
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/package-lock.json:/app/package-lock.json
+      - ./frontend/vite.config.js:/app/vite.config.js
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - frontend_dist:/app/dist
+    command: sh -c "npm ci && npm run build"
 
   nginx:
     image: nginx:1.27-alpine
@@ -42,9 +71,16 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./frontend/dist:/usr/share/nginx/html:ro
+      - frontend_dist:/usr/share/nginx/html:ro
+      - ./nginx-entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     depends_on:
-      - backend
+      - backend-1
+      - backend-2
+      - backend-3
+      - frontend
 
 volumes:
   redis_data:
+  frontend_dist:
+  storage_uploads:

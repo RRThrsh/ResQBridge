@@ -1,6 +1,6 @@
 -- Schema created: 2026-06-12
 -- Source: backend/convex/schema.ts
--- Last updated: 2026-07-09 (removed messages, added expenses, push subscriptions)
+-- Last updated: 2026-07-12 (added expenses, adminNotifications; updated all comments)
 
 -- ============================================================
 -- otps — One-time passwords for email-based authentication
@@ -17,7 +17,8 @@ CREATE TABLE otps (
 
 -- ============================================================
 -- users — Application users with role-based access control
--- Added availability column: 2026-07-07
+-- Role added: 2026-07-07 (superadmin, admin, rescuer, user)
+-- Availability added: 2026-07-07
 -- ============================================================
 CREATE TABLE users (
     uuid VARCHAR(36) PRIMARY KEY,
@@ -26,7 +27,7 @@ CREATE TABLE users (
     phoneNumber VARCHAR(20) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('superadmin', 'admin', 'domestic', 'rescuer', 'user') NOT NULL DEFAULT 'user',
+    role ENUM('superadmin', 'admin', 'rescuer', 'user') NOT NULL DEFAULT 'user',
     availability ENUM('available', 'busy') DEFAULT NULL,
     _creationTime BIGINT NOT NULL,
     INDEX by_email (email),
@@ -63,7 +64,7 @@ CREATE TABLE rescuers (
 -- ============================================================
 -- reports — Animal rescue incident reports
 -- Added: 2026-06-20
--- Aligned with schema: 2026-07-07
+-- Aligned with schema: 2026-07-07 (assignedUser, reporterIp, archivedAt, archivedByName, resolvedAt)
 -- ============================================================
 CREATE TABLE reports (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -85,6 +86,7 @@ CREATE TABLE reports (
     createdAt BIGINT NOT NULL,
     archivedAt BIGINT DEFAULT NULL,
     archivedByName VARCHAR(255) DEFAULT NULL,
+    resolvedAt BIGINT DEFAULT NULL,
     _creationTime BIGINT NOT NULL,
     INDEX by_assignedTo (assignedTo),
     INDEX by_status (status)
@@ -194,6 +196,24 @@ CREATE TABLE equipmentChecklists (
     items JSON NOT NULL,
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
+    INDEX by_reportId (reportId)
+);
+
+-- ============================================================
+-- expenses — Rescuer expense tracking with reimbursement workflow
+-- Added: 2026-07-12 (synchronized from schema.ts)
+-- ============================================================
+CREATE TABLE expenses (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(36) NOT NULL,
+    reportId VARCHAR(255) DEFAULT NULL,
+    category VARCHAR(100) NOT NULL,
+    amount DOUBLE NOT NULL,
+    description TEXT NOT NULL,
+    receiptImages JSON DEFAULT NULL,
+    status ENUM('pending','approved','reimbursed','rejected') NOT NULL DEFAULT 'pending',
+    createdAt BIGINT NOT NULL,
+    INDEX by_userId (userId),
     INDEX by_reportId (reportId)
 );
 

@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Modal } from '../../components/ui'
+import AnimateIn from '../../components/ui/AnimateIn'
 
 const GALLERY_COLORS = [
-  'from-emerald-600 to-green-800',
-  'from-amber-500 to-orange-700',
-  'from-teal-600 to-cyan-800',
-  'from-blue-600 to-indigo-800',
-  'from-rose-500 to-pink-800',
-  'from-violet-500 to-purple-800',
+  { from: 'from-emerald-500', to: 'to-green-700' },
+  { from: 'from-amber-400', to: 'to-orange-600' },
+  { from: 'from-teal-500', to: 'to-cyan-700' },
+  { from: 'from-blue-500', to: 'to-indigo-700' },
+  { from: 'from-rose-400', to: 'to-pink-600' },
+  { from: 'from-violet-500', to: 'to-purple-700' },
 ]
 
 export default function Gallery({ title, subtitle, images }) {
@@ -16,42 +17,47 @@ export default function Gallery({ title, subtitle, images }) {
   if (!images.length) return null
 
   return (
-    <section className="border-t border-gray-100 px-6 py-16 sm:px-8 lg:px-8">
+    <section className="border-t border-gray-100 px-6 py-20 sm:px-8 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <h2 className="text-2xl font-light text-gray-900 sm:text-3xl">{title}</h2>
-        <p className="mt-2 text-sm text-gray-400">{subtitle}</p>
+        <AnimateIn>
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{title}</h2>
+          <p className="mt-1 max-w-3xl text-base leading-relaxed text-gray-400">{subtitle}</p>
+        </AnimateIn>
 
-        <div className="mt-10 columns-1 gap-4 sm:columns-2 lg:columns-3">
+        <div className="mt-8 columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4">
           {images.map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setSelected(img)}
-              className={`group relative mb-4 block w-full overflow-hidden rounded-xl text-left ${
-                img.span ? 'aspect-square sm:aspect-auto sm:row-span-2' : 'aspect-[4/3]'
-              }`}
-            >
-              {img.image ? (
-                <img src={img.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              ) : (
-                <div className={`absolute inset-0 bg-gradient-to-br ${GALLERY_COLORS[i % GALLERY_COLORS.length]}`} />
-              )}
-              <div className="absolute inset-0 bg-black/20 transition group-hover:bg-black/40" />
-              <div className="relative flex h-full flex-col justify-end p-5">
-                <p className="text-sm font-semibold text-white">{img.title}</p>
-                <p className="mt-1 text-xs text-white/70">{img.label}</p>
-              </div>
-            </button>
+            <AnimateIn key={i} delay={i * 80}>
+              <button
+                onClick={() => setSelected(img)}
+                className="group relative mb-5 block w-full overflow-hidden rounded-2xl text-left"
+              >
+                {img.image ? (
+                  <img
+                    src={img.image}
+                    alt=""
+                    className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className={`aspect-[4/3] bg-gradient-to-br ${GALLERY_COLORS[i % GALLERY_COLORS.length].from} ${GALLERY_COLORS[i % GALLERY_COLORS.length].to}`} />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                <div className="absolute inset-x-0 bottom-0 p-5 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 translate-y-2">
+                  <p className="text-sm font-semibold text-white">{img.title}</p>
+                  <p className="mt-0.5 text-xs text-white/70">{img.label}</p>
+                </div>
+              </button>
+            </AnimateIn>
           ))}
         </div>
       </div>
 
       <Modal isOpen={!!selected} onClose={() => setSelected(null)} title={selected?.title || 'Photo'} size="4xl">
         {selected && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {selected.image ? (
               <img src={selected.image} alt="" className="aspect-video w-full rounded-xl object-cover" />
             ) : (
-              <div className={`aspect-video w-full rounded-xl bg-gradient-to-br ${GALLERY_COLORS[0]}`}>
+              <div className={`aspect-video w-full rounded-xl bg-gradient-to-br ${GALLERY_COLORS[0].from} ${GALLERY_COLORS[0].to}`}>
                 <div className="flex h-full items-end rounded-xl bg-black/20 p-6">
                   <p className="text-lg font-semibold text-white">{selected.title}</p>
                 </div>

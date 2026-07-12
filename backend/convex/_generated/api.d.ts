@@ -13,7 +13,6 @@ import type * as adminNotifications from "../adminNotifications.js";
 import type * as admins from "../admins.js";
 import type * as config from "../config.js";
 import type * as equipmentChecklists from "../equipmentChecklists.js";
-import type * as expenses from "../expenses.js";
 import type * as locations from "../locations.js";
 import type * as logs from "../logs.js";
 import type * as notes from "../notes.js";
@@ -36,7 +35,6 @@ declare const fullApi: ApiFromModules<{
   admins: typeof admins;
   config: typeof config;
   equipmentChecklists: typeof equipmentChecklists;
-  expenses: typeof expenses;
   locations: typeof locations;
   logs: typeof logs;
   notes: typeof notes;

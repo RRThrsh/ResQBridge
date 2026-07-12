@@ -10,6 +10,7 @@ const BADGES = {
   new: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   en_route: 'bg-blue-100 text-blue-800 border-blue-300',
   in_progress: 'bg-amber-100 text-amber-800 border-amber-300',
+  transport_to_pwrccc: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   resolved: 'bg-green-100 text-green-800 border-green-300',
   failed: 'bg-red-100 text-red-800 border-red-300',
 }
@@ -17,8 +18,9 @@ const BADGES = {
 const BADGE_LABELS = {
   new: 'New',
   en_route: 'En Route',
-  in_progress: 'Working',
-  resolved: 'Done',
+  in_progress: 'In Progress',
+  transport_to_pwrccc: 'Transport to PWRCCC',
+  resolved: 'Successful',
   failed: 'Failed',
 }
 
@@ -32,14 +34,38 @@ const CATEGORY_ICONS = {
   found: PawIcon, abandoned: HouseIcon, other: ClipboardIcon,
 }
 
+const SPEED_KPH = 30
+
+function haversineDistance(coords1, coords2) {
+  if (!coords1 || !coords2) return null
+  const R = 6371
+  const dLat = ((coords2.lat - coords1.lat) * Math.PI) / 180
+  const dLng = ((coords2.lng - coords1.lng) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((coords1.lat * Math.PI) / 180) *
+      Math.cos((coords2.lat * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function getDistanceInfo(userPos, lat, lng) {
+  if (!userPos || lat == null || lng == null) return null
+  const dist = haversineDistance(userPos, { lat, lng })
+  if (dist == null) return null
+  return { dist, min: Math.round((dist / SPEED_KPH) * 60) }
+}
+
 export default function RescuerAssignments() {
   const { user } = useAuth()
   const { userPos, requestLocation } = useLocationContext()
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [filter, setFilter] = useState('')
   const [actionLoading, setActionLoading] = useState(null)
   const [acceptedIds, setAcceptedIds] = useState(new Set())
+  const [arrivedIds, setArrivedIds] = useState(new Set())
 
   const [diaryText, setDiaryText] = useState({})
   const [failReason, setFailReason] = useState({})
@@ -142,25 +168,36 @@ export default function RescuerAssignments() {
           list = list.filter((r) => r.status === 'assigned' || r.status === 'pending')
         }
         setReports(list)
+        setError(null)
       })
-      .catch(() => {})
+      .catch((err) => {
+        setError(err.message || 'Failed to load assignments')
+        setReports([])
+      })
       .finally(() => setLoading(false))
   }, [user, filter])
 
   useEffect(() => { setPage(1); fetchReports() }, [user, filter])
 
   useEffect(() => {
-    const es = new EventSource('/api/v1/report/updates', { withCredentials: true })
-    es.onmessage = (e) => {
-      try {
-        const event = JSON.parse(e.data)
-        if (event.type === 'report:claimed' || event.type === 'report:status') {
-          fetchReports()
-        }
-      } catch {}
+    let es
+    function connect() {
+      es = new EventSource('/api/v1/report/updates', { withCredentials: true })
+      es.onmessage = (e) => {
+        try {
+          const event = JSON.parse(e.data)
+          if (event.type === 'report:claimed' || event.type === 'report:status') {
+            fetchReports()
+          }
+        } catch {}
+      }
+      es.onerror = () => {
+        es.close()
+        setTimeout(connect, 3000)
+      }
     }
-    es.onerror = () => {}
-    return () => es.close()
+    connect()
+    return () => { if (es) es.close() }
   }, [fetchReports])
 
   async function handleAccept(reportId) {
@@ -185,7 +222,7 @@ export default function RescuerAssignments() {
   }
 
   const OUTCOME_OPTIONS = ['Released to wild', 'Transferred to vet', 'Transferred to wildlife center', 'Deceased', 'Escaped', 'Other']
-  const ACTION_OPTIONS = ['First aid administered', 'Animal captured/contained', 'Animal transported', 'Released on-site', 'Sedated', 'Tagged/identified', 'Owner reunited', 'Area secured']
+  const ACTION_OPTIONS = ['First aid administered', 'Animal captured/contained', 'Animal transported', 'Released on-site', 'Sedated', 'Tagged/identified', 'Area secured']
   const CONDITION_OPTIONS = ['Critical', 'Poor', 'Fair', 'Good', 'Excellent']
 
   async function handleResolve(reportId) {
@@ -202,14 +239,14 @@ export default function RescuerAssignments() {
         `Condition on arrival: ${report.condition || 'Not specified'}`,
         `Actions taken: ${report.actions?.length ? report.actions.join(', ') : 'None listed'}`,
         `Outcome: ${report.outcome || 'Not specified'}`,
-        `Release/transfer location: ${report.releaseLocation || 'Not specified'}`,
+
         `Environmental conditions: ${report.environment || 'Not specified'}`,
         `Other responders: ${report.responders || 'None'}`,
       ]
       await rescuerApi.addNote(reportId, `Post-Rescue Report:\n${structured.join('\n')}`)
       await rescuerApi.updateReportStatus(reportId, 'resolved')
       fetchReports()
-    } catch { alert('Failed to resolve.') }
+    } catch { alert('Failed to mark as success.') }
     finally { setActionLoading(null) }
   }
 
@@ -260,6 +297,7 @@ export default function RescuerAssignments() {
     if (status === 'failed') return 'failed'
     if (status === 'in_progress') return 'in_progress'
     if (status === 'en_route') return 'en_route'
+    if (status === 'transport_to_pwrccc') return 'transport_to_pwrccc'
     return 'new'
   }
 
@@ -285,8 +323,8 @@ export default function RescuerAssignments() {
               { key: '', label: 'All' },
               { key: 'unaccepted', label: 'New' },
               { key: 'en_route', label: 'En Route' },
-              { key: 'in_progress', label: 'Working' },
-              { key: 'resolved', label: 'Done' },
+              { key: 'in_progress', label: 'In Progress' },
+              { key: 'resolved', label: 'Successful' },
               { key: 'failed', label: 'Failed' },
             ].map((s) => (
               <button
@@ -307,6 +345,14 @@ export default function RescuerAssignments() {
         {loading ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-16 text-center">
+            <h3 className="text-xl font-bold text-red-800">Error loading assignments</h3>
+            <p className="mt-2 text-base text-red-600">{error}</p>
+            <button onClick={fetchReports} className="mt-4 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-700">
+              Retry
+            </button>
           </div>
         ) : reports.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-white p-16 text-center">
@@ -353,7 +399,14 @@ export default function RescuerAssignments() {
                             <span className="font-semibold text-gray-900">{r.name}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-gray-600 max-w-[200px] truncate">{r.location}</td>
+                        <td className="px-5 py-4 text-gray-600 max-w-[200px] truncate">
+  {r.location}
+  {(() => {
+    const info = getDistanceInfo(userPos, r.latitude, r.longitude)
+    if (!info) return null
+    return <span className="block text-xs text-gray-400">{info.dist.toFixed(1)} km · {info.min} min</span>
+  })()}
+</td>
                         <td className="px-5 py-4">
                           <span className={`inline-block rounded-full border-2 px-3 py-0.5 text-xs font-bold ${badgeClass}`}>
                             {badgeLabel}
@@ -376,7 +429,7 @@ export default function RescuerAssignments() {
 
             <Modal
               isOpen={!!selectedReport}
-              onClose={() => { setSelectedReport(null); setShowFailInput(new Set()) }}
+              onClose={() => { setSelectedReport(null); setShowFailInput(new Set()); setArrivedIds(new Set()) }}
               title={selectedReport?.name || ''}
               size="7xl"
             >
@@ -388,9 +441,14 @@ export default function RescuerAssignments() {
                 const badgeClass = BADGES[badgeKey] || BADGES.new
                 const badgeLabel = BADGE_LABELS[badgeKey]
 
-                const showDiary = isAccepted || r.status === 'en_route' || r.status === 'in_progress'
+                const hasArrived = arrivedIds.has(r._id) || r.status === 'in_progress'
                 const showInitial = !isAccepted && r.status !== 'en_route' && r.status !== 'in_progress' && r.status !== 'resolved' && r.status !== 'failed'
+                const showEnRoute = !showInitial && !hasArrived && (isAccepted || r.status === 'en_route')
+                const showPostArrival = hasArrived
                 const reportImages = uploadedImages[r._id] || []
+
+                const distInfo = getDistanceInfo(userPos, r.latitude, r.longitude)
+                const isNearSite = distInfo && distInfo.dist <= 0.05
 
                 return (
                   <div className="max-h-[75vh] overflow-y-auto space-y-5">
@@ -398,13 +456,50 @@ export default function RescuerAssignments() {
                       <span className={`rounded-full border-2 px-3 py-1 text-sm font-bold ${badgeClass}`}>{badgeLabel}</span>
                       <span className={`rounded-full px-3 py-1 text-sm font-bold ${urgency.class}`}>{urgency.label}</span>
                       <span className="text-sm text-gray-500">{r.animalType}</span>
-                      <span className="text-sm text-gray-400">{r.location}</span>
+                      <span className="text-sm text-gray-400">
+                        {r.location}
+                        {(() => {
+                          const info = getDistanceInfo(userPos, r.latitude, r.longitude)
+                          if (!info) return null
+                          return <> · {info.dist.toFixed(1)} km · ~{info.min} min</>
+                        })()}
+                      </span>
                     </div>
 
                     {r.description && <p className="text-gray-700">{r.description}</p>}
 
+                    <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-4 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Reporter</p>
+                        <p className="mt-0.5 font-semibold text-gray-900">{r.name}</p>
+                        {r.phone && <p className="text-gray-600">{r.phone}</p>}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Category</p>
+                        <p className="mt-0.5 font-semibold text-gray-900 capitalize">{r.category?.replace('_', ' ')}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Animal</p>
+                        <p className="mt-0.5 font-semibold text-gray-900">{r.animalType}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Location</p>
+                        <p className="mt-0.5 font-semibold text-gray-900">{r.location}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Urgency</p>
+                        <p className={`mt-0.5 font-semibold ${urgency.class}`}>{urgency.label}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Submitted</p>
+                        <p className="mt-0.5 font-semibold text-gray-900">
+                          {new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+
                     {r.latitude && r.longitude && (
-                      <ReportMap latitude={r.latitude} longitude={r.longitude} label={r.name} userPos={userPos} requestLocation={requestLocation} />
+                      <ReportMap latitude={r.latitude} longitude={r.longitude} label={r.name} userPos={userPos} requestLocation={requestLocation} autoRoute={r.status === 'en_route'} showControls={r.status === 'en_route'} />
                     )}
 
                     {showInitial && (
@@ -434,31 +529,44 @@ export default function RescuerAssignments() {
 
                     {!showInitial && (
                       <>
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Equipment Checklist</p>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {(checklists[r._id] || EQUIPMENT_ITEMS.map((l) => ({ label: l, checked: false }))).map((item, i) => (
+                        {showEnRoute && (
+                          <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-5 space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-lg font-bold text-amber-900">En Route to Rescue Site</p>
+                                <p className="text-sm text-amber-700">Follow the route on the map above</p>
+                              </div>
                               <button
-                                key={i}
-                                onClick={() => toggleCheckItem(r._id, i)}
-                                className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all ${
-                                  item.checked
-                                    ? 'bg-green-50 border-green-300 text-green-800'
-                                    : 'bg-white border-gray-200 text-gray-600 hover:border-amber-400'
+                                onClick={async () => {
+                                  setActionLoading(r._id)
+                                  try {
+                                    await rescuerApi.updateReportStatus(r._id, 'in_progress')
+                                    const next = new Set(arrivedIds)
+                                    next.add(r._id)
+                                    setArrivedIds(next)
+                                    fetchReports()
+                                  } catch { alert('Failed to mark arrived.') }
+                                  finally { setActionLoading(null) }
+                                }}
+                                disabled={!isNearSite || actionLoading === r._id}
+                                className={`inline-flex items-center gap-1.5 rounded-xl px-6 py-3 text-base font-bold shadow transition-all ${
+                                  isNearSite
+                                    ? 'bg-green-600 text-white hover:bg-green-700'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 }`}
                               >
-                                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-xs ${
-                                  item.checked ? 'bg-green-600 border-green-600 text-white' : 'border-gray-300'
-                                }`}>
-                                  {item.checked ? '✓' : ''}
-                                </span>
-                                {item.label}
+                                {actionLoading === r._id ? '...' : <><CarIcon className="w-5 h-5" /> Arrived</>}
                               </button>
-                            ))}
+                            </div>
+                            {!isNearSite && distInfo && (
+                              <p className="text-xs text-amber-600 font-medium">
+                                You must be within 50m of the rescue site to mark as arrived
+                              </p>
+                            )}
                           </div>
-                        </div>
+                        )}
 
-                        {showDiary && (
+                        {showPostArrival && (
                           <div className="space-y-3">
                             <textarea
                               placeholder="Write your rescue diary here..."
@@ -519,16 +627,6 @@ export default function RescuerAssignments() {
                                 </div>
 
                                 <div>
-                                  <label className="text-sm font-semibold text-gray-700">Release / transfer location</label>
-                                  <input type="text"
-                                    value={postReport[r._id]?.releaseLocation || ''}
-                                    onChange={(e) => setPostReport({ ...postReport, [r._id]: { ...postReport[r._id], releaseLocation: e.target.value } })}
-                                    placeholder={r.latitude && r.longitude ? `${r.latitude}, ${r.longitude}` : 'Enter location'}
-                                    className="mt-1 w-full rounded-xl border-2 border-gray-300 px-4 py-2.5 text-sm focus:border-amber-600 focus:outline-none"
-                                  />
-                                </div>
-
-                                <div>
                                   <label className="text-sm font-semibold text-gray-700">Environmental conditions</label>
                                   <input type="text"
                                     value={postReport[r._id]?.environment || ''}
@@ -573,14 +671,14 @@ export default function RescuerAssignments() {
                             <div className="flex flex-wrap gap-2">
                               <DoubleConfirmation
                                 onConfirm={() => { handleResolve(r._id); setSelectedReport(null) }}
-                                title="Resolve Assignment"
-                                message="Are you sure you want to mark this assignment as resolved?"
-                                confirmText="Yes, Resolve"
+                                title="Mark as Success"
+                                message="Are you sure you want to mark this assignment as successful?"
+                                confirmText="Yes, Success"
                               >
                                 <button disabled={actionLoading === r._id}
                                   className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 shadow disabled:opacity-50"
                                 >
-                                  {actionLoading === r._id ? '...' : <><CheckCircleIcon className="w-4 h-4" /> Resolve</>}
+                                  {actionLoading === r._id ? '...' : <><CheckCircleIcon className="w-4 h-4" /> Success</>}
                                 </button>
                               </DoubleConfirmation>
                               <button
@@ -620,53 +718,7 @@ export default function RescuerAssignments() {
                           </div>
                         )}
 
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Voice Notes</p>
-                          <div className="space-y-2">
-                            {(voiceNotes[r._id] || []).length > 0 ? (
-                              voiceNotes[r._id].map((vn) => (
-                                <div key={vn._id} className="flex items-center gap-3 rounded-xl bg-gray-50 border-2 border-gray-200 px-4 py-3">
-                                  <svg className="h-5 w-5 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
-                                  </svg>
-                                  <span className="text-sm font-medium text-gray-700">{vn.userName}</span>
-                                  <span className="text-xs text-gray-400">{vn.duration ? `${Math.round(vn.duration)}s` : ''}</span>
-                                  <audio controls src={vn.audioUrl} className="h-8 flex-1" />
-                                </div>
-                              ))
-                            ) : (
-                              <p className="text-sm text-gray-500 italic">No voice notes</p>
-                            )}
-                            <div className="flex gap-2">
-                              {recordingId === r._id ? (
-                                <button onClick={stopRecording}
-                                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700"
-                                >
-                                  <span className="h-3 w-3 rounded-full bg-white animate-pulse" /> Stop Recording
-                                </button>
-                              ) : (
-                                <button onClick={() => startRecording(r._id)}
-                                  className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700"
-                                >
-                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-                                  </svg>
-                                  Record
-                                </button>
-                              )}
-                              {audioBlobs[r._id] && (
-                                <>
-                                  <audio controls src={audioBlobs[r._id]} className="h-10" />
-                                  <button onClick={() => submitVoiceNote(r._id)}
-                                    className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700"
-                                  >
-                                    Upload
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+
                       </>
                     )}
                   </div>

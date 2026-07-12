@@ -5,7 +5,8 @@ const { notifyAdmin } = require("../services/adminNotification");
 
 const getUsers = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
-  const sanitized = users.map((u) => ({
+  const filtered = users.filter((u) => u.role !== "superadmin");
+  const sanitized = filtered.map((u) => ({
     uuid: u.uuid,
     firstName: u.firstName,
     lastName: u.lastName,
@@ -73,27 +74,29 @@ const updateUserRole = async (req, res) => {
 
 const STATUS_MAP = {
   pending: "pending",
-  accepted: "assigned",
+  assigned: "assigned",
   en_route: "en_route",
-  rescue_success: "resolved",
-  rescue_failed: "failed",
+  in_progress: "in_progress",
+  transport_to_pwrccc: "transport_to_pwrccc",
+  resolved: "resolved",
+  failed: "failed",
 };
 
 const getAdminReports = async (req, res) => {
   const reports = await convexClient.query(anyApi.reports.listReports);
   const mapped = reports.map((r) => ({
     _id: r._id,
-    name: r.reporterEmail || r.name || "Anonymous",
+    name: r.reporterEmail || "Anonymous",
     phone: r.phone || "",
     category: r.category || "other",
-    animalType: r.animalType,
-    urgency: r.urgency,
+    animalType: r.animalName || r.animalType,
+    urgency: r.urgency || "medium",
     location: r.location,
     description: r.description,
-    images: r.images ? r.images.split(",") : [],
+    images: r.images ? (Array.isArray(r.images) ? r.images : [r.images]) : [],
     status: STATUS_MAP[r.status] || r.status,
-    assignedTo: r.assignedRescuerEmail || null,
-    assignedUser: null,
+    assignedTo: r.assignedRescuerEmail || r.assignedTo || null,
+    assignedUser: r.assignedUser || null,
     latitude: r.latitude ?? null,
     longitude: r.longitude ?? null,
     createdAt: r.createdAt,
@@ -102,7 +105,16 @@ const getAdminReports = async (req, res) => {
 };
 
 const assignReport = async (req, res) => {
-  res.status(503).json({ message: "Assigning reports requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ message: "userId is required." });
+  }
+  await convexClient.mutation(anyApi.reports.assignReport, {
+    reportId: id,
+    userId,
+  });
+  res.json({ message: "Report assigned." });
 };
 
 const getRescuerLocations = async (_req, res) => {
@@ -110,12 +122,55 @@ const getRescuerLocations = async (_req, res) => {
   res.json({ locations });
 };
 
+const getRescuerReports = async (req, res) => {
+  const { uuid } = req.params;
+  const reports = await convexClient.query(anyApi.reports.getReports, { assignedTo: uuid });
+  const mapped = reports.map((r) => ({
+    _id: r._id,
+    name: r.name,
+    phone: r.phone,
+    category: r.category,
+    animalType: r.animalType,
+    urgency: r.urgency,
+    location: r.location,
+    description: r.description,
+    latitude: r.latitude,
+    longitude: r.longitude,
+    status: r.status,
+    assignedTo: r.assignedTo,
+    assignedUser: r.assignedUser,
+    createdAt: r.createdAt,
+  }));
+  res.json({ reports: mapped });
+};
+
 const archiveReport = async (req, res) => {
-  res.status(503).json({ message: "Archiving requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  await convexClient.mutation(anyApi.reports.archiveReports, {
+    reportIds: [id],
+    archivedBy: req.user.uuid,
+  });
+  res.json({ message: "Report archived." });
+};
+
+const bulkArchiveReports = async (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: "ids array is required." });
+  }
+  await convexClient.mutation(anyApi.reports.archiveReports, {
+    reportIds: ids,
+    archivedBy: req.user.uuid,
+  });
+  res.json({ message: `${ids.length} report(s) archived.` });
 };
 
 const unarchiveReport = async (req, res) => {
-  res.status(503).json({ message: "Unarchiving requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  await convexClient.mutation(anyApi.reports.unarchiveReport, {
+    reportId: id,
+  });
+  res.json({ message: "Report unarchived." });
 };
 
 const getArchivedReports = async (_req, res) => {
@@ -123,17 +178,22 @@ const getArchivedReports = async (_req, res) => {
 };
 
 const deleteReport = async (req, res) => {
-  res.status(503).json({ message: "Deleting requires deploying updated Convex functions. Ask your developer to run: npx convex deploy" });
+  const { id } = req.params;
+  await convexClient.mutation(anyApi.reports.deleteReport, {
+    reportId: id,
+  });
+  res.json({ message: "Report deleted." });
 };
 
 const getStats = async (_req, res) => {
   const users = await convexClient.query(anyApi.users.getAllUsers);
-  const totalUsers = users.length;
-  const roleCounts = { superadmin: 0, admin: 0, rescuer: 0, user: 0 };
-  for (const u of users) {
+  const filtered = users.filter((u) => u.role !== "superadmin");
+  const totalUsers = filtered.length;
+  const roleCounts = { admin: 0, rescuer: 0, user: 0 };
+  for (const u of filtered) {
     if (roleCounts[u.role] !== undefined) roleCounts[u.role]++;
   }
   res.json({ stats: { totalUsers, roleCounts } });
 };
 
-module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, archiveReport, unarchiveReport, getArchivedReports, deleteReport };
+module.exports = { getUsers, getUser, updateUserRole, getStats, getAdminReports, assignReport, getRescuerLocations, getRescuerReports, archiveReport, bulkArchiveReports, unarchiveReport, getArchivedReports, deleteReport };

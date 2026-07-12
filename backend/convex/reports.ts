@@ -7,6 +7,7 @@ const reportStatus = v.union(
   v.literal("assigned"),
   v.literal("en_route"),
   v.literal("in_progress"),
+  v.literal("transport_to_pwrccc"),
   v.literal("resolved"),
   v.literal("failed"),
 );
@@ -149,7 +150,11 @@ export const updateReportStatus = mutation({
     status: reportStatus,
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.reportId, { status: args.status });
+    const patch = { status: args.status } as any;
+    if (args.status === "resolved" || args.status === "failed") {
+      patch.resolvedAt = Date.now();
+    }
+    await ctx.db.patch(args.reportId, patch);
   },
 });
 

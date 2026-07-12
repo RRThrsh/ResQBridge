@@ -5,18 +5,26 @@ import { SessionProvider } from '../../context/SessionContext'
 import SectionTracker from './SectionTracker'
 import HeroSection from './HeroSection'
 import Carousel from './Carousel'
-
+import HowItWorks from './HowItWorks'
+import SuccessStories from './SuccessStories'
+import Gallery from './Gallery'
+import StatsSection from './StatsSection'
+import PartnerLogos from './PartnerLogos'
 import Location from './Location'
 import NewsEvents from './NewsEvents'
-import StatsSection from './StatsSection'
 import FAQSection from './FAQSection'
 import ContactSection from './ContactSection'
-import SuccessStories from './SuccessStories'
-
-import HowItWorks from './HowItWorks'
-import Gallery from './Gallery'
-import PartnerLogos from './PartnerLogos'
+import LandingSkeleton from './LandingSkeleton'
 import Maintenance from './Maintenance'
+import EmergencyBanner from './EmergencyBanner'
+import TrustSection from './TrustSection'
+import ActiveIncidents from './ActiveIncidents'
+import VolunteerSection from './VolunteerSection'
+import NewsletterSection from './NewsletterSection'
+import BlogPreview from './BlogPreview'
+import EmergencyFloatingButton from './EmergencyFloatingButton'
+import AccessibilityBar from './AccessibilityBar'
+import InstallPrompt from './InstallPrompt'
 
 const API_BASE = '/api/v1'
 
@@ -24,9 +32,13 @@ const EMPTY_CONFIG = {
   hero: {}, stats: [], contact: {}, faq: [], carousel: [],
   howItWorks: { steps: [] },
   successStories: { stories: [] }, gallery: { images: [] },
-
   partners: { partners: [] }, location: { center: { lat: 9.799447, lng: 118.693766 } },
   newsEvents: { news: [], events: [] },
+  emergencyBanner: { message: '', type: 'info', active: false, linkText: '', ctaText: '' },
+  activeIncidents: {},
+  trustSection: {},
+  volunteerSection: {},
+  blogPreview: {},
 }
 
 function fillDefaults(defaults, api) {
@@ -46,6 +58,7 @@ function fillDefaults(defaults, api) {
 
 export default function Landing() {
   const [landingConfig, setLandingConfig] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [maintenanceEndTime, setMaintenanceEndTime] = useState('')
 
@@ -58,6 +71,7 @@ export default function Landing() {
         setMaintenanceEndTime(d.maintenanceEndTime || '')
       })
       .catch(() => {})
+      .finally(() => setLoading(false))
 
   useEffect(() => {
     fetchConfig()
@@ -65,13 +79,23 @@ export default function Landing() {
     return () => clearInterval(id)
   }, [])
 
+  if (loading) return <LandingSkeleton />
+
   if (maintenanceMode) return <Maintenance endTime={maintenanceEndTime} />
 
   const cfg = landingConfig || EMPTY_CONFIG
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col" style={{ fontSize: 'var(--a11y-font-size, 100%)' }}>
       <Navbar />
+      <EmergencyBanner
+        message={cfg.emergencyBanner.message}
+        type={cfg.emergencyBanner.type}
+        active={cfg.emergencyBanner.active}
+        linkText={cfg.emergencyBanner.linkText}
+        ctaText={cfg.emergencyBanner.ctaText}
+      />
+      <AccessibilityBar />
       <main className="flex-1">
         <SessionProvider>
           <SectionTracker name="hero">
@@ -94,8 +118,15 @@ export default function Landing() {
             <StatsSection stats={cfg.stats} />
           </SectionTracker>
 
+          <SectionTracker name="trust-section">
+            <TrustSection title={cfg.trustSection.title} subtitle={cfg.trustSection.subtitle} mediaMentions={cfg.trustSection.mediaMentions} awards={cfg.trustSection.awards} />
+          </SectionTracker>
+
           <SectionTracker name="partners">
             <PartnerLogos title={cfg.partners.title} subtitle={cfg.partners.subtitle} partners={cfg.partners.partners} />
+          </SectionTracker>
+          <SectionTracker name="active-incidents">
+            <ActiveIncidents title={cfg.activeIncidents.title} subtitle={cfg.activeIncidents.subtitle} />
           </SectionTracker>
           <SectionTracker name="location">
             <Location title={cfg.location.title} subtitle={cfg.location.subtitle} center={cfg.location.center} />
@@ -103,8 +134,17 @@ export default function Landing() {
           <SectionTracker name="news-events">
             <NewsEvents title={cfg.newsEvents.title} subtitle={cfg.newsEvents.subtitle} news={cfg.newsEvents.news} events={cfg.newsEvents.events} />
           </SectionTracker>
+          <SectionTracker name="blog-preview">
+            <BlogPreview title={cfg.blogPreview.title} subtitle={cfg.blogPreview.subtitle} />
+          </SectionTracker>
           <SectionTracker name="faq">
             <FAQSection faq={cfg.faq} />
+          </SectionTracker>
+          <SectionTracker name="volunteer">
+            <VolunteerSection title={cfg.volunteerSection.title} subtitle={cfg.volunteerSection.subtitle} />
+          </SectionTracker>
+          <SectionTracker name="newsletter">
+            <NewsletterSection />
           </SectionTracker>
           <SectionTracker name="contact">
             <ContactSection contact={cfg.contact} />
@@ -112,6 +152,8 @@ export default function Landing() {
         </SessionProvider>
       </main>
       <Footer />
+      <EmergencyFloatingButton />
+      <InstallPrompt />
     </div>
   )
 }

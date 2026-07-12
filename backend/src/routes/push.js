@@ -1,12 +1,17 @@
 const express = require("express");
+const { body } = require("express-validator");
 const router = express.Router();
 const { authenticate } = require("../middleware/auth");
+const { validate } = require("../middleware/validate");
 const { addSubscription, removeSubscription } = require("../services/pushNotification");
 
-router.post("/subscribe", authenticate, (req, res) => {
-  const { subscription } = req.body;
-  if (!subscription) return res.status(400).json({ message: "Subscription is required." });
-  addSubscription(req.user.uuid, subscription);
+const subscribeRules = [
+  body("subscription").notEmpty().withMessage("Subscription is required."),
+  body("subscription.endpoint").isURL({ protocols: ["https"] }).withMessage("Valid HTTPS endpoint is required."),
+];
+
+router.post("/subscribe", authenticate, subscribeRules, validate, (req, res) => {
+  addSubscription(req.user.uuid, req.body.subscription);
   res.json({ message: "Subscribed." });
 });
 

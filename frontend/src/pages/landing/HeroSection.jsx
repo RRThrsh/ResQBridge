@@ -1,46 +1,124 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../components/ui'
 
-export default function HeroSection({ badge, title, description }) {
+export default function HeroSection({
+  badge = 'Community Powered',
+  title = 'Helping Lost Wildlife Find Their Way Home',
+  description = 'Report lost or injured wildlife, connect with your community, and help protect and reunite animals with their natural habitats.',
+}) {
+  const scrollToHowItWorks = () => {
+    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const words = title.split(' ')
+  const normalTitle = words.length > 2 ? words.slice(0, -2).join(' ') : ''
+  const gradientTitle = words.length > 2 ? words.slice(-2).join(' ') : title
+
+  const dots = useMemo(() =>
+    Array.from({ length: 15 }, (_, i) => ({
+      left: `${(i * 23 + 7) % 100}%`,
+      top: `${(i * 17 + 11) % 100}%`,
+      delay: `${(i * 0.4) % 3}s`,
+      size: (i % 3) + 1,
+    })), [])
+
   return (
-    <section className="relative flex min-h-screen items-center overflow-hidden px-6 py-12 sm:px-8 lg:px-8">
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-green-100/40 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-emerald-100/30 blur-3xl" />
-        <div className="absolute left-1/2 top-1/4 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-50/50 blur-2xl" />
+    <section className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-white via-emerald-50/40 to-white px-6 py-20">
+      {/* Animated gradient orbs */}
+      <div className="pointer-events-none absolute inset-0 -z-20">
+        <div className="absolute -left-40 -top-40 h-[500px] w-[500px] animate-pulse-soft rounded-full bg-emerald-300/10 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 h-[500px] w-[500px] animate-float rounded-full bg-teal-300/10 blur-3xl" />
+        <div className="absolute left-1/3 top-1/4 h-72 w-72 animate-float-slow rounded-full bg-amber-200/10 blur-3xl" />
       </div>
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-2 lg:gap-12">
-        <div className="text-center lg:text-left">
-          <span className="inline-block max-w-full rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-medium tracking-wide text-emerald-700 uppercase sm:px-4 sm:py-1.5 sm:text-xs">
+
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e5e7eb20_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb20_1px,transparent_1px)] bg-[size:48px_48px]" />
+
+      {/* Floating decorative dots */}
+      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+        {dots.map((d, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-emerald-400/30"
+            style={{
+              left: d.left,
+              top: d.top,
+              width: `${d.size * 4}px`,
+              height: `${d.size * 4}px`,
+              animation: `float ${3 + (i % 4)}s ease-in-out ${d.delay} infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+        {/* Badge */}
+        <div className="animate-fadeIn">
+          <span className="inline-block rounded-full border border-emerald-200/60 bg-white/70 px-5 py-2 text-sm font-semibold tracking-wide text-emerald-700 shadow-sm backdrop-blur-md">
             {badge}
           </span>
-          <h1 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-gray-900 sm:mt-6 sm:text-5xl lg:text-6xl">
-            {title}
-          </h1>
-          <p className="mt-4 text-sm leading-relaxed text-gray-500 sm:mt-6 sm:text-base sm:leading-relaxed lg:text-lg">
-            {description}
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:justify-center lg:justify-start">
-            <Link to="/report"><Button size="lg" className="w-full sm:w-auto">Report an Animal</Button></Link>
-
-          </div>
         </div>
-        <div className="relative hidden h-72 lg:block lg:h-[28rem]">
-          <div className="absolute right-0 h-full w-full overflow-hidden rounded-3xl bg-gradient-to-br from-green-50 via-emerald-50 to-amber-50">
-            <div className="absolute bottom-0 left-0 right-0 h-1/2 rounded-t-[100%] bg-gradient-to-t from-green-700/20 to-transparent" />
-            <div className="absolute bottom-12 left-0 right-0 mx-auto h-8 w-3/4 rounded-t-full bg-gradient-to-t from-green-800/30 to-transparent" />
-            <div className="absolute bottom-8 left-8 h-20 w-20 rounded-full bg-yellow-200/60 blur-sm" />
-            <div className="absolute bottom-4 left-1/3 h-6 w-6 rounded-full bg-green-600/20" />
-            <div className="absolute bottom-6 right-1/4 h-4 w-4 rounded-full bg-green-600/20" />
-            <div className="absolute bottom-8 left-1/2 h-3 w-3 rounded-full bg-green-600/15" />
-            <div className="absolute right-12 top-12 h-24 w-24 rounded-full bg-white/60 shadow-lg" />
-            <div className="absolute right-16 top-16 h-8 w-8 rounded-full bg-yellow-100" />
-            <svg className="absolute left-8 top-8 h-12 w-12 text-green-600/20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+
+        {/* Heading */}
+        <h1 className="mt-8 max-w-4xl text-5xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
+          {normalTitle && <>{normalTitle} </>}
+          <span className="bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 bg-clip-text text-transparent">
+            {gradientTitle}
+          </span>
+        </h1>
+
+        {/* Description */}
+        <p className="mt-2 max-w-2xl text-lg leading-8 text-gray-400">
+          {description}
+        </p>
+
+        {/* Buttons */}
+        <div className="mt-18 flex flex-col gap-4 sm:flex-row">
+          <Link to="/report">
+            <Button
+              size="lg"
+              className="w-full rounded-sm px-4 py-3 text-base shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-emerald-300/40 sm:w-auto"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              Report an Animal
+            </Button>
+          </Link>
+
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={scrollToHowItWorks}
+            className="w-full rounded-sm px-4 py-3 text-base transition-all duration-300 hover:-translate-y-1 hover:bg-emerald-50 sm:w-auto"
+          >
+            Learn More
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
+          </Button>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 flex flex-col items-center text-gray-400">
+          <span className="mb-2 text-xs uppercase tracking-[0.3em]">Scroll</span>
+          <div className="flex h-10 w-6 justify-center rounded-full border-2 border-gray-300">
+            <div className="mt-2 h-2 w-2 animate-bounce rounded-full bg-emerald-500" />
           </div>
         </div>
       </div>
     </section>
+  )
+}
+
+function FeaturePill({ icon, label }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs shadow-sm">
+        {icon}
+      </span>
+      <span>{label}</span>
+    </div>
   )
 }

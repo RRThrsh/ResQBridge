@@ -1,10 +1,26 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Modal from '../../components/ui/Modal.jsx'
+import { HoneypotField } from '../../components/ui'
 import { auth } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 
 const API_BASE = '/api/v1'
+
+const VALID_EMAIL_DOMAINS = [
+  'gmail.com',
+  'yahoo.com',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'icloud.com',
+  'protonmail.com',
+  'aol.com',
+  'mail.com',
+  'ymail.com',
+  'zoho.com',
+  'yandex.com',
+]
 
 export default function Register() {
   const [showTerms, setShowTerms] = useState(false)
@@ -41,22 +57,24 @@ export default function Register() {
     switch (name) {
       case 'firstName':
         if (!value.trim()) return 'First name is required.'
-        if (value.trim().length > 50) return 'First name must be at most 50 characters.'
+        if (value.trim().length > 15) return 'First name must be at most 15 characters.'
         if (!/^[a-zA-Z\s'-]+$/.test(value.trim())) return 'First name contains invalid characters.'
         return ''
       case 'lastName':
         if (!value.trim()) return 'Last name is required.'
-        if (value.trim().length > 50) return 'Last name must be at most 50 characters.'
+        if (value.trim().length > 15) return 'Last name must be at most 15 characters.'
         if (!/^[a-zA-Z\s'-]+$/.test(value.trim())) return 'Last name contains invalid characters.'
         return ''
       case 'phone':
-        const digits = value.replace(/\D/g, '')
-        if (!digits) return 'Phone number is required.'
-        if (digits.length < 7 || digits.length > 15) return 'Phone must be 7–15 digits.'
+        if (!value) return 'Phone number is required.'
+        if (value[0] !== '9') return 'Must start with 9.'
+        if (value.length < 10) return 'Enter complete 10-digit number.'
         return ''
       case 'email':
         if (!value.trim()) return 'Email is required.'
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return 'Invalid email format.'
+        const domain = value.trim().split('@')[1]?.toLowerCase()
+        if (domain && !VALID_EMAIL_DOMAINS.includes(domain)) return 'Email domain is not supported.'
         return ''
       case 'password':
         if (!value) return 'Password is required.'
@@ -171,7 +189,7 @@ export default function Register() {
       const data = await auth.register({
         firstName: sanitizeText(firstName),
         lastName: sanitizeText(lastName),
-        phoneNumber: phone.replace(/\D/g, ''),
+        phoneNumber: '+63' + phone,
         email: sanitizeText(email),
         password,
         confirmPassword,
@@ -211,6 +229,7 @@ export default function Register() {
           </div>
 
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+            <HoneypotField />
             {error && (
               <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
             )}
@@ -232,6 +251,7 @@ export default function Register() {
                       : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
                   }`}
                   placeholder="Juan"
+                  maxLength={15}
                   required
                 />
                 {touched.firstName && fieldErrors.firstName && (
@@ -251,6 +271,7 @@ export default function Register() {
                       : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
                   }`}
                   placeholder="Dela Cruz"
+                  maxLength={15}
                   required
                 />
                 {touched.lastName && fieldErrors.lastName && (
@@ -261,19 +282,34 @@ export default function Register() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Phone</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={handleInputChange(setPhone, 'phone')}
-                onBlur={handleBlur('phone')}
-                className={`mt-1.5 w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
-                  touched.phone && fieldErrors.phone
-                    ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
-                }`}
-                placeholder="+63 9XX XXX XXXX"
-                required
-              />
+              <div className="mt-1.5 flex">
+                <span className="inline-flex items-center rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 px-3 text-sm text-gray-600">+63</span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={phone}
+                  onBeforeInput={(e) => { if (e.data && /\D/.test(e.data)) e.preventDefault() }}
+                  onPaste={(e) => { const pasted = (e.clipboardData || window.clipboardData).getData('text'); if (/\D/.test(pasted)) e.preventDefault() }}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  onBlur={() => {
+                    setTouched((prev) => ({ ...prev, phone: true }))
+                    setFieldErrors((prev) => ({ ...prev, phone: validateField('phone', phone) }))
+                  }}
+                  className={`w-full rounded-r-lg border px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                    touched.phone && fieldErrors.phone
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                      : 'border-gray-300 focus:border-green-500 focus:ring-green-500/20'
+                  }`}
+                  placeholder="9XX XXX XXXX"
+                  required
+                />
+              </div>
+              {phone && phone[0] !== '9' && (
+                <p className="mt-1 text-xs text-amber-600">Must start with 9.</p>
+              )}
+              {phone && phone[0] === '9' && phone.length < 10 && (
+                <p className="mt-1 text-xs text-amber-600">Enter complete 10-digit number.</p>
+              )}
               {touched.phone && fieldErrors.phone && (
                 <p className="mt-1 text-xs text-red-500">{fieldErrors.phone}</p>
               )}
@@ -502,8 +538,12 @@ export default function Register() {
                 <div className="col-span-1">
                   <label className="block text-xs font-medium text-gray-500">Zipcode</label>
                   <input
+                    type="tel"
+                    inputMode="numeric"
                     value={zipcode}
-                    onChange={(e) => setZipcode(e.target.value)}
+                    onBeforeInput={(e) => { if (e.data && /\D/.test(e.data)) e.preventDefault() }}
+                    onPaste={(e) => { const pasted = (e.clipboardData || window.clipboardData).getData('text'); if (/\D/.test(pasted)) e.preventDefault() }}
+                    onChange={(e) => setZipcode(e.target.value.replace(/\D/g, '').slice(0, 4))}
                     onBlur={() => setZipcode((v) => v.replace(/\D/g, ''))}
                     className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     placeholder="Zipcode"

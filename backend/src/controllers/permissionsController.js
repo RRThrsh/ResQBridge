@@ -9,6 +9,7 @@ const DEFAULT_ADMIN_PERMISSIONS = {
   monitoring: { read: true, write: false, execute: false },
   audit: { read: true, write: false, execute: false },
   landingPage: { read: true, write: false, execute: false },
+  wildlifeGuide: { read: true, write: false, execute: false },
   systemConfig: { read: false, write: false, execute: false },
   dashboard: { read: true, write: false, execute: false },
   archive: { read: true, write: false, execute: false },

@@ -95,6 +95,7 @@ export const admin = {
       body: JSON.stringify({ userId }),
     }),
   getRescuerLocations: () => request('/admin/rescuer-locations'),
+  getRescuerReports: (uuid) => request(`/admin/rescuers/${uuid}/reports`),
   getAdminPermissions: () => request('/admin/permissions'),
   getHealth: () => request('/admin/health'),
   bulkArchiveReports: (ids) =>
@@ -190,14 +191,6 @@ export const rescuer = {
       method: 'POST',
       body: JSON.stringify({ reportId, audioUrl, duration }),
     }),
-
-  addExpense: (data) =>
-    request('/rescuer/expenses', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-  getExpenses: () => request('/rescuer/expenses'),
-  getExpenseStats: () => request('/rescuer/expenses/stats'),
 }
 
 export const logs = {
@@ -208,4 +201,10 @@ export const logs = {
     }),
   trackLogout: () =>
     request('/log/logout', { method: 'POST' }),
+}
+
+export const sso = {
+  get googleUrl() {
+    return `${API_BASE}/auth/google`
+  },
 }

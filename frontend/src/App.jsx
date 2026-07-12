@@ -22,7 +22,6 @@ import RescuerActivity from './pages/rescuer/Activity.jsx'
 import RescuerNotifications from './pages/rescuer/Notifications.jsx'
 import RescuerShifts from './pages/rescuer/Shifts.jsx'
 import RescuerTeamMap from './pages/rescuer/TeamMap.jsx'
-import RescuerExpenses from './pages/rescuer/Expenses.jsx'
 import WildlifeGuide from './pages/WildlifeGuide.jsx'
 import Report from './pages/landing/Report.jsx'
 
@@ -64,7 +63,6 @@ function App() {
               <Route path="profile" element={<RescuerProfile />} />
               <Route path="shifts" element={<RescuerShifts />} />
               <Route path="team-map" element={<RescuerTeamMap />} />
-              <Route path="expenses" element={<RescuerExpenses />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

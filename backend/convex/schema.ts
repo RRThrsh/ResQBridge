@@ -20,7 +20,6 @@ export default defineSchema({
     role: v.union(
       v.literal("superadmin"),
       v.literal("admin"),
-      v.literal("domestic"),
       v.literal("rescuer"),
       v.literal("user"),
     ),
@@ -73,6 +72,7 @@ export default defineSchema({
     createdAt: v.number(),
     archivedAt: v.optional(v.number()),
     archivedByName: v.optional(v.string()),
+    resolvedAt: v.optional(v.number()),
   })
     .index("by_assignedTo", ["assignedTo"])
     .index("by_status", ["status"]),
@@ -161,7 +161,7 @@ export default defineSchema({
     category: v.string(),
     amount: v.number(),
     description: v.string(),
-    receiptUrl: v.optional(v.string()),
+    receiptImages: v.optional(v.array(v.string())),
     status: v.union(
       v.literal("pending"),
       v.literal("approved"),
