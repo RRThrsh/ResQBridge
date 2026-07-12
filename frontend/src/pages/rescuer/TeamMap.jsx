@@ -12,6 +12,19 @@ IntersectionObserver.prototype.observe = function (el) {
 
 const containerStyle = { width: '100%', height: '100%' }
 
+const DEFAULT_CENTER = { lat: 9.799447, lng: 118.693766 }
+
+function icon(g, scale, fillColor) {
+  return {
+    path: g.maps.SymbolPath.CIRCLE,
+    scale,
+    fillColor,
+    fillOpacity: 1,
+    strokeColor: '#fff',
+    strokeWeight: 4,
+  }
+}
+
 export default function TeamMap() {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   const { user } = useAuth()

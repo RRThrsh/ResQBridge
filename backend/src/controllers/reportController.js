@@ -10,10 +10,10 @@ const { STORAGE_DIR } = require("./uploadController");
 
 const URGENCY_MAP = {
   Healthy: "low",
-  Injured: "emergency",
+  Injured: "high",
   Sick: "high",
   Trapped: "high",
-  Unknown: "medium",
+  Unknown: "high",
 };
 
 const submitReport = async (req, res) => {
@@ -70,17 +70,19 @@ const submitReport = async (req, res) => {
 
   const clientIp = req.ip || req.connection?.remoteAddress || "unknown";
 
-  const reporterEmail = name
-    ? `${name.replace(/\s+/g, '').toLowerCase()}@report.resqbridge`
-    : `reporter-${Date.now()}@report.resqbridge`;
-
-  await convexClient.mutation(anyApi.reports.createReport, {
-    animalName: animalType,
+  await convexClient.mutation(anyApi.reports.insertReport, {
+    name: name || "Anonymous",
+    phone,
+    category: category || "other",
+    animalType,
+    urgency,
     location,
     description,
+    images: images.length > 0 ? images.join(",") : undefined,
     latitude: lat,
     longitude: lng,
-    reporterEmail,
+    status: "pending",
+    reporterIp: clientIp,
   });
 
   await notifyAdmin({

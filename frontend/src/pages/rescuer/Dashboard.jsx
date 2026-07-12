@@ -6,9 +6,7 @@ import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIco
 
 const URGENCY_LABEL = {
   low: { label: 'Low', class: 'bg-gray-100 text-gray-700' },
-  medium: { label: 'Medium', class: 'bg-amber-100 text-amber-800' },
-  high: { label: 'High', class: 'bg-orange-100 text-orange-800' },
-  emergency: { label: 'Emergency', class: 'bg-red-100 text-red-800 font-bold' },
+  high: { label: 'High', class: 'bg-red-100 text-red-800 font-bold' },
 }
 
 const STATUS_BADGE = {

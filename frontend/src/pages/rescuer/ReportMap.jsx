@@ -206,14 +206,6 @@ export default function ReportMap({ latitude, longitude, label, userPos, autoRou
       >
         <Marker
           position={{ lat: latitude, lng: longitude }}
-          icon={{
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#ef4444',
-            fillOpacity: 1,
-            strokeColor: '#fff',
-            strokeWeight: 3,
-          }}
           title={label || 'Report Location'}
         />
 

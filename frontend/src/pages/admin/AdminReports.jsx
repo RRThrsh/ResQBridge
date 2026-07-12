@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react'
 import { DoubleConfirmation, SkeletonCard } from '../../components/ui'
 import { admin as adminApi } from '../../services/api'
 import { MedicalIcon, StrandedIcon, SearchIcon, PawIcon, HouseIcon, ClipboardIcon } from '../../components/SvgIcons'
+import ReportMap from '../rescuer/ReportMap'
 
 const URGENCY_LABEL = {
   low: { label: 'Low', class: 'bg-gray-100 text-gray-700' },
-  medium: { label: 'Medium', class: 'bg-amber-100 text-amber-800' },
-  high: { label: 'High', class: 'bg-orange-100 text-orange-800' },
-  emergency: { label: 'Emergency', class: 'bg-red-100 text-red-800 font-bold' },
+  high: { label: 'High', class: 'bg-red-100 text-red-800 font-bold' },
 }
 
 const STATUS_BADGE = {
@@ -34,6 +33,8 @@ const CATEGORY_ICONS = {
 const CATEGORY_LABELS = {
   injury: 'Injured / In Distress', stranded: 'Stranded', missing: 'Missing Pet / Animal',
   found: 'Found Animal', abandoned: 'Abandoned', other: 'Other',
+  wildlife_sighting: 'Wildlife Sighting', illegal_possession: 'Illegal Wildlife Possession',
+  human_wildlife_conflict: 'Human–Wildlife Conflict', emergency: 'Emergency',
 }
 
 export default function AdminReports({ adminPermissions }) {
@@ -49,6 +50,7 @@ export default function AdminReports({ adminPermissions }) {
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkArchiving, setBulkArchiving] = useState(false)
+  const [assignTarget, setAssignTarget] = useState({})
   const pageSize = 10
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export default function AdminReports({ adminPermissions }) {
     .sort((a, b) => {
       if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt)
       if (sortBy === 'urgency') {
-        const order = { emergency: 0, high: 1, medium: 2, low: 3 }
+        const order = { high: 0, low: 1 }
         return (order[a.urgency] ?? 3) - (order[b.urgency] ?? 3)
       }
       return new Date(b.createdAt) - new Date(a.createdAt)
@@ -354,6 +356,15 @@ export default function AdminReports({ adminPermissions }) {
                               <img src={img} alt="" className="h-16 w-24 object-cover transition group-hover:scale-105" />
                             </a>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {r.latitude && r.longitude && (
+                      <div className="mt-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1.5">Location Map</p>
+                        <div className="overflow-hidden rounded-lg border border-gray-200">
+                          <ReportMap latitude={r.latitude} longitude={r.longitude} label={r.animalType} />
                         </div>
                       </div>
                     )}

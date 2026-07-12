@@ -2,16 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { admin as adminApi } from '../../services/api'
 
 const urgencyBadge = {
-  emergency: 'bg-red-50 text-red-700 ring-red-600/20',
-  high: 'bg-orange-50 text-orange-700 ring-orange-600/20',
-  medium: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+  high: 'bg-red-50 text-red-700 ring-red-600/20',
   low: 'bg-green-50 text-green-700 ring-green-600/20',
 }
 
 const urgencyLabels = {
-  emergency: 'Emergency',
   high: 'High',
-  medium: 'Medium',
   low: 'Low',
 }
 
