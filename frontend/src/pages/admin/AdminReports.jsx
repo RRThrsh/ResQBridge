@@ -166,11 +166,10 @@ export default function AdminReports({ adminPermissions }) {
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
-          <option value="urgency">Urgency</option>
         </select>
       </div>
 
-      {(adminPermissions?.reports?.execute) && selectedIds.size > 0 && (
+      {(!adminPermissions || adminPermissions?.reports?.execute) && selectedIds.size > 0 && (
         <div className="mb-3 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
           <span className="text-sm font-medium text-green-800">{selectedIds.size} selected</span>
           <DoubleConfirmation
@@ -225,7 +224,7 @@ export default function AdminReports({ adminPermissions }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {(adminPermissions?.reports?.execute) && (
+          {(!adminPermissions || adminPermissions?.reports?.execute) && (
             <div className="flex items-center gap-2 px-1 py-1">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -263,7 +262,7 @@ export default function AdminReports({ adminPermissions }) {
                 }`}
               >
                 <div className="flex items-center">
-                  {(adminPermissions?.reports?.execute) && (
+                  {(!adminPermissions || adminPermissions?.reports?.execute) && (
                     <label className="flex items-center justify-center pl-3">
                       <input
                         type="checkbox"
@@ -370,15 +369,15 @@ export default function AdminReports({ adminPermissions }) {
                           <span className="text-sm text-gray-400">Unassigned</span>
                         )}
                       </div>
-                      {r.status !== 'resolved' && r.status !== 'failed' && !r.assignedTo && (
-                        (adminPermissions?.reports?.write || adminPermissions?.reports?.execute) ? (
+                      {r.status !== 'resolved' && r.status !== 'failed' && (
+                        (!adminPermissions || adminPermissions?.reports?.write || adminPermissions?.reports?.execute) ? (
                           <select
                             disabled={assigningId === r._id}
-                            defaultValue=""
+                            value={r.assignedTo || ""}
                             onChange={(e) => handleAssign(r._id, e.target.value)}
                             className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 focus:border-green-600 focus:outline-none disabled:opacity-50"
                           >
-                            <option value="" disabled>Assign rescuer...</option>
+                            <option value="">{r.assignedTo ? 'Change rescuer...' : 'Assign rescuer...'}</option>
                             {users.map((u) => {
                               const s = getRescuerStatus(u.uuid)
                               return (
@@ -390,7 +389,7 @@ export default function AdminReports({ adminPermissions }) {
                           </select>
                         ) : null
                       )}
-                      {(adminPermissions?.reports?.execute) && (
+                      {(!adminPermissions || adminPermissions?.reports?.execute) && (
                         <DoubleConfirmation
                           onConfirm={async () => {
                             try {

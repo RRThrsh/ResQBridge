@@ -82,7 +82,7 @@ export default function Dashboard() {
         adminApi.getUsers(),
         adminApi.getStats(),
         adminApi.getDashboardData(),
-        user?.role !== 'superadmin' ? adminApi.getAdminPermissions() : Promise.resolve({ permissions: {} }),
+        user?.role !== 'superadmin' ? adminApi.getAdminPermissions() : Promise.resolve(null),
       ])
       setUsers(usersRes.users)
       setStats(statsRes.stats)
