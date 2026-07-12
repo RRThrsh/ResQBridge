@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button } from '../../components/ui'
+import { Button, HoneypotField } from '../../components/ui'
 import AnimateIn from '../../components/ui/AnimateIn'
 
 const API_BASE = '/api/v1'
@@ -107,6 +107,7 @@ export default function ContactSection({ contact }) {
             )}
 
             <form className="space-y-5" onSubmit={handleSubmit}>
+              <HoneypotField />
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700">Name</label>

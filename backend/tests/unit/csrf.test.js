@@ -3,7 +3,7 @@ describe("CSRF check middleware", () => {
 
   beforeAll(async () => {
     process.env.FRONTEND_URL = "http://localhost:5173";
-    csrfCheck = (await import("../../src/routes/report.js")).csrfCheck;
+    csrfCheck = (await import("../../src/middleware/csrf.js")).csrfCheck;
   });
 
   function mockReq(origin, referer) {

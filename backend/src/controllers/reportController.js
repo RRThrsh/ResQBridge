@@ -6,9 +6,7 @@ const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
 const { notifyAdmin } = require("../services/adminNotification");
-
-const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const { STORAGE_DIR } = require("./uploadController");
 
 const URGENCY_MAP = {
   Healthy: "low",
@@ -21,11 +19,23 @@ const URGENCY_MAP = {
 const submitReport = async (req, res) => {
   const { name, phone, category, animalType, wildlifeCondition, location, description, latitude, longitude } = req.body;
 
-  const urgency = URGENCY_MAP[wildlifeCondition] || "medium";
-
-  if (!phone || !animalType || !urgency || !location || !description) {
-    return res.status(400).json({ message: "Phone, animal type, urgency, location, and description are required." });
+  if (name && name.length > 100) {
+    return res.status(400).json({ message: "Name must be at most 100 characters." });
   }
+  if (!phone || !/^\+?\d{7,15}$/.test(phone)) {
+    return res.status(400).json({ message: "Valid phone number is required (7-15 digits)." });
+  }
+  if (!animalType || animalType.length > 200) {
+    return res.status(400).json({ message: "Animal type is required and must be at most 200 characters." });
+  }
+  if (!location || location.length > 500) {
+    return res.status(400).json({ message: "Location is required and must be at most 500 characters." });
+  }
+  if (!description || description.length > 2000) {
+    return res.status(400).json({ message: "Description is required and must be at most 2000 characters." });
+  }
+
+  const urgency = URGENCY_MAP[wildlifeCondition] || "medium";
 
   const lat = latitude ? parseFloat(latitude) : undefined;
   const lng = longitude ? parseFloat(longitude) : undefined;
@@ -35,12 +45,12 @@ const submitReport = async (req, res) => {
     for (const file of req.files) {
       const ext = path.extname(file.originalname) || ".jpg";
       const filename = `${uuidv4()}${ext}`;
-      const outputPath = path.join(UPLOAD_DIR, filename);
+      const outputPath = path.join(STORAGE_DIR, filename);
       await sharp(file.buffer)
         .resize({ width: 1920, withoutEnlargement: true })
         .jpeg({ quality: 80, mozjpeg: true })
         .toFile(outputPath);
-      images.push(`/uploads/${filename}`);
+      images.push(`/api/v1/public/files/${filename}`);
     }
   }
 

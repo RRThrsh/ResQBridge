@@ -202,3 +202,9 @@ export const logs = {
   trackLogout: () =>
     request('/log/logout', { method: 'POST' }),
 }
+
+export const sso = {
+  get googleUrl() {
+    return `${API_BASE}/auth/google`
+  },
+}

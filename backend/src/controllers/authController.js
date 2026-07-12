@@ -7,6 +7,9 @@ const { AppError } = require("../middleware/errorHandler");
 const { sendOtp, sendPasswordReset } = require("../services/email");
 const { logEvent } = require("../middleware/logAudit");
 
+const failedAttempts = new Map();
+const otpAttempts = new Map();
+
 const sendOtpHandler = async (req, res) => {
   const email = req.body.email.trim().toLowerCase();
 
@@ -29,7 +32,7 @@ const sendOtpHandler = async (req, res) => {
 
   await logEvent({ req, eventType: "login_attempt", metadata: { email, action: "otp_sent" } });
 
-  res.json({ message: "OTP sent to your email.", otpRequired: true });
+  res.json({ message: "If eligible, an OTP has been sent.", otpRequired: true });
 };
 
 const register = async (req, res) => {
@@ -44,10 +47,17 @@ const register = async (req, res) => {
   const otpEnabled = await convexClient.query(anyApi.config.getConfigValue, { key: "otpEnabled" });
   if (otpEnabled !== "false") {
     if (!otp) throw new AppError("OTP is required.", 400);
+    const key = `otp:${email}`;
+    const otpFailCount = otpAttempts.get(key) || 0;
+    if (otpFailCount >= 3) {
+      throw new AppError("Too many OTP attempts. Request a new code.", 429);
+    }
     const valid = await convexClient.query(anyApi.otp.getValidOtp, { email, otp });
     if (!valid) {
+      otpAttempts.set(key, otpFailCount + 1);
       throw new AppError("Invalid or expired OTP.", 400);
     }
+    otpAttempts.delete(key);
     await convexClient.mutation(anyApi.otp.markOtpUsed, { id: valid._id });
   }
 
@@ -83,7 +93,6 @@ const register = async (req, res) => {
 
   res.status(201).json({
     message: "User registered successfully.",
-    token,
     user: { uuid: userUuid, firstName, lastName, email, role: "rescuer" },
   });
 };
@@ -91,30 +100,36 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
   const trimmedEmail = email.trim();
+  const emailKey = trimmedEmail.toLowerCase();
 
-  console.log(`[LOGIN] email="${trimmedEmail}" lower="${trimmedEmail.toLowerCase()}"`);
+  const failKey = `login:${emailKey}`;
+  const attempts = failedAttempts.get(failKey) || 0;
+  if (attempts >= 5) {
+    throw new AppError("Account temporarily locked. Try again later.", 429);
+  }
 
   let user = await convexClient.query(anyApi.users.getUserByEmail, { email: trimmedEmail });
-  console.log(`[LOGIN] exact match: ${user ? 'FOUND' : 'NOT FOUND'}`);
 
   if (!user) {
-    user = await convexClient.query(anyApi.users.getUserByEmail, { email: trimmedEmail.toLowerCase() });
-    console.log(`[LOGIN] lower match: ${user ? 'FOUND' : 'NOT FOUND'}`);
+    user = await convexClient.query(anyApi.users.getUserByEmail, { email: emailKey });
   }
 
   if (!user) {
-    console.log(`[LOGIN] user NOT FOUND for "${trimmedEmail}"`);
+    failedAttempts.set(failKey, attempts + 1);
+    setTimeout(() => { const c = failedAttempts.get(failKey); if (c && c <= attempts + 1) failedAttempts.delete(failKey); }, 15 * 60 * 1000);
     await logEvent({ req, eventType: "login_attempt", metadata: { email: trimmedEmail, reason: "user_not_found" } });
     throw new AppError("Invalid email or password.", 401);
   }
 
-  console.log(`[LOGIN] user FOUND: uuid=${user.uuid} role=${user.role} storedEmail="${user.email}"`);
-
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
+    failedAttempts.set(failKey, attempts + 1);
+    setTimeout(() => { const c = failedAttempts.get(failKey); if (c && c <= attempts + 1) failedAttempts.delete(failKey); }, 15 * 60 * 1000);
     await logEvent({ req, eventType: "login_attempt", metadata: { email: trimmedEmail, reason: "wrong_password" } });
     throw new AppError("Invalid email or password.", 401);
   }
+
+  failedAttempts.delete(failKey);
 
   const token = jwt.sign(
     { uuid: user.uuid, email: user.email, role: user.role },
@@ -134,7 +149,6 @@ const login = async (req, res) => {
 
   res.json({
     message: "Login successful.",
-    token,
     user: {
       uuid: user.uuid,
       firstName: user.firstName,
@@ -149,21 +163,20 @@ const forgotPassword = async (req, res) => {
   const email = req.body.email.trim().toLowerCase();
 
   const user = await convexClient.query(anyApi.users.getUserByEmail, { email });
-  if (!user) {
-    throw new AppError("No account found with that email.", 404);
+
+  if (user) {
+    const resetToken = jwt.sign(
+      { uuid: user.uuid, email: user.email, type: "password-reset" },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
+
+    await sendPasswordReset(email, resetToken);
+
+    await logEvent({ req, userId: user.uuid, eventType: "password_reset", metadata: { email } });
   }
 
-  const resetToken = jwt.sign(
-    { uuid: user.uuid, email: user.email, type: "password-reset" },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" },
-  );
-
-  await sendPasswordReset(email, resetToken);
-
-  await logEvent({ req, userId: user.uuid, eventType: "password_reset", metadata: { email } });
-
-  res.json({ message: "Password reset link sent to your email." });
+  res.json({ message: "If an account with that email exists, a reset link has been sent." });
 };
 
 const resetPassword = async (req, res) => {

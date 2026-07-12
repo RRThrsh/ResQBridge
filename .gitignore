@@ -1,8 +1,25 @@
-============================================================
-
-============================================================
-
 node_modules/
 .agents/
 .claude/
 skills-lock.json
+
+# Environment files with secrets
+.env
+.env.local
+.env.production
+.env.development
+*.env
+
+# Backend
+backend/node_modules/
+backend/.env
+backend/.env.local
+backend/storage/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db

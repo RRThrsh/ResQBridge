@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, DoubleConfirmation, InfoPopover } from '../../components/ui'
+import { Button, DoubleConfirmation, InfoPopover, HoneypotField } from '../../components/ui'
 import ReportSkeleton from './ReportSkeleton'
 import fallbackSpecies from '../../data/wildlifeSpecies'
 import L from 'leaflet'
@@ -231,6 +231,7 @@ export default function Report() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-gray-200 bg-white px-8 py-10 shadow-sm">
+          <HoneypotField />
           {error && (
             <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
           )}

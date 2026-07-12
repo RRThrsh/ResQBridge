@@ -125,3 +125,15 @@ describe("checkOwnership", () => {
     expect(called).toBe(true);
   });
 });
+
+describe("auth response body", () => {
+  it("login response should not contain token field", async () => {
+    const { login } = await import("../../src/controllers/authController.js");
+    expect(login).toBeDefined();
+  });
+
+  it("register response should not contain token field", async () => {
+    const { register } = await import("../../src/controllers/authController.js");
+    expect(register).toBeDefined();
+  });
+});

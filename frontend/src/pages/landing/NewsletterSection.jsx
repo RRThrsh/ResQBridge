@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import AnimateIn from '../../components/ui/AnimateIn'
+import { HoneypotField } from '../../components/ui'
 
 const API_BASE = '/api/v1'
 
@@ -65,6 +66,7 @@ export default function NewsletterSection() {
 
         <AnimateIn delay={150}>
           <form onSubmit={handleSubmit} className="mx-auto mt-8 flex max-w-md gap-3">
+            <HoneypotField />
             <div className="relative flex-1">
               <input
                 type="email"

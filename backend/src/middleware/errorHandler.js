@@ -37,7 +37,7 @@ class ForbiddenError extends AppError {
   }
 }
 
-function errorHandler(err, _req, res, _next) {
+function errorHandler(err, req, res, _next) {
   if (err.isOperational) {
     return res.status(err.statusCode).json({ message: err.message });
   }
@@ -49,6 +49,25 @@ function errorHandler(err, _req, res, _next) {
   if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
     return res.status(401).json({ message: "Invalid or expired token." });
   }
+
+  if (err.name === "MulterError") {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({ message: "File too large." });
+    }
+    return res.status(400).json({ message: err.message });
+  }
+
+  const { logEvent } = require("./logAudit");
+  logEvent({
+    req,
+    eventType: "error",
+    metadata: {
+      error: err.message,
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+      path: req?.originalUrl,
+      method: req?.method,
+    },
+  });
 
   console.error("Unhandled error:", err);
   res.status(500).json({ message: "Internal server error." });

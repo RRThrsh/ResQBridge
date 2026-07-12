@@ -12,11 +12,14 @@ export function AuthProvider({ children }) {
       if (res.ok) {
         const data = await res.json()
         setUser(data.user)
+        return data.user
       } else {
         setUser(null)
+        return null
       }
     } catch {
       setUser(null)
+      return null
     } finally {
       setLoading(false)
     }
@@ -38,7 +41,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login: handleLogin, logout, isAuthenticated: !!user, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login: handleLogin, logout, isAuthenticated: !!user, updateUser, fetchUser }}>
       {children}
     </AuthContext.Provider>
   )

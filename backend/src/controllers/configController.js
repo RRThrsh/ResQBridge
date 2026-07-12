@@ -2,6 +2,8 @@ const convexClient = require("../config/convex");
 const { anyApi } = require("convex/server");
 const { logEvent } = require("../middleware/logAudit");
 
+const ALLOWED_CONFIG_KEYS = new Set(["otpEnabled", "maintenanceMode", "maintenanceEndTime", "landingContent"]);
+
 const getConfig = async (_req, res) => {
   const config = await convexClient.query(anyApi.config.getConfig);
   res.json({ config });
@@ -12,6 +14,10 @@ const updateConfig = async (req, res) => {
 
   if (!key || value === undefined || value === null) {
     return res.status(400).json({ message: "key and value are required." });
+  }
+
+  if (!ALLOWED_CONFIG_KEYS.has(key)) {
+    return res.status(400).json({ message: "Invalid config key." });
   }
 
   await convexClient.mutation(anyApi.config.upsertConfig, { key, value });

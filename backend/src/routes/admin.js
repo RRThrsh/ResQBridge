@@ -1,5 +1,5 @@
 const express = require("express");
-const { body } = require("express-validator");
+const { body, param } = require("express-validator");
 const router = express.Router();
 const { authenticate, authorize, authorizeWithPermission } = require("../middleware/auth");
 const { validate } = require("../middleware/validate");
@@ -17,20 +17,24 @@ router.use(authenticate);
 const adminOnly = authorize("superadmin", "admin");
 const superOnly = authorize("superadmin");
 
+const uuidParam = param("uuid").trim().isUUID().withMessage("Valid UUID is required.");
+const reportIdParam = param("id").trim().notEmpty().withMessage("Report ID is required.");
+const ipParam = param("ip").trim().isIP().withMessage("Valid IP address is required.");
+
 router.get("/dashboard", authorizeWithPermission("dashboard"), asyncHandler(getDashboardData));
 
 router.get("/users", authorizeWithPermission("users"), asyncHandler(getUsers));
-router.get("/users/:uuid", authorizeWithPermission("users"), asyncHandler(getUser));
+router.get("/users/:uuid", authorizeWithPermission("users"), uuidParam, validate, asyncHandler(getUser));
 router.get("/stats", adminOnly, asyncHandler(getStats));
 
 const updateRoleRules = [
   body("role").trim().notEmpty().withMessage("Role is required."),
 ];
-router.patch("/users/:uuid/role", authorizeWithPermission("users", "write"), updateRoleRules, validate, asyncHandler(updateUserRole));
+router.patch("/users/:uuid/role", authorizeWithPermission("users", "write"), uuidParam, updateRoleRules, validate, asyncHandler(updateUserRole));
 
 router.get("/logs", authorizeWithPermission("audit"), asyncHandler(getLogs));
 router.get("/logs/stats", authorizeWithPermission("audit"), asyncHandler(getLogStats));
-router.get("/logs/ip/:ip", authorizeWithPermission("audit"), asyncHandler(getLogsByIP));
+router.get("/logs/ip/:ip", authorizeWithPermission("audit"), ipParam, validate, asyncHandler(getLogsByIP));
 router.post("/logs/cleanup", authorizeWithPermission("audit", "execute"), asyncHandler(deleteOldLogs));
 
 router.get("/config", authorizeWithPermission("systemConfig"), asyncHandler(getConfig));
@@ -43,14 +47,14 @@ router.get("/permissions", adminOnly, asyncHandler(getAdminPermissions));
 router.put("/permissions", superOnly, asyncHandler(updateAdminPermissions));
 
 router.get("/reports", authorizeWithPermission("reports"), asyncHandler(getAdminReports));
-router.post("/reports/:id/assign", authorizeWithPermission("reports", "execute"), asyncHandler(assignReport));
-router.put("/reports/:id/archive", authorizeWithPermission("reports", "execute"), asyncHandler(archiveReport));
+router.post("/reports/:id/assign", authorizeWithPermission("reports", "execute"), reportIdParam, validate, asyncHandler(assignReport));
+router.put("/reports/:id/archive", authorizeWithPermission("reports", "execute"), reportIdParam, validate, asyncHandler(archiveReport));
 router.post("/reports/bulk/archive", authorizeWithPermission("reports", "execute"), asyncHandler(bulkArchiveReports));
 router.get("/reports/archived", authorizeWithPermission("archive"), asyncHandler(getArchivedReports));
-router.post("/reports/:id/unarchive", authorizeWithPermission("archive", "write"), asyncHandler(unarchiveReport));
-router.delete("/reports/:id", authorizeWithPermission("archive", "execute"), asyncHandler(deleteReport));
+router.post("/reports/:id/unarchive", authorizeWithPermission("archive", "write"), reportIdParam, validate, asyncHandler(unarchiveReport));
+router.delete("/reports/:id", authorizeWithPermission("archive", "execute"), reportIdParam, validate, asyncHandler(deleteReport));
 router.get("/rescuer-locations", authorizeWithPermission("rescuerMap"), asyncHandler(getRescuerLocations));
-router.get("/rescuers/:uuid/reports", authorizeWithPermission("rescuerMap"), asyncHandler(getRescuerReports));
+router.get("/rescuers/:uuid/reports", authorizeWithPermission("rescuerMap"), uuidParam, validate, asyncHandler(getRescuerReports));
 
 router.get("/export/reports", authorizeWithPermission("exportData"), asyncHandler(exportReports));
 router.get("/export/users", authorizeWithPermission("exportData"), asyncHandler(exportUsers));
